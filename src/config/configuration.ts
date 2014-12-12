@@ -1,6 +1,7 @@
 /// <reference path="../../typings/async.d.ts" />
 
 import async = require("async");
+import util = require("util");
 
 import Callback = require("../callback");
 import ResultCallback = require("../resultCallback");
@@ -11,11 +12,13 @@ import DatabaseDriver = require("../driver/databaseDriver");
 import MongoDriver = require("../driver/mongoDriver");
 import Connection = require("../driver/connection");
 import Collection = require("../driver/collection");
+import CollectionTable = require("../driver/collectionTable");
 import TypeMapping = require("../mapping/typeMapping");
 import MappingRegistry = require("../mapping/mappingRegistry");
 import MappingProvider = require("../mapping/providers/mappingProvider");
 import AnnotationMappingProvider = require("../mapping/providers/annotationMappingProvider");
 import ConfigurationOptions = require("./configurationOptions");
+import IdentityGenerator = require("../id/identityGenerator");
 
 class Configuration {
 
@@ -24,11 +27,14 @@ class Configuration {
     private _optionsProcessed: boolean;
     private _driver: DatabaseDriver;
 
+    identityGenerator: IdentityGenerator;
+
     constructor(options?: ConfigurationOptions) {
 
         this._options = options;
         this._driver = new MongoDriver();
         this._mappingProvider = new AnnotationMappingProvider(this);
+        this.identityGenerator = this._driver.defaultIdentityGenerator();
     }
 
     addDeclarationFile(path: string): void {
@@ -82,27 +88,64 @@ class Configuration {
         this._mappingProvider.getMapping((err, mappings) => {
             if(err) return callback(err);
 
-            var sessionFactory = new SessionFactory(connection, new MappingRegistry(mappings));
-            callback(null, sessionFactory);
+            this._buildCollections(connection, mappings, (err, collections) => {
+                if(err) return callback(err);
+
+                var sessionFactory = new SessionFactory(collections, new MappingRegistry(mappings));
+                callback(null, sessionFactory);
+            });
         });
     }
 
-    private _buildCollections(connection: Connection, mappings: TypeMapping[], callback: ResultCallback<Collection[]>): void {
+    private _buildCollections(connection: Connection, mappings: TypeMapping[], callback: ResultCallback<CollectionTable>): void {
 
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
-        var collections: Collection[] = [];
+        var collections: CollectionTable = {};
         var names: Map<boolean> = {};
 
-        async.each(mappings, (item: TypeMapping, callback) => {
+        async.each(mappings, (mapping: TypeMapping, callback: (err?: Error) => void) => {
 
-            //TODO: check to make sure we have a collection name
-            if(Map.hasProperty(names, item.collectionName)) {
-                // TOD: duplicate collection error
+            // only root types are mapped to a collection
+            if(!mapping.isRootType) {
+                return callback();
             }
 
-            connection.db.collection()
+            // make sure we have a collection name
+            if (!mapping.collectionName) {
+                return callback(new Error("Missing collection name on mapping for type '" + mapping.type.getFullName() + "'."));
+            }
 
+            // make sure db/collection is not mapped to some other type.
+            var key = [(mapping.databaseName || connection.db.databaseName), "/", mapping.collectionName].join("");
+            if (Map.hasProperty(names, key)) {
+                return callback(new Error("Duplicate collection name '" + key + "' on type '" + mapping.type.getFullName() + "' ."));
+            }
+            names[key] = true;
+
+            // change current database if a databaseName was specified in the mapping
+            var db = connection.db;
+            if(mapping.databaseName && mapping.databaseName !== connection.db.databaseName) {
+                db = db.db(mapping.databaseName);
+            }
+
+            // try to get the collection
+            db.collection(mapping.collectionName, { strict: true }, (err: Error, collection: Collection) => {
+
+                // if there is an error getting the collection, try to create it
+                if(err) {
+                    db.createCollection(mapping.collectionName, mapping.collectionOptions || {}, addToCollectionTable);
+                }
+                else {
+                    addToCollectionTable(null, collection);
+                }
+            });
+
+            function addToCollectionTable(err: Error, collection: Collection): void {
+                if(err) return callback(err);
+                collections[mapping.id] = collection;
+                callback();
+            }
 
         }, (err) => {
             if(err) return callback(err);

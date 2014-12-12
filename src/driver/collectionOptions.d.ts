@@ -3,37 +3,42 @@ interface CollectionOptions {
     /**
      * The write concern.
      */
-    w: string;
+    w?: string;
 
     /**
      * The write concern timeout.
      */
-    wtimeout: number;
+    wtimeout?: number;
 
     /**
      * Specify a journal write concern.
      */
-    j: boolean;
+    j?: boolean;
 
     /**
      * Create a capped collection.
      */
-    capped: boolean;
+    capped?: boolean;
 
     /**
      * The size of the capped collection in bytes.
      */
-    size: number;
+    size?: number;
 
     /**
      * The maximum number of document in the capped collection.
      */
-    max: number;
+    max?: number;
 
     /**
      * The preferred read preference
      */
-    readPreference: string;
+    readPreference?: string;
+
+    /**
+     * Strict mode
+     */
+    strict?: boolean;
 }
 
 export = CollectionOptions;

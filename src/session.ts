@@ -1,6 +1,5 @@
 import Callback = require("./callback");
-import Connection = require("./driver/connection");
-import ObjectId = require("./driver/objectId");
+import Identifier = require("./id/identifier");
 import UnitOfWork = require("./unitOfWork");
 import Constructor = require("./constructor");
 import QueryBuilder = require("./queryBuilder");
@@ -9,15 +8,13 @@ import LockMode = require("./lockMode");
 
 class Session {
 
-    private _connection: Connection;
     private _uow: UnitOfWork;
     private _sessionFactory: SessionFactory;
 
-    constructor(connection: Connection, sessionFactory: SessionFactory) {
+    constructor(sessionFactory: SessionFactory) {
 
-        this._connection = connection;
         this._sessionFactory = sessionFactory;
-        this._uow = new UnitOfWork(connection, sessionFactory.mappingRegistry);
+        this._uow = new UnitOfWork(sessionFactory.collections, sessionFactory.mappingRegistry);
     }
 
     save (obj: any): void {
@@ -30,7 +27,7 @@ class Session {
         this._uow.remove(obj);
     }
 
-    find<T>(ctr: Constructor<T>, id: ObjectId, callback: (err: Error, result: T) => void): void {
+    find<T>(ctr: Constructor<T>, id: Identifier, callback: (err: Error, result: T) => void): void {
 
     }
 

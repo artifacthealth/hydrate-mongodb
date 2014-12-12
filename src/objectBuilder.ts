@@ -7,6 +7,7 @@ import Property = require("./mapping/property");
 import MappingRegistry = require("./mapping/mappingRegistry");
 import ReflectHelper = require("./reflectHelper");
 import BuilderState = require("./builderState");
+import Identifier = require("./id/identifier");
 
 class ObjectBuilder {
 
@@ -19,10 +20,6 @@ class ObjectBuilder {
 
     buildObject(document: any, type: reflect.Type): any {
 
-        if (!document._id) {
-            throw new Error("Root document is missing primary key.");
-        }
-
         var state = new BuilderState();
 
         var obj = this._buildObject(document, type, state, true);
@@ -30,7 +27,6 @@ class ObjectBuilder {
             throw new Error(state.getErrorMessage());
         }
 
-        obj._id = document._id;
         return obj;
     }
 
@@ -44,10 +40,18 @@ class ObjectBuilder {
             return;
         }
 
-        // if this is a document type and it's not the root, this should be a reference.
-        if(mapping.isDocumentType && !isRoot) {
-            // TODO: how to handle reference
-            return;
+        var id: Identifier;
+        if(mapping.isDocumentType) {
+            // TODO: allow mapping to map document identifier field to different property on object
+            id = document[mapping.rootType.identityField];
+            if(!id) {
+                state.addError("Expected document to have an identifier.", type, document);
+                return;
+            }
+            if(!isRoot) {
+                // TODO: how to handle reference
+                return id;
+            }
         }
 
         // get mapping based on discriminator field if one exists
@@ -83,6 +87,11 @@ class ObjectBuilder {
             state.path.push(property.name);
             property.symbol.setValue(obj, this._buildValue(value, property.symbol.getType(), state));
             state.path.pop();
+        }
+
+        // if this is the root then set the identifier
+        if(isRoot) {
+            obj[mapping.rootType.identityField] = id;
         }
 
         return obj;

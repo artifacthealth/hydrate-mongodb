@@ -8,6 +8,7 @@ import MappingRegistry = require("./mapping/mappingRegistry");
 import MappingFlags = require("./mapping/typeMappingFlags");
 import ReflectHelper = require("./reflectHelper");
 import BuilderState = require("./builderState");
+import Identifier = require("./id/identifier");
 
 class DocumentBuilder {
 
@@ -20,10 +21,6 @@ class DocumentBuilder {
 
     buildDocument(obj: any, type: reflect.Type): any {
 
-        if (!obj._id) {
-            throw new Error("Root object is missing primary key.");
-        }
-
         var state = new BuilderState();
 
         var document = this._buildDocument(obj, type, state, true);
@@ -31,7 +28,6 @@ class DocumentBuilder {
             throw new Error(state.getErrorMessage());
         }
 
-        document._id = obj._id;
         return document;
     }
 
@@ -47,15 +43,18 @@ class DocumentBuilder {
             return;
         }
 
-        // If we have a document type and this is not the root object, then just save a reference to the object.
-        if(mapping.isDocumentType && !isRoot) {
-            // TODO: consider when to use DBRef instead of ObjectID
-            var id = obj._id;
+        var id: Identifier;
+        if(mapping.isDocumentType) {
+            // TODO: allow mapping to map document identifier field to different property on object
+            id = obj[mapping.rootType.identityField];
             if(!id) {
-                state.addError("Expected referenced document type object to have a primary key.", type, obj);
+                state.addError("Expected document type object to have an identifier.", type, obj);
                 return;
             }
-            return id;
+            if(!isRoot) {
+                // If we have a document type and this is not the root object, then just save a reference to the object.
+                return id;
+            }
         }
 
         // track embedded objects to make sure we don't have an infinite loop
@@ -105,6 +104,11 @@ class DocumentBuilder {
         // add discriminator
         if(mapping.discriminatorField) {
             document[mapping.discriminatorField] = mapping.discriminatorValue;
+        }
+
+        // if this is the root then set the identifier
+        if(isRoot) {
+            document[mapping.rootType.identityField] = id;
         }
 
         return document;

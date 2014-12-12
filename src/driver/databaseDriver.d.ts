@@ -1,11 +1,11 @@
 import Connection = require("./connection");
 import ResultCallback = require("../resultCallback");
-import ObjectId = require("./objectId");
+import IdentityGenerator = require("../id/identityGenerator");
 
 interface DatabaseDriver {
 
     connect(url: string, options: any, callback: ResultCallback<Connection>): void;
-    createObjectId(): ObjectId;
+    defaultIdentityGenerator(): IdentityGenerator;
 }
 
 export = DatabaseDriver;

@@ -4,6 +4,8 @@ import IndexOptions = require("./indexOptions");
 
 interface Db {
 
+    databaseName?: string;
+
     db(dbName: string): Db;
     close(forceClose?: boolean, callback?: (err: Error, result: any) => void ): void;
     collection(collectionName: string, options: CollectionOptions, callback: (err: Error, collection: Collection) => void ): Collection;

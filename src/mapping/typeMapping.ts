@@ -9,6 +9,8 @@ import TypeMappingFlags = require("./TypeMappingFlags");
 import Index = require("./index");
 import CollectionOptions = require("../driver/collectionOptions");
 import Configuration = require("../config/Configuration");
+import IdentityGenerator = require("../id/identityGenerator");
+import Identifier = require("../id/identifier");
 
 class TypeMapping {
 
@@ -24,6 +26,9 @@ class TypeMapping {
 
     discriminatorField: string;
     discriminatorValue: string;
+
+    identityGenerator: IdentityGenerator;
+    identityField: string;
 
     private _discriminatorMap: Map<TypeMapping>;
 
@@ -146,6 +151,17 @@ class TypeMapping {
     }
 
     /**
+     * Gets the object identifier as a string. Returns undefined if the object does not have an identifier.
+     * @param obj The object
+     */
+    getIdentifierValue(obj: any): string {
+        var id = obj[this.rootType.identityField];
+        if(id) {
+            return id.toString();
+        }
+    }
+
+    /**
      * Adds default mapping values to TypeMapping. Called by MappingProvider after TypeMapping is created.
      * @param config The configuration.
      */
@@ -175,6 +191,13 @@ class TypeMapping {
                 if (!this.collectionName) {
                     // TODO: configurable naming strategy for when name is not specified?
                     this.collectionName = this.type.getName();
+                }
+
+                if (!this.identityField) {
+                    this.identityField = "_id";
+                }
+                if(!this.identityGenerator) {
+                    this.identityGenerator = config.identityGenerator;
                 }
             }
             else {

@@ -1,19 +1,17 @@
 import Connection = require("./driver/connection");
+import CollectionTable = require("./driver/collectionTable");
 import Session = require("./session");
 import MappingRegistry = require("./mapping/mappingRegistry");
 
 class SessionFactory {
 
-    private _connection: Connection;
+    constructor(public collections: CollectionTable, public mappingRegistry: MappingRegistry) {
 
-    constructor(connection: Connection, public mappingRegistry: MappingRegistry) {
-
-        this._connection = connection;
     }
 
     createSession(): Session {
 
-        return new Session(this._connection, this);
+        return new Session(this);
     }
 }
 

@@ -3,10 +3,10 @@
 
 import reflect = require("tsreflect");
 import async = require("async");
-import ObjectId = require("./driver/objectId");
+import Identifier = require("./id/identifier");
 import Map = require("./map");
 import Callback = require("./callback");
-import Connection = require("./driver/connection");
+import CollectionTable = require("./driver/collectionTable");
 import MappingRegistry = require("./mapping/mappingRegistry");
 import Constructor = require("./constructor");
 import ChangeTracking = require("./mapping/changeTracking");
@@ -33,12 +33,12 @@ class UnitOfWork {
     private _scheduledInsertions: Map<any> = {};
     private _scheduledDirtyCheck: Map<any> = {};
 
-    private _connection: Connection;
+    private _collections: CollectionTable;
     private _mappingRegistry: MappingRegistry;
 
-    constructor(connection: Connection, mappingRegistry: MappingRegistry) {
+    constructor(collections: CollectionTable, mappingRegistry: MappingRegistry) {
 
-        this._connection = connection;
+        this._collections = collections;
         this._mappingRegistry = mappingRegistry;
     }
 
@@ -49,17 +49,17 @@ class UnitOfWork {
             throw new Error("Object is not mapped as a document type.");
         }
 
-        var state = this._getObjectState(obj);
+        var state = this._getObjectState(mapping, obj);
         switch(state) {
             case ObjectState.Managed:
                 if(mapping.changeTracking == ChangeTracking.DeferredExplicit) {
-                    this._scheduleDirtyCheck(obj);
+                    this._scheduleDirtyCheck(mapping, obj);
                 }
                 break;
             case ObjectState.New:
                 // TODO: what if object already has an ID?
-                obj._id = this._connection.driver.createObjectId();
-                this._scheduleInsert(obj);
+                obj[mapping.rootType.identityField] = mapping.rootType.identityGenerator.generate();
+                this._scheduleInsert(mapping, obj);
                 break;
             case ObjectState.Detached:
                 throw new Error("Cannot save a detached object.");
@@ -79,7 +79,7 @@ class UnitOfWork {
             throw new Error("Object is not mapped as a document type.");
         }
 
-        var state = this._getObjectState(obj);
+        var state = this._getObjectState(mapping, obj);
         switch(state) {
             case ObjectState.New:
             case ObjectState.Removed:
@@ -87,7 +87,7 @@ class UnitOfWork {
                 break;
             case ObjectState.Managed:
                 // TODO: call lifecycle callbacks
-                this._scheduleDelete(obj);
+                this._scheduleDelete(mapping, obj);
                 break;
             case ObjectState.Detached:
                 throw new Error("Cannot remove a detached object.");
@@ -97,13 +97,10 @@ class UnitOfWork {
         }
     }
 
-    find(id: ObjectId, callback: ResultCallback<any>): void {
+    load(mapping: TypeMapping, document: any, callback: ResultCallback<any>): void {
 
-    }
-
-    load(document: any, callback: ResultCallback<any>): void {
-
-        var id = this._getObjectId(document);
+        // TODO: separate method for retrieving id from document rather than object?
+        var id = mapping.getIdentifierValue(document);
         if(!id) {
             process.nextTick(() => callback(new Error("Document missing primary key.")));
             return;
@@ -141,15 +138,14 @@ class UnitOfWork {
         }
     }
 
-    private _scheduleDirtyCheck(obj: any): void {
+    private _scheduleDirtyCheck(mapping: TypeMapping, obj: any): void {
 
-        var id = this._getObjectId(obj);
-        this._scheduledDirtyCheck[id] = obj;
+        this._scheduledDirtyCheck[mapping.getIdentifierValue(obj)] = obj;
     }
 
-    private _scheduleInsert(obj: any): void {
+    private _scheduleInsert(mapping: TypeMapping, obj: any): void {
 
-        var id = this._getObjectId(obj);
+        var id = mapping.getIdentifierValue(obj);
 
         if(Map.hasProperty(this._scheduledUpdates, id)) {
             throw new Error("Dirty object cannot be scheduled for insertion.");
@@ -168,12 +164,9 @@ class UnitOfWork {
     }
 
     // TODO: remove this function?
-    private _scheduleUpdate(obj: any): void {
+    private _scheduleUpdate(mapping: TypeMapping, obj: any): void {
 
-        var id = this._getObjectId(obj);
-        if(!id) {
-            throw new Error("Object missing identifier.");
-        }
+        var id = mapping.getIdentifierValue(obj);
 
         if(Map.hasProperty(this._scheduledDeletions, id)) {
             throw new Error("Removed object cannot be scheduled for update.");
@@ -184,9 +177,9 @@ class UnitOfWork {
         }
     }
 
-    private _scheduleDelete(obj: any): void {
+    private _scheduleDelete(mapping: TypeMapping, obj: any): void {
 
-        var id = this._getObjectId(obj);
+        var id = mapping.getIdentifierValue(obj);
 
         if(Map.hasProperty(this._scheduledInsertions, id)) {
             this._removeFromIdentityMap(id);
@@ -231,9 +224,9 @@ class UnitOfWork {
         return true;
     }
 
-    private _getObjectState(obj: any): ObjectState {
+    private _getObjectState(mapping: TypeMapping, obj: any): ObjectState {
 
-        var id = this._getObjectId(obj);
+        var id = mapping.getIdentifierValue(obj);
         if(id === undefined) {
             return ObjectState.New;
         }
@@ -243,16 +236,7 @@ class UnitOfWork {
         }
 
         // TODO: how to handle unknown state
-
         return ObjectState.Detached;
-    }
-
-    private _getObjectId(obj: any): string {
-
-        var id = <ObjectId>obj._id;
-        if(id !== undefined) {
-            return id.toHexString();
-        }
     }
 }
 

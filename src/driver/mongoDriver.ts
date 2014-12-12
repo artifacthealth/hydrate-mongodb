@@ -5,10 +5,15 @@ import mongodb = require("mongodb");
 import DatabaseDriver = require("./databaseDriver");
 import Connection = require("./connection");
 import ResultCallback = require("../resultCallback");
-import ObjectId = require("./objectId");
-import MongoConnection = require("./mongoConnection")
+import IdentityGenerator = require("../id/identityGenerator");
+import ObjectIdGenerator = require("../id/objectIdGenerator");
+import MongoConnection = require("./mongoConnection");
+
+// TODO: switch to mongodb-core driver? https://github.com/christkv/mongodb-core
 
 class MongoDriver implements DatabaseDriver {
+
+    private _defaultGenerator = new ObjectIdGenerator();
 
     connect(url: string, options: any, callback: ResultCallback<Connection>): void {
 
@@ -18,8 +23,8 @@ class MongoDriver implements DatabaseDriver {
         });
     }
 
-    createObjectId(): ObjectId {
-        return new mongodb.ObjectID();
+    defaultIdentityGenerator(): IdentityGenerator {
+        return this._defaultGenerator;
     }
 }
 

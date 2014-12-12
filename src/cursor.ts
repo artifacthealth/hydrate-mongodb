@@ -5,7 +5,7 @@ import DriverCursor = require("./driver/cursor");
 import UnitOfWork = require("./unitOfWork");
 
 class Cursor {
-
+/*
     private _innerCursor: DriverCursor;
     private _uow: UnitOfWork;
 
@@ -127,6 +127,7 @@ class Cursor {
         this._innerCursor.rewind();
         return this;
     }
+    */
 }
 
 export = Cursor;

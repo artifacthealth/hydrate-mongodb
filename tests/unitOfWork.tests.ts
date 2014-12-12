@@ -12,6 +12,7 @@ describe('UnitOfWork', () => {
     it('', (done) => {
 
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
+        config.addDeclarationFile("build/tests/fixtures/model.d.json");
         config.createSessionFactory((err, sessionFactory) => {
 
             var session = sessionFactory.createSession();
