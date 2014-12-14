@@ -161,6 +161,14 @@ class TypeMapping {
         }
     }
 
+    generateIdentifier(): Identifier {
+        return this.rootType.identityGenerator.generate();
+    }
+
+    hasChangeTracking(changeTracking: ChangeTracking): boolean {
+        return this.rootType.changeTracking === changeTracking;
+    }
+
     /**
      * Adds default mapping values to TypeMapping. Called by MappingProvider after TypeMapping is created.
      * @param config The configuration.

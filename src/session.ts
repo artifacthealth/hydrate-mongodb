@@ -17,9 +17,9 @@ class Session {
         this._uow = new UnitOfWork(sessionFactory.collections, sessionFactory.mappingRegistry);
     }
 
-    save (obj: any): void {
+    persist (obj: any): void {
 
-        this._uow.save(obj);
+        this._uow.persist(obj);
     }
 
     remove (obj: any): void {
@@ -38,6 +38,10 @@ class Session {
 
     flush(callback: Callback): void {
         this._uow.flush(callback);
+    }
+
+    getIdentifier(obj: any): Identifier {
+        return null;
     }
 }
 

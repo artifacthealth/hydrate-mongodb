@@ -1,242 +1,256 @@
-/// <reference path="../typings/async.d.ts" />
-/// <reference path="../typings/tsreflect.d.ts" />
-
-import reflect = require("tsreflect");
-import async = require("async");
-import Identifier = require("./id/identifier");
+import ChangeTracking = require("./mapping/changeTracking");
+import CollectionTable = require("./driver/collectionTable");
+import Constructor = require("./constructor");
+import MappingRegistry = require("./mapping/mappingRegistry");
 import Map = require("./map");
 import Callback = require("./callback");
-import CollectionTable = require("./driver/collectionTable");
-import MappingRegistry = require("./mapping/mappingRegistry");
-import Constructor = require("./constructor");
-import ChangeTracking = require("./mapping/changeTracking");
-import PropertyFlags = require("./mapping/propertyFlags");
-import TypeMapping = require("./mapping/typeMapping");
 import ResultCallback = require("./resultCallback");
+import TypeMapping = require("./mapping/typeMapping");
+import Identifier = require("./id/identifier");
+import LockMode = require("./lockMode");
+import ObjectBuilder = require("./objectBuilder");
+import DocumentPersister = require("./documentPersister");
+import DocumentBuilder = require("./documentBuilder");
 
 enum ObjectState {
 
+    /**
+     * Managed entities have a persistent identity and are associated with a persistence context.
+     */
     Managed,
-    New,
+
+    /**
+     * Detached entities have a persistent identity and are not currently associated with a persistence context.
+     */
     Detached,
+
+    /**
+     * Removed entities  have a persistent identity, are associated with a persistent context, and are
+     * scheduled for deletion from the mongodb. Once the entity is deleted from the mongodb, it is considered a
+     * new entity.
+     */
     Removed
+}
+
+enum Operation {
+    None = 0,
+    Insert,
+    Update,
+    Delete,
+    DirtyCheck
+}
+
+// TODO: option to use weak reference until object is removed or modified and attach event to unlink if garbage collected? https://github.com/TooTallNate/node-weak
+interface ObjectLinks {
+
+    state: ObjectState;
+    scheduledOperation: Operation;
+    object: any;
+    originalDocument?: any;
+    mapping: TypeMapping;
 }
 
 class UnitOfWork {
 
-    private _objectStates: Map<ObjectState> = {};
-    private _identityMap: Map<any> = {};
-    private _originalDocuments: Map<any> = {};
-
-    private _scheduledUpdates: Map<any> = {};
-    private _scheduledDeletions: Map<any> = {};
-    private _scheduledInsertions: Map<any> = {};
-    private _scheduledDirtyCheck: Map<any> = {};
-
     private _collections: CollectionTable;
     private _mappingRegistry: MappingRegistry;
+    private _objectLinks: Map<ObjectLinks> = {};
+    private _objectBuilder: ObjectBuilder;
+    private _documentBuilder: DocumentBuilder;
 
     constructor(collections: CollectionTable, mappingRegistry: MappingRegistry) {
 
         this._collections = collections;
         this._mappingRegistry = mappingRegistry;
+        this._objectBuilder = new ObjectBuilder(mappingRegistry);
+        this._documentBuilder = new DocumentBuilder(mappingRegistry);
     }
 
-    save (obj: any): void {
+    persist (obj: any): void {
 
-        var mapping = this._mappingRegistry.getMappingForObject(obj);
-        if(!mapping) {
-            throw new Error("Object is not mapped as a document type.");
+        var links = this._getObjectLinks(obj);
+        if(!links) {
+            var mapping = this._mappingRegistry.getMappingForObject(obj);
+            if(!mapping) {
+                throw new Error("Object is not mapped as a document type.");
+            }
+
+            // we haven't seen this object before
+            obj["_id"] = mapping.generateIdentifier();
+            this._linkObject(obj, mapping, Operation.Insert);
+            return;
         }
 
-        var state = this._getObjectState(mapping, obj);
-        switch(state) {
+        switch(links.state) {
             case ObjectState.Managed:
-                if(mapping.changeTracking == ChangeTracking.DeferredExplicit) {
-                    this._scheduleDirtyCheck(mapping, obj);
+                if(links.mapping.hasChangeTracking(ChangeTracking.DeferredExplicit) && !links.scheduledOperation) {
+                    links.scheduledOperation = Operation.DirtyCheck;
                 }
-                break;
-            case ObjectState.New:
-                // TODO: what if object already has an ID?
-                obj[mapping.rootType.identityField] = mapping.rootType.identityGenerator.generate();
-                this._scheduleInsert(mapping, obj);
+                // TODO: cascade persist to references flagged with cascadepersit even if current object is already managed
                 break;
             case ObjectState.Detached:
-                throw new Error("Cannot save a detached object.");
+                throw new Error("Cannot persist a detached object.");
                 break;
             case ObjectState.Removed:
-                throw new Error("Cannot save a removed object.");
+                // Cancel delete operation and make managed.
+                links.scheduledOperation = Operation.None;
+                links.state = ObjectState.Managed;
                 break;
-            default:
-                throw new Error("Invalid object state '" + state + "'.");
         }
     }
 
     remove (obj: any): void {
 
-        var mapping = this._mappingRegistry.getMappingForObject(obj);
-        if(!mapping) {
-            throw new Error("Object is not mapped as a document type.");
-        }
+        // TODO: cascade remove to references flagged with cascaderemove event if current object is not managed
+        var links = this._getObjectLinks(obj);
+        if(!links) return;
 
-        var state = this._getObjectState(mapping, obj);
-        switch(state) {
-            case ObjectState.New:
-            case ObjectState.Removed:
-                // nothing to do
-                break;
+        switch(links.state) {
             case ObjectState.Managed:
-                // TODO: call lifecycle callbacks
-                this._scheduleDelete(mapping, obj);
+                // if the object has never been persisted then unlink the object and clear it's id
+                if(links.scheduledOperation == Operation.Insert) {
+                    this._unlinkObject(links);
+                }
+                else {
+                    links.scheduledOperation = Operation.Delete;
+                    links.state = ObjectState.Removed;
+                    // TODO: after successful delete operation, unlink the object and clear the object's identifier
+                }
                 break;
             case ObjectState.Detached:
                 throw new Error("Cannot remove a detached object.");
                 break;
-            default:
-                throw new Error("Invalid object state '" + state + "'.");
+            case ObjectState.Removed:
+                // nothing to do
+                break;
         }
     }
 
-    load(mapping: TypeMapping, document: any, callback: ResultCallback<any>): void {
+    detach(obj: any): void {
 
-        // TODO: separate method for retrieving id from document rather than object?
-        var id = mapping.getIdentifierValue(document);
-        if(!id) {
-            process.nextTick(() => callback(new Error("Document missing primary key.")));
-            return;
+        var links = this._getObjectLinks(obj);
+        if(links && links.state == ObjectState.Managed) {
+            this._unlinkObject(links);
         }
-
-        var obj = Map.getProperty(this._identityMap, id);
-        if(obj) {
-            process.nextTick(() => callback(null ,obj));
-            return;
-        }
-
-        // deserialize object
     }
 
-    flush (callback?: Callback): void {
+    flush(callback: Callback): void {
 
-    }
+        var persisters: { [id: number]: DocumentPersister } = {};
 
-    private _computeChangeSets(): void {
-
-        for(var id in this._identityMap) {
-            if(this._identityMap.hasOwnProperty(id)) {
-
-                var obj = this._identityMap[id];
-                var mapping = this._mappingRegistry.getMappingForObject(obj);
-
-                if(mapping.changeTracking == ChangeTracking.DeferredImplicit || this._scheduledDirtyCheck[id]) {
-
-                    if(this._objectStates[id] == ObjectState.Managed && !this._scheduledInsertions[id]) {
-
-                        //this._computeChangeSet(mapping, obj);
-                    }
+        var objectLinks = this._objectLinks;
+        for(var id in objectLinks) {
+            if(objectLinks.hasOwnProperty(id)) {
+                var links = objectLinks[id];
+                var rootMappingId = links.mapping.rootType.id;
+                var persister = persisters[rootMappingId];
+                if(!persister) {
+                    persister = new DocumentPersister(this._collections[rootMappingId], this._documentBuilder);
+                    persisters[rootMappingId] = persister;
                 }
             }
         }
     }
 
-    private _scheduleDirtyCheck(mapping: TypeMapping, obj: any): void {
+    find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void {
 
-        this._scheduledDirtyCheck[mapping.getIdentifierValue(obj)] = obj;
-    }
-
-    private _scheduleInsert(mapping: TypeMapping, obj: any): void {
-
-        var id = mapping.getIdentifierValue(obj);
-
-        if(Map.hasProperty(this._scheduledUpdates, id)) {
-            throw new Error("Dirty object cannot be scheduled for insertion.");
-        }
-
-        if(Map.hasProperty(this._scheduledDeletions, id)) {
-            throw new Error("Removed object cannot be scheduled for insertion.");
-        }
-
-        if(Map.hasProperty(this._scheduledInsertions, id)) {
-            throw new Error("Object is already scheduled for insertion.");
-        }
-
-        this._scheduledInsertions[id] = obj;
-        this._addToIdentityMap(obj, id);
-    }
-
-    // TODO: remove this function?
-    private _scheduleUpdate(mapping: TypeMapping, obj: any): void {
-
-        var id = mapping.getIdentifierValue(obj);
-
-        if(Map.hasProperty(this._scheduledDeletions, id)) {
-            throw new Error("Removed object cannot be scheduled for update.");
-        }
-
-        if(!Map.hasProperty(this._scheduledInsertions, id)) {
-            this._scheduledUpdates[id] = obj;
-        }
-    }
-
-    private _scheduleDelete(mapping: TypeMapping, obj: any): void {
-
-        var id = mapping.getIdentifierValue(obj);
-
-        if(Map.hasProperty(this._scheduledInsertions, id)) {
-            this._removeFromIdentityMap(id);
-            delete this._scheduledInsertions[id];
+        // check to see if object is already loaded
+        var links = this._getObjectLinksById(id);
+        if(links) {
+            process.nextTick(() => {
+                callback(null, links.object);
+            })
             return;
         }
 
-        if(!Map.hasProperty(this._identityMap, id)) {
-            return;
+        var mapping = this._mappingRegistry.getMappingForConstructor(ctr);
+        if(!mapping) {
+            return callback(new Error("Object is not mapped as a document type."));
         }
 
-        this._removeFromIdentityMap(id);
-        this._objectStates[id] = ObjectState.Removed;
+        this._collections[mapping.id].findOne({ _id: id }, (err, document) => {
+            if(err) return callback(err);
 
-        delete this._scheduledUpdates[id];
-        this._scheduledDeletions[id] = obj;
+            this._load(mapping, document, callback);
+        });
     }
 
-    private _addToIdentityMap(obj: any, id: string): boolean {
+    private _load<T>(mapping: TypeMapping, document: any, callback: ResultCallback<T>): void {
 
-        if(Map.hasProperty(this._identityMap, id)) {
-            return false;
+        // if the document is null or undefined then return undefined
+        if(!document) {
+            return process.nextTick(() => {
+                callback(null);
+            });
         }
 
-        this._identityMap[id] = obj;
-        this._objectStates[id] = ObjectState.Managed;
+        // check to see if object is already loaded
+        var links = this._getObjectLinksById(document["_id"]);
+        if(links) {
+            return process.nextTick(() => {
+                callback(null, links.object);
+            });
+        }
 
-        // TODO: attach event listener/observable
-        return true;
+        var obj = this._objectBuilder.buildObject(document, mapping.type);
+        var links = this._linkObject(obj, mapping);
+        // save the original document for dirty checking
+        links.originalDocument = document;
+
+        callback(null, obj);
     }
 
-    private _removeFromIdentityMap(id: string): boolean {
+    private _getObjectLinksById(id: Identifier): ObjectLinks {
 
-        if(!Map.hasProperty(this._identityMap, id)) {
-            return false;
-        }
-
-        delete this._identityMap[id];
-        this._objectStates[id] = ObjectState.Detached;
-
-        // TODO: remove event listener/observable
-        return true;
+        return this._objectLinks[id.toString()];
     }
 
-    private _getObjectState(mapping: TypeMapping, obj: any): ObjectState {
+    private _getObjectLinks(obj: any): ObjectLinks {
 
-        var id = mapping.getIdentifierValue(obj);
-        if(id === undefined) {
-            return ObjectState.New;
+        var id = obj["_id"];
+        if(id) {
+            var links = this._objectLinks[id.toString()];
+            if(!links) {
+                // If we have an id but no links then the object must be detached since we assume that we manage
+                // the assignment of the identifier. Create object links.
+                links = this._linkObject(obj);
+                links.state = ObjectState.Detached;
+            }
+            return links;
+        }
+    }
+
+    private _linkObject(obj: any, mapping?: TypeMapping, operation = Operation.None): ObjectLinks {
+
+        if(!mapping) {
+            var mapping = this._mappingRegistry.getMappingForObject(obj);
+            if(!mapping) {
+                throw new Error("Object is not mapped as a document type.");
+            }
         }
 
-        if(Map.hasProperty(this._objectStates, id)) {
-            return this._objectStates[id];
+        var links = {
+            state: ObjectState.Managed,
+            scheduledOperation: operation,
+            object: obj,
+            mapping: mapping
         }
 
-        // TODO: how to handle unknown state
-        return ObjectState.Detached;
+        return this._objectLinks[obj["_id"].toString()] = links;
+    }
+
+    private _unlinkObject(links: ObjectLinks): void {
+
+        delete this._objectLinks[links.object["_id"].toString()];
+        // if the object was never persisted or if it has been removed, then clear it's identifier as well
+        if(links.scheduledOperation == Operation.Insert || links.state == ObjectState.Removed) {
+            this._clearIdentifier(links.object);
+        }
+    }
+
+    private _clearIdentifier(obj: any): void {
+
+        delete obj["_id"];
     }
 }
 

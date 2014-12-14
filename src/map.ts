@@ -82,7 +82,8 @@ module Map {
         return result;
     }
 
-    var nextHashCode = 0;
+    var nextHashCode = 1;
+    var hashCodeName = "__hashCode" + (new Date().getTime()) + "__";
 
     /**
      * Gets a unique identifier for objects that can be used as the key for a map.
@@ -90,11 +91,15 @@ module Map {
      */
     export function getHashCode(obj: any): string {
 
-        if(hasProperty(obj, "__hashCode__")) {
-            return obj.__hashCode__;
+        // TODO: Should we use hasProperty?
+        if(obj[hashCodeName]) {
+            return obj[hashCodeName];
         }
         else {
-            Object.defineProperty(obj, "__hashCode__", {
+            if(!Object.isExtensible(obj)) {
+                throw new Error("Cannot get hash code for object that is not extensible.");
+            }
+            Object.defineProperty(obj, hashCodeName, {
                 configurable: false,
                 enumerable: false,
                 writable: false,
