@@ -1,10 +1,10 @@
-/// <reference path="../typings/async.d.ts" />
+/// <reference path="../../typings/async.d.ts" />
 
 import async = require("async");
 import Callback = require("callback");
 import CollectionTable = require("driver/collectionTable");
 import DocumentBuilder = require("./documentBuilder");
-import TypeMapping = require("./mapping/typeMapping");
+import TypeMapping = require("../mapping/typeMapping");
 
 class DocumentPersister {
 

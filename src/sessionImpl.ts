@@ -1,16 +1,18 @@
+import Callback = require("./callback");
 import ChangeTracking = require("./mapping/changeTracking");
 import CollectionTable = require("./driver/collectionTable");
 import Constructor = require("./constructor");
-import MappingRegistry = require("./mapping/mappingRegistry");
-import Map = require("./map");
-import Callback = require("./callback");
-import ResultCallback = require("./resultCallback");
-import TypeMapping = require("./mapping/typeMapping");
-import Identifier = require("./id/identifier");
+import DocumentBuilder = require("./persister/documentBuilder");
+import DocumentPersister = require("./persister/documentPersister");
 import LockMode = require("./lockMode");
-import ObjectBuilder = require("./objectBuilder");
-import DocumentPersister = require("./documentPersister");
-import DocumentBuilder = require("./documentBuilder");
+import Identifier = require("./id/identifier");
+import Map = require("./map");
+import MappingRegistry = require("./mapping/mappingRegistry");
+import ObjectBuilder = require("./persister/objectBuilder");
+import ResultCallback = require("./resultCallback");
+import Session = require("./session");
+import SessionFactory = require("./sessionFactory");
+import TypeMapping = require("./mapping/typeMapping");
 
 enum ObjectState {
 
@@ -32,11 +34,18 @@ enum ObjectState {
 }
 
 enum Operation {
+
     None = 0,
     Insert,
     Update,
     Delete,
     DirtyCheck
+}
+
+enum ObjectFlags {
+
+    None = 0,
+    ReadOnly = 0x00000001
 }
 
 // TODO: option to use weak reference until object is removed or modified and attach event to unlink if garbage collected? https://github.com/TooTallNate/node-weak
@@ -50,7 +59,7 @@ interface ObjectLinks {
 }
 
 // TODO: read-only query results, read-only annotation for classes, raise events on UnitOfWork
-class UnitOfWork {
+class SessionImpl implements Session {
 
     private _collections: CollectionTable;
     private _mappingRegistry: MappingRegistry;
@@ -59,12 +68,12 @@ class UnitOfWork {
     private _objectBuilder: ObjectBuilder;
     private _documentBuilder: DocumentBuilder;
 
-    constructor(collections: CollectionTable, mappingRegistry: MappingRegistry) {
+    constructor(sessionFactory: SessionFactory) {
 
-        this._collections = collections;
-        this._mappingRegistry = mappingRegistry;
-        this._objectBuilder = new ObjectBuilder(mappingRegistry);
-        this._documentBuilder = new DocumentBuilder(mappingRegistry);
+        this._collections = sessionFactory.collections;
+        this._mappingRegistry = sessionFactory.mappingRegistry;
+        this._objectBuilder = new ObjectBuilder(this._mappingRegistry);
+        this._documentBuilder = new DocumentBuilder(this._mappingRegistry);
     }
 
     persist (obj: any): void {
@@ -137,14 +146,25 @@ class UnitOfWork {
 
     flush(callback: Callback): void {
 
-        // get all links ordered by root mapping then operation
+        // Get all list of all object links. A for-in loop is slow so build a list from the map since we are going
+        // to have to iterate through the list several times.
         var list = this._getAllObjectLinks();
 
+        /*
+        for(var i = 0, l = list.length; i < l; i++) {
+            var links = list[i];
+            // TODO: ignore read-only objects
+            // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
+            if(links.scheduledOperation == Operation.DirtyCheck || (links.mapping.rootType.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
+
+                var document = this._documentBuilder.buildDocument(links.object, links.mapping.type);
+            }
+        }
+        */
+
+        // MongoDB bulk operations need to be ordered by operation type or they are not executed
+        // as bulk operations
         var persister = new DocumentPersister(this._collections, this._documentBuilder);
-
-        // TODO: need to do dirty check first
-
-        // MongoDB's bulk operations need to be ordered by operation type or they are not executed as bulk operations
 
         // Add all inserts
         for(var i = 0, l = list.length; i < l; i++) {
@@ -173,7 +193,7 @@ class UnitOfWork {
         persister.execute(callback);
     }
 
-    find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void {
+    find<T>(ctr: Constructor<T>, id: string, callback: ResultCallback<T>): void {
 
         // check to see if object is already loaded
         var links = this._getObjectLinksById(id);
@@ -189,7 +209,7 @@ class UnitOfWork {
             return callback(new Error("Object is not mapped as a document type."));
         }
 
-        this._collections[mapping.id].findOne({ _id: id }, (err, document) => {
+        this._collections[mapping.rootType.id].findOne({ _id: mapping.rootType.identityGenerator.fromString(id) }, (err, document) => {
             if(err) return callback(err);
 
             this._load(mapping, document, callback);
@@ -278,8 +298,8 @@ class UnitOfWork {
 
     private _unlinkObject(links: ObjectLinks): void {
 
-        delete this._objectLinks[links.object["_id"].toString()];
         this._objectLinksCount--;
+        delete this._objectLinks[links.object["_id"].toString()];
 
         // if the object was never persisted or if it has been removed, then clear it's identifier as well
         if(links.scheduledOperation == Operation.Insert || links.state == ObjectState.Removed) {
@@ -293,4 +313,4 @@ class UnitOfWork {
     }
 }
 
-export = UnitOfWork;
+export = SessionImpl;

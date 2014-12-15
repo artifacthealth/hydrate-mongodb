@@ -2,7 +2,7 @@
 
 import async = require("async");
 import DriverCursor = require("./driver/cursor");
-import UnitOfWork = require("./unitOfWork");
+import UnitOfWork = require("./sessionImpl");
 
 class Cursor {
 /*

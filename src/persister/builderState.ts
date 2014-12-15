@@ -1,4 +1,4 @@
-/// <reference path="../typings/tsreflect.d.ts" />
+/// <reference path="../../typings/tsreflect.d.ts" />
 
 import reflect = require("tsreflect");
 import BuilderError = require("./builderError");

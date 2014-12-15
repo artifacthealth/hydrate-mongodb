@@ -13,8 +13,8 @@ class ObjectIdGenerator implements IdentityGenerator {
         return <Identifier>new ObjectID();
     }
 
-    validate(id: Identifier): boolean {
-        return id instanceof ObjectID;
+    fromString(text: string): Identifier {
+        return <Identifier>ObjectID.createFromHexString(text);
     }
 }
 

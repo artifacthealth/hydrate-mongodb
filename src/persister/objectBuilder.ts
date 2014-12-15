@@ -1,16 +1,15 @@
-/// <reference path="../typings/tsreflect.d.ts" />
+/// <reference path="../../typings/tsreflect.d.ts" />
 
 import reflect = require("tsreflect");
-import PropertyFlags = require("./mapping/propertyFlags");
-import TypeMapping = require("./mapping/typeMapping");
-import Property = require("./mapping/property");
-import MappingRegistry = require("./mapping/mappingRegistry");
-import MappingFlags = require("./mapping/typeMappingFlags");
-import ReflectHelper = require("./reflectHelper");
+import PropertyFlags = require("../mapping/propertyFlags");
+import TypeMapping = require("../mapping/typeMapping");
+import Property = require("../mapping/property");
+import MappingRegistry = require("../mapping/mappingRegistry");
+import ReflectHelper = require("../reflectHelper");
 import BuilderState = require("./builderState");
-import Identifier = require("./id/identifier");
+import Identifier = require("../id/identifier");
 
-class DocumentBuilder {
+class ObjectBuilder {
 
     private _mappingRegistry: MappingRegistry;
 
@@ -19,54 +18,56 @@ class DocumentBuilder {
         this._mappingRegistry = mappingRegistry;
     }
 
-    buildDocument(obj: any, type: reflect.Type): any {
+    buildObject(document: any, type: reflect.Type): any {
 
         var state = new BuilderState();
 
-        var document = this._buildDocument(obj, type, state, true);
+        var obj = this._buildObject(document, type, state, true);
         if(state.errors.length > 0) {
             throw new Error(state.getErrorMessage());
         }
 
-        return document;
+        return obj;
     }
 
-    private _buildDocument(obj: any, type: reflect.Type, state: BuilderState, isRoot?: boolean): any {
+    private _buildObject(document: any, type: reflect.Type, state: BuilderState, isRoot?: boolean): any {
 
-        var document: any = {};
-
-        // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
-        // does not exist, default to mapping for type.
-        var mapping = this._mappingRegistry.getMappingForObject(obj) || this._mappingRegistry.getMappingForType(type);
+        var mapping = this._mappingRegistry.getMappingForType(type);
         if(!mapping) {
-            state.addError("No mapping available for type '" + type.getFullName() + "'.", type, obj);
+            state.addError("No mapping available for type '" + type.getFullName() + "'.", type, document);
             return;
         }
 
+        var obj: any = mapping.type.isClass() ? mapping.type.createObject() : {};
+
         var id: Identifier;
         if(mapping.isDocumentType) {
-            // TODO: allow mapping to map document identifier field to different property on object
-            id = obj[mapping.rootType.identityField];
-            if(!id) {
-                state.addError("Missing identifier.", type, obj);
-                return;
+            if(isRoot) {
+                // TODO: allow mapping to map document identifier field to different property on object
+                id = document[mapping.rootType.identityField];
+                if(!id) {
+                    state.addError("Missing identifier.", type, document);
+                    return;
+                }
             }
-            if(!isRoot) {
-                // If we have a document type and this is not the root object, then just save a reference to the object.
-                return id;
+            else {
+                // TODO: how to handle reference
+                return document;
             }
         }
 
-        // TODO: change to use Map.hashCode
-        // track embedded objects to make sure we don't have an infinite loop
-        var embedded = false;
-        if(mapping.isEmbeddedType) {
-            if(state.visited.indexOf(obj) !== -1) {
-                state.addError("Recursive reference of embedded type is not allowed.", type, obj);
+        // get mapping based on discriminator field if one exists
+        if(mapping.discriminatorField) {
+            var discriminatorValue = document[mapping.discriminatorField];
+            if(discriminatorValue === undefined) {
+                state.addError("Expected discriminator field '" + mapping.discriminatorField + "'.", type, document);
                 return;
             }
-            state.visited.push(obj);
-            embedded = true;
+            mapping = mapping.getMappingByDiscriminator(discriminatorValue);
+            if(mapping == undefined) {
+                state.addError("Unknown discriminator value '" + discriminatorValue + "'.", type, document);
+                return;
+            }
         }
 
         var properties = mapping.properties;
@@ -78,41 +79,24 @@ class DocumentBuilder {
             if(flags & (PropertyFlags.Ignored | PropertyFlags.InverseSide)) {
                 continue;
             }
+            // TODO: how to handle inverse side of reference
 
-            var value = property.symbol.getValue(obj);
-
+            var value = document[property.field];
             if(value == undefined || value == null) {
-                // skip undefined or null values unless allowed
-                if((flags & PropertyFlags.Nullable) == 0) {
-                    continue;
-                }
-                // if nullable, store undefined values as null
-                value = null;
-            }
-            else {
-                state.path.push(property.name);
-                value = this._buildValue(value, property.symbol.getType(), state);
-                state.path.pop();
+                continue;
             }
 
-            document[property.field] = value;
-        }
-
-        if(embedded) {
-            state.visited.pop();
-        }
-
-        // add discriminator
-        if(mapping.discriminatorField) {
-            document[mapping.discriminatorField] = mapping.discriminatorValue;
+            state.path.push(property.name);
+            property.symbol.setValue(obj, this._buildValue(value, property.symbol.getType(), state));
+            state.path.pop();
         }
 
         // if this is the root then set the identifier
         if(isRoot) {
-            document[mapping.rootType.identityField] = id;
+            obj[mapping.rootType.identityField] = id;
         }
 
-        return document;
+        return obj;
     }
 
     private _buildValue(value: any, type: reflect.Type, state: BuilderState): any {
@@ -149,11 +133,14 @@ class DocumentBuilder {
         }
 
         if(type.isEnum()) {
-            if(typeof value !== "number") {
-                state.addError("Expected enum value to be a number.", type, value);
-                return;
+            if(typeof value == "string") {
+                return type.getEnumValue(value);
             }
-            return type.getEnumName(value);
+            if(typeof value == "number") {
+                return value;
+            }
+            state.addError("Enum value must be a string or number.", type, value);
+            return;
         }
 
         if(type.isTuple()) {
@@ -184,7 +171,7 @@ class DocumentBuilder {
             return this._cloneRegExp(value);
         }
 
-        return this._buildDocument(value, type, state);
+        return this._buildObject(value, type, state);
     }
 
     private _buildTuple(source: any, sourceType: reflect.Type, state: BuilderState): any {
@@ -215,7 +202,9 @@ class DocumentBuilder {
 
         var ret = new Array(source.length);
         for (var i = 0, l = source.length; i < l; i++) {
+            state.path.push(i);
             ret[i] = this._buildValue(source[i], elementType, state);
+            state.path.pop();
         }
         return ret;
     }
@@ -236,4 +225,4 @@ class DocumentBuilder {
     }
 }
 
-export = DocumentBuilder;
+export = ObjectBuilder;

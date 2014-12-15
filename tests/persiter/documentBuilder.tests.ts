@@ -1,16 +1,16 @@
-/// <reference path="../typings/mocha.d.ts"/>
-/// <reference path="../typings/chai.d.ts"/>
+/// <reference path="../../typings/mocha.d.ts"/>
+/// <reference path="../../typings/chai.d.ts"/>
 
 import chai = require("chai");
 import assert = chai.assert;
-import helpers = require("./helpers");
-import model = require("./fixtures/model");
-import MongoDriver = require("../src/driver/mongoDriver");
+import helpers = require("../helpers");
+import model = require("../fixtures/model");
+import MongoDriver = require("../../src/driver/mongoDriver");
 
-import MappingRegistry = require("../src/mapping/mappingRegistry");
-import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
-import DocumentBuilder = require("../src/documentBuilder");
-import Configuration = require("../src/config/configuration");
+import MappingRegistry = require("../../src/mapping/mappingRegistry");
+import AnnotationMappingProvider = require("../../src/mapping/providers/annotationMappingProvider");
+import DocumentBuilder = require("../../src/persister/documentBuilder");
+import Configuration = require("../../src/config/configuration");
 
 describe('DocumentBuilder', () => {
 

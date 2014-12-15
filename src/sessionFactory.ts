@@ -1,7 +1,8 @@
-import Connection = require("./driver/connection");
 import CollectionTable = require("./driver/collectionTable");
-import Session = require("./session");
+import Connection = require("./driver/connection");
 import MappingRegistry = require("./mapping/mappingRegistry");
+import Session = require("./session");
+import SessionImpl = require("./sessionImpl");
 
 class SessionFactory {
 
@@ -11,7 +12,7 @@ class SessionFactory {
 
     createSession(): Session {
 
-        return new Session(this);
+        return new SessionImpl(this);
     }
 }
 
