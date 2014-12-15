@@ -48,7 +48,7 @@ class DocumentBuilder {
             // TODO: allow mapping to map document identifier field to different property on object
             id = obj[mapping.rootType.identityField];
             if(!id) {
-                state.addError("Expected document type object to have an identifier.", type, obj);
+                state.addError("Missing identifier.", type, obj);
                 return;
             }
             if(!isRoot) {
@@ -57,6 +57,7 @@ class DocumentBuilder {
             }
         }
 
+        // TODO: change to use Map.hashCode
         // track embedded objects to make sure we don't have an infinite loop
         var embedded = false;
         if(mapping.isEmbeddedType) {

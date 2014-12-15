@@ -29,6 +29,7 @@ class Session {
 
     find<T>(ctr: Constructor<T>, id: Identifier, callback: (err: Error, result: T) => void): void {
 
+        this._uow.find(ctr, id, callback);
     }
 
     query<T>(ctr: Constructor<T>): QueryBuilder<T> {

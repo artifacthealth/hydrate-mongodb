@@ -91,8 +91,7 @@ module Map {
      */
     export function getHashCode(obj: any): string {
 
-        // TODO: Should we use hasProperty?
-        if(obj[hashCodeName]) {
+        if(hasProperty(obj, hashCodeName)) {
             return obj[hashCodeName];
         }
         else {

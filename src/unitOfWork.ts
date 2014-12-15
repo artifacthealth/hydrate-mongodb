@@ -15,19 +15,18 @@ import DocumentBuilder = require("./documentBuilder");
 enum ObjectState {
 
     /**
-     * Managed entities have a persistent identity and are associated with a persistence context.
+     * Managed entities have a persistent identity and are associated with a session.
      */
     Managed,
 
     /**
-     * Detached entities have a persistent identity and are not currently associated with a persistence context.
+     * Detached entities have a persistent identity and are not currently associated with a session.
      */
     Detached,
 
     /**
-     * Removed entities  have a persistent identity, are associated with a persistent context, and are
-     * scheduled for deletion from the mongodb. Once the entity is deleted from the mongodb, it is considered a
-     * new entity.
+     * Removed entities  have a persistent identity, are associated with a session, and are scheduled for deletion
+     * from the mongodb. Once the entity is deleted from the mongodb, it is considered a new entity.
      */
     Removed
 }
@@ -50,11 +49,13 @@ interface ObjectLinks {
     mapping: TypeMapping;
 }
 
+// TODO: read-only query results, read-only annotation for classes, raise events on UnitOfWork
 class UnitOfWork {
 
     private _collections: CollectionTable;
     private _mappingRegistry: MappingRegistry;
     private _objectLinks: Map<ObjectLinks> = {};
+    private _objectLinksCount = 0;
     private _objectBuilder: ObjectBuilder;
     private _documentBuilder: DocumentBuilder;
 
@@ -136,20 +137,40 @@ class UnitOfWork {
 
     flush(callback: Callback): void {
 
-        var persisters: { [id: number]: DocumentPersister } = {};
+        // get all links ordered by root mapping then operation
+        var list = this._getAllObjectLinks();
 
-        var objectLinks = this._objectLinks;
-        for(var id in objectLinks) {
-            if(objectLinks.hasOwnProperty(id)) {
-                var links = objectLinks[id];
-                var rootMappingId = links.mapping.rootType.id;
-                var persister = persisters[rootMappingId];
-                if(!persister) {
-                    persister = new DocumentPersister(this._collections[rootMappingId], this._documentBuilder);
-                    persisters[rootMappingId] = persister;
-                }
+        var persister = new DocumentPersister(this._collections, this._documentBuilder);
+
+        // TODO: need to do dirty check first
+
+        // MongoDB's bulk operations need to be ordered by operation type or they are not executed as bulk operations
+
+        // Add all inserts
+        for(var i = 0, l = list.length; i < l; i++) {
+            var links = list[i];
+            if (links.scheduledOperation == Operation.Insert) {
+                persister.addInsert(links.object, links.mapping);
             }
         }
+
+        // Add all updates
+        for(var i = 0, l = list.length; i < l; i++) {
+            var links = list[i];
+            if (links.scheduledOperation == Operation.Update) {
+                persister.addUpdate(links.object, links.mapping);
+            }
+        }
+
+        // Add all deletes
+        for(var i = 0, l = list.length; i < l; i++) {
+            var links = list[i];
+            if (links.scheduledOperation == Operation.Delete) {
+                persister.addDelete(links.object, links.mapping);
+            }
+        }
+
+        persister.execute(callback);
     }
 
     find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void {
@@ -205,6 +226,21 @@ class UnitOfWork {
         return this._objectLinks[id.toString()];
     }
 
+    private _getAllObjectLinks(): ObjectLinks[] {
+
+        var ret: ObjectLinks[] = new Array(this._objectLinksCount),
+            i = 0;
+
+        var objectLinks = this._objectLinks;
+        for(var id in objectLinks) {
+            if (objectLinks.hasOwnProperty(id)) {
+                ret[i++] = objectLinks[id];
+            }
+        }
+
+        return ret;
+    }
+
     private _getObjectLinks(obj: any): ObjectLinks {
 
         var id = obj["_id"];
@@ -236,12 +272,15 @@ class UnitOfWork {
             mapping: mapping
         }
 
+        this._objectLinksCount++;
         return this._objectLinks[obj["_id"].toString()] = links;
     }
 
     private _unlinkObject(links: ObjectLinks): void {
 
         delete this._objectLinks[links.object["_id"].toString()];
+        this._objectLinksCount--;
+
         // if the object was never persisted or if it has been removed, then clear it's identifier as well
         if(links.scheduledOperation == Operation.Insert || links.state == ObjectState.Removed) {
             this._clearIdentifier(links.object);

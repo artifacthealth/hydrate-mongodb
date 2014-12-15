@@ -108,18 +108,18 @@ class Configuration {
 
             // only root types are mapped to a collection
             if(!mapping.isRootType) {
-                return callback();
+                return done();
             }
 
             // make sure we have a collection name
             if (!mapping.collectionName) {
-                return callback(new Error("Missing collection name on mapping for type '" + mapping.type.getFullName() + "'."));
+                return done(new Error("Missing collection name on mapping for type '" + mapping.type.getFullName() + "'."));
             }
 
             // make sure db/collection is not mapped to some other type.
             var key = [(mapping.databaseName || connection.db.databaseName), "/", mapping.collectionName].join("");
             if (Map.hasProperty(names, key)) {
-                return callback(new Error("Duplicate collection name '" + key + "' on type '" + mapping.type.getFullName() + "' ."));
+                return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.type.getFullName() + "' ."));
             }
             names[key] = true;
 
@@ -129,24 +129,34 @@ class Configuration {
                 db = db.db(mapping.databaseName);
             }
 
-            // try to get the collection
-            db.collection(mapping.collectionName, { strict: true }, (err: Error, collection: Collection) => {
+            db.collectionNames(mapping.collectionName, null, (err: Error, names: string[]): void => {
+                if(err) return done(err);
 
-                // if there is an error getting the collection, try to create it
-                if(err) {
-                    db.createCollection(mapping.collectionName, mapping.collectionOptions || {}, addToCollectionTable);
+                if(names.length == 0) {
+                    // collection does not exist, create it
+                    db.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
+                        if(err) return done(err);
+                        collections[mapping.id] = collection;
+                        // TODO: create indexes for newly created collection
+                        done();
+                    });
                 }
                 else {
-                    addToCollectionTable(null, collection);
+                    // collection exists, get it
+                    db.collection(mapping.collectionName, { strict: true }, (err: Error, collection: Collection) => {
+                        if(err) return done(err);
+                        collections[mapping.id] = collection;
+                        done();
+                    });
                 }
+
             });
 
-            function addToCollectionTable(err: Error, collection: Collection): void {
-                if(err) return callback(err);
-                collections[mapping.id] = collection;
-                callback();
+            function done(err?: Error): void {
+                process.nextTick(() => {
+                    callback(err);
+                });
             }
-
         }, (err) => {
             if(err) return callback(err);
             callback(null, collections);
