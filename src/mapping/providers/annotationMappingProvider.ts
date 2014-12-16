@@ -234,7 +234,7 @@ class TypeMappingBuilder {
     private _populateTypeMapping(mapping: TypeMapping): void {
 
         if(mapping.flags & TypeMappingFlags.DocumentType) {
-            mapping.rootType = this._getRootTypeMapping(mapping);
+            mapping.root = this._getRootTypeMapping(mapping);
         }
 
         // get type level annotations

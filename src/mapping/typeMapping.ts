@@ -35,7 +35,7 @@ class TypeMapping {
     /**
      * The mapping for the type that is at the root of an inheritance hierarchy.
      */
-    rootType: TypeMapping;
+    root: TypeMapping;
 
     changeTracking: ChangeTracking;
 
@@ -65,7 +65,7 @@ class TypeMapping {
     addIndex(index: Index): void {
 
         if(!this.isRootType) {
-            this.rootType.addIndex(index);
+            this.root.addIndex(index);
             return;
         }
 
@@ -100,12 +100,12 @@ class TypeMapping {
     setDiscriminatorValue(value: string): void {
 
         this.discriminatorValue = value;
-        this.rootType.addDiscriminatorMapping(value, this);
+        this.root.addDiscriminatorMapping(value, this);
     }
 
     getMappingByDiscriminator(value: string): TypeMapping {
 
-        return Map.getProperty(this.rootType._discriminatorMap, value);
+        return Map.getProperty(this.root._discriminatorMap, value);
     }
 
     addDiscriminatorMapping(value: string, mapping: TypeMapping): void {
@@ -155,18 +155,18 @@ class TypeMapping {
      * @param obj The object
      */
     getIdentifierValue(obj: any): string {
-        var id = obj[this.rootType.identityField];
+        var id = obj[this.root.identityField];
         if(id) {
             return id.toString();
         }
     }
 
     generateIdentifier(): Identifier {
-        return this.rootType.identityGenerator.generate();
+        return this.root.identityGenerator.generate();
     }
 
     hasChangeTracking(changeTracking: ChangeTracking): boolean {
-        return this.rootType.changeTracking === changeTracking;
+        return this.root.changeTracking === changeTracking;
     }
 
     /**
@@ -210,7 +210,7 @@ class TypeMapping {
             }
             else {
                 // inherit values from root type
-                this.discriminatorField = this.rootType.discriminatorField;
+                this.discriminatorField = this.root.discriminatorField;
             }
 
             // if we are a document type and the the discriminatorValue is not set, default to the class name

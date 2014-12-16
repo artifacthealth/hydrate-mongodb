@@ -44,7 +44,7 @@ class ObjectBuilder {
         if(mapping.isDocumentType) {
             if(isRoot) {
                 // TODO: allow mapping to map document identifier field to different property on object
-                id = document[mapping.rootType.identityField];
+                id = document[mapping.root.identityField];
                 if(!id) {
                     state.addError("Missing identifier.", type, document);
                     return;
@@ -93,7 +93,7 @@ class ObjectBuilder {
 
         // if this is the root then set the identifier
         if(isRoot) {
-            obj[mapping.rootType.identityField] = id;
+            obj[mapping.root.identityField] = id;
         }
 
         return obj;

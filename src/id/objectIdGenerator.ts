@@ -16,6 +16,10 @@ class ObjectIdGenerator implements IdentityGenerator {
     fromString(text: string): Identifier {
         return <Identifier>ObjectID.createFromHexString(text);
     }
+
+    isIdentifier(value: any): boolean {
+        return value instanceof ObjectID;
+    }
 }
 
 export = ObjectIdGenerator;

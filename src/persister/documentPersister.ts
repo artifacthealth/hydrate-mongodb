@@ -38,7 +38,6 @@ class DocumentPersister {
     execute(callback: Callback): void {
 
         async.each(this._batches, (batch: any, done: (err?: Error) => void) => {
-
             batch.execute(done);
 
         }, (err: Error) => {
@@ -49,7 +48,7 @@ class DocumentPersister {
 
     private _getBatch(mapping: TypeMapping): any {
 
-        var id = mapping.rootType.id,
+        var id = mapping.root.id,
             batch = this._batchTable[id];
 
         if(batch === undefined) {

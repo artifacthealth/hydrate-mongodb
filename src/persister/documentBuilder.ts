@@ -45,15 +45,20 @@ class DocumentBuilder {
 
         var id: Identifier;
         if(mapping.isDocumentType) {
-            // TODO: allow mapping to map document identifier field to different property on object
-            id = obj[mapping.rootType.identityField];
-            if(!id) {
-                state.addError("Missing identifier.", type, obj);
-                return;
+            // TODO: what if obj is an identifier
+            if(mapping.root.identityGenerator.isIdentifier(obj)) {
+                return obj;
             }
-            if(!isRoot) {
-                // If we have a document type and this is not the root object, then just save a reference to the object.
-                return id;
+            else {
+                id = obj[mapping.root.identityField];
+                if (!id) {
+                    state.addError("Missing identifier.", type, obj);
+                    return;
+                }
+                if (!isRoot) {
+                    // If we have a document type and this is not the root object, then just save a reference to the object.
+                    return id;
+                }
             }
         }
 
@@ -62,7 +67,7 @@ class DocumentBuilder {
         var embedded = false;
         if(mapping.isEmbeddedType) {
             if(state.visited.indexOf(obj) !== -1) {
-                state.addError("Recursive reference of embedded type is not allowed.", type, obj);
+                state.addError("Recursive reference of embedded object is not allowed.", type, obj);
                 return;
             }
             state.visited.push(obj);
@@ -109,7 +114,7 @@ class DocumentBuilder {
 
         // if this is the root then set the identifier
         if(isRoot) {
-            document[mapping.rootType.identityField] = id;
+            document[mapping.root.identityField] = id;
         }
 
         return document;

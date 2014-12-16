@@ -6,8 +6,8 @@ import ResultCallback = require("./resultCallback");
 
 interface Session {
 
-    persist (obj: any): void;
-    remove (obj: any): void;
+    persist(obj: any, callback: Callback): void;
+    remove(obj: any): void;
     detach(obj: any): void;
     flush(callback: Callback): void;
     find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void;
