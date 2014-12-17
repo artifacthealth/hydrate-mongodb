@@ -57,10 +57,10 @@ class ObjectBuilder {
         }
 
         // get mapping based on discriminator field if one exists
-        if(mapping.discriminatorField) {
-            var discriminatorValue = document[mapping.discriminatorField];
+        if(mapping.root.discriminatorField) {
+            var discriminatorValue = document[mapping.root.discriminatorField];
             if(discriminatorValue === undefined) {
-                state.addError("Expected discriminator field '" + mapping.discriminatorField + "'.", type, document);
+                state.addError("Expected discriminator field '" + mapping.root.discriminatorField + "'.", type, document);
                 return;
             }
             mapping = mapping.getMappingByDiscriminator(discriminatorValue);

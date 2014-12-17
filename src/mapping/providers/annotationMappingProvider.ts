@@ -283,7 +283,6 @@ class TypeMappingBuilder {
         for(var i = 0, l = properties.length; i < l; i++) {
             var symbol = properties[i];
             if(!symbol.isProperty()) continue;
-
             try {
                 var property = this._createProperty(mapping, symbol);
                 // add to mapping after property has been fully initialized
@@ -313,6 +312,8 @@ class TypeMappingBuilder {
                     case "transient":
                         property.setFlags(PropertyFlags.Ignored);
                         break;
+                    case "cascade":
+                        this._setCascade(property, annotation.value);
                     case "field":
                         this._setField(property, annotation.value);
                         break;
@@ -505,6 +506,32 @@ class TypeMappingBuilder {
                 break;
             default:
                 throw new Error("Unknown change tracking policy: " + value);
+        }
+    }
+
+    private _setCascade(property: Property, value: any): void {
+
+        if(typeof value !== "string") {
+            throw new Error("Property 'cascade' should be of type string.")
+        }
+
+        var cascades = value.split(",");
+        for(var i = 0, l = cascades.length; i < l; i++) {
+            var cascade = cascades[i].trim().toLowerCase();
+            switch(cascade) {
+                case "all":
+                    property.setFlags(PropertyFlags.CascadeAll);
+                    break;
+                case "save":
+                    property.setFlags(PropertyFlags.CascadeSave);
+                    break;
+                case "remove":
+                    property.setFlags(PropertyFlags.CascadeRemove);
+                    break;
+                case "detach":
+                    property.setFlags(PropertyFlags.CascadeDetach);
+                    break;
+            }
         }
     }
 

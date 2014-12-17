@@ -57,6 +57,8 @@ class Configuration {
             }
             if(error) return callback(error, null);
 
+            // TODO: tell mongodb not to generate objectid. all ids should come from us.
+
             this._driver.connect(this._options.uri, this._options.connectionOptions || {}, (err, connection) => {
                 if(err) return callback(err);
                 this._createFactory(connection, callback);

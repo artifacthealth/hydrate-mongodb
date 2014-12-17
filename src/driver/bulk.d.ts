@@ -1,3 +1,5 @@
+import BulkWriteResult = require("./bulkWriteResult");
+
 interface Bulk {
 
     /**
@@ -56,8 +58,8 @@ interface Bulk {
      * @param {boolean} [options.fsync=false] Specify a file sync write concern.
      * @param {UnorderedBulkOperation~resultCallback} callback The result callback
      */
-    execute(callback: (err: Error, result: any) => void): void;
-    execute(options: any, callback: (err: Error, result: any) => void): void;
+    execute(callback: (err: Error, result: BulkWriteResult) => void): void;
+    execute(options: any, callback: (err: Error, result: BulkWriteResult) => void): void;
 }
 
 export = Bulk;

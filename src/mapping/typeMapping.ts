@@ -20,9 +20,9 @@ class TypeMapping {
     indexes: Index[];
     collectionOptions: CollectionOptions;
 
-    properties: Property[];
-    private _propertiesByName: Map<Property>;
-    private _propertiesByField: Map<Property>;
+    properties: Property[] = [];
+    private _propertiesByName: Map<Property> = {};
+    private _propertiesByField: Map<Property> = {};
 
     discriminatorField: string;
     discriminatorValue: string;
@@ -39,15 +39,21 @@ class TypeMapping {
 
     changeTracking: ChangeTracking;
 
-    versioned: boolean;
+    versioned: boolean = true;
     versionField: string;
 
-    lockable: boolean;
+    lockable: boolean = true;
     lockField: string;
+
+    classConstructor: Function;
+
 
     constructor(public type: reflect.Type, public flags: TypeMappingFlags) {
 
         this.id = type.getId();
+        if(type.isClass()) {
+            this.classConstructor = type.getConstructor();
+        }
     }
 
     get isEmbeddedType(): boolean {
@@ -76,12 +82,6 @@ class TypeMapping {
     }
 
     addProperty(property: Property): void {
-
-        if(!this.properties) {
-            this.properties = [];
-            this._propertiesByName = {};
-            this._propertiesByField = {};
-        }
 
         var name = property.name;
         if(Map.hasProperty(this._propertiesByName, name)) {
@@ -151,25 +151,6 @@ class TypeMapping {
     }
 
     /**
-     * Gets the object identifier as a string. Returns undefined if the object does not have an identifier.
-     * @param obj The object
-     */
-    getIdentifierValue(obj: any): string {
-        var id = obj[this.root.identityField];
-        if(id) {
-            return id.toString();
-        }
-    }
-
-    generateIdentifier(): Identifier {
-        return this.root.identityGenerator.generate();
-    }
-
-    hasChangeTracking(changeTracking: ChangeTracking): boolean {
-        return this.root.changeTracking === changeTracking;
-    }
-
-    /**
      * Adds default mapping values to TypeMapping. Called by MappingProvider after TypeMapping is created.
      * @param config The configuration.
      */
@@ -207,10 +188,6 @@ class TypeMapping {
                 if(!this.identityGenerator) {
                     this.identityGenerator = config.identityGenerator;
                 }
-            }
-            else {
-                // inherit values from root type
-                this.discriminatorField = this.root.discriminatorField;
             }
 
             // if we are a document type and the the discriminatorValue is not set, default to the class name

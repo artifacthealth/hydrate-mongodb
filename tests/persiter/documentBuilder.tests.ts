@@ -22,21 +22,20 @@ describe('DocumentBuilder', () => {
                 if(err) return done(err);
 
                 var fixture = helpers.requireFixture("model");
-                var generator = new MongoDriver().defaultIdentityGenerator();
 
                 var person = new model.Person(new model.PersonName("Jones", "Bob"));
                 person.phones = [ new model.Phone("303-258-1111", model.PhoneType.Work) ];
-                (<any>person)._id = generator.generate();
+                (<any>person)._id = 1;
                 person.addAttribute("eye color", "hazel");
                 person.addAttribute("hair color", "brown");
                 person.addAttribute("temperament", "angry");
 
                 var parent1 = new model.Person(new model.PersonName("Jones", "Mary"));
-                (<any>parent1)._id = generator.generate();
+                (<any>parent1)._id = 2;
                 person.addParent(parent1);
 
                 var parent2 = new model.Person(new model.PersonName("Jones", "Jack"));
-                (<any>parent2)._id = generator.generate();
+                (<any>parent2)._id = 3;
                 person.addParent(parent2);
 
                 var ret = builder.buildDocument(person, fixture.resolve("Person").getDeclaredType());

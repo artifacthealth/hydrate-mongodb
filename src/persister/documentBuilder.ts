@@ -108,8 +108,8 @@ class DocumentBuilder {
         }
 
         // add discriminator
-        if(mapping.discriminatorField) {
-            document[mapping.discriminatorField] = mapping.discriminatorValue;
+        if(mapping.root && mapping.root.discriminatorField) {
+            document[mapping.root.discriminatorField] = mapping.discriminatorValue;
         }
 
         // if this is the root then set the identifier

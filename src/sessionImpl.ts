@@ -17,7 +17,7 @@ import MappingRegistry = require("./mapping/mappingRegistry");
 import ObjectBuilder = require("./persister/objectBuilder");
 import PropertyFlags = require("./mapping/propertyFlags");
 import ResultCallback = require("./resultCallback");
-import Session = require("./session");
+import InternalSession = require("./internalSession");
 import SessionFactory = require("./sessionFactory");
 import TypeMapping = require("./mapping/typeMapping");
 import TypeMappingFlags = require("./mapping/typeMappingFlags");
@@ -72,12 +72,11 @@ interface ObjectLinks {
 }
 
 // TODO: read-only query results, read-only annotation for classes, raise events on UnitOfWork
-class SessionImpl implements Session {
+class SessionImpl implements InternalSession {
 
     private _collections: CollectionTable;
     private _mappingRegistry: MappingRegistry;
     private _objectLinks: Map<ObjectLinks> = {};
-    private _objectLinksCount = 0;
     private _objectBuilder: ObjectBuilder;
     private _documentBuilder: DocumentBuilder;
 
@@ -89,108 +88,132 @@ class SessionImpl implements Session {
         this._documentBuilder = new DocumentBuilder(this._mappingRegistry);
     }
 
-    persist(obj: any, callback: Callback): void {
+    save(obj: any, callback: Callback): void {
 
-        /*
-        this._persist(obj);
-        callback();
-        */
-
-        this._forEachEntity(obj, (item: any, done: Callback) => {
-            this._persist(item);
-            done();
-        }, callback);
-
+        this._findReferencedEntities(obj, PropertyFlags.CascadeSave, (err, entities) => {
+            if(err) return callback(err);
+            this._saveEntities(entities, callback);
+        });
     }
 
-    _persist(obj: any): void {
+    private _saveEntities(entities: any[], callback: Callback): void {
 
-        var links = this._getObjectLinks(obj);
-        if (!links) {
-            var mapping = this._mappingRegistry.getMappingForObject(obj);
-            if (!mapping) {
-                throw new Error("Object is not mapped as a document type.");
+        for(var i = 0, l = entities.length; i < l; i++) {
+            var obj = entities[i];
+            var links = this._getObjectLinks(obj);
+            if (!links) {
+                var mapping = this._mappingRegistry.getMappingForObject(obj);
+                if (!mapping) {
+                    callback(new Error("Object is not mapped as a document type."));
+                    return;
+                }
+
+                // we haven't seen this object before
+                obj["_id"] = mapping.root.identityGenerator.generate();
+                this._linkObject(obj, mapping, Operation.Insert);
             }
-
-            // we haven't seen this object before
-            obj["_id"] = mapping.generateIdentifier();
-            this._linkObject(obj, mapping, Operation.Insert);
-            return;
-        }
-
-        switch (links.state) {
-            case ObjectState.Managed:
-                if (links.mapping.hasChangeTracking(ChangeTracking.DeferredExplicit) && !links.scheduledOperation) {
-                    links.scheduledOperation = Operation.DirtyCheck;
+            else {
+                switch (links.state) {
+                    case ObjectState.Managed:
+                        if (links.mapping.root.changeTracking == ChangeTracking.DeferredExplicit && !links.scheduledOperation) {
+                            links.scheduledOperation = Operation.DirtyCheck;
+                        }
+                        break;
+                    case ObjectState.Detached:
+                        callback(new Error("Cannot save a detached object."));
+                        return;
+                    case ObjectState.Removed:
+                        // Cancel delete operation and make managed.
+                        links.scheduledOperation = Operation.None;
+                        links.state = ObjectState.Managed;
+                        break;
                 }
-                // TODO: cascade persist to references flagged with cascadepersit even if current object is already managed
-                break;
-            case ObjectState.Detached:
-                throw new Error("Cannot persist a detached object.");
-                break;
-            case ObjectState.Removed:
-                // Cancel delete operation and make managed.
-                links.scheduledOperation = Operation.None;
-                links.state = ObjectState.Managed;
-                break;
+            }
         }
+
+        callback();
     }
 
-    remove(obj: any): void {
+    remove(obj: any, callback: Callback): void {
 
-        // TODO: cascade remove to references flagged with cascaderemove event if current object is not managed
-        var links = this._getObjectLinks(obj);
-        if (!links) return;
-
-        switch (links.state) {
-            case ObjectState.Managed:
-                // if the object has never been persisted then unlink the object and clear it's id
-                if (links.scheduledOperation == Operation.Insert) {
-                    this._unlinkObject(links);
-                }
-                else {
-                    links.scheduledOperation = Operation.Delete;
-                    links.state = ObjectState.Removed;
-                    // TODO: after successful delete operation, unlink the object and clear the object's identifier
-                }
-                break;
-            case ObjectState.Detached:
-                throw new Error("Cannot remove a detached object.");
-                break;
-            case ObjectState.Removed:
-                // nothing to do
-                break;
-        }
+        this._findReferencedEntities(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
+            if(err) return callback(err);
+            this._removeEntities(entities, callback);
+        });
     }
 
-    detach(obj: any): void {
+    private _removeEntities(entities: any[], callback: Callback): void {
 
-        var links = this._getObjectLinks(obj);
-        if (links && links.state == ObjectState.Managed) {
-            this._unlinkObject(links);
+        // remove in reverse order
+        for(var i = entities.length - 1; i >= 0; i--) {
+            var obj = entities[i];
+
+            var links = this._getObjectLinks(obj);
+            if (links) {
+                switch (links.state) {
+                    case ObjectState.Managed:
+                        // if the object has never been persisted then unlink the object and clear it's id
+                        if (links.scheduledOperation == Operation.Insert) {
+                            this._unlinkObject(links);
+                        }
+                        else {
+                            links.scheduledOperation = Operation.Delete;
+                            links.state = ObjectState.Removed;
+                            // TODO: after successful delete operation, unlink the object and clear the object's identifier
+                        }
+                        break;
+                    case ObjectState.Detached:
+                        callback(new Error("Cannot remove a detached object."));
+                        return;
+                }
+            }
         }
+
+        callback();
     }
 
+    detach(obj: any, callback: Callback): void {
+
+        this._findReferencedEntities(obj, PropertyFlags.CascadeDetach, (err, entities) => {
+            if(err) return callback(err);
+            this._detachEntities(entities, callback);
+        });
+    }
+
+    private _detachEntities(entities: any[], callback: Callback): void {
+
+        for(var i = 0, l = entities.length; i < l; i++) {
+            var links = this._getObjectLinks(entities[i]);
+            if (links && links.state == ObjectState.Managed) {
+                this._unlinkObject(links);
+            }
+        }
+
+        callback();
+    }
+
+    // TODO: make callback optional on operations (e.g. persist, etc.) and throw error during flush if callback was not provided to operation
+    // TODO: wait for any pending operations (e.g. persist, etc.) to complete before flush is executed
+    // TODO: if flush is executing, delay any operations (e.g. persist, etc.) until after flush has completed
+    // TODO: if flush fails, mark session invalid and don't allow any further operations?
+    // TODO: if operations fails (e.g. persist, etc.) should session become invalid?
     flush(callback: Callback): void {
 
         // Get all list of all object links. A for-in loop is slow so build a list from the map since we are going
         // to have to iterate through the list several times.
         var list = this._getAllObjectLinks();
 
-        /*
-         for(var i = 0, l = list.length; i < l; i++) {
-         var links = list[i];
-         // TODO: ignore read-only objects
-         // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
-         if(links.scheduledOperation == Operation.DirtyCheck || (links.mapping.rootType.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
-
-         var document = this._documentBuilder.buildDocument(links.object, links.mapping.type);
-         }
-         }
-         */
+        for(var i = 0, l = list.length; i < l; i++) {
+            var links = list[i];
+            // TODO: ignore read-only objects
+            // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
+            if (links.scheduledOperation == Operation.DirtyCheck || (links.mapping.root.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
+                var document = this._documentBuilder.buildDocument(links.object, links.mapping.type);
+            }
+        }
 
         // MongoDB bulk operations need to be ordered by operation type or they are not executed
-        // as bulk operations
+        // as bulk operations. The DocumentPersister will group operations by collection but will not reorder them.
         var persister = new DocumentPersister(this._collections, this._documentBuilder);
 
         // Add all inserts
@@ -217,7 +240,16 @@ class SessionImpl implements Session {
             }
         }
 
-        persister.execute(callback);
+        // TODO: what to do if we get an error during execute? Should we make the session invalid?
+        persister.execute(err => {
+            if(err) return callback(err);
+
+            // clear any scheduled operations
+            for (var i = 0, l = list.length; i < l; i++) {
+                list[i].scheduledOperation = Operation.None;
+            }
+            callback();
+        });
     }
 
     find<T>(ctr: Constructor<T>, id: string, callback: ResultCallback<T>): void {
@@ -242,17 +274,16 @@ class SessionImpl implements Session {
         }
     }
 
-    private _find(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void {
+    clear(): void {
 
-        var links = this._getObjectLinksById(id);
-        if (links) {
-            process.nextTick(() => {
-                callback(null, links.object);
-            });
-        }
-
-        this._findInCollection(mapping, id, callback);
+        this._objectLinks = {};
     }
+
+    getIdentifier(obj: any): Identifier {
+
+        return obj["_id"];
+    }
+
 
     private _findInCollection(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void {
 
@@ -291,15 +322,17 @@ class SessionImpl implements Session {
         return this._objectLinks[id.toString()];
     }
 
+    /**
+     * Returns all linked objected as an array.
+     */
     private _getAllObjectLinks(): ObjectLinks[] {
 
-        var ret: ObjectLinks[] = new Array(this._objectLinksCount),
-            i = 0;
+        var ret: ObjectLinks[] = [];
 
         var objectLinks = this._objectLinks;
         for (var id in objectLinks) {
             if (objectLinks.hasOwnProperty(id)) {
-                ret[i++] = objectLinks[id];
+                ret.push(objectLinks[id]);
             }
         }
 
@@ -313,22 +346,18 @@ class SessionImpl implements Session {
             var links = this._objectLinks[id.toString()];
             if (!links) {
                 // If we have an id but no links then the object must be detached since we assume that we manage
-                // the assignment of the identifier. Create object links.
-                links = this._linkObject(obj);
+                // the assignment of the identifier.
+                var mapping = this._mappingRegistry.getMappingForObject(obj);
+                if (!mapping) return;
+
+                links = this._linkObject(obj, mapping);
                 links.state = ObjectState.Detached;
             }
             return links;
         }
     }
 
-    private _linkObject(obj: any, mapping?: TypeMapping, operation = Operation.None): ObjectLinks {
-
-        if (!mapping) {
-            var mapping = this._mappingRegistry.getMappingForObject(obj);
-            if (!mapping) {
-                throw new Error("Object is not mapped as a document type.");
-            }
-        }
+    private _linkObject(obj: any, mapping: TypeMapping, operation = Operation.None): ObjectLinks {
 
         var links = {
             state: ObjectState.Managed,
@@ -337,13 +366,11 @@ class SessionImpl implements Session {
             mapping: mapping
         }
 
-        this._objectLinksCount++;
         return this._objectLinks[obj["_id"].toString()] = links;
     }
 
     private _unlinkObject(links: ObjectLinks): void {
 
-        this._objectLinksCount--;
         delete this._objectLinks[links.object["_id"].toString()];
 
         // if the object was never persisted or if it has been removed, then clear it's identifier as well
@@ -357,36 +384,42 @@ class SessionImpl implements Session {
         delete obj["_id"];
     }
 
-    private _forEachEntity(obj: any, iterator: IteratorCallback<any>, callback: Callback): void {
+    private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
         var mapping = this._mappingRegistry.getMappingForObject(obj);
         if (!mapping) {
-            process.nextTick(() => callback(new Error("Object is not mapped as a document type.")));
+            done(new Error("Object is not mapped as a document type."));
         }
 
         var entities: any[] = [],
             embedded: any[] = [];
-        this._walkEntity(obj, mapping, entities, embedded, err => {
-            if(err) return callback(err);
-            async.each(entities, iterator, callback);
+        this._walkEntity(obj, mapping, flags, entities, embedded, err => {
+            if(err) return done(err);
+            done(null, entities);
         });
+
+        function done(err: Error, results?: any[]) {
+            process.nextTick(() => {
+                callback(err, results);
+            });
+        }
     }
 
-    private _walkEntity(entity: any, mapping: TypeMapping, entities: any[], embedded: any[], callback: Callback): void {
+    private _walkEntity(entity: any, mapping: TypeMapping, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
 
         var references: Reference[] = [];
-        this._walkValue(entity, mapping.type, entities, embedded, references);
+        this._walkValue(entity, mapping.type, flags, entities, embedded, references);
 
+        // TODO: load references in batches grouped by root mapping
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
-
-            this._find(reference.mapping, reference.id, (err: Error, entity: any) => {
+            this._findInCollection(reference.mapping, reference.id, (err: Error, entity: any) => {
                 if (err) return done(err);
-                this._walkEntity(entity, reference.mapping, entities, embedded, callback);
+                this._walkEntity(entity, reference.mapping, flags, entities, embedded, callback);
             });
         }, err => callback(err));
     }
 
-    private _walkValue(value: any, type: reflect.Type, entities: any[], embedded: any[], references: Reference[]): void {
+    private _walkValue(value: any, type: reflect.Type, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (value === null || value === undefined) return;
 
@@ -394,7 +427,7 @@ class SessionImpl implements Session {
             if (Array.isArray(value)) {
                 var elementTypes = type.getElementTypes();
                 for (var i = 0, l = Math.min(value.length, elementTypes.length); i < l; i++) {
-                    this._walkValue(value[i], elementTypes[i], entities, embedded, references);
+                    this._walkValue(value[i], elementTypes[i], flags, entities, embedded, references);
                 }
             }
             return;
@@ -404,7 +437,7 @@ class SessionImpl implements Session {
             if (Array.isArray(value)) {
                 var elementType = type.getElementType();
                 for (i = 0, l = value.length; i < l; i++) {
-                    this._walkValue(value[i], elementType, entities, embedded, references);
+                    this._walkValue(value[i], elementType, flags, entities, embedded, references);
                 }
             }
             return;
@@ -417,14 +450,18 @@ class SessionImpl implements Session {
             if (!mapping) return;
 
             if (mapping.flags & TypeMappingFlags.DocumentType) {
-                if (mapping.root.identityGenerator.isIdentifier(value)) {
+                // TODO: handle DBRef
+                if(!(value instanceof mapping.classConstructor)) {
+                    // if the entity is not an instance of the entity's constructor then it should be an identifier or DBRef
                     var links = this._getObjectLinksById(value);
                     if (links) {
                         value = links.object;
                     }
                     else {
-                        // store reference to resolve later
-                        references.push({ mapping: mapping, id: value });
+                        if(flags & PropertyFlags.Dereference) {
+                            // store reference to resolve later
+                            references.push({mapping: mapping, id: value});
+                        }
                         return;
                     }
                 }
@@ -439,8 +476,9 @@ class SessionImpl implements Session {
             var properties = mapping.properties;
             for (var i = 0, l = properties.length; i < l; i++) {
                 var property = properties[i];
-                if (!(property.flags & PropertyFlags.Ignored)) {
-                    this._walkValue(property.symbol.getValue(value), property.symbol.getType(), entities, embedded, references);
+                // if the property is not ignored and it has the specified flags, then walk the value of the property
+                if (!(property.flags & PropertyFlags.Ignored) && (property.flags & flags)) {
+                    this._walkValue(property.symbol.getValue(value), property.symbol.getType(), flags, entities, embedded, references);
                 }
             }
         }

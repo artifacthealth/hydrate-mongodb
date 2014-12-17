@@ -19,8 +19,10 @@ class MappingRegistry {
             this._mappingByType[mapping.type.getId()] = mapping;
 
             if(mapping.type.isClass()) {
-                var ctr = mapping.type.getConstructor();
-                this._mappingByConstructor[Map.getHashCode(ctr)] = mapping;
+                if(!mapping.classConstructor) {
+                    throw new Error("Class mapping is missing classConstructor.");
+                }
+                this._mappingByConstructor[Map.getHashCode(mapping.classConstructor)] = mapping;
             }
         }
     }
