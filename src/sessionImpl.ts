@@ -6,6 +6,7 @@ import async = require("async");
 import Callback = require("./callback");
 import ChangeTracking = require("./mapping/changeTracking");
 import CollectionTable = require("./driver/collectionTable");
+import Collection = require("./driver/collection");
 import Constructor = require("./constructor");
 import DocumentBuilder = require("./persister/documentBuilder");
 import DocumentPersister = require("./persister/documentPersister");
@@ -21,6 +22,7 @@ import InternalSession = require("./internalSession");
 import SessionFactory = require("./sessionFactory");
 import TypeMapping = require("./mapping/typeMapping");
 import TypeMappingFlags = require("./mapping/typeMappingFlags");
+import TaskQueue = require("./taskQueue");
 
 enum ObjectState {
 
@@ -41,19 +43,34 @@ enum ObjectState {
     Removed
 }
 
-enum Operation {
+enum ObjectFlags {
+
+    None = 0,
+    ReadOnly = 0x00000001
+}
+
+enum Action {
+
+    Save = 0x00000001,
+    Remove = 0x00000002,
+    Detach = 0x00000004,
+    Flush = 0x00000008,
+    Find = 0x00000010,
+    Clear = 0x00000020,
+
+    SaveWaits = Action.Remove | Action.Detach | Action.Flush,
+    RemoveWaits = Action.Save | Action.Detach | Action.Flush,
+    DetachWaits = Action.Save | Action.Remove | Action.Flush,
+    FlushWaits = Action.Save |Action.Remove | Action.Detach | Action.Flush
+}
+
+enum ScheduledOperation {
 
     None = 0,
     Insert,
     Update,
     Delete,
     DirtyCheck
-}
-
-enum ObjectFlags {
-
-    None = 0,
-    ReadOnly = 0x00000001
 }
 
 interface Reference {
@@ -65,7 +82,7 @@ interface Reference {
 interface ObjectLinks {
 
     state: ObjectState;
-    scheduledOperation: Operation;
+    scheduledOperation: ScheduledOperation;
     object: any;
     originalDocument?: any;
     mapping: TypeMapping;
@@ -79,6 +96,7 @@ class SessionImpl implements InternalSession {
     private _objectLinks: Map<ObjectLinks> = {};
     private _objectBuilder: ObjectBuilder;
     private _documentBuilder: DocumentBuilder;
+    private _queue: TaskQueue;
 
     constructor(sessionFactory: SessionFactory) {
 
@@ -86,9 +104,50 @@ class SessionImpl implements InternalSession {
         this._mappingRegistry = sessionFactory.mappingRegistry;
         this._objectBuilder = new ObjectBuilder(this._mappingRegistry);
         this._documentBuilder = new DocumentBuilder(this._mappingRegistry);
+        this._queue = new TaskQueue(this._execute.bind(this));
     }
 
-    save(obj: any, callback: Callback): void {
+    save(obj: any, callback?: Callback): void {
+
+        this._queue.add(Action.Save, Action.SaveWaits, obj, callback);
+    }
+
+    remove(obj: any, callback?: Callback): void {
+
+        this._queue.add(Action.Remove, Action.RemoveWaits, obj, callback);
+    }
+
+    detach(obj: any, callback: Callback): void {
+
+        this._queue.add(Action.Detach, Action.DetachWaits, obj, callback);
+    }
+
+    // TODO: if flush fails, mark session invalid and don't allow any further operations?
+    // TODO: if operations fails (e.g. persist, etc.) should session become invalid?
+    flush(callback?: Callback): void {
+
+        this._queue.add(Action.Flush, Action.FlushWaits, undefined, callback);
+    }
+
+    private _execute(action: Action, arg: any, callback: ResultCallback<any>): void {
+
+        switch(action) {
+            case Action.Save:
+                this._save(arg, callback);
+                break;
+            case Action.Remove:
+                this._remove(arg, callback);
+                break;
+            case Action.Detach:
+                this._detach(arg, callback);
+                break;
+            case Action.Flush:
+                this._flush(callback);
+                break;
+        }
+    }
+
+    private _save(obj: any, callback: Callback): void {
 
         this._findReferencedEntities(obj, PropertyFlags.CascadeSave, (err, entities) => {
             if(err) return callback(err);
@@ -110,13 +169,13 @@ class SessionImpl implements InternalSession {
 
                 // we haven't seen this object before
                 obj["_id"] = mapping.root.identityGenerator.generate();
-                this._linkObject(obj, mapping, Operation.Insert);
+                this._linkObject(obj, mapping, ScheduledOperation.Insert);
             }
             else {
                 switch (links.state) {
                     case ObjectState.Managed:
                         if (links.mapping.root.changeTracking == ChangeTracking.DeferredExplicit && !links.scheduledOperation) {
-                            links.scheduledOperation = Operation.DirtyCheck;
+                            links.scheduledOperation = ScheduledOperation.DirtyCheck;
                         }
                         break;
                     case ObjectState.Detached:
@@ -124,7 +183,7 @@ class SessionImpl implements InternalSession {
                         return;
                     case ObjectState.Removed:
                         // Cancel delete operation and make managed.
-                        links.scheduledOperation = Operation.None;
+                        links.scheduledOperation = ScheduledOperation.None;
                         links.state = ObjectState.Managed;
                         break;
                 }
@@ -134,7 +193,7 @@ class SessionImpl implements InternalSession {
         callback();
     }
 
-    remove(obj: any, callback: Callback): void {
+    private _remove(obj: any, callback: Callback): void {
 
         this._findReferencedEntities(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
             if(err) return callback(err);
@@ -152,14 +211,15 @@ class SessionImpl implements InternalSession {
             if (links) {
                 switch (links.state) {
                     case ObjectState.Managed:
-                        // if the object has never been persisted then unlink the object and clear it's id
-                        if (links.scheduledOperation == Operation.Insert) {
+                        if (links.scheduledOperation == ScheduledOperation.Insert) {
+                            // if the object has never been persisted then unlink the object and clear it's id
                             this._unlinkObject(links);
                         }
                         else {
-                            links.scheduledOperation = Operation.Delete;
+                            // queue object for delete opera tion
+                            links.scheduledOperation = ScheduledOperation.Delete;
                             links.state = ObjectState.Removed;
-                            // TODO: after successful delete operation, unlink the object and clear the object's identifier
+                            // object is unlinked after flush
                         }
                         break;
                     case ObjectState.Detached:
@@ -172,7 +232,7 @@ class SessionImpl implements InternalSession {
         callback();
     }
 
-    detach(obj: any, callback: Callback): void {
+    private _detach(obj: any, callback: Callback): void {
 
         this._findReferencedEntities(obj, PropertyFlags.CascadeDetach, (err, entities) => {
             if(err) return callback(err);
@@ -192,12 +252,7 @@ class SessionImpl implements InternalSession {
         callback();
     }
 
-    // TODO: make callback optional on operations (e.g. persist, etc.) and throw error during flush if callback was not provided to operation
-    // TODO: wait for any pending operations (e.g. persist, etc.) to complete before flush is executed
-    // TODO: if flush is executing, delay any operations (e.g. persist, etc.) until after flush has completed
-    // TODO: if flush fails, mark session invalid and don't allow any further operations?
-    // TODO: if operations fails (e.g. persist, etc.) should session become invalid?
-    flush(callback: Callback): void {
+    private _flush(callback: Callback): void {
 
         // Get all list of all object links. A for-in loop is slow so build a list from the map since we are going
         // to have to iterate through the list several times.
@@ -207,19 +262,19 @@ class SessionImpl implements InternalSession {
             var links = list[i];
             // TODO: ignore read-only objects
             // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
-            if (links.scheduledOperation == Operation.DirtyCheck || (links.mapping.root.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
+            if (links.scheduledOperation == ScheduledOperation.DirtyCheck || (links.mapping.root.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
                 var document = this._documentBuilder.buildDocument(links.object, links.mapping.type);
             }
         }
 
         // MongoDB bulk operations need to be ordered by operation type or they are not executed
         // as bulk operations. The DocumentPersister will group operations by collection but will not reorder them.
-        var persister = new DocumentPersister(this._collections, this._documentBuilder);
+        var persister = new DocumentPersister(this, this._documentBuilder);
 
         // Add all inserts
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
-            if (links.scheduledOperation == Operation.Insert) {
+            if (links.scheduledOperation == ScheduledOperation.Insert) {
                 persister.addInsert(links.object, links.mapping);
             }
         }
@@ -227,7 +282,7 @@ class SessionImpl implements InternalSession {
         // Add all updates
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
-            if (links.scheduledOperation == Operation.Update) {
+            if (links.scheduledOperation == ScheduledOperation.Update) {
                 persister.addUpdate(links.object, links.mapping);
             }
         }
@@ -235,7 +290,7 @@ class SessionImpl implements InternalSession {
         // Add all deletes
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
-            if (links.scheduledOperation == Operation.Delete) {
+            if (links.scheduledOperation == ScheduledOperation.Delete) {
                 persister.addDelete(links.object, links.mapping);
             }
         }
@@ -244,12 +299,32 @@ class SessionImpl implements InternalSession {
         persister.execute(err => {
             if(err) return callback(err);
 
-            // clear any scheduled operations
             for (var i = 0, l = list.length; i < l; i++) {
-                list[i].scheduledOperation = Operation.None;
+                var links = list[i];
+                if(links.scheduledOperation == ScheduledOperation.Delete) {
+                    // after a successful delete operation unlink the object
+                    this._unlinkObject(links);
+                }
+                // clear any scheduled operations
+                links.scheduledOperation = ScheduledOperation.None;
             }
             callback();
         });
+    }
+
+    clear(): void {
+
+        this._objectLinks = {};
+    }
+
+    getIdentifier(obj: any): Identifier {
+
+        return obj["_id"];
+    }
+
+    getCollection(mapping: TypeMapping): Collection {
+
+        return this._collections[mapping.root.id];
     }
 
     find<T>(ctr: Constructor<T>, id: string, callback: ResultCallback<T>): void {
@@ -274,20 +349,9 @@ class SessionImpl implements InternalSession {
         }
     }
 
-    clear(): void {
-
-        this._objectLinks = {};
-    }
-
-    getIdentifier(obj: any): Identifier {
-
-        return obj["_id"];
-    }
-
-
     private _findInCollection(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void {
 
-        this._collections[mapping.root.id].findOne({ _id: id }, (err, document) => {
+        this.getCollection(mapping).findOne({ _id: id }, (err, document) => {
             if (err) return callback(err);
             this._load(mapping, document, callback);
         });
@@ -357,7 +421,7 @@ class SessionImpl implements InternalSession {
         }
     }
 
-    private _linkObject(obj: any, mapping: TypeMapping, operation = Operation.None): ObjectLinks {
+    private _linkObject(obj: any, mapping: TypeMapping, operation = ScheduledOperation.None): ObjectLinks {
 
         var links = {
             state: ObjectState.Managed,
@@ -374,7 +438,7 @@ class SessionImpl implements InternalSession {
         delete this._objectLinks[links.object["_id"].toString()];
 
         // if the object was never persisted or if it has been removed, then clear it's identifier as well
-        if (links.scheduledOperation == Operation.Insert || links.state == ObjectState.Removed) {
+        if (links.scheduledOperation == ScheduledOperation.Insert || links.state == ObjectState.Removed) {
             this._clearIdentifier(links.object);
         }
     }
@@ -442,6 +506,7 @@ class SessionImpl implements InternalSession {
             }
             return;
         }
+        // TODO: handle indexed types
 
         if (type.isObjectType()) {
             // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
@@ -453,6 +518,7 @@ class SessionImpl implements InternalSession {
                 // TODO: handle DBRef
                 if(!(value instanceof mapping.classConstructor)) {
                     // if the entity is not an instance of the entity's constructor then it should be an identifier or DBRef
+                    // TODO: validate identifier
                     var links = this._getObjectLinksById(value);
                     if (links) {
                         value = links.object;

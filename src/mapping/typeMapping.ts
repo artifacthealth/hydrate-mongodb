@@ -28,7 +28,6 @@ class TypeMapping {
     discriminatorValue: string;
 
     identityGenerator: IdentityGenerator;
-    identityField: string;
 
     private _discriminatorMap: Map<TypeMapping>;
 
@@ -182,9 +181,6 @@ class TypeMapping {
                     this.collectionName = this.type.getName();
                 }
 
-                if (!this.identityField) {
-                    this.identityField = "_id";
-                }
                 if(!this.identityGenerator) {
                     this.identityGenerator = config.identityGenerator;
                 }

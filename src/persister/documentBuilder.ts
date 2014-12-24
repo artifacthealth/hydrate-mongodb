@@ -50,7 +50,7 @@ class DocumentBuilder {
                 return obj;
             }
             else {
-                id = obj[mapping.root.identityField];
+                id = obj["_id"];
                 if (!id) {
                     state.addError("Missing identifier.", type, obj);
                     return;
@@ -114,7 +114,7 @@ class DocumentBuilder {
 
         // if this is the root then set the identifier
         if(isRoot) {
-            document[mapping.root.identityField] = id;
+            document["_id"] = id;
         }
 
         return document;

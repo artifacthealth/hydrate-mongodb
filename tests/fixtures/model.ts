@@ -26,7 +26,7 @@ export class Person extends Party {
     phones: Phone[];
     email: string;
 
-    /** @cascade "persist" */
+    /** @cascade "save, remove" */
     parents: Person[];
     children: Person[];
 

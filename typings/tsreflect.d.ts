@@ -53,7 +53,7 @@ declare module "tsreflect" {
         getDeclaredType(): Type;
         getExports(flags?: SymbolFlags): Symbol[];
 
-        resolve (name: string): Symbol;
+        resolve (entityName: string): Symbol;
 
         getValue(obj: any): any;
         setValue(obj: any, value: any): void;
@@ -76,10 +76,19 @@ declare module "tsreflect" {
 
     interface Annotation {
 
+        /**
+         * The name of the annotation.
+         */
         name: string;
+
+        /**
+         * The value of the annotation.
+         */
         value: any;
 
-        /** Returns the name of the file that the annotation was declared in. */
+        /**
+         * Returns the name of the file that the annotation was declared in.
+         */
         getDeclarationFileName(): string;
     }
 
@@ -138,6 +147,7 @@ declare module "tsreflect" {
         isInterface(): boolean;
         isTuple(): boolean;
         isArray(): boolean;
+        isIndex(): boolean;
         isAnonymous(): boolean;
         isReference(): boolean;
         isEnum(): boolean;

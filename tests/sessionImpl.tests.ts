@@ -8,6 +8,7 @@ import assert = chai.assert;
 
 import Configuration = require("../src/config/configuration");
 import SessionFactory = require("../src/sessionFactory");
+import SessionImpl = require("../src/sessionImpl");
 import model = require("./fixtures/model");
 
 describe('SessionImpl', () => {
@@ -27,40 +28,24 @@ describe('SessionImpl', () => {
         });
     });
 
-    it('persist', (done) => {
+    it.skip('save', (done) => {
 
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/model.d.json");
         config.createSessionFactory((err: Error, sessionFactory: SessionFactory) => {
             if(err) throw err;
 
-            var session = sessionFactory.createSession();
-
-            var people: model.Person[] = [];
+            var session = <SessionImpl>sessionFactory.createSession();
 
             for(var i = 0; i < 1000; i++) {
-                people.push(new model.Person(new model.PersonName("Jones" + i, "Bob")))
+                session.save(new model.Person(new model.PersonName("Jones" + i, "Bob")));
             }
 
-            var persistStart = process.hrtime();
-            async.each(people, (person: model.Person, done: (err?: Error) => void) => {
-                session.save(person, done);
-            }, (err) => {
-                if(err) return done(err);
-                var persistEnd = process.hrtime(persistStart);
-                var flushStart = process.hrtime();
-                session.flush(() => {
-                    var flushEnd = process.hrtime(flushStart);
-                    console.log("persist time: " + persistEnd[0] + "s, " + (persistEnd[1]/1000000).toFixed(3) + "ms");
-                    console.log("flush time: " + flushEnd[0] + "s, " + (flushEnd[1]/1000000).toFixed(3) + "ms");
-                    done();
-                });
-            });
+            session.flush(done);
         });
     });
 
-
-    it.skip('cascade', (done) => {
+    it('cascade', (done) => {
 
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/model.d.json");
@@ -78,20 +63,9 @@ describe('SessionImpl', () => {
             var parent2 = new model.Person(new model.PersonName("Jones", "Jack"));
             person.addParent(parent2);
 
-            session.save(person, err => {
-                session.flush(err => {
-                    if(err) return done(err);
-
-                    session.remove(person, err => {
-                        if(err) return done(err);
-
-                        session.flush(err => {
-                            if(err) return done(err);
-                            done();
-                        });
-                    });
-                });
-            });
+            session.save(person);
+            session.remove(person);
+            session.flush(done);
         });
     });
 
