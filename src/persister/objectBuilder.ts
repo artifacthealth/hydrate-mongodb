@@ -5,7 +5,7 @@ import PropertyFlags = require("../mapping/propertyFlags");
 import TypeMapping = require("../mapping/typeMapping");
 import Property = require("../mapping/property");
 import MappingRegistry = require("../mapping/mappingRegistry");
-import ReflectHelper = require("../reflectHelper");
+import ReflectHelper = require("../core/reflectHelper");
 import BuilderState = require("./builderState");
 import Identifier = require("../id/identifier");
 
@@ -64,7 +64,7 @@ class ObjectBuilder {
                 return;
             }
             mapping = mapping.getMappingByDiscriminator(discriminatorValue);
-            if(mapping == undefined) {
+            if(mapping === undefined) {
                 state.addError("Unknown discriminator value '" + discriminatorValue + "'.", type, document);
                 return;
             }
@@ -82,13 +82,22 @@ class ObjectBuilder {
             // TODO: how to handle inverse side of reference
 
             var value = document[property.field];
-            if(value == undefined || value == null) {
+            if(value === undefined) {
+                // skip undefined values
                 continue;
             }
-
-            state.path.push(property.name);
-            property.symbol.setValue(obj, this._buildValue(value, property.symbol.getType(), state));
-            state.path.pop();
+            if(value === null) {
+                // skip null values unless allowed
+                if(!(flags & PropertyFlags.Nullable)) {
+                    continue;
+                }
+            }
+            else {
+                state.path.push(property.name);
+                value = this._buildValue(value, property.symbol.getType(), state);
+                state.path.pop();
+            }
+            property.symbol.setValue(obj, value);
         }
 
         // if this is the root then set the identifier

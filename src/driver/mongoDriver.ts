@@ -4,7 +4,7 @@ import mongodb = require("mongodb");
 
 import DatabaseDriver = require("./databaseDriver");
 import Connection = require("./connection");
-import ResultCallback = require("../resultCallback");
+import ResultCallback = require("../core/resultCallback");
 import IdentityGenerator = require("../id/identityGenerator");
 import ObjectIdGenerator = require("../id/objectIdGenerator");
 import MongoConnection = require("./mongoConnection");

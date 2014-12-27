@@ -1,4 +1,4 @@
-import ResultCallback = require("./resultCallback");
+import ResultCallback = require("./core/resultCallback");
 
 interface Task {
 

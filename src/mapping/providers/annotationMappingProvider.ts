@@ -1,18 +1,18 @@
 /// <reference path="../../../typings/tsreflect.d.ts" />
 
 import reflect = require("tsreflect");
-import ResultCallback = require("../../resultCallback");
+import ResultCallback = require("../../core/resultCallback");
 import TypeMapping = require("../typeMapping");
 import Property = require("../property");
 import MappingProvider = require("./MappingProvider");
-import ReflectHelper = require("../../ReflectHelper");
+import ReflectHelper = require("../../core/ReflectHelper");
 import Index = require("../index");
 import IndexOptions = require("../../driver/indexOptions");
 import TypeMappingFlags = require("../typeMappingFlags");
 import PropertyFlags = require("../propertyFlags");
 import ChangeTracking = require("../changeTracking");
 import Configuration = require("../../config/Configuration");
-import Map = require("../../map");
+import Map = require("../../core/map");
 
 class AnnotationMappingProvider implements MappingProvider {
 
@@ -314,11 +314,12 @@ class TypeMappingBuilder {
                         break;
                     case "cascade":
                         this._setCascade(property, annotation.value);
+                        break;
                     case "field":
                         this._setField(property, annotation.value);
                         break;
                     case "index":
-                        // queue up index annotations till after all annotations are processed and default mappings
+                        // queue up index annotations until after all annotations are processed and default mappings
                         // are applied because we may not know the field name yet.
                         (indexAnnotations || (indexAnnotations = [])).push(annotation);
                         break;

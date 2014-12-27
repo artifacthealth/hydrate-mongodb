@@ -3,10 +3,10 @@
 import async = require("async");
 import util = require("util");
 
-import Callback = require("../callback");
-import ResultCallback = require("../resultCallback");
+import Callback = require("../core/callback");
+import ResultCallback = require("../core/resultCallback");
 
-import Map = require("../map");
+import Map = require("../core/map");
 import SessionFactory = require("../sessionFactory");
 import DatabaseDriver = require("../driver/databaseDriver");
 import MongoDriver = require("../driver/mongoDriver");

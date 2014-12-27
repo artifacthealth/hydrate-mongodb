@@ -2,7 +2,7 @@
 
 import fs = require("fs");
 import Connection = require("../driver/connection");
-import ResultCallback = require("../resultCallback");
+import ResultCallback = require("../core/resultCallback");
 import Configuration = require("./Configuration");
 import SessionFactory = require("../sessionFactory");
 

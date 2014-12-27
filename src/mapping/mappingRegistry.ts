@@ -3,8 +3,8 @@
 import reflect = require("tsreflect");
 import TypeMapping = require("./typeMapping");
 import TypeMappingFlags = require("./typeMappingFlags");
-import Constructor = require("../constructor");
-import Map = require("../map");
+import Constructor = require("../core/constructor");
+import Map = require("../core/map");
 
 class MappingRegistry {
 

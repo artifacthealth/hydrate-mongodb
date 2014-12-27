@@ -6,7 +6,7 @@ import TypeMapping = require("../mapping/typeMapping");
 import Property = require("../mapping/property");
 import MappingRegistry = require("../mapping/mappingRegistry");
 import MappingFlags = require("../mapping/typeMappingFlags");
-import ReflectHelper = require("../reflectHelper");
+import ReflectHelper = require("../core/reflectHelper");
 import BuilderState = require("./builderState");
 import Identifier = require("../id/identifier");
 
@@ -46,7 +46,7 @@ class DocumentBuilder {
         var id: Identifier;
         if(mapping.isDocumentType) {
             // TODO: what if obj is an identifier
-            if(mapping.root.identityGenerator.isIdentifier(obj)) {
+            if(mapping.root.identityGenerator.validate(obj)) {
                 return obj;
             }
             else {
@@ -85,21 +85,21 @@ class DocumentBuilder {
             }
 
             var value = property.symbol.getValue(obj);
-
-            if(value == undefined || value == null) {
-                // skip undefined or null values unless allowed
-                if((flags & PropertyFlags.Nullable) == 0) {
+            if(value === undefined) {
+                // skip undefined values
+                continue;
+            }
+            if(value === null) {
+                // skip null values unless allowed
+                if(!(flags & PropertyFlags.Nullable)) {
                     continue;
                 }
-                // if nullable, store undefined values as null
-                value = null;
             }
             else {
                 state.path.push(property.name);
                 value = this._buildValue(value, property.symbol.getType(), state);
                 state.path.pop();
             }
-
             document[property.field] = value;
         }
 

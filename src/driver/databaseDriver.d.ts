@@ -1,5 +1,5 @@
 import Connection = require("./connection");
-import ResultCallback = require("../resultCallback");
+import ResultCallback = require("../core/resultCallback");
 import IdentityGenerator = require("../id/identityGenerator");
 
 interface DatabaseDriver {

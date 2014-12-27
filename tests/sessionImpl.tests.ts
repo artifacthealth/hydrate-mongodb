@@ -64,8 +64,11 @@ describe('SessionImpl', () => {
             person.addParent(parent2);
 
             session.save(person);
-            session.remove(person);
-            session.flush(done);
+            session.flush(() => {
+
+                person.birthDate = new Date("08/18/1977");
+                session.flush(done);
+            });
         });
     });
 

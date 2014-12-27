@@ -3,21 +3,22 @@
 
 import reflect = require("tsreflect");
 import async = require("async");
-import Callback = require("./callback");
+import Callback = require("./core/callback");
 import ChangeTracking = require("./mapping/changeTracking");
 import CollectionTable = require("./driver/collectionTable");
 import Collection = require("./driver/collection");
-import Constructor = require("./constructor");
+import Comparer = require("./persister/Comparer");
+import Constructor = require("./core/constructor");
 import DocumentBuilder = require("./persister/documentBuilder");
 import DocumentPersister = require("./persister/documentPersister");
 import LockMode = require("./lockMode");
 import Identifier = require("./id/identifier");
-import IteratorCallback = require("./iteratorCallback");
-import Map = require("./map");
+import IteratorCallback = require("./core/iteratorCallback");
+import Map = require("./core/map");
 import MappingRegistry = require("./mapping/mappingRegistry");
 import ObjectBuilder = require("./persister/objectBuilder");
 import PropertyFlags = require("./mapping/propertyFlags");
-import ResultCallback = require("./resultCallback");
+import ResultCallback = require("./core/resultCallback");
 import InternalSession = require("./internalSession");
 import SessionFactory = require("./sessionFactory");
 import TypeMapping = require("./mapping/typeMapping");
@@ -37,8 +38,9 @@ enum ObjectState {
     Detached,
 
     /**
-     * Removed entities  have a persistent identity, are associated with a session, and are scheduled for deletion
-     * from the mongodb. Once the entity is deleted from the mongodb, it is considered a new entity.
+     * Removed entities have a persistent identity, are associated with a session, and are scheduled for deletion
+     * from the mongodb. Once the entity is deleted from the mongodb, the entity is no longer managed and is
+     * considered a new entity.
      */
     Removed
 }
@@ -88,7 +90,8 @@ interface ObjectLinks {
     mapping: TypeMapping;
 }
 
-// TODO: read-only query results, read-only annotation for classes, raise events on UnitOfWork
+// TODO: read-only query results
+// TODO: raise events on UnitOfWork
 class SessionImpl implements InternalSession {
 
     private _collections: CollectionTable;
@@ -97,6 +100,7 @@ class SessionImpl implements InternalSession {
     private _objectBuilder: ObjectBuilder;
     private _documentBuilder: DocumentBuilder;
     private _queue: TaskQueue;
+    private _comparer: Comparer;
 
     constructor(sessionFactory: SessionFactory) {
 
@@ -105,6 +109,7 @@ class SessionImpl implements InternalSession {
         this._objectBuilder = new ObjectBuilder(this._mappingRegistry);
         this._documentBuilder = new DocumentBuilder(this._mappingRegistry);
         this._queue = new TaskQueue(this._execute.bind(this));
+        this._comparer = new Comparer();
     }
 
     save(obj: any, callback?: Callback): void {
@@ -123,7 +128,7 @@ class SessionImpl implements InternalSession {
     }
 
     // TODO: if flush fails, mark session invalid and don't allow any further operations?
-    // TODO: if operations fails (e.g. persist, etc.) should session become invalid?
+    // TODO: if operations fails (e.g. save, etc.) should session become invalid? Perhaps have two classes of errors, those that cause the session to become invalid and those that do not?
     flush(callback?: Callback): void {
 
         this._queue.add(Action.Flush, Action.FlushWaits, undefined, callback);
@@ -149,7 +154,7 @@ class SessionImpl implements InternalSession {
 
     private _save(obj: any, callback: Callback): void {
 
-        this._findReferencedEntities(obj, PropertyFlags.CascadeSave, (err, entities) => {
+        this._referencedEntities(obj, PropertyFlags.CascadeSave, (err, entities) => {
             if(err) return callback(err);
             this._saveEntities(entities, callback);
         });
@@ -179,7 +184,8 @@ class SessionImpl implements InternalSession {
                         }
                         break;
                     case ObjectState.Detached:
-                        callback(new Error("Cannot save a detached object."));
+                        callback(new Error("Cannot save a " +
+                        "detached object."));
                         return;
                     case ObjectState.Removed:
                         // Cancel delete operation and make managed.
@@ -195,7 +201,7 @@ class SessionImpl implements InternalSession {
 
     private _remove(obj: any, callback: Callback): void {
 
-        this._findReferencedEntities(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
+        this._referencedEntities(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
             if(err) return callback(err);
             this._removeEntities(entities, callback);
         });
@@ -216,7 +222,7 @@ class SessionImpl implements InternalSession {
                             this._unlinkObject(links);
                         }
                         else {
-                            // queue object for delete opera tion
+                            // queue object for delete operation
                             links.scheduledOperation = ScheduledOperation.Delete;
                             links.state = ObjectState.Removed;
                             // object is unlinked after flush
@@ -234,7 +240,7 @@ class SessionImpl implements InternalSession {
 
     private _detach(obj: any, callback: Callback): void {
 
-        this._findReferencedEntities(obj, PropertyFlags.CascadeDetach, (err, entities) => {
+        this._referencedEntities(obj, PropertyFlags.CascadeDetach, (err, entities) => {
             if(err) return callback(err);
             this._detachEntities(entities, callback);
         });
@@ -258,32 +264,28 @@ class SessionImpl implements InternalSession {
         // to have to iterate through the list several times.
         var list = this._getAllObjectLinks();
 
+        // MongoDB bulk operations need to be ordered by operation type or they are not executed
+        // as bulk operations. The DocumentPersister will group operations by collection but will not reorder them.
+        var persister = new DocumentPersister(this, this._documentBuilder);
+
         for(var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             // TODO: ignore read-only objects
             // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
             if (links.scheduledOperation == ScheduledOperation.DirtyCheck || (links.mapping.root.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
                 var document = this._documentBuilder.buildDocument(links.object, links.mapping.type);
+                var changes = this._comparer.compare(links.originalDocument, document);
+                if(changes.$set || changes.$unset) {
+                    persister.addUpdate(links.object, links.mapping);
+                }
             }
         }
-
-        // MongoDB bulk operations need to be ordered by operation type or they are not executed
-        // as bulk operations. The DocumentPersister will group operations by collection but will not reorder them.
-        var persister = new DocumentPersister(this, this._documentBuilder);
 
         // Add all inserts
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             if (links.scheduledOperation == ScheduledOperation.Insert) {
                 persister.addInsert(links.object, links.mapping);
-            }
-        }
-
-        // Add all updates
-        for (var i = 0, l = list.length; i < l; i++) {
-            var links = list[i];
-            if (links.scheduledOperation == ScheduledOperation.Update) {
-                persister.addUpdate(links.object, links.mapping);
             }
         }
 
@@ -295,7 +297,7 @@ class SessionImpl implements InternalSession {
             }
         }
 
-        // TODO: what to do if we get an error during execute? Should we make the session invalid?
+        // TODO: what to do if we get an error during execute? Should we make the session invalid? yes.
         persister.execute(err => {
             if(err) return callback(err);
 
@@ -317,7 +319,7 @@ class SessionImpl implements InternalSession {
         this._objectLinks = {};
     }
 
-    getIdentifier(obj: any): Identifier {
+    getId(obj: any): Identifier {
 
         return obj["_id"];
     }
@@ -448,7 +450,7 @@ class SessionImpl implements InternalSession {
         delete obj["_id"];
     }
 
-    private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
+    private _referencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
         var mapping = this._mappingRegistry.getMappingForObject(obj);
         if (!mapping) {
@@ -515,10 +517,12 @@ class SessionImpl implements InternalSession {
             if (!mapping) return;
 
             if (mapping.flags & TypeMappingFlags.DocumentType) {
-                // TODO: handle DBRef
                 if(!(value instanceof mapping.classConstructor)) {
                     // if the entity is not an instance of the entity's constructor then it should be an identifier or DBRef
-                    // TODO: validate identifier
+                    // TODO: handle DBRef
+                    if(!mapping.root.identityGenerator.validate(value)) {
+                        return;
+                    }
                     var links = this._getObjectLinksById(value);
                     if (links) {
                         value = links.object;
@@ -526,7 +530,7 @@ class SessionImpl implements InternalSession {
                     else {
                         if(flags & PropertyFlags.Dereference) {
                             // store reference to resolve later
-                            references.push({mapping: mapping, id: value});
+                            references.push({ mapping: mapping, id: value });
                         }
                         return;
                     }

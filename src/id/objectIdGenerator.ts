@@ -17,7 +17,7 @@ class ObjectIdGenerator implements IdentityGenerator {
         return <Identifier>ObjectID.createFromHexString(text);
     }
 
-    isIdentifier(value: any): boolean {
+    validate(value: any): boolean {
         return value instanceof ObjectID;
     }
 }

@@ -1,4 +1,4 @@
-import ResultCallback = require("../../resultCallback");
+import ResultCallback = require("../../core/resultCallback");
 import TypeMapping = require("../typeMapping");
 
 interface MappingProvider {

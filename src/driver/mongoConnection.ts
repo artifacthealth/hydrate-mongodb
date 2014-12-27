@@ -1,8 +1,8 @@
 /// <reference path="../../typings/mongodb.d.ts" />
 
 import mongodb = require("mongodb");
-import Callback = require("./../callback");
-import ResultCallback = require("./../resultCallback");
+import Callback = require("../core/callback");
+import ResultCallback = require("../core/resultCallback");
 import Collection = require("./collection");
 import CollectionOptions = require("./collectionOptions");
 import Connection = require("./connection");

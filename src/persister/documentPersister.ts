@@ -1,7 +1,7 @@
 /// <reference path="../../typings/async.d.ts" />
 
 import async = require("async");
-import Callback = require("callback");
+import Callback = require("../core/callback");
 import CollectionTable = require("driver/collectionTable");
 import DocumentBuilder = require("./documentBuilder");
 import TypeMapping = require("../mapping/typeMapping");
@@ -17,6 +17,8 @@ interface Batch {
     deleted: number;
 }
 
+// TODO: consider performance with a write concern of 0 and checking errors afterwards. See https://blog.compose.io/faster-updates-with-mongodb-2-4/
+// TODO: retry write after error? updates need to be idempotent so you can reapply full batch without side-effects
 class DocumentPersister {
 
     private _documentBuilder: DocumentBuilder;
@@ -33,15 +35,16 @@ class DocumentPersister {
     addInsert(obj: any, mapping: TypeMapping): void {
 
         var document = this._documentBuilder.buildDocument(obj, mapping.type);
-
+/*
         if(mapping.root.versioned) {
-            // set initial value of of version field
+            // set initial value of version field
             document[mapping.root.versionField] = 1;
-        }
+        }*/
 
         var batch = this._getBatch(mapping);
         batch.inserted++;
         batch.operation.insert(document);
+        console.log("INSERT: " + JSON.stringify(document, null, "\t"));
     }
 
     addUpdate(obj: any, mapping: TypeMapping): void {
@@ -51,17 +54,18 @@ class DocumentPersister {
             _id: obj["_id"]
         }
 
-        var currentVersion = 0,
-            document = this._documentBuilder.buildDocument(obj, mapping.type);
-
+        var document = this._documentBuilder.buildDocument(obj, mapping.type);
+/*
         if(mapping.root.versioned) {
+            var currentVersion = document[mapping.root.versionField];
             query[mapping.root.versionField] = currentVersion;
             document[mapping.root.versionField] = currentVersion + 1;
         }
-
+*/
         var batch = this._getBatch(mapping);
         batch.updated++;
         batch.operation.find(query).replaceOne(document);
+        console.log("UPDATE: " + JSON.stringify(document, null, "\t"));
     }
 
     addDelete(obj: any, mapping: TypeMapping): void {
@@ -73,6 +77,7 @@ class DocumentPersister {
         var batch = this._getBatch(mapping);
         batch.deleted++;
         batch.operation.find(query).removeOne();
+        console.log("DELETE: " + JSON.stringify(document, null, "\t"));
     }
 
     execute(callback: Callback): void {
@@ -88,18 +93,23 @@ class DocumentPersister {
             batch.operation.execute((err: Error, result: BulkWriteResult) => {
                 if(err) return done(err);
 
-                if((result.nRemoved || 0) != batch.deleted || (result.nModified || 0) != batch.updated || (result.nInserted || 0) != batch.inserted) {
-                    // TODO: provide more detailed error information
-                    return done(new Error("Flush failed. Not all queued operations for collection '" + batch.collectionName + "' executed correctly."));
+                // TODO: provide more detailed error information
+                if((result.nInserted || 0) != batch.inserted) {
+                    return done(new Error("Flush failed for collection '" + batch.collectionName + "'. Expected to insert " + batch.inserted + " documents but only inserted " + (result.nInserted || 0) + "."));
+                }
+
+                if((result.nModified || 0) != batch.updated) {
+                    return done(new Error("Flush failed for collection '" + batch.collectionName + "'. Expected to update " + batch.updated + " documents but only updated " + (result.nModified || 0) + "."));
+                }
+
+                if((result.nRemoved || 0) != batch.deleted) {
+                    return done(new Error("Flush failed for collection '" + batch.collectionName + "'. Expected to delete " + batch.deleted + " documents but only deleted " + (result.nRemoved || 0) + "."));
                 }
 
                 done();
             });
 
-        }, (err: Error) => {
-            if(err) return callback(err);
-            callback();
-        });
+        }, callback);
     }
 
     private _getBatch(mapping: TypeMapping): Batch {

@@ -1,5 +1,5 @@
 import IndexOptions = require("../driver/indexOptions");
-import Map = require("../map");
+import Map = require("../core/map");
 
 interface Index {
 

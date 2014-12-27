@@ -123,6 +123,19 @@ describe('AnnotationMappingProvider', () => {
             });
         });
 
+        describe("@cascade", () => {
+
+            // There was a bug where switch was missing break and @cascade fell through to @field, setting the name of the field
+            it("does not affect the name of the field", (done) => {
+
+                processFixture("cascade", done, (results) => {
+
+                    var mapping = findMapping(results, "A");
+                    assert.equal(mapping.getProperty("b").field, "b");
+                });
+            });
+        });
+
         describe('@field', () => {
             it("sets field name if specified", (done) => {
 

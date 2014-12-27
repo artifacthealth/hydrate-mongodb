@@ -1,4 +1,4 @@
-import Constructor = require("./constructor");
+import Constructor = require("./core/constructor");
 
 class QueryBuilder<T> {
 
