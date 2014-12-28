@@ -1,0 +1,19 @@
+@startuml
+
+class SessionFactory {
+    getEntityPersister(entity: any): Persister
+}
+
+class Session {
+}
+Session <-- SessionFactory
+
+class Persister {
+    mapping: TypeMapping
+    load(id: any, callback: Callback<any>)
+    dirtyCheck(originalDocument, document)
+    createBatch(): Batch
+
+}
+
+@enduml

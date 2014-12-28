@@ -32,7 +32,7 @@ class DocumentPersister {
         this._documentBuilder = documentBuilder;
     }
 
-    addInsert(obj: any, mapping: TypeMapping): void {
+    addInsert(obj: any, mapping: TypeMapping): any {
 
         var document = this._documentBuilder.buildDocument(obj, mapping.type);
 /*
@@ -45,6 +45,7 @@ class DocumentPersister {
         batch.inserted++;
         batch.operation.insert(document);
         console.log("INSERT: " + JSON.stringify(document, null, "\t"));
+        return document;
     }
 
     addUpdate(obj: any, mapping: TypeMapping): void {

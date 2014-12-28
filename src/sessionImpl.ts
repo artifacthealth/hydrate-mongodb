@@ -285,7 +285,7 @@ class SessionImpl implements InternalSession {
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             if (links.scheduledOperation == ScheduledOperation.Insert) {
-                persister.addInsert(links.object, links.mapping);
+                links.originalDocument = persister.addInsert(links.object, links.mapping);
             }
         }
 
@@ -482,7 +482,7 @@ class SessionImpl implements InternalSession {
                 if (err) return done(err);
                 this._walkEntity(entity, reference.mapping, flags, entities, embedded, callback);
             });
-        }, err => callback(err));
+        }, callback);
     }
 
     private _walkValue(value: any, type: reflect.Type, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
