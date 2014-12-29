@@ -8,6 +8,7 @@ import ResultCallback = require("../core/resultCallback");
 
 import Map = require("../core/map");
 import SessionFactory = require("../sessionFactory");
+import SessionFactoryImpl = require("../sessionFactoryImpl");
 import DatabaseDriver = require("../driver/databaseDriver");
 import MongoDriver = require("../driver/mongoDriver");
 import Connection = require("../driver/connection");
@@ -50,7 +51,7 @@ class Configuration {
             callback = connectionOrCallback;
 
             if(!this._options.uri) {
-                var error = new Error("A database connection must be passed to createSessionFactory or a connection URI should be specified in the configuration options.");
+                var error = new Error("A database connection must be passed to createSessionFactoryImpl or a connection URI should be specified in the configuration options.");
             }
             if(typeof this._options.uri !== "string") {
                 var error = new Error("Connection URI expected to be of type string.");
@@ -93,8 +94,8 @@ class Configuration {
             this._buildCollections(connection, mappings, (err, collections) => {
                 if(err) return callback(err);
 
-                var sessionFactory = new SessionFactory(collections, new MappingRegistry(mappings));
-                callback(null, sessionFactory);
+                var sessionFactoryImpl = new SessionFactoryImpl(collections, new MappingRegistry(mappings));
+                callback(null, sessionFactoryImpl);
             });
         });
     }

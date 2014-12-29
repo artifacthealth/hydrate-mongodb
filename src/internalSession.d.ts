@@ -1,14 +1,15 @@
 import Session = require("./session");
 import TypeMapping = require("./mapping/typeMapping");
 import Collection = require("./driver/collection");
+import ResultCallback = require("./core/resultCallback");
+import Identifier = require("./id/identifier");
+import Persister = require("./persister/entityPersister");
 
 interface InternalSession extends Session {
 
-    /**
-     * Returns the collection for the specified mapping
-     * @param mapping The mapping to get the collection for.
-     */
-    getCollection(mapping: TypeMapping): Collection;
+    getObject(id: Identifier): any;
+    registerManaged(persister: Persister, entity: any, document: any): void;
+    load(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void;
 }
 
 export = InternalSession;

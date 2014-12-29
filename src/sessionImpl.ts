@@ -5,25 +5,20 @@ import reflect = require("tsreflect");
 import async = require("async");
 import Callback = require("./core/callback");
 import ChangeTracking = require("./mapping/changeTracking");
-import CollectionTable = require("./driver/collectionTable");
-import Collection = require("./driver/collection");
-import Comparer = require("./persister/Comparer");
 import Constructor = require("./core/constructor");
-import DocumentBuilder = require("./persister/documentBuilder");
-import DocumentPersister = require("./persister/documentPersister");
+import PersisterBatch = require("./persister/persisterBatch");
 import LockMode = require("./lockMode");
 import Identifier = require("./id/identifier");
 import IteratorCallback = require("./core/iteratorCallback");
 import Map = require("./core/map");
-import MappingRegistry = require("./mapping/mappingRegistry");
-import ObjectBuilder = require("./persister/objectBuilder");
 import PropertyFlags = require("./mapping/propertyFlags");
 import ResultCallback = require("./core/resultCallback");
 import InternalSession = require("./internalSession");
-import SessionFactory = require("./sessionFactory");
+import InternalSessionFactory = require("./internalSessionFactory");
 import TypeMapping = require("./mapping/typeMapping");
 import TypeMappingFlags = require("./mapping/typeMappingFlags");
 import TaskQueue = require("./taskQueue");
+import EntityPersister = require("./persister/entityPersister");
 
 enum ObjectState {
 
@@ -87,29 +82,19 @@ interface ObjectLinks {
     scheduledOperation: ScheduledOperation;
     object: any;
     originalDocument?: any;
-    mapping: TypeMapping;
+    persister: EntityPersister;
 }
 
 // TODO: read-only query results
 // TODO: raise events on UnitOfWork
 class SessionImpl implements InternalSession {
 
-    private _collections: CollectionTable;
-    private _mappingRegistry: MappingRegistry;
     private _objectLinks: Map<ObjectLinks> = {};
-    private _objectBuilder: ObjectBuilder;
-    private _documentBuilder: DocumentBuilder;
     private _queue: TaskQueue;
-    private _comparer: Comparer;
 
-    constructor(sessionFactory: SessionFactory) {
+    constructor(public factory: InternalSessionFactory) {
 
-        this._collections = sessionFactory.collections;
-        this._mappingRegistry = sessionFactory.mappingRegistry;
-        this._objectBuilder = new ObjectBuilder(this._mappingRegistry);
-        this._documentBuilder = new DocumentBuilder(this._mappingRegistry);
         this._queue = new TaskQueue(this._execute.bind(this));
-        this._comparer = new Comparer();
     }
 
     save(obj: any, callback?: Callback): void {
@@ -166,26 +151,25 @@ class SessionImpl implements InternalSession {
             var obj = entities[i];
             var links = this._getObjectLinks(obj);
             if (!links) {
-                var mapping = this._mappingRegistry.getMappingForObject(obj);
-                if (!mapping) {
-                    callback(new Error("Object is not mapped as a document type."));
+                var persister = this.factory.getPersisterForObject(obj);
+                if (!persister) {
+                    callback(new Error("Object type is not mapped as an entity."));
                     return;
                 }
 
                 // we haven't seen this object before
-                obj["_id"] = mapping.root.identityGenerator.generate();
-                this._linkObject(obj, mapping, ScheduledOperation.Insert);
+                obj["_id"] = persister.identityGenerator.generate();
+                this._linkObject(obj, persister, ScheduledOperation.Insert);
             }
             else {
                 switch (links.state) {
                     case ObjectState.Managed:
-                        if (links.mapping.root.changeTracking == ChangeTracking.DeferredExplicit && !links.scheduledOperation) {
+                        if (links.persister.changeTracking == ChangeTracking.DeferredExplicit && !links.scheduledOperation) {
                             links.scheduledOperation = ScheduledOperation.DirtyCheck;
                         }
                         break;
                     case ObjectState.Detached:
-                        callback(new Error("Cannot save a " +
-                        "detached object."));
+                        callback(new Error("Cannot save a detached object."));
                         return;
                     case ObjectState.Removed:
                         // Cancel delete operation and make managed.
@@ -265,19 +249,15 @@ class SessionImpl implements InternalSession {
         var list = this._getAllObjectLinks();
 
         // MongoDB bulk operations need to be ordered by operation type or they are not executed
-        // as bulk operations. The DocumentPersister will group operations by collection but will not reorder them.
-        var persister = new DocumentPersister(this, this._documentBuilder);
+        // as bulk operations. The Batch will group operations by collection but will not reorder them.
+        var batch = new PersisterBatch();
 
+        // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
         for(var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             // TODO: ignore read-only objects
-            // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
-            if (links.scheduledOperation == ScheduledOperation.DirtyCheck || (links.mapping.root.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
-                var document = this._documentBuilder.buildDocument(links.object, links.mapping.type);
-                var changes = this._comparer.compare(links.originalDocument, document);
-                if(changes.$set || changes.$unset) {
-                    persister.addUpdate(links.object, links.mapping);
-                }
+            if (links.scheduledOperation == ScheduledOperation.DirtyCheck || (links.persister.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
+                links.originalDocument = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
             }
         }
 
@@ -285,7 +265,7 @@ class SessionImpl implements InternalSession {
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             if (links.scheduledOperation == ScheduledOperation.Insert) {
-                links.originalDocument = persister.addInsert(links.object, links.mapping);
+                links.originalDocument = links.persister.insert(batch, links.object);
             }
         }
 
@@ -293,12 +273,12 @@ class SessionImpl implements InternalSession {
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             if (links.scheduledOperation == ScheduledOperation.Delete) {
-                persister.addDelete(links.object, links.mapping);
+                links.persister.remove(batch, links.object);
             }
         }
 
         // TODO: what to do if we get an error during execute? Should we make the session invalid? yes.
-        persister.execute(err => {
+        batch.execute(err => {
             if(err) return callback(err);
 
             for (var i = 0, l = list.length; i < l; i++) {
@@ -324,63 +304,45 @@ class SessionImpl implements InternalSession {
         return obj["_id"];
     }
 
-    getCollection(mapping: TypeMapping): Collection {
+    getObject(id: Identifier): any {
 
-        return this._collections[mapping.root.id];
+        var links = this._getObjectLinksById(id);
+        if (links) {
+            return links.object;
+        }
     }
 
-    find<T>(ctr: Constructor<T>, id: string, callback: ResultCallback<T>): void {
+    registerManaged(persister: EntityPersister, entity: any, document: any): void {
+
+        // save the original document for dirty checking
+        this._linkObject(entity, persister).originalDocument = document;
+    }
+
+    find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void {
 
         // check to see if object is already loaded
         var links = this._getObjectLinksById(id);
         if (links) {
-            return done(null, links.object);
+            return process.nextTick(() => callback(null, links.object));
         }
 
-        var mapping = this._mappingRegistry.getMappingForConstructor(ctr);
-        if (!mapping) {
-            return done(new Error("Object is not mapped as a document type."));
+        var persister = this.factory.getPersisterForConstructor(ctr);
+        if (!persister) {
+            return process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
         }
 
-        this._findInCollection(mapping, mapping.root.identityGenerator.fromString(id), callback);
-
-        function done(err: Error, result?: T) {
-            process.nextTick(() => {
-                callback(err, result);
-            });
-        }
+        persister.load(this, id, callback);
     }
 
-    private _findInCollection(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void {
-
-        this.getCollection(mapping).findOne({ _id: id }, (err, document) => {
-            if (err) return callback(err);
-            this._load(mapping, document, callback);
-        });
-    }
-
-    // only call within async function
-    private _load<T>(mapping: TypeMapping, document: any, callback: ResultCallback<T>): void {
-
-        // if the document is null or undefined then return undefined
-        if (!document) {
-            // note that we are not ensuring the callback is called async because _load will only
-            // be called within an async function
-            return callback(null);
-        }
+    load(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void {
 
         // check to see if object is already loaded
-        var links = this._getObjectLinksById(document["_id"]);
+        var links = this._getObjectLinksById(id);
         if (links) {
-            return callback(null, links.object);
+            return process.nextTick(() => callback(null, links.object));
         }
 
-        var obj = this._objectBuilder.buildObject(document, mapping.type);
-        var links = this._linkObject(obj, mapping);
-        // save the original document for dirty checking
-        links.originalDocument = document;
-
-        callback(null, obj);
+        this.factory.getPersisterForMapping(mapping).load(this, id, callback);
     }
 
     private _getObjectLinksById(id: Identifier): ObjectLinks {
@@ -413,26 +375,31 @@ class SessionImpl implements InternalSession {
             if (!links) {
                 // If we have an id but no links then the object must be detached since we assume that we manage
                 // the assignment of the identifier.
-                var mapping = this._mappingRegistry.getMappingForObject(obj);
-                if (!mapping) return;
+                var persister = this.factory.getPersisterForObject(obj);
+                if (!persister) return;
 
-                links = this._linkObject(obj, mapping);
+                links = this._linkObject(obj, persister);
                 links.state = ObjectState.Detached;
             }
             return links;
         }
     }
 
-    private _linkObject(obj: any, mapping: TypeMapping, operation = ScheduledOperation.None): ObjectLinks {
+    private _linkObject(obj: any, persister: EntityPersister, operation = ScheduledOperation.None): ObjectLinks {
+
+        var id = obj["_id"].toString();
+        if(this._objectLinks[id]) {
+            throw new Error("Session already contains a managed entity with identifier '" + id + "'.");
+        }
 
         var links = {
             state: ObjectState.Managed,
             scheduledOperation: operation,
             object: obj,
-            mapping: mapping
+            persister: persister
         }
 
-        return this._objectLinks[obj["_id"].toString()] = links;
+        return this._objectLinks[id] = links;
     }
 
     private _unlinkObject(links: ObjectLinks): void {
@@ -452,23 +419,17 @@ class SessionImpl implements InternalSession {
 
     private _referencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
-        var mapping = this._mappingRegistry.getMappingForObject(obj);
-        if (!mapping) {
-            done(new Error("Object is not mapped as a document type."));
+        var persister = this.factory.getPersisterForObject(obj);
+        if (!persister) {
+            return process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
         }
 
         var entities: any[] = [],
             embedded: any[] = [];
-        this._walkEntity(obj, mapping, flags, entities, embedded, err => {
-            if(err) return done(err);
-            done(null, entities);
+        this._walkEntity(obj, persister.mapping, flags, entities, embedded, err => {
+            if(err) return process.nextTick(() => callback(err));
+            return process.nextTick(() => callback(null, entities));
         });
-
-        function done(err: Error, results?: any[]) {
-            process.nextTick(() => {
-                callback(err, results);
-            });
-        }
     }
 
     private _walkEntity(entity: any, mapping: TypeMapping, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
@@ -478,7 +439,7 @@ class SessionImpl implements InternalSession {
 
         // TODO: load references in batches grouped by root mapping
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
-            this._findInCollection(reference.mapping, reference.id, (err: Error, entity: any) => {
+            this.load(reference.mapping, reference.id, (err: Error, entity: any) => {
                 if (err) return done(err);
                 this._walkEntity(entity, reference.mapping, flags, entities, embedded, callback);
             });
@@ -513,7 +474,7 @@ class SessionImpl implements InternalSession {
         if (type.isObjectType()) {
             // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
             // does not exist, default to mapping for type.
-            var mapping = this._mappingRegistry.getMappingForObject(value) || this._mappingRegistry.getMappingForType(type);
+            var mapping = this.factory.getMappingForObject(value) || this.factory.getMappingForType(type);
             if (!mapping) return;
 
             if (mapping.flags & TypeMappingFlags.DocumentType) {

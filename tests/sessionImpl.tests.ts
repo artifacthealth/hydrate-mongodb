@@ -45,7 +45,7 @@ describe('SessionImpl', () => {
         });
     });
 
-    it('cascade', (done) => {
+    it.skip('cascade', (done) => {
 
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/model.d.json");

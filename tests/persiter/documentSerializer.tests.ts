@@ -8,20 +8,26 @@ import model = require("../fixtures/model");
 import MongoDriver = require("../../src/driver/mongoDriver");
 
 import MappingRegistry = require("../../src/mapping/mappingRegistry");
+import SessionFactoryImpl = require("../../src/sessionFactoryImpl");
 import AnnotationMappingProvider = require("../../src/mapping/providers/annotationMappingProvider");
-import DocumentBuilder = require("../../src/persister/documentBuilder");
+import Serializer = require("../../src/persister/documentSerializer");
 import Configuration = require("../../src/config/configuration");
 
-describe('DocumentBuilder', () => {
+describe('DocumentSerializer', () => {
 
-    describe('buildDocument', () => {
+    describe('read', () => {
 
-        it('', (done) => {
+        it.skip('performance test', (done) => {
 
-            createDocumentBuilder((err, builder) => {
-                if(err) return done(err);
+            var mappingProvider = new AnnotationMappingProvider(new Configuration());
+            mappingProvider.addFile("build/tests/fixtures/model.d.json");
+            mappingProvider.getMapping((err, mappings) => {
+                if (err) return done(err);
 
                 var fixture = helpers.requireFixture("model");
+                var registry = new MappingRegistry(mappings);
+                var factory = new SessionFactoryImpl({}, registry);
+                var serializer = new Serializer(factory, fixture.resolve("Person").getDeclaredType());
 
                 var person = new model.Person(new model.PersonName("Jones", "Bob"));
                 person.phones = [ new model.Phone("303-258-1111", model.PhoneType.Work) ];
@@ -38,23 +44,20 @@ describe('DocumentBuilder', () => {
                 (<any>parent2)._id = 3;
                 person.addParent(parent2);
 
-                var ret = builder.buildDocument(person, fixture.resolve("Person").getDeclaredType());
+                var document = serializer.write(person);
+
+                var start = process.hrtime();
+
+                for(var i = 0; i < 10000; i++) {
+                    var obj = serializer.read(document);
+                }
+
+                // divide by a million to get nano to milli
+                var elapsed = process.hrtime(start);
+                console.log("loaded " + i + " objects in " + elapsed[0] + "s, " + (elapsed[1]/1000000).toFixed(3) + "ms");
+
                 done();
             });
         });
     });
 });
-
-function createDocumentBuilder(callback: (err: Error, builder:  DocumentBuilder) => void): void {
-
-    var mappingProvider = new AnnotationMappingProvider(new Configuration());
-    mappingProvider.addFile("build/tests/fixtures/model.d.json");
-    mappingProvider.getMapping((err, mappings) => {
-        if (err) return callback(err, null);
-
-        var mappingRegistry = new MappingRegistry(mappings);
-        var documentBuilder = new DocumentBuilder(mappingRegistry);
-
-        callback(null, documentBuilder);
-    });
-}

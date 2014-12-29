@@ -1,13 +1,16 @@
-// TODO: ignore fields added by persister such as __v, __l
-class Comparer {
+import Changes = require("./changes");
 
-    compare(originalDocument: any, document: any): any {
-        var changes = {};
-        this._compare(originalDocument, document, changes);
+// TODO: ignore fields added by persister such as __v, __l
+module DocumentComparer {
+
+    export function compare(originalDocument: any, document: any): Changes {
+
+        var changes: Changes = {};
+        compareObjects(originalDocument, document, changes);
         return changes;
     }
 
-    private _compare(o1: any, o2: any, changes: any, path?: string): void {
+    function compareObjects(o1: any, o2: any, changes: any, path?: string): void {
 
         if (o1 === o2 || (o1 !== o1 && o2 !== o2)) return;
 
@@ -29,7 +32,7 @@ class Comparer {
                             if (o1.length == o2.length) {
                                 for (var i = 0, l = o1.length; i < l; i++) {
                                     // check if array element has changed
-                                    this._compare(o1[i], o2[i], changes, base + i);
+                                    compareObjects(o1[i], o2[i], changes, base + i);
                                 }
                                 return;
                             }
@@ -52,7 +55,7 @@ class Comparer {
                                 }
                                 else {
                                     // check if field has changed
-                                    this._compare(o1[key], o2[key], changes, base + key);
+                                    compareObjects(o1[key], o2[key], changes, base + key);
                                 }
                             }
                         }
@@ -67,7 +70,7 @@ class Comparer {
     }
 
     // Based on AngularJS equals function.
-    private _equals(o1: any, o2: any): any {
+    function equals(o1: any, o2: any): any {
 
         if (o1 === o2) return true;
         if (o1 === null || o2 === null) return false;
@@ -79,7 +82,7 @@ class Comparer {
 
                 if (o1.length == o2.length) {
                     for(var i = 0, l = o1.length; i < l; i++) {
-                        if (!this._equals(o1[i], o2[i])) return false;
+                        if (!equals(o1[i], o2[i])) return false;
                     }
                     return true;
                 }
@@ -93,7 +96,7 @@ class Comparer {
 
                 for(var key in o1) {
                     if(o1.hasOwnProperty(key) && o1[key] !== undefined) {
-                        if (!this._equals(o1[key], o2[key])) return false;
+                        if (!equals(o1[key], o2[key])) return false;
                     }
                 }
 
@@ -109,4 +112,4 @@ class Comparer {
     }
 }
 
-export = Comparer;
+export = DocumentComparer;
