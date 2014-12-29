@@ -51,7 +51,7 @@ class Configuration {
             callback = connectionOrCallback;
 
             if(!this._options.uri) {
-                var error = new Error("A database connection must be passed to createSessionFactoryImpl or a connection URI should be specified in the configuration options.");
+                var error = new Error("A database connection must be passed to createSessionFactory or a connection URI should be specified in the configuration options.");
             }
             if(typeof this._options.uri !== "string") {
                 var error = new Error("Connection URI expected to be of type string.");
