@@ -17,7 +17,7 @@ describe('DocumentSerializer', () => {
 
     describe('read', () => {
 
-        it.skip('performance test', (done) => {
+        it('performance test', (done) => {
 
             var mappingProvider = new AnnotationMappingProvider(new Configuration());
             mappingProvider.addFile("build/tests/fixtures/model.d.json");
@@ -28,20 +28,21 @@ describe('DocumentSerializer', () => {
                 var registry = new MappingRegistry(mappings);
                 var factory = new SessionFactoryImpl({}, registry);
                 var serializer = new Serializer(factory, fixture.resolve("Person").getDeclaredType());
+                var identity = registry.getMappingForConstructor(model.Person).root.identity;
 
                 var person = new model.Person(new model.PersonName("Jones", "Bob"));
                 person.phones = [ new model.Phone("303-258-1111", model.PhoneType.Work) ];
-                (<any>person)._id = 1;
+                (<any>person)._id = identity.generate();
                 person.addAttribute("eye color", "hazel");
                 person.addAttribute("hair color", "brown");
                 person.addAttribute("temperament", "angry");
 
                 var parent1 = new model.Person(new model.PersonName("Jones", "Mary"));
-                (<any>parent1)._id = 2;
+                (<any>parent1)._id = identity.generate();
                 person.addParent(parent1);
 
                 var parent2 = new model.Person(new model.PersonName("Jones", "Jack"));
-                (<any>parent2)._id = 3;
+                (<any>parent2)._id = identity.generate();
                 person.addParent(parent2);
 
                 var document = serializer.write(person);

@@ -6,7 +6,6 @@ import async = require("async");
 import Callback = require("./core/callback");
 import ChangeTracking = require("./mapping/changeTracking");
 import Constructor = require("./core/constructor");
-import PersisterBatch = require("./persister/persisterBatch");
 import LockMode = require("./lockMode");
 import Identifier = require("./id/identifier");
 import IteratorCallback = require("./core/iteratorCallback");
@@ -19,6 +18,7 @@ import TypeMapping = require("./mapping/typeMapping");
 import TypeMappingFlags = require("./mapping/typeMappingFlags");
 import TaskQueue = require("./taskQueue");
 import EntityPersister = require("./persister/entityPersister");
+import Batch = require("./persister/batch");
 
 enum ObjectState {
 
@@ -158,7 +158,7 @@ class SessionImpl implements InternalSession {
                 }
 
                 // we haven't seen this object before
-                obj["_id"] = persister.identityGenerator.generate();
+                obj["_id"] = persister.identity.generate();
                 this._linkObject(obj, persister, ScheduledOperation.Insert);
             }
             else {
@@ -250,7 +250,7 @@ class SessionImpl implements InternalSession {
 
         // MongoDB bulk operations need to be ordered by operation type or they are not executed
         // as bulk operations. The Batch will group operations by collection but will not reorder them.
-        var batch = new PersisterBatch();
+        var batch = new Batch();
 
         // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
         for(var i = 0, l = list.length; i < l; i++) {
@@ -306,7 +306,7 @@ class SessionImpl implements InternalSession {
 
     getObject(id: Identifier): any {
 
-        var links = this._getObjectLinksById(id);
+        var links = this._objectLinks[id.toString()];
         if (links) {
             return links.object;
         }
@@ -321,9 +321,9 @@ class SessionImpl implements InternalSession {
     find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void {
 
         // check to see if object is already loaded
-        var links = this._getObjectLinksById(id);
-        if (links) {
-            return process.nextTick(() => callback(null, links.object));
+        var entity = this.getObject(id);
+        if (entity) {
+            return process.nextTick(() => callback(null, entity));
         }
 
         var persister = this.factory.getPersisterForConstructor(ctr);
@@ -337,17 +337,12 @@ class SessionImpl implements InternalSession {
     load(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void {
 
         // check to see if object is already loaded
-        var links = this._getObjectLinksById(id);
-        if (links) {
-            return process.nextTick(() => callback(null, links.object));
+        var entity = this.getObject(id);
+        if (entity) {
+            return process.nextTick(() => callback(null, entity));
         }
 
         this.factory.getPersisterForMapping(mapping).load(this, id, callback);
-    }
-
-    private _getObjectLinksById(id: Identifier): ObjectLinks {
-
-        return this._objectLinks[id.toString()];
     }
 
     /**
@@ -478,15 +473,15 @@ class SessionImpl implements InternalSession {
             if (!mapping) return;
 
             if (mapping.flags & TypeMappingFlags.DocumentType) {
+                // if the object is not an instance of the entity's constructor then it should be an identifier or DBRef
                 if(!(value instanceof mapping.classConstructor)) {
-                    // if the entity is not an instance of the entity's constructor then it should be an identifier or DBRef
                     // TODO: handle DBRef
-                    if(!mapping.root.identityGenerator.validate(value)) {
+                    if(!mapping.root.identity.validate(value)) {
                         return;
                     }
-                    var links = this._getObjectLinksById(value);
-                    if (links) {
-                        value = links.object;
+                    var entity = this.getObject(value);
+                    if (entity) {
+                        value = entity;
                     }
                     else {
                         if(flags & PropertyFlags.Dereference) {

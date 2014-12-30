@@ -83,6 +83,7 @@ class Serializer {
 
     private _readObject(document: any, type: reflect.Type, state: SerializerState, path?: string): any {
 
+        var base = path ? path + "." : "";
         var mapping = this._factory.getMappingForType(type);
         if(!mapping) {
             return state.addError("No mapping available for type '" + type.getFullName() + "'.", path, type, document);
@@ -91,15 +92,22 @@ class Serializer {
         var isRoot = path === undefined;
         if(mapping.isDocumentType) {
             if(isRoot) {
-                // TODO: allow mapping to map document identifier field to different property on object
                 var id = document["_id"];
                 if(!id) {
                     return state.addError("Missing identifier.", path, type, document);
                 }
             }
             else {
-                // TODO: how to handle reference
-                return document;
+                var id = document;
+            }
+            // TODO: handle DBRef
+            if(!mapping.root.identity.validate(id)) {
+                return state.addError("'" + id.toString() + "' is not a valid identifier.", base + "_id", type, id);
+            }
+            // TODO: resolve reference here or do later?
+            // if this is not the root document then just return the id
+            if(!isRoot) {
+                return id;
             }
         }
 
@@ -118,11 +126,11 @@ class Serializer {
         var obj: any = mapping.type.isClass() ? mapping.type.createObject() : {};
         // if this is the root then set the identifier
         if(isRoot) {
+            // TODO: allow mapping to map document identifier field to different property on object
             obj["_id"] = id;
         }
 
         var properties = mapping.properties;
-        var base = path ? path + "." : "";
         for(var i = 0, l = properties.length; i < l; i++) {
             var property = properties[i];
 
@@ -239,6 +247,7 @@ class Serializer {
     private _writeObject(obj: any, type: reflect.Type, state: SerializerState, path?: string): any {
 
         var document: any = {};
+        var base = path ? path + "." : "";
 
         // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
         // does not exist, default to mapping for type.
@@ -249,19 +258,28 @@ class Serializer {
 
         var isRoot = path === undefined;
         if(mapping.isDocumentType) {
-            // TODO: what if obj is an identifier
-            if(mapping.root.identityGenerator.validate(obj)) {
-                return obj;
+            // if the object is not an instance of the entity's constructor then it should be an identifier or DBRef
+            if(!(obj instanceof mapping.classConstructor)) {
+                // TODO: handle DBRef
+                var id = obj;
             }
             else {
                 var id = obj["_id"];
                 if (!id) {
                     return state.addError("Missing identifier.", path, type, obj);
                 }
-                if (!isRoot) {
-                    // If we have a document type and this is not the root object, then just save a reference to the object.
-                    return id;
-                }
+            }
+            if(!mapping.root.identity.validate(id)) {
+                return state.addError("'" + id.toString() + "' is not a valid identifier.", base + "_id", type, id);
+            }
+            if(isRoot) {
+                // if this is the root then set the identifier
+                document["_id"] = id;
+            }
+            else {
+                // otherwise, save a reference
+                // TODO: decide when to save reference as a DBRef
+                return id;
             }
         }
 
@@ -278,7 +296,6 @@ class Serializer {
         }
 
         var properties = mapping.properties;
-        var base = path ? path + "." : "";
         for(var i = 0, l = properties.length; i < l; i++) {
             var property = properties[i],
                 flags = property.flags;
@@ -314,11 +331,6 @@ class Serializer {
             document[mapping.root.discriminatorField] = mapping.discriminatorValue;
         }
 
-        // if this is the root then set the identifier
-        if(isRoot) {
-            document["_id"] = id;
-        }
-
         return document;
     }
 
@@ -352,6 +364,8 @@ class Serializer {
             if(typeof value !== "number") {
                 return state.addError("Expected enum value to be a number.", path, type, value);
             }
+            // TODO: default enum to number?
+            // TODO: save as number if name is not found? e.g. when used as bitmap
             return type.getEnumName(value);
         }
 
@@ -371,6 +385,8 @@ class Serializer {
             }
             return ret;
         }
+
+        // TODO: handle indexed type
 
         if(type.isArray()) {
             if(!Array.isArray(value)) {

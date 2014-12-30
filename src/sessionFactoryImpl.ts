@@ -21,6 +21,7 @@ class SessionFactoryImpl implements InternalSessionFactory {
     constructor(collections: CollectionTable, mappingRegistry: MappingRegistry) {
 
         this._collections = collections;
+        // TODO: get rid of mapping registry and handle directly in session factory
         this._mappingRegistry = mappingRegistry;
     }
 

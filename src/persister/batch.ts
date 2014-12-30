@@ -2,14 +2,14 @@
 
 import async = require("async");
 import Callback = require("../core/callback");
-import CollectionTable = require("driver/collectionTable");
-import Persister = require("./entityPersister");
+import EntityPersister = require("./entityPersister");
 import Bulk = require("../driver/bulk");
 import BulkWriteResult = require("../driver/bulkWriteResult");
 import InternalSession = require("../internalSession");
 import Changes = require("./changes");
 
 interface CollectionBatch {
+
     collectionName: string;
     operation: Bulk;
     inserted: number;
@@ -24,7 +24,7 @@ class PersisterBatch {
     private _batchTable: { [id: number]: CollectionBatch } = {};
     private _batches: CollectionBatch[] = [];
 
-    addInsert(document: any, persister: Persister): void {
+    addInsert(document: any, persister: EntityPersister): void {
 
         var batch = this._getBatch(persister);
         batch.inserted++;
@@ -32,9 +32,8 @@ class PersisterBatch {
         console.log("INSERT: " + JSON.stringify(document, null, "\t"));
     }
 
-    addUpdate(id: any, changes: Changes, persister: Persister): void {
+    addUpdate(id: any, changes: Changes, persister: EntityPersister): void {
 
-        // TODO: Change to actual update instead of replacement
         var query: any = {
             _id: id
         }
@@ -45,7 +44,7 @@ class PersisterBatch {
         console.log("UPDATE: " + JSON.stringify(changes, null, "\t"));
     }
 
-    addRemove(id: any, persister: Persister): void {
+    addRemove(id: any, persister: EntityPersister): void {
 
         var query: any = {
             _id: id
@@ -60,10 +59,7 @@ class PersisterBatch {
     execute(callback: Callback): void {
 
         if(this._batches.length == 0) {
-            process.nextTick(() => {
-                callback();
-            });
-            return;
+            return process.nextTick(() => callback());
         }
 
         async.each(this._batches, (batch: CollectionBatch, done: (err?: Error) => void) => {
@@ -89,7 +85,7 @@ class PersisterBatch {
         }, callback);
     }
 
-    private _getBatch(persister: Persister): CollectionBatch {
+    private _getBatch(persister: EntityPersister): CollectionBatch {
 
         var id = persister.mapping.root.id,
             batch = this._batchTable[id];
