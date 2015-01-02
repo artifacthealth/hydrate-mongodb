@@ -163,6 +163,7 @@ declare module "tsreflect" {
 
         getEnumValue(value: string, ignoreCase?: boolean): number;
         getEnumName(value: number): string;
+        getEnumNames(): string[];
         getElementType(): Type;
         getElementTypes(): Type[];
 

@@ -1,26 +1,23 @@
-/// <reference path="../../typings/tsreflect.d.ts" />
 /// <reference path="../../typings/async.d.ts" />
 
-import reflect = require("tsreflect");
-import TypeMapping = require("../mapping/TypeMapping");
+import async = require("async");
+import EntityMapping = require("../mapping/entityMapping");
 import Collection = require("../driver/collection");
 import Identifier = require('../id/identifier');
 import ResultCallback = require("../core/resultCallback");
 import InternalSession = require("../internalSession");
 import InternalSessionFactory = require("../internalSessionFactory");
-import DocumentSerializer = require("./documentSerializer");
 import DocumentComparer = require("./documentComparer");
 import ChangeTracking = require("../mapping/changeTracking");
 import IdentityGenerator = require("../id/identityGenerator");
 import Batch = require("./batch");
 import Callback = require("../core/callback");
-import TypeMappingFlags = require("../mapping/typeMappingFlags");
-
+import MappingError = require("../mapping/mappingError");
 
 import PropertyFlags = require("../mapping/propertyFlags");
 
 interface Reference {
-    mapping: TypeMapping;
+    mapping: EntityMapping;
     id: Identifier;
     object: any;
     key: string;
@@ -28,22 +25,20 @@ interface Reference {
 
 class EntityPersister {
 
-    private _serializer: DocumentSerializer;
-
     changeTracking: ChangeTracking;
     identity: IdentityGenerator;
 
-    constructor(public factory: InternalSessionFactory, public mapping: TypeMapping, public collection: Collection) {
+    constructor(public factory: InternalSessionFactory, public mapping: EntityMapping, public collection: Collection) {
 
-        this._serializer = new DocumentSerializer(factory, mapping.type);
-
-        this.changeTracking = mapping.root.changeTracking;
-        this.identity = mapping.root.identity;
+        this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
+        this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
     dirtyCheck(batch: Batch, entity: any, originalDocument: any): any {
 
-        var document = this._serializer.write(entity);
+        var errors: MappingError[] = [];
+        var visited: any[] = [];
+        var document = this.mapping.write(entity, null, errors, visited);
 
         var changes = DocumentComparer.compare(originalDocument, document);
         if(changes.$set || changes.$unset) {
@@ -55,7 +50,10 @@ class EntityPersister {
 
     insert(batch: Batch, entity: any): any {
 
-        var document = this._serializer.write(entity);
+        var errors: MappingError[] = [];
+        var visited: any[] = [];
+        var document = this.mapping.write(entity, null, errors, visited);
+
         batch.addInsert(document, this);
         return document;
     }
@@ -90,11 +88,13 @@ class EntityPersister {
             return callback(null, entity);
         }
 
-        var entity = this._serializer.read(document);
+        var errors: MappingError[] = [];
+        var entity = this.mapping.read(document, null, errors);
         session.registerManaged(this, entity, document);
         callback(null, entity);
     }
 
+    /*
     walk(session: InternalSession, obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
         var persister = this.factory.getPersisterForObject(obj);
@@ -106,6 +106,7 @@ class EntityPersister {
             embedded: any[] = [];
         this._walkEntity(session, obj, persister.mapping, flags, entities, embedded, err => {
             if(err) return process.nextTick(() => callback(err));
+            console.log("HERE", entities);
             return process.nextTick(() => callback(null, entities));
         });
     }
@@ -126,12 +127,12 @@ class EntityPersister {
                 reference.object[reference.key] = entity;
 
                 // now walk entity
-                this._walkEntity(session, entity, reference.mapping, flags, entities, embedded, callback);
+                this._walkEntity(session, entity, reference.mapping, flags, entities, embedded, done);
             });
         }, callback);
     }
 
-    private _walkValue(session: InternalSession, value: any, type: reflect.Type, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[], key?: any): void {
+    private _walkValue(session: InternalSession, value: any, type: reflect.Type, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[], parent?: any, key?: any): void {
 
         if (value === null || value === undefined) return;
 
@@ -139,7 +140,7 @@ class EntityPersister {
             if (Array.isArray(value)) {
                 var elementTypes = type.getElementTypes();
                 for (var i = 0, l = Math.min(value.length, elementTypes.length); i < l; i++) {
-                    this._walkValue(session, value[i], elementTypes[i], flags, entities, embedded, references, i);
+                    this._walkValue(session, value[i], elementTypes[i], flags, entities, embedded, references, value, i);
                 }
             }
             return;
@@ -149,7 +150,7 @@ class EntityPersister {
             if (Array.isArray(value)) {
                 var elementType = type.getElementType();
                 for (i = 0, l = value.length; i < l; i++) {
-                    this._walkValue(session, value[i], elementType, flags, entities, embedded, references, i);
+                    this._walkValue(session, value[i], elementType, flags, entities, embedded, references, value, i);
                 }
             }
             return;
@@ -171,13 +172,11 @@ class EntityPersister {
                     }
                     var entity = session.getObject(value);
                     if (entity) {
-                        value = entity;
+                        parent[key] = value = entity;
                     }
                     else {
-                        if(flags & PropertyFlags.Dereference) {
-                            // store reference to resolve later
-                            references.push({ mapping: mapping, id: value, object: value, key: key });
-                        }
+                        // store reference to resolve later
+                        references.push({ mapping: mapping, id: value, object: parent, key: key });
                         return;
                     }
                 }
@@ -193,12 +192,13 @@ class EntityPersister {
             for (var i = 0, l = properties.length; i < l; i++) {
                 var property = properties[i];
                 // if the property is not ignored and it has the specified flags, then walk the value of the property
-                if (!(property.flags & PropertyFlags.Ignored) && (property.flags & flags)) {
-                    this._walkValue(session, property.symbol.getValue(value), property.symbol.getType(), flags, entities, embedded, references, property.name);
+                if (!(property.flags & PropertyFlags.Ignored)) {
+                    this._walkValue(session, value[property.name], property.symbol.getType(), flags, entities, embedded, references, value, property.name);
                 }
             }
         }
     }
+    */
 }
 
 export = EntityPersister;

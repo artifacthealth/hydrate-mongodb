@@ -1,0 +1,48 @@
+import Mapping = require("./mapping");
+import MappingBase = require("./mappingBase");
+import MappingError = require("./mappingError");
+import RegExpUtil = require("../core/regExpUtil");
+import MappingFlags = require("./mappingFlags");
+import Changes = require("./changes");
+
+class RegExpMapping extends MappingBase {
+
+    constructor() {
+        super(MappingFlags.RegExp);
+    }
+
+    read(value: any, path: string, errors: MappingError[]): any {
+
+        if(!(value instanceof RegExp)) {
+            errors.push({ message: "Expected RegExp.", path: path, value: value });
+            return;
+        }
+        return RegExpUtil.clone(value);
+    }
+
+    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(!(value instanceof RegExp)) {
+            errors.push({ message: "Expected RegExp.", path: path, value: value });
+            return;
+        }
+        return RegExpUtil.clone(value);
+    }
+
+    walk(value: any, path: string): void {
+
+    }
+
+    compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
+
+        // TODO: throw if objectValue is not RegExp
+
+        if(documentValue instanceof RegExp && objectValue.toString() === documentValue.toString()) {
+            return;
+        }
+
+        (changes["$set"] || (changes["$set"] = {}))[path] = RegExpUtil.clone(objectValue);
+    }
+}
+
+export = RegExpMapping;

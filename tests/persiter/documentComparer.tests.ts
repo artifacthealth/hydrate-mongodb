@@ -245,7 +245,7 @@ describe('DocumentComparer', () => {
         assert.isUndefined(ret.$set["a"]);
     });
 
-    it.skip("", () => {
+    it("performance", () => {
 
         var a: any = {
             list: []

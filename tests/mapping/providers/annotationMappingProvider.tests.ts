@@ -6,8 +6,12 @@ import chai = require("chai");
 import assert = chai.assert;
 import reflect = require("tsreflect");
 import AnnotationMappingProvider = require("../../../src/mapping/providers/annotationMappingProvider");
-import TypeMapping = require("../../../src/mapping/TypeMapping");
 import Configuration = require("../../../src/config/Configuration");
+import MappingRegistry = require("../../../src/mapping/mappingRegistry");
+
+import Mapping = require("../../../src/mapping/mapping");
+import ClassMapping = require("../../../src/mapping/classMapping");
+import EntityMapping = require("../../../src/mapping/entityMapping");
 
 describe('AnnotationMappingProvider', () => {
 
@@ -35,7 +39,7 @@ describe('AnnotationMappingProvider', () => {
                 processFixture("collectionHierarchy", done, (results) => {
 
                     assert.lengthOf(results, 3);
-                    results.forEach(x => assert.isTrue(x.isDocumentType));
+                    results.forEach(x => assert.instanceOf(x, EntityMapping));
                 });
             });
 
@@ -117,7 +121,7 @@ describe('AnnotationMappingProvider', () => {
 
                 processFixture("discriminatorValueDuplicate", (err) => {
                     assert.ok(err);
-                    assert.include(err.message, "There is already a class with a discriminator value of");
+                    assert.include(err.message, "There is already a class in this inheritance hierarchy with a discriminator value of");
                     done();
                 });
             });
@@ -167,25 +171,25 @@ describe('AnnotationMappingProvider', () => {
     });
 });
 
-function findMapping(mappings: TypeMapping[], name: string): TypeMapping {
+function findMapping(mappings: EntityMapping[], name: string): EntityMapping {
 
     for(var i = 0, l = mappings.length; i < l; i++) {
         var mapping = mappings[i];
-        if(mapping.type.getName() === name) {
+        if(mapping.name === name) {
             return mapping;
         }
     }
 }
 
-function processFixture(file: string, done: (err?: Error) => void, callback?: (results: TypeMapping[]) => void): void {
+function processFixture(file: string, done: (err?: Error) => void, callback?: (results: EntityMapping[]) => void): void {
 
     var provider = new AnnotationMappingProvider(new Configuration());
     provider.addFile("build/tests/fixtures/annotations/" + file + ".d.json");
-    provider.getMapping((err, results) => {
+    provider.getMapping((err, registry) => {
         if(err) return done(err);
 
         if(callback) {
-            callback(results);
+            callback(<EntityMapping[]>registry.getMappings());
         }
         done();
     });

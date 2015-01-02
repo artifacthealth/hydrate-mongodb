@@ -85,6 +85,10 @@ module Map {
     var nextHashCode = 1;
     var hashCodeName = "__hashCode" + (new Date().getTime()) + "__";
 
+    // V8 cannot optimize property access if variable is used for property name, so we generate a function for access.
+    // See Angular design doc here: http://tinyurl.com/kap2g2r
+    var _getHashCode: (obj: any) => string = <any>(new Function("o", "return o['" + hashCodeName + "']"));
+
     export function setHashCode(obj: any, hashCode: string): string {
 
         if(!Object.isExtensible(obj)) {
@@ -107,10 +111,7 @@ module Map {
      */
     export function getHashCode(obj: any): string {
 
-        if(hasProperty(obj, hashCodeName)) {
-            return obj[hashCodeName];
-        }
-        return setHashCode(obj, (nextHashCode++).toString());
+        return _getHashCode(obj) || setHashCode(obj, (nextHashCode++).toString());
     }
 }
 

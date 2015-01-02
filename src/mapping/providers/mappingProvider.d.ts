@@ -1,9 +1,9 @@
 import ResultCallback = require("../../core/resultCallback");
-import TypeMapping = require("../typeMapping");
+import MappingRegistry = require("../mappingRegistry");
 
 interface MappingProvider {
 
-    getMapping(callback: ResultCallback<TypeMapping[]>): void;
+    getMapping(callback: ResultCallback<MappingRegistry>): void;
 }
 
 export = MappingProvider;

@@ -14,12 +14,13 @@ import MongoDriver = require("../driver/mongoDriver");
 import Connection = require("../driver/connection");
 import Collection = require("../driver/collection");
 import CollectionTable = require("../driver/collectionTable");
-import TypeMapping = require("../mapping/typeMapping");
+import Mapping = require("../mapping/mapping");
 import MappingRegistry = require("../mapping/mappingRegistry");
 import MappingProvider = require("../mapping/providers/mappingProvider");
 import AnnotationMappingProvider = require("../mapping/providers/annotationMappingProvider");
 import ConfigurationOptions = require("./configurationOptions");
 import IdentityGenerator = require("../id/identityGenerator");
+import EntityMapping = require("../mapping/entityMapping");
 
 class Configuration {
 
@@ -88,41 +89,36 @@ class Configuration {
             }
         }
 
-        this._mappingProvider.getMapping((err, mappings) => {
+        this._mappingProvider.getMapping((err, registry) => {
             if(err) return callback(err);
 
-            this._buildCollections(connection, mappings, (err, collections) => {
+            this._buildCollections(connection, registry, (err, collections) => {
                 if(err) return callback(err);
 
-                var sessionFactoryImpl = new SessionFactoryImpl(collections, new MappingRegistry(mappings));
+                var sessionFactoryImpl = new SessionFactoryImpl(collections, registry);
                 callback(null, sessionFactoryImpl);
             });
         });
     }
 
-    private _buildCollections(connection: Connection, mappings: TypeMapping[], callback: ResultCallback<CollectionTable>): void {
+    private _buildCollections(connection: Connection, registry: MappingRegistry, callback: ResultCallback<CollectionTable>): void {
 
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
         var collections: CollectionTable = {};
         var names: Map<boolean> = {};
 
-        async.each(mappings, (mapping: TypeMapping, callback: (err?: Error) => void) => {
-
-            // only root types are mapped to a collection
-            if(!mapping.isRootType) {
-                return done();
-            }
+        async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
 
             // make sure we have a collection name
             if (!mapping.collectionName) {
-                return done(new Error("Missing collection name on mapping for type '" + mapping.type.getFullName() + "'."));
+                return done(new Error("Missing collection name on mapping for type '" + mapping.name + "'."));
             }
 
             // make sure db/collection is not mapped to some other type.
             var key = [(mapping.databaseName || connection.db.databaseName), "/", mapping.collectionName].join("");
             if (Map.hasProperty(names, key)) {
-                return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.type.getFullName() + "' ."));
+                return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
             }
             names[key] = true;
 

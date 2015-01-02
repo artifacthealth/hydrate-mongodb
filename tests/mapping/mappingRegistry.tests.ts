@@ -7,19 +7,11 @@ import helpers = require("../helpers");
 import model = require("../fixtures/model");
 
 import MappingRegistry = require("../../src/mapping/MappingRegistry");
-import TypeMapping = require("../../src/mapping/typeMapping");
-import TypeMappingFlags = require("../../src/mapping/typeMappingFlags");
+import Mapping = require("../../src/mapping/mapping");
+import EntityMapping = require("../../src/mapping/entityMapping");
+import ClassMapping = require("../../src/mapping/classMapping");
 
 describe('MappingRegistry', () => {
-
-    describe('getMappingForType', () => {
-
-        it('returns the mapping for the specified type', () => {
-
-            var fixture = createFixture();
-            assert.equal(fixture.registry.getMappingForType(fixture.partyMapping.type), fixture.partyMapping);
-        });
-    });
 
     describe('getMappingForObject', () => {
 
@@ -49,21 +41,27 @@ describe('MappingRegistry', () => {
 
 interface Fixture {
 
-    partyMapping: TypeMapping;
-    personMapping: TypeMapping;
-    addressMapping: TypeMapping;
+    partyMapping: EntityMapping;
+    personMapping: EntityMapping;
+    addressMapping: ClassMapping;
     registry: MappingRegistry;
 }
 
 function createFixture() {
 
     var fixture = helpers.requireFixture("model");
+    var registry = new MappingRegistry();
 
-    var partyMapping = new TypeMapping(fixture.resolve("Party").getDeclaredType(), TypeMappingFlags.DocumentType|TypeMappingFlags.RootType);
-    var personMapping = new TypeMapping(fixture.resolve("Person").getDeclaredType(), TypeMappingFlags.DocumentType);
-    var addressMapping = new TypeMapping(fixture.resolve("Address").getDeclaredType(), TypeMappingFlags.EmbeddedType);
+    var partyMapping = new EntityMapping(registry);
+    partyMapping.classConstructor = model.Party;
+    var personMapping = new EntityMapping(registry, partyMapping);
+    personMapping.classConstructor = model.Person;
+    var addressMapping = new ClassMapping(registry);
+    addressMapping.classConstructor = model.Address;
 
-    var registry = new MappingRegistry([ partyMapping, personMapping, addressMapping ]);
+    registry.addMapping(partyMapping);
+    registry.addMapping(personMapping);
+    registry.addMapping(addressMapping);
 
     return {
         partyMapping: partyMapping,

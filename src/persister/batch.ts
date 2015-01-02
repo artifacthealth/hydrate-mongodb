@@ -87,7 +87,7 @@ class PersisterBatch {
 
     private _getBatch(persister: EntityPersister): CollectionBatch {
 
-        var id = persister.mapping.root.id,
+        var id = persister.mapping.inheritanceRoot.id,
             batch = this._batchTable[id];
 
         if(batch === undefined) {

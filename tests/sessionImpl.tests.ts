@@ -55,6 +55,7 @@ describe('SessionImpl', () => {
             var session = sessionFactory.createSession();
 
             var person = new model.Person(new model.PersonName("Jones", "Bob"));
+
             person.phones = [ new model.Phone("303-258-1111", model.PhoneType.Work) ];
 
             var parent1 = new model.Person(new model.PersonName("Jones", "Mary"));
@@ -64,11 +65,7 @@ describe('SessionImpl', () => {
             person.addParent(parent2);
 
             session.save(person);
-            session.flush(() => {
-
-                person.birthDate = new Date("08/18/1977");
-                session.flush(done);
-            });
+            session.flush(done);
         });
     });
 

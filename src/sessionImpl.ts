@@ -1,7 +1,5 @@
-/// <reference path="../typings/tsreflect.d.ts" />
 /// <reference path="../typings/async.d.ts" />
 
-import reflect = require("tsreflect");
 import async = require("async");
 import Callback = require("./core/callback");
 import ChangeTracking = require("./mapping/changeTracking");
@@ -14,8 +12,7 @@ import PropertyFlags = require("./mapping/propertyFlags");
 import ResultCallback = require("./core/resultCallback");
 import InternalSession = require("./internalSession");
 import InternalSessionFactory = require("./internalSessionFactory");
-import TypeMapping = require("./mapping/typeMapping");
-import TypeMappingFlags = require("./mapping/typeMappingFlags");
+import EntityMapping = require("./mapping/entityMapping");
 import TaskQueue = require("./taskQueue");
 import EntityPersister = require("./persister/entityPersister");
 import Batch = require("./persister/batch");
@@ -71,7 +68,7 @@ enum ScheduledOperation {
 }
 
 interface Reference {
-    mapping: TypeMapping;
+    mapping: EntityMapping;
     id: Identifier;
 }
 
@@ -334,6 +331,7 @@ class SessionImpl implements InternalSession {
         persister.load(this, id, callback);
     }
 
+    /*
     load(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void {
 
         // check to see if object is already loaded
@@ -344,6 +342,7 @@ class SessionImpl implements InternalSession {
 
         this.factory.getPersisterForMapping(mapping).load(this, id, callback);
     }
+    */
 
     /**
      * Returns all linked objected as an array.
@@ -413,6 +412,11 @@ class SessionImpl implements InternalSession {
     }
 
     private _referencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
+        // TODO: fix
+        process.nextTick(() => callback(null, [obj]));
+    }
+    /*
+    private _referencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
         var persister = this.factory.getPersisterForObject(obj);
         if (!persister) {
@@ -436,13 +440,14 @@ class SessionImpl implements InternalSession {
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
             this.load(reference.mapping, reference.id, (err: Error, entity: any) => {
                 if (err) return done(err);
-                this._walkEntity(entity, reference.mapping, flags, entities, embedded, callback);
+                this._walkEntity(entity, reference.mapping, flags, entities, embedded, done);
             });
         }, callback);
     }
 
     private _walkValue(value: any, type: reflect.Type, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
+        /*
         if (value === null || value === undefined) return;
 
         if (type.isTuple()) {
@@ -509,6 +514,7 @@ class SessionImpl implements InternalSession {
             }
         }
     }
+    */
 }
 
 export = SessionImpl;

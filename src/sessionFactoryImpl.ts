@@ -1,6 +1,3 @@
-/// <reference path="../typings/tsreflect.d.ts" />
-
-import reflect = require("tsreflect");
 import CollectionTable = require("./driver/collectionTable");
 import Connection = require("./driver/connection");
 import MappingRegistry = require("./mapping/mappingRegistry");
@@ -9,7 +6,9 @@ import SessionImpl = require("./sessionImpl");
 import InternalSessionFactory = require("./internalSessionFactory");
 import Constructor = require("./core/constructor");
 import EntityPersister = require("./persister/entityPersister");
-import TypeMapping = require("./mapping/typeMapping");
+import Mapping = require("./mapping/mapping");
+import ClassMapping = require("./mapping/classMapping");
+import EntityMapping = require("./mapping/entityMapping");
 
 
 class SessionFactoryImpl implements InternalSessionFactory {
@@ -30,36 +29,39 @@ class SessionFactoryImpl implements InternalSessionFactory {
         return new SessionImpl(this);
     }
 
-    getMappingForType(type: reflect.Type): TypeMapping {
-
-        return this._mappingRegistry.getMappingForType(type);
-    }
-
-    getMappingForObject(obj: any): TypeMapping {
+    getMappingForObject(obj: any): ClassMapping {
 
         return this._mappingRegistry.getMappingForObject(obj);
     }
 
-    getMappingForConstructor(ctr: Constructor<any>): TypeMapping {
+    getMappingForConstructor(ctr: Constructor<any>): ClassMapping {
 
         return this._mappingRegistry.getMappingForConstructor(ctr);
     }
 
     getPersisterForObject(obj: any): EntityPersister {
 
-        return this.getPersisterForMapping(this._mappingRegistry.getMappingForObject(obj));
+        var mapping = this._mappingRegistry.getMappingForObject(obj);
+        if(!(mapping instanceof EntityMapping)) {
+            throw new Error("Object is not mapped as an entity");
+        }
+        return this.getPersisterForMapping(<EntityMapping>mapping);
     }
 
     getPersisterForConstructor(ctr: Constructor<any>): EntityPersister {
 
-        return this.getPersisterForMapping(this._mappingRegistry.getMappingForConstructor(ctr));
+        var mapping = this._mappingRegistry.getMappingForConstructor(ctr);
+        if(!(mapping instanceof EntityMapping)) {
+            throw new Error("Object is not mapped as an entity");
+        }
+        return this.getPersisterForMapping(<EntityMapping>mapping);
     }
 
-    getPersisterForMapping(mapping: TypeMapping): EntityPersister {
+    getPersisterForMapping(mapping: EntityMapping): EntityPersister {
 
         var persister = this._persisterByMapping[mapping.id];
         if(persister === undefined) {
-            persister = new EntityPersister(this, mapping, this._collections[mapping.root.id]);
+            persister = new EntityPersister(this, mapping, this._collections[mapping.inheritanceRoot.id]);
         }
         return persister;
     }
