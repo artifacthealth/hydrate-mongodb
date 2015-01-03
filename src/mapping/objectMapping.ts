@@ -160,6 +160,11 @@ class ObjectMapping extends MappingBase {
 
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
 
+        this.compareObject(objectValue, documentValue, changes, path);
+    }
+
+    protected compareObject(objectValue: any, documentValue: any, changes: Changes, path: string): void {
+
         // TODO: throw error if objectValue is not an object.
         // TODO: throw error if objectValue or documentValue are null or undefined?
         // TODO: handle errors/visited

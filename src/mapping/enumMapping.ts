@@ -84,7 +84,7 @@ class EnumMapping extends MappingBase {
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
 
         // TODO: handle errors/visited
-        super.compare(this.write(objectValue, path, [], []), documentValue, changes, path);
+       super.compare(this.write(objectValue, path, [], []), documentValue, changes, path);
     }
 }
 

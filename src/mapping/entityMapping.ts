@@ -139,9 +139,8 @@ class EntityMapping extends ClassMapping {
             }
         }
 
-        // TODO: add "equals" to Identifier interface
-        if(!id.equals(documentValue)) {
-            (changes["$set"] || (changes["$set"] = {}))[path] = id;
+        if(!(<EntityMapping>this.inheritanceRoot).identity.areEqual(id, documentValue)) {
+         //   (changes["$set"] || (changes["$set"] = {}))[path] = id;
         }
     }
 }

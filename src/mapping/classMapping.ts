@@ -88,12 +88,7 @@ class ClassMapping extends ObjectMapping {
 
         // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
         // does not exist, default to current mapping.
-        (this.registry.getMappingForObject(objectValue) || this).compareClass(objectValue, documentValue, changes, path);
-    }
-
-    protected compareClass(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
-        super.compare(objectValue, documentValue, changes, path);
+        (this.registry.getMappingForObject(objectValue) || this).compareObject(objectValue, documentValue, changes, path);
     }
 
 }

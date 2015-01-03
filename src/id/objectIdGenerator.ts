@@ -20,6 +20,10 @@ class ObjectIdGenerator implements IdentityGenerator {
     fromString(text: string): Identifier {
         return <Identifier>ObjectID.createFromHexString(text);
     }
+
+    areEqual(a: Identifier, b: Identifier): boolean {
+        return (<any>a).equals(b);
+    }
 }
 
 export = ObjectIdGenerator;
