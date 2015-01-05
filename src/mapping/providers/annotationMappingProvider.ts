@@ -120,7 +120,7 @@ class MappingBuilder {
 
         // find all entity types
         for(var i = 0, l = symbols.length; i < l; i++) {
-            this._findEntityTypes(symbols[i]);
+            this._findClasses(symbols[i]);
         }
 
         this._ensureOneCollectionPerHierarchy();
@@ -134,18 +134,18 @@ class MappingBuilder {
             this._scanPropertiesForEmbeddedTypes(objectTypes[i]);
         }
 
-        // create root entity types first
+        // create root types first
         for(var i = 0, l = objectTypes.length; i < l; i++) {
             var links = this._typeTable[objectTypes[i].getId()];
-            if(links.kind == MappingKind.RootEntity) {
+            if(links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable) {
                 this._createMapping(links);
             }
         }
 
-        // create build every thing else
+        // create every thing else
         for(var i = 0, l = objectTypes.length; i < l; i++) {
             var links = this._typeTable[objectTypes[i].getId()];
-            if(links.kind != MappingKind.RootEntity) {
+            if(links.kind != MappingKind.RootEntity && links.kind !== MappingKind.RootEmbeddable) {
                 this._createMapping(links);
             }
         }
@@ -176,25 +176,49 @@ class MappingBuilder {
         return "Unable to build type mappings from declaration files:\n" + this._errors.join("\n");
     }
 
-    private _findEntityTypes(symbol: reflect.Symbol): void {
+    private _findClasses(symbol: reflect.Symbol): void {
 
         if(symbol.isClass()) {
             var type = symbol.getDeclaredType();
             if(type.hasAnnotation("collection", true)) {
-                this._addType(type, type.hasAnnotation("collection") ? MappingKind.Entity|MappingKind.RootEntity : MappingKind.Entity);
+                this._addType(type, type.hasAnnotation("collection") ? MappingKind.RootEntity : MappingKind.Entity);
+            }
+            else if(type.hasAnnotation("embeddable", true)) {
+                this._addType(type, type.hasAnnotation("embeddable") ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
             }
         }
 
         var exports = symbol.getExports(reflect.SymbolFlags.Class | reflect.SymbolFlags.Namespace);
         for(var i = 0, l = exports.length; i < l; i++) {
-            this._findEntityTypes(exports[i]);
+            this._findClasses(exports[i]);
+        }
+    }
+
+    private _scanPropertiesForEmbeddedTypes(type: reflect.Type): void {
+
+        var properties = type.getProperties();
+        for(var i = 0, l = properties.length; i < l; i++) {
+            var property = properties[i];
+
+            if(property.isProperty()) {
+                this._findEmbeddedTypes(property.getType());
+            }
         }
     }
 
     private _findEmbeddedTypes(type: reflect.Type): void {
 
-        if(!type.isObjectType() || this._typeTable[type.getId()] || ReflectHelper.isNativeType(type)) return;
+        if(!type.isObjectType() || ReflectHelper.isNativeType(type)) return;
 
+        if(type.isClass() && !this._typeTable[type.getId()]) {
+            this._addError("Invalid type '"+ type.getFullName() +"'. All referenced classes must belong to an inheritance hierarchy annotated with 'collection' or 'embeddable'.");
+        }
+
+        if(this._typeTable[type.getId()]) {
+            return;
+        }
+
+        // TODO: handle scanning indexed types
         if(type.isArray()) {
             // note that any properties stored on an array type are not persisted, same with tuple
             this._findEmbeddedTypes(type.getElementType());
@@ -222,40 +246,30 @@ class MappingBuilder {
         }
     }
 
-    private _scanPropertiesForEmbeddedTypes(type: reflect.Type): void {
-
-        var properties = type.getProperties();
-        for(var i = 0, l = properties.length; i < l; i++) {
-            var property = properties[i];
-
-            if(property.isProperty()) {
-                this._findEmbeddedTypes(property.getType());
-            }
-        }
-    }
-
     private _ensureOneCollectionPerHierarchy(): void {
 
         var types = this._objectTypes;
         for(var i = 0, l = types.length; i < l; i++) {
             var type = types[i];
             if(this._subclassMarkedAsRootType(type)) {
-                this._addAnnotationError(type, type.getAnnotations("collection")[0], "Only one class per inheritance hierarchy can have the 'collection' annotation.");
+                this._addAnnotationError(type, type.getAnnotations("collection")[0], "Only one class per inheritance hierarchy can have the 'collection' or 'embeddable' annotation.");
             }
         }
     }
 
+    // Ryan x104
+
     private _subclassMarkedAsRootType(type: reflect.Type): boolean {
 
         var links = this._typeTable[type.getId()];
-        if(links.kind != MappingKind.RootEntity) {
+        if(links.kind != MappingKind.RootEntity && links.kind != MappingKind.RootEmbeddable) {
             return false;
         }
 
         var baseClass = type.getBaseClass();
         while(baseClass) {
             var links = this._typeTable[type.getId()];
-            if(links.kind == MappingKind.RootEntity) {
+            if(links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable) {
                 return true;
             }
             baseClass = baseClass.getBaseClass();
@@ -264,29 +278,18 @@ class MappingBuilder {
         return false;
     }
 
-    private _getEntityInheritanceRoot(type: reflect.Type): EntityMapping {
-
-        var baseClass = type;
-        while(baseClass) {
-            var links = this._typeTable[baseClass.getId()];
-            if(links && (links.kind == MappingKind.RootEntity)) {
-                return <EntityMapping>links.mapping;
-            }
-            baseClass = baseClass.getBaseClass();
-        }
-
-        this._addError("Could not find root type for type '" + type.getFullName() + "'.");
-    }
-
     private _createMapping(links: TypeLinks): void {
 
         var mapping: Mapping,
             type = links.type;
 
         switch(links.kind) {
+            case MappingKind.RootEmbeddable:
+                mapping = new ClassMapping(this._registry);
+                break;
             case MappingKind.Embeddable:
                 if (type.isClass()) {
-                    mapping = new ClassMapping(this._registry);
+                    mapping = new ClassMapping(this._registry, this._getInheritanceRoot(type));
                 }
                 else {
                     mapping = new ObjectMapping();
@@ -296,11 +299,25 @@ class MappingBuilder {
                 mapping = new EntityMapping(this._registry);
                 break;
             case MappingKind.Entity:
-                mapping = new EntityMapping(this._registry, this._getEntityInheritanceRoot(type));
+                mapping = new EntityMapping(this._registry, this._getInheritanceRoot(type));
                 break;
         }
 
         links.mapping = mapping;
+    }
+
+    private _getInheritanceRoot(type: reflect.Type): EntityMapping {
+
+        var baseClass = type;
+        while(baseClass) {
+            var links = this._typeTable[baseClass.getId()];
+            if(links && (links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable)) {
+                return <EntityMapping>links.mapping;
+            }
+            baseClass = baseClass.getBaseClass();
+        }
+
+        this._addError("Could not find inheritance root for type '" + type.getFullName() + "'.");
     }
 
     private _populateMapping(links: TypeLinks) {

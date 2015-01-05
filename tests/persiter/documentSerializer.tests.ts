@@ -71,19 +71,21 @@ describe('DocumentSerializer', () => {
                 var errors: any[] = [];
                 var visited: any[] = [];
                 var document = mapping.write(person, null, errors, visited);
+                var document2 = mapping.write(person, null, errors, visited);
                 var obj = mapping.read(document, null, errors);
-             //   obj.parents = obj.parents.reverse();
-                //obj.gender = model.Gender.Male;
+                obj.parents = obj.parents.reverse();
+                obj.gender = model.Gender.Male;
 
                 var start = process.hrtime();
 
                 for(var i = 0; i < 10000; i++) {
-     //               var errors: any[] = [];
-    //                var visited: any[] = [];
-    //                var document = mapping.write(person, "", errors, visited);
+                //    var errors: any[] = [];
+                //    var visited: any[] = [];
+                //    var document = mapping.write(person, "", errors, visited);
     //                 var obj = mapping.read(document, null, errors);
                    var changes: any = {};
                     mapping.compare(obj, document, changes, "");
+                //    var result = (<EntityMapping>mapping).areDocumentsEqual(document, document2);
                 }
 
                 // divide by a million to get nano to milli

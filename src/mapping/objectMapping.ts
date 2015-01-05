@@ -160,11 +160,6 @@ class ObjectMapping extends MappingBase {
 
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
 
-        this.compareObject(objectValue, documentValue, changes, path);
-    }
-
-    protected compareObject(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
         // TODO: throw error if objectValue is not an object.
         // TODO: throw error if objectValue or documentValue are null or undefined?
         // TODO: handle errors/visited
@@ -224,6 +219,33 @@ class ObjectMapping extends MappingBase {
             // check for changed values
             property.mapping.compare(propertyValue, fieldValue, changes, base + property.field);
         }
+    }
+
+    areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        if (typeof documentValue1 !== "object" || typeof documentValue2 !== "object") {
+            return false;
+        }
+
+        var properties = this.properties;
+        for (var i = 0, l = properties.length; i < l; i++) {
+            var property = properties[i];
+
+            // skip fields that are not persisted
+            if (property.flags & (PropertyFlags.Ignored | PropertyFlags.InverseSide)) {
+                continue;
+            }
+
+            // get the field values from the documents
+            var fieldValue1 = property.getFieldValue(documentValue1);
+            var fieldValue2 = property.getFieldValue(documentValue2);
+
+            if(fieldValue1 !== fieldValue2 && !property.mapping.areEqual(fieldValue1, fieldValue2)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

@@ -69,6 +69,7 @@ export class Organization extends Party {
     }
 }
 
+/** @embeddable */
 export class PersonName {
 
     first: string;
@@ -125,6 +126,7 @@ export enum Gender {
     NotApplicable
 }
 
+/** @embeddable */
 export class Address {
 
     street1: string;
@@ -140,6 +142,7 @@ export enum PhoneType {
     Home
 }
 
+/** @embeddable */
 export class Phone {
 
     constructor(public number: string, public type: PhoneType) {

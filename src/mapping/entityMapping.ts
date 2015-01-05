@@ -140,8 +140,25 @@ class EntityMapping extends ClassMapping {
         }
 
         if(!(<EntityMapping>this.inheritanceRoot).identity.areEqual(id, documentValue)) {
-         //   (changes["$set"] || (changes["$set"] = {}))[path] = id;
+            (changes["$set"] || (changes["$set"] = {}))[path] = id;
         }
+    }
+
+    areDocumentsEqual(document1: any, document2: any): boolean {
+
+        return super.areEqual(document1, document2);
+    }
+
+    areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        var id1 = documentValue1["_id"] || documentValue1,
+            id2 = documentValue2["_id"] || documentValue2;
+
+        if(id1 === null || id1 === undefined || id2 === null || id2 === undefined) {
+            return false;
+        }
+
+        return (<EntityMapping>this.inheritanceRoot).identity.areEqual(id1, id2)
     }
 }
 

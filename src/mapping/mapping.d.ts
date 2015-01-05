@@ -11,6 +11,7 @@ interface Mapping {
     write(value: any, path: string, errors: MappingError[], visited: any[]): any;
     walk(value: any, path: string): void;
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void;
+    areEqual(documentValue1: any, documentValue2: any): boolean;
 }
 
 export = Mapping;

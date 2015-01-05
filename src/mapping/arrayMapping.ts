@@ -94,6 +94,26 @@ class ArrayMapping extends MappingBase {
             mapping.compare(item, documentItem, changes, path + "." + i);
         }
     }
+
+    areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        if (!Array.isArray(documentValue1) || !Array.isArray(documentValue2) || documentValue1.length != documentValue2.length) {
+            return false;
+        }
+
+        var mapping = this.elementMapping;
+        for (var i = 0, l = documentValue1.length; i < l; i++) {
+            // get the field values from the documents
+            var fieldValue1 = documentValue1[i];
+            var fieldValue2 = documentValue2[i];
+
+            if(fieldValue1 !== fieldValue2 && !mapping.areEqual(fieldValue1, fieldValue2)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
 
 export = ArrayMapping;

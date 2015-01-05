@@ -86,11 +86,48 @@ class ClassMapping extends ObjectMapping {
 
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
 
-        // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
-        // does not exist, default to current mapping.
-        (this.registry.getMappingForObject(objectValue) || this).compareObject(objectValue, documentValue, changes, path);
+        var objectMapping = (this.registry.getMappingForObject(objectValue) || this);
+
+        /*
+        TODO: handle situation where objectMapping != documentMapping
+        var discriminatorValue = documentValue[this.inheritanceRoot.discriminatorField];
+        var documentMapping = this.inheritanceRoot._discriminatorMap[discriminatorValue];
+        */
+
+        objectMapping._compare(objectValue, documentValue, changes, path);
     }
 
+    private _compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
+        super.compare(objectValue, documentValue, changes, path);
+    }
+
+    areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        var root = this.inheritanceRoot;
+
+        // get mappings for documents based on discriminator
+        var discriminatorValue1 = documentValue1[root.discriminatorField],
+            discriminatorValue2 = documentValue2[root.discriminatorField];
+
+        if (discriminatorValue1 === undefined || discriminatorValue2 === undefined) {
+            return false;
+        }
+
+        var mapping1 = root._discriminatorMap[discriminatorValue1],
+            mapping2 = root._discriminatorMap[discriminatorValue2];
+
+        // make sure both documents have the same mapping
+        if(mapping1 === undefined || mapping2 === undefined || mapping1 !== mapping2) {
+            return false;
+        }
+
+        return mapping1._areEqual(documentValue1, documentValue2);
+    }
+
+    private _areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        return super.areEqual(documentValue1, documentValue2);
+    }
 }
 
 export = ClassMapping;

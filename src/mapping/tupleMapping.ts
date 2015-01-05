@@ -93,6 +93,30 @@ class TupleMapping extends MappingBase {
             elementMappings[i].compare(item, documentItem, changes, path + "." + i);
         }
     }
+
+    areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        if (!Array.isArray(documentValue1) || !Array.isArray(documentValue2) || documentValue1.length != documentValue2.length) {
+            return false;
+        }
+
+        var elementMappings = this.elementMappings;
+        if (documentValue1.length != elementMappings.length) {
+            return false;
+        }
+
+        for (var i = 0, l = elementMappings.length; i < l; i++) {
+            // get the field values from the documents
+            var fieldValue1 = documentValue1[i];
+            var fieldValue2 = documentValue2[i];
+
+            if(fieldValue1 !== fieldValue2 && !elementMappings[i].areEqual(fieldValue1, fieldValue2)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }
 
 export = TupleMapping;

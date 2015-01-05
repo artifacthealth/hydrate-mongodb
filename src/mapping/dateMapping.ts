@@ -43,6 +43,15 @@ class DateMapping extends MappingBase {
 
         (changes["$set"] || (changes["$set"] = {}))[path] = new Date(objectTime);
     }
+
+    areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        if (documentValue1 instanceof Date && documentValue2 instanceof Date) {
+            return documentValue1.getTime() == documentValue2.getTime();
+        }
+
+        return false;
+    }
 }
 
 export = DateMapping;

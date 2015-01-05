@@ -43,6 +43,15 @@ class RegExpMapping extends MappingBase {
 
         (changes["$set"] || (changes["$set"] = {}))[path] = RegExpUtil.clone(objectValue);
     }
+
+    areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        if (documentValue1 instanceof RegExp && documentValue2 instanceof RegExp) {
+            return documentValue1.toString() == documentValue2.toString();
+        }
+
+        return false;
+    }
 }
 
 export = RegExpMapping;

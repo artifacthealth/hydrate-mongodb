@@ -47,7 +47,7 @@ describe('AnnotationMappingProvider', () => {
 
                 processFixture("collectionMultiple", (err) => {
                     assert.ok(err);
-                    assert.include(err.message, "Only one class per inheritance hierarchy can have the 'collection' annotation");
+                    assert.include(err.message, "Only one class per inheritance hierarchy can have the 'collection' or 'embeddable' annotation");
                     done();
                 });
             });
