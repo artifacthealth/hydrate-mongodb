@@ -1,3 +1,7 @@
+/// <reference path="../../typings/async.d.ts" />
+
+import async = require("async");
+
 import IdentityGenerator = require("../id/identityGenerator");
 import MappingError = require("./mappingError");
 import ClassMapping = require("./classMapping");
@@ -7,6 +11,9 @@ import CollectionOptions = require("../driver/collectionOptions");
 import MappingRegistry = require("./mappingRegistry");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
+import Reference = require("./reference");
+import PropertyFlags = require("./propertyFlags");
+import InternalSession = require("../internalSession");
 
 class EntityMapping extends ClassMapping {
 
@@ -159,6 +166,34 @@ class EntityMapping extends ClassMapping {
         }
 
         return (<EntityMapping>this.inheritanceRoot).identity.areEqual(id1, id2)
+    }
+
+    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+
+        if (value === null || value === undefined || typeof value !== "object") return;
+
+        if(!(value instanceof this.classConstructor)) {
+            // TODO: handle DBRef
+            if(!(<EntityMapping>this.inheritanceRoot).identity.validate(value)) {
+                return;
+            }
+            var entity = session.getObject(value);
+            if (entity) {
+                value = entity;
+            }
+            else {
+                if(flags & PropertyFlags.Dereference) {
+                    // store reference to resolve later
+                    references.push({ mapping: this, id: value });
+                }
+                return;
+            }
+        }
+
+        if (entities.indexOf(value) !== -1) return;
+        entities.push(value);
+
+        super.walk(session, value, flags, entities, embedded, references);
     }
 }
 

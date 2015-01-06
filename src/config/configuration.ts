@@ -15,6 +15,7 @@ import Connection = require("../driver/connection");
 import Collection = require("../driver/collection");
 import CollectionTable = require("../driver/collectionTable");
 import Mapping = require("../mapping/mapping");
+import MappingFlags = require("../mapping/mappingFlags");
 import MappingRegistry = require("../mapping/mappingRegistry");
 import MappingProvider = require("../mapping/providers/mappingProvider");
 import AnnotationMappingProvider = require("../mapping/providers/annotationMappingProvider");
@@ -109,6 +110,8 @@ class Configuration {
         var names: Map<boolean> = {};
 
         async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
+
+            if(!(mapping.flags & MappingFlags.InheritanceRoot)) return done();
 
             // make sure we have a collection name
             if (!mapping.collectionName) {

@@ -56,7 +56,7 @@ describe('DocumentSerializer', () => {
                 var mapping = registry.getMappingForConstructor(model.Person);
 
                 var person = new model.Person(new model.PersonName("Jones", "Bob"));
-                person.phones = [ new model.Phone("303-258-1111", model.PhoneType.Work) ];
+                person.phones = [ new model.WorkPhone("303-258-1111", "12") ];
                 (<any>person)._id = identity.generate();
                 person.addAttribute("eye color", "hazel");
                 person.addAttribute("hair color", "brown");
@@ -78,13 +78,13 @@ describe('DocumentSerializer', () => {
 
                 var start = process.hrtime();
 
-                for(var i = 0; i < 10000; i++) {
+                for(var i = 0; i < 10000; i++) {8
                 //    var errors: any[] = [];
                 //    var visited: any[] = [];
-                //    var document = mapping.write(person, "", errors, visited);
+                    var document = mapping.write(person, "", errors, visited);
     //                 var obj = mapping.read(document, null, errors);
-                   var changes: any = {};
-                    mapping.compare(obj, document, changes, "");
+              //     var changes: any = {};
+              //      mapping.compare(obj, document, changes, "");
                 //    var result = (<EntityMapping>mapping).areDocumentsEqual(document, document2);
                 }
 

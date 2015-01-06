@@ -3,6 +3,9 @@ import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
+import Reference = require("./reference");
+import PropertyFlags = require("./propertyFlags");
+import InternalSession = require("../internalSession");
 
 class TupleMapping extends MappingBase {
 
@@ -17,15 +20,15 @@ class TupleMapping extends MappingBase {
             return;
         }
 
-        var elementMappings = this.elementMappings;
-        if(value.length != elementMappings.length) {
-            errors.push({ message: "Expected " + elementMappings.length + " elements in tuple but source had " + value.length + ".", path: path, value: value });
+        var mappings = this.elementMappings;
+        if(value.length != mappings.length) {
+            errors.push({ message: "Expected " + mappings.length + " elements in tuple but source had " + value.length + ".", path: path, value: value });
             return;
         }
 
         var result = new Array(value.length);
-        for (var i = 0, l = elementMappings.length; i < l; i++) {
-            result[i] = elementMappings[i].read(value[i], path + "." + i, errors);
+        for (var i = 0, l = mappings.length; i < l; i++) {
+            result[i] = mappings[i].read(value[i], path + "." + i, errors);
         }
 
         return result;
@@ -38,24 +41,20 @@ class TupleMapping extends MappingBase {
             return;
         }
 
-        var elementMappings = this.elementMappings;
-        if(value.length != elementMappings.length) {
-            errors.push({ message: "Expected " + elementMappings.length + " elements in tuple but source had " + value.length + ".", path: path, value: value });
+        var mappings = this.elementMappings;
+        if(value.length != mappings.length) {
+            errors.push({ message: "Expected " + mappings.length + " elements in tuple but source had " + value.length + ".", path: path, value: value });
             return;
         }
 
         // TODO: treat undefined as null?
 
         var result = new Array(value.length);
-        for (var i = 0, l = elementMappings.length; i < l; i++) {
-            result[i] = elementMappings[i].write(value[i], path + "." + i, errors, visited);
+        for (var i = 0, l = mappings.length; i < l; i++) {
+            result[i] = mappings[i].write(value[i], path + "." + i, errors, visited);
         }
 
         return result;
-    }
-
-    walk(value: any, path: string): void {
-
     }
 
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
@@ -68,8 +67,8 @@ class TupleMapping extends MappingBase {
             return;
         }
 
-        var elementMappings = this.elementMappings;
-        for (var i = 0, l = elementMappings.length; i < l; i++) {
+        var mappings = this.elementMappings;
+        for (var i = 0, l = mappings.length; i < l; i++) {
             var item = objectValue[i]
 
             // treat undefined values as null
@@ -90,7 +89,7 @@ class TupleMapping extends MappingBase {
             }
 
             // check if array element has changed
-            elementMappings[i].compare(item, documentItem, changes, path + "." + i);
+            mappings[i].compare(item, documentItem, changes, path + "." + i);
         }
     }
 
@@ -100,22 +99,35 @@ class TupleMapping extends MappingBase {
             return false;
         }
 
-        var elementMappings = this.elementMappings;
-        if (documentValue1.length != elementMappings.length) {
+        var mappings = this.elementMappings;
+        if (documentValue1.length != mappings.length) {
             return false;
         }
 
-        for (var i = 0, l = elementMappings.length; i < l; i++) {
+        for (var i = 0, l = mappings.length; i < l; i++) {
             // get the field values from the documents
             var fieldValue1 = documentValue1[i];
             var fieldValue2 = documentValue2[i];
 
-            if(fieldValue1 !== fieldValue2 && !elementMappings[i].areEqual(fieldValue1, fieldValue2)) {
+            if(fieldValue1 !== fieldValue2 && !mappings[i].areEqual(fieldValue1, fieldValue2)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+
+    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+
+        if (value === null || value === undefined || !Array.isArray(value)) {
+            return;
+        }
+
+        var mappings = this.elementMappings;
+        for (var i = 0, l = Math.min(value.length, mappings.length); i < l; i++) {
+            mappings[i].walk(session, value[i], flags, entities, embedded, references);
+        }
     }
 }
 

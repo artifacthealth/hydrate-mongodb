@@ -1,6 +1,6 @@
 import Constructor = require("./core/constructor");
 import SessionFactory = require("./sessionFactory");
-import EntityPersister = require("./persister/entityPersister");
+import EntityPersister = require("./entityPersister");
 import EntityMapping = require("./mapping/entityMapping");
 import ClassMapping = require("./mapping/classMapping");
 

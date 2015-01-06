@@ -125,8 +125,7 @@ class MappingBuilder {
 
         this._ensureOneCollectionPerHierarchy();
 
-        // TODO: handle embedded hierachy
-        // TODO: identity supertypes as embeddable or entity. error on conflicts
+        // TODO: identity supertypes as embeddable or entity. error on conflicts.
         // TODO: perhaps named types should be required to have @entity or @embeddable. how to handle multiple inheritance?
         // find all embedded types
         var objectTypes = this._objectTypes;
@@ -402,8 +401,6 @@ class MappingBuilder {
             }
         }
 
-        this._registry.addMapping(<ClassMapping>mapping);
-
         return mapping;
     }
 
@@ -446,6 +443,8 @@ class MappingBuilder {
             // TODO: configurable naming strategy for when discriminator field is not specified?
             mapping.setDiscriminatorValue(mapping.name);
         }
+
+        this._registry.addMapping(mapping);
 
         return this._populateObjectMapping(mapping, type);
     }

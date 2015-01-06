@@ -1,4 +1,6 @@
-/** @collection */
+/**
+ * @collection
+ */
 export class Party {
 
     /** @field "name" */
@@ -147,5 +149,12 @@ export class Phone {
 
     constructor(public number: string, public type: PhoneType) {
 
+    }
+}
+
+export class WorkPhone extends Phone {
+
+    constructor(number: string, public extension: string) {
+        super(number, PhoneType.Work);
     }
 }

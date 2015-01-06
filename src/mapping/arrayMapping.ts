@@ -3,6 +3,10 @@ import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
+import Reference = require("./reference");
+import PropertyFlags = require("./propertyFlags");
+import InternalSession = require("../internalSession");
+
 
 class ArrayMapping extends MappingBase {
 
@@ -53,10 +57,6 @@ class ArrayMapping extends MappingBase {
         }
 
         return result;
-    }
-
-    walk(value: any, path: string): void {
-
     }
 
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
@@ -113,6 +113,19 @@ class ArrayMapping extends MappingBase {
         }
 
         return true;
+    }
+
+
+    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+
+        if (value === null || value === undefined || !Array.isArray(value)) {
+            return;
+        }
+
+        var mapping = this.elementMapping;
+        for (var i = 0, l = value.length; i < l; i++) {
+            mapping.walk(session, value[i], flags, entities, embedded, references);
+        }
     }
 }
 

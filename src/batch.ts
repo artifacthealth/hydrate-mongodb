@@ -1,12 +1,12 @@
-/// <reference path="../../typings/async.d.ts" />
+/// <reference path="../typings/async.d.ts" />
 
 import async = require("async");
-import Callback = require("../core/callback");
+import Callback = require("./core/callback");
 import EntityPersister = require("./entityPersister");
-import Bulk = require("../driver/bulk");
-import BulkWriteResult = require("../driver/bulkWriteResult");
-import InternalSession = require("../internalSession");
-import Changes = require("./changes");
+import Bulk = require("./driver/bulk");
+import BulkWriteResult = require("./driver/bulkWriteResult");
+import InternalSession = require("./internalSession");
+import Changes = require("./mapping/changes");
 
 interface CollectionBatch {
 
@@ -29,7 +29,19 @@ class PersisterBatch {
         var batch = this._getBatch(persister);
         batch.inserted++;
         batch.operation.insert(document);
-        console.log("INSERT: " + JSON.stringify(document, null, "\t"));
+        //console.log("INSERT: " + JSON.stringify(document, null, "\t"));
+    }
+
+    addReplace(document: any, persister: EntityPersister): void {
+
+        var query: any = {
+            _id: document["_id"]
+        }
+
+        var batch = this._getBatch(persister);
+        batch.updated++;
+        batch.operation.find(query).replaceOne(document);
+        //console.log("REPLACE: " + JSON.stringify(document, null, "\t"));
     }
 
     addUpdate(id: any, changes: Changes, persister: EntityPersister): void {
@@ -41,7 +53,7 @@ class PersisterBatch {
         var batch = this._getBatch(persister);
         batch.updated++;
         batch.operation.find(query).update(changes);
-        console.log("UPDATE: " + JSON.stringify(changes, null, "\t"));
+        //console.log("UPDATE: " + JSON.stringify(changes, null, "\t"));
     }
 
     addRemove(id: any, persister: EntityPersister): void {
@@ -53,7 +65,7 @@ class PersisterBatch {
         var batch = this._getBatch(persister);
         batch.removed++;
         batch.operation.find(query).removeOne();
-        console.log("REMOVE: " + JSON.stringify(document, null, "\t"));
+        //console.log("REMOVE: " + JSON.stringify(document, null, "\t"));
     }
 
     execute(callback: Callback): void {

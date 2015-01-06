@@ -14,8 +14,8 @@ import InternalSession = require("./internalSession");
 import InternalSessionFactory = require("./internalSessionFactory");
 import EntityMapping = require("./mapping/entityMapping");
 import TaskQueue = require("./taskQueue");
-import EntityPersister = require("./persister/entityPersister");
-import Batch = require("./persister/batch");
+import EntityPersister = require("./entityPersister");
+import Batch = require("./batch");
 
 enum ObjectState {
 
@@ -136,7 +136,13 @@ class SessionImpl implements InternalSession {
 
     private _save(obj: any, callback: Callback): void {
 
-        this._referencedEntities(obj, PropertyFlags.CascadeSave, (err, entities) => {
+        var persister = this.factory.getPersisterForObject(obj);
+        if (!persister) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
+
+        persister.getReferencedEntities(this, obj, PropertyFlags.CascadeSave, (err, entities) => {
             if(err) return callback(err);
             this._saveEntities(entities, callback);
         });
@@ -182,7 +188,13 @@ class SessionImpl implements InternalSession {
 
     private _remove(obj: any, callback: Callback): void {
 
-        this._referencedEntities(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
+        var persister = this.factory.getPersisterForObject(obj);
+        if (!persister) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
+
+        persister.getReferencedEntities(this, obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
             if(err) return callback(err);
             this._removeEntities(entities, callback);
         });
@@ -221,7 +233,13 @@ class SessionImpl implements InternalSession {
 
     private _detach(obj: any, callback: Callback): void {
 
-        this._referencedEntities(obj, PropertyFlags.CascadeDetach, (err, entities) => {
+        var persister = this.factory.getPersisterForObject(obj);
+        if (!persister) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
+
+        persister.getReferencedEntities(this, obj, PropertyFlags.CascadeDetach, (err, entities) => {
             if(err) return callback(err);
             this._detachEntities(entities, callback);
         });
@@ -331,19 +349,6 @@ class SessionImpl implements InternalSession {
         persister.load(this, id, callback);
     }
 
-    /*
-    load(mapping: TypeMapping, id: Identifier, callback: ResultCallback<any>): void {
-
-        // check to see if object is already loaded
-        var entity = this.getObject(id);
-        if (entity) {
-            return process.nextTick(() => callback(null, entity));
-        }
-
-        this.factory.getPersisterForMapping(mapping).load(this, id, callback);
-    }
-    */
-
     /**
      * Returns all linked objected as an array.
      */
@@ -411,110 +416,6 @@ class SessionImpl implements InternalSession {
         delete obj["_id"];
     }
 
-    private _referencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
-        // TODO: fix
-        process.nextTick(() => callback(null, [obj]));
-    }
-    /*
-    private _referencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
-
-        var persister = this.factory.getPersisterForObject(obj);
-        if (!persister) {
-            return process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-        }
-
-        var entities: any[] = [],
-            embedded: any[] = [];
-        this._walkEntity(obj, persister.mapping, flags, entities, embedded, err => {
-            if(err) return process.nextTick(() => callback(err));
-            return process.nextTick(() => callback(null, entities));
-        });
-    }
-
-    private _walkEntity(entity: any, mapping: TypeMapping, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
-
-        var references: Reference[] = [];
-        this._walkValue(entity, mapping.type, flags, entities, embedded, references);
-
-        // TODO: load references in batches grouped by root mapping
-        async.each(references, (reference: Reference, done: (err?: Error) => void) => {
-            this.load(reference.mapping, reference.id, (err: Error, entity: any) => {
-                if (err) return done(err);
-                this._walkEntity(entity, reference.mapping, flags, entities, embedded, done);
-            });
-        }, callback);
-    }
-
-    private _walkValue(value: any, type: reflect.Type, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
-
-        /*
-        if (value === null || value === undefined) return;
-
-        if (type.isTuple()) {
-            if (Array.isArray(value)) {
-                var elementTypes = type.getElementTypes();
-                for (var i = 0, l = Math.min(value.length, elementTypes.length); i < l; i++) {
-                    this._walkValue(value[i], elementTypes[i], flags, entities, embedded, references);
-                }
-            }
-            return;
-        }
-
-        if (type.isArray()) {
-            if (Array.isArray(value)) {
-                var elementType = type.getElementType();
-                for (i = 0, l = value.length; i < l; i++) {
-                    this._walkValue(value[i], elementType, flags, entities, embedded, references);
-                }
-            }
-            return;
-        }
-        // TODO: handle indexed types
-
-        if (type.isObjectType()) {
-            // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
-            // does not exist, default to mapping for type.
-            var mapping = this.factory.getMappingForObject(value) || this.factory.getMappingForType(type);
-            if (!mapping) return;
-
-            if (mapping.flags & TypeMappingFlags.DocumentType) {
-                // if the object is not an instance of the entity's constructor then it should be an identifier or DBRef
-                if(!(value instanceof mapping.classConstructor)) {
-                    // TODO: handle DBRef
-                    if(!mapping.root.identity.validate(value)) {
-                        return;
-                    }
-                    var entity = this.getObject(value);
-                    if (entity) {
-                        value = entity;
-                    }
-                    else {
-                        if(flags & PropertyFlags.Dereference) {
-                            // store reference to resolve later
-                            references.push({ mapping: mapping, id: value });
-                        }
-                        return;
-                    }
-                }
-                if (entities.indexOf(value) !== -1) return;
-                entities.push(value);
-            }
-            else {
-                if (embedded.indexOf(value) !== -1) return;
-                embedded.push(value);
-            }
-
-            var properties = mapping.properties;
-            for (var i = 0, l = properties.length; i < l; i++) {
-                var property = properties[i];
-                // if the property is not ignored and it has the specified flags, then walk the value of the property
-                if (!(property.flags & PropertyFlags.Ignored) && (property.flags & flags)) {
-                    this._walkValue(property.symbol.getValue(value), property.symbol.getType(), flags, entities, embedded, references);
-                }
-            }
-        }
-    }
-    */
 }
 
 export = SessionImpl;
