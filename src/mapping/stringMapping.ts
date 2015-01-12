@@ -26,14 +26,6 @@ class StringMapping extends MappingBase {
         }
         return value;
     }
-
-    walk(value: any, path: string): void {
-
-    }
-
-    compare(from: any, to: any): void {
-
-    }
 }
 
 export = StringMapping;

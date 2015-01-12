@@ -4,11 +4,13 @@ enum PropertyFlags {
     CascadeSave = 0x00000002,
     CascadeRemove = 0x00000004,
     CascadeDetach = 0x00000008,
-    CascadeAll = CascadeSave | CascadeRemove | CascadeDetach,
-    InverseSide = 0x00000010,
-    Nullable = 0x00000020,
-    OrphanRemoval = 0x00000040,
-    Dereference = 0x00000080
+    CascadeRefresh = 0x00000010,
+    CascadeMerge = 0x00000020,
+    CascadeAll = CascadeSave | CascadeRemove | CascadeDetach | CascadeRefresh | CascadeMerge,
+    InverseSide = 0x00000040,
+    Nullable = 0x00000080,
+    OrphanRemoval = 0x00000100,
+    Dereference = 0x00000200
 }
 
 export = PropertyFlags;

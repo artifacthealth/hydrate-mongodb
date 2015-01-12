@@ -7,8 +7,10 @@ import InternalSessionFactory = require("./internalSessionFactory");
 import Constructor = require("./core/constructor");
 import EntityPersister = require("./entityPersister");
 import Mapping = require("./mapping/mapping");
+import MappingFlags = require("./mapping/mappingFlags");
 import ClassMapping = require("./mapping/classMapping");
 import EntityMapping = require("./mapping/entityMapping");
+import Batch = require("./batch");
 
 
 class SessionFactoryImpl implements InternalSessionFactory {
@@ -29,32 +31,20 @@ class SessionFactoryImpl implements InternalSessionFactory {
         return new SessionImpl(this);
     }
 
-    getMappingForObject(obj: any): ClassMapping {
-
-        return this._mappingRegistry.getMappingForObject(obj);
-    }
-
-    getMappingForConstructor(ctr: Constructor<any>): ClassMapping {
-
-        return this._mappingRegistry.getMappingForConstructor(ctr);
-    }
-
     getPersisterForObject(obj: any): EntityPersister {
 
         var mapping = this._mappingRegistry.getMappingForObject(obj);
-        if(!(mapping instanceof EntityMapping)) {
-            throw new Error("Object is not mapped as an entity");
+        if(mapping && (mapping.flags & MappingFlags.Entity)) {
+            return this.getPersisterForMapping(<EntityMapping>mapping);
         }
-        return this.getPersisterForMapping(<EntityMapping>mapping);
     }
 
     getPersisterForConstructor(ctr: Constructor<any>): EntityPersister {
 
         var mapping = this._mappingRegistry.getMappingForConstructor(ctr);
-        if(!(mapping instanceof EntityMapping)) {
-            throw new Error("Object is not mapped as an entity");
+        if(mapping && (mapping.flags & MappingFlags.Entity)) {
+            return this.getPersisterForMapping(<EntityMapping>mapping);
         }
-        return this.getPersisterForMapping(<EntityMapping>mapping);
     }
 
     getPersisterForMapping(mapping: EntityMapping): EntityPersister {
@@ -64,6 +54,10 @@ class SessionFactoryImpl implements InternalSessionFactory {
             persister = new EntityPersister(this, mapping, this._collections[mapping.inheritanceRoot.id]);
         }
         return persister;
+    }
+
+    createBatch(): Batch {
+        return new Batch();
     }
 }
 

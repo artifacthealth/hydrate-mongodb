@@ -29,10 +29,6 @@ class RegExpMapping extends MappingBase {
         return RegExpUtil.clone(value);
     }
 
-    walk(value: any, path: string): void {
-
-    }
-
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
 
         // TODO: throw if objectValue is not RegExp

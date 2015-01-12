@@ -77,10 +77,6 @@ class EnumMapping extends MappingBase {
         return name;
     }
 
-    walk(value: any, path: string): void {
-
-    }
-
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
 
         // TODO: handle errors/visited

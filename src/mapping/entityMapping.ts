@@ -78,6 +78,7 @@ class EntityMapping extends ClassMapping {
 
         // if this is not the top level then just return the id
         if(path) {
+            // TODO: check session to see if entity is already loaded and return entity instead?
             return id;
         }
 

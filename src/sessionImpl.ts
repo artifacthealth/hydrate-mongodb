@@ -12,10 +12,9 @@ import PropertyFlags = require("./mapping/propertyFlags");
 import ResultCallback = require("./core/resultCallback");
 import InternalSession = require("./internalSession");
 import InternalSessionFactory = require("./internalSessionFactory");
-import EntityMapping = require("./mapping/entityMapping");
 import TaskQueue = require("./taskQueue");
 import EntityPersister = require("./entityPersister");
-import Batch = require("./batch");
+import Query = require("./query");
 
 enum ObjectState {
 
@@ -49,13 +48,10 @@ enum Action {
     Remove = 0x00000002,
     Detach = 0x00000004,
     Flush = 0x00000008,
-    Find = 0x00000010,
-    Clear = 0x00000020,
-
-    SaveWaits = Action.Remove | Action.Detach | Action.Flush,
-    RemoveWaits = Action.Save | Action.Detach | Action.Flush,
-    DetachWaits = Action.Save | Action.Remove | Action.Flush,
-    FlushWaits = Action.Save |Action.Remove | Action.Detach | Action.Flush
+    Clear = 0x00000010,
+    Find = 0x00000020,
+    Refresh = 0x00000040,
+    All = Save | Remove | Detach | Flush | Clear | Find | Refresh
 }
 
 enum ScheduledOperation {
@@ -65,11 +61,6 @@ enum ScheduledOperation {
     Update,
     Delete,
     DirtyCheck
-}
-
-interface Reference {
-    mapping: EntityMapping;
-    id: Identifier;
 }
 
 // TODO: option to use weak reference until object is removed or modified and attach event to unlink if garbage collected? https://github.com/TooTallNate/node-weak
@@ -82,7 +73,7 @@ interface ObjectLinks {
     persister: EntityPersister;
 }
 
-// TODO: read-only query results
+// TODO: read-only query results. perhaps not needed if we can use Object.observe in Node v12 to be notified of which objects have changed.
 // TODO: raise events on UnitOfWork
 class SessionImpl implements InternalSession {
 
@@ -96,26 +87,93 @@ class SessionImpl implements InternalSession {
 
     save(obj: any, callback?: Callback): void {
 
-        this._queue.add(Action.Save, Action.SaveWaits, obj, callback);
+        this._queue.add(Action.Save, Action.All & ~Action.Save, obj, callback);
     }
 
     remove(obj: any, callback?: Callback): void {
 
-        this._queue.add(Action.Remove, Action.RemoveWaits, obj, callback);
+        this._queue.add(Action.Remove, Action.All & ~Action.Remove, obj, callback);
     }
 
-    detach(obj: any, callback: Callback): void {
+    refresh(obj: any, callback?: Callback): void {
 
-        this._queue.add(Action.Detach, Action.DetachWaits, obj, callback);
+        this._queue.add(Action.Refresh, Action.All & ~Action.Refresh, obj, callback);
     }
 
-    // TODO: if flush fails, mark session invalid and don't allow any further operations?
-    // TODO: if operations fails (e.g. save, etc.) should session become invalid? Perhaps have two classes of errors, those that cause the session to become invalid and those that do not?
+    detach(obj: any, callback?: Callback): void {
+
+        this._queue.add(Action.Detach, Action.All & ~Action.Detach, obj, callback);
+    }
+
+    clear(callback?: Callback): void {
+
+        this._queue.add(Action.Clear, Action.All, undefined, callback);
+    }
+
     flush(callback?: Callback): void {
 
-        this._queue.add(Action.Flush, Action.FlushWaits, undefined, callback);
+        this._queue.add(Action.Flush, Action.All, undefined, callback);
     }
 
+    find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void {
+
+        this._queue.add(Action.Find, Action.All & ~Action.Find, [ctr, id], callback);
+    }
+
+    query<T>(ctr: Constructor<T>): Query<T> {
+        // TODO: cache query object?
+        return new Query<T>(this, this.factory.getPersisterForConstructor(ctr));
+    }
+
+    /**
+     * Gets the database identifier for an entity.
+     * @param obj The entity.
+     */
+    getId(obj: any): Identifier {
+
+        return obj["_id"];
+    }
+
+    /**
+     * Determines whether an entity is managed by this session.
+     * @param entity The entity to check.
+     */
+    contains(obj: any): boolean {
+
+        var id = obj["_id"];
+        if(id) {
+            var links = this._objectLinks[id.toString()];
+            return links && links.state != ObjectState.Removed;
+        }
+
+        return false;
+    }
+
+    /**
+     * Gets a managed object by the specified id. If the object is found but scheduled for delete then null is
+     * returned. If the object is not found then undefined is returned; otherwise, the object is returned.
+     * @param id The object identifier.
+     */
+    getObject(id: Identifier): any {
+
+        var links = this._objectLinks[id.toString()];
+        if (links) {
+            return links.state == ObjectState.Removed ? null : links.object;
+        }
+    }
+
+    registerManaged(persister: EntityPersister, entity: any, document: any): void {
+
+        // save the original document for dirty checking
+        this._linkObject(entity, persister).originalDocument = document;
+    }
+
+    /**
+     * Called by TaskQueue to execute an operation.
+     * @param action The action to execute.
+     * @param arg Contains arguments for the action.
+     * @param callback Called when method completes.
+     */
     private _execute(action: Action, arg: any, callback: ResultCallback<any>): void {
 
         switch(action) {
@@ -128,8 +186,14 @@ class SessionImpl implements InternalSession {
             case Action.Detach:
                 this._detach(arg, callback);
                 break;
+            case Action.Clear:
+                this._clear(callback);
+                break;
             case Action.Flush:
                 this._flush(callback);
+                break;
+            case Action.Find:
+                this._find(arg[0], arg[1], callback);
                 break;
         }
     }
@@ -257,22 +321,60 @@ class SessionImpl implements InternalSession {
         callback();
     }
 
+    private _refresh(obj: any, callback: Callback): void {
+
+        var persister = this.factory.getPersisterForObject(obj);
+        if (!persister) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
+
+        persister.getReferencedEntities(this, obj, PropertyFlags.CascadeRefresh, (err, entities) => {
+            if(err) return callback(err);
+            this._refreshEntities(entities, callback);
+        });
+    }
+
+    private _refreshEntities(entities: any[], callback: Callback): void {
+
+        async.each(entities, (entity: any, done: (err?: Error) => void) => {
+            var links = this._getObjectLinks(entity);
+            if (!links || links.state != ObjectState.Managed) {
+                return done(new Error("Object is not managed."));
+            }
+            links.persister.refresh(this, links.object, (err, document) => {
+                if(err) return done(err);
+                links.originalDocument = document;
+                done();
+            });
+        }, callback);
+    }
+
+    // TODO: if flush fails, mark session invalid and don't allow any further operations?
+    // TODO: if operations fails (e.g. save, etc.) should session become invalid? Perhaps have two classes of errors, those that cause the session to become invalid and those that do not?
     private _flush(callback: Callback): void {
 
         // Get all list of all object links. A for-in loop is slow so build a list from the map since we are going
         // to have to iterate through the list several times.
         var list = this._getAllObjectLinks();
 
-        // MongoDB bulk operations need to be ordered by operation type or they are not executed
-        // as bulk operations. The Batch will group operations by collection but will not reorder them.
-        var batch = new Batch();
+        var batch = this.factory.createBatch();
+
+        // Add operations to batch group by operation type. MongoDB bulk operations need to be ordered by operation
+        // type or they are not executed as bulk operations.
 
         // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
         for(var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             // TODO: ignore read-only objects
             if (links.scheduledOperation == ScheduledOperation.DirtyCheck || (links.persister.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
-                links.originalDocument = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
+                var result = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
+                if(result instanceof Error) {
+                    return callback(result);
+                }
+                else {
+                    links.originalDocument = result;
+                }
             }
         }
 
@@ -280,7 +382,13 @@ class SessionImpl implements InternalSession {
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             if (links.scheduledOperation == ScheduledOperation.Insert) {
-                links.originalDocument = links.persister.insert(batch, links.object);
+                var result = links.persister.insert(batch, links.object);
+                if(result instanceof Error) {
+                    return callback(result);
+                }
+                else {
+                    links.originalDocument = result;
+                }
             }
         }
 
@@ -309,46 +417,6 @@ class SessionImpl implements InternalSession {
         });
     }
 
-    clear(): void {
-
-        this._objectLinks = {};
-    }
-
-    getId(obj: any): Identifier {
-
-        return obj["_id"];
-    }
-
-    getObject(id: Identifier): any {
-
-        var links = this._objectLinks[id.toString()];
-        if (links) {
-            return links.object;
-        }
-    }
-
-    registerManaged(persister: EntityPersister, entity: any, document: any): void {
-
-        // save the original document for dirty checking
-        this._linkObject(entity, persister).originalDocument = document;
-    }
-
-    find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void {
-
-        // check to see if object is already loaded
-        var entity = this.getObject(id);
-        if (entity) {
-            return process.nextTick(() => callback(null, entity));
-        }
-
-        var persister = this.factory.getPersisterForConstructor(ctr);
-        if (!persister) {
-            return process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-        }
-
-        persister.load(this, id, callback);
-    }
-
     /**
      * Returns all linked objected as an array.
      */
@@ -364,6 +432,28 @@ class SessionImpl implements InternalSession {
         }
 
         return ret;
+    }
+
+    /**
+     * Detaches all managed objects.
+     * @param callback Callback to execute after operation completes.
+     */
+    private _clear(callback: Callback): void {
+
+        this._objectLinks = {};
+        process.nextTick(callback);
+    }
+
+    private _find(ctr: Constructor<any>, id: Identifier, callback: ResultCallback<any>): void {
+
+        var persister = this.factory.getPersisterForConstructor(ctr);
+        if (!persister) {
+            return process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+        }
+
+        // Note, there is no need to flush before the we call load since load calls getObject which will take
+        // into account any newly saved or removed objects.
+        persister.find(this, id, callback);
     }
 
     private _getObjectLinks(obj: any): ObjectLinks {
@@ -407,13 +497,8 @@ class SessionImpl implements InternalSession {
 
         // if the object was never persisted or if it has been removed, then clear it's identifier as well
         if (links.scheduledOperation == ScheduledOperation.Insert || links.state == ObjectState.Removed) {
-            this._clearIdentifier(links.object);
+            delete links.object["_id"];
         }
-    }
-
-    private _clearIdentifier(obj: any): void {
-
-        delete obj["_id"];
     }
 
 }
