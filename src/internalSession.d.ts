@@ -2,7 +2,7 @@ import Session = require("./session");
 import Collection = require("./driver/collection");
 import ResultCallback = require("./core/resultCallback");
 import Identifier = require("./id/identifier");
-import Persister = require("./entityPersister");
+import Persister = require("./persisterImpl");
 
 interface InternalSession extends Session {
 

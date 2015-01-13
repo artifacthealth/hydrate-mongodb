@@ -9,48 +9,53 @@ import InternalSession = require("./internalSession");
 import InternalSessionFactory = require("./internalSessionFactory");
 import ChangeTracking = require("./mapping/changeTracking");
 import IdentityGenerator = require("./id/identityGenerator");
-import Batch = require("./batch");
+import Batch = require("./batchImpl");
 import Callback = require("./core/callback");
 import MappingError = require("./mapping/mappingError");
 import Reference = require("./mapping/reference")
 import PropertyFlags = require("./mapping/propertyFlags");
+import Cursor = require("./cursor");
+import Result = require("./core/result");
 
-class EntityPersister {
+class PersisterImpl {
 
     changeTracking: ChangeTracking;
     identity: IdentityGenerator;
 
-    constructor(public factory: InternalSessionFactory, public mapping: EntityMapping, public collection: Collection) {
+    private _factory: InternalSessionFactory;
 
+    constructor(factory: InternalSessionFactory, public mapping: EntityMapping, public collection: Collection) {
+
+        this._factory = factory;
         this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
-    dirtyCheck(batch: Batch, entity: any, originalDocument: any): any {
+    dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any> {
 
         var errors: MappingError[] = [];
         var document = this.mapping.write(entity, "", errors, []);
         if(errors.length > 0) {
-            return new Error("Error serializing document:\n" + this._getMappingErrorMessage(errors));
+            return new Result(new Error("Error serializing document:\n" + this._getMappingErrorMessage(errors)));
         }
 
         if(!this.mapping.areDocumentsEqual(originalDocument, document)) {
             batch.addReplace(document, this);
         }
 
-        return document;
+        return new Result(null, document);
     }
 
-    insert(batch: Batch, entity: any): any {
+    insert(batch: Batch, entity: any): Result<any> {
 
         var errors: MappingError[] = [];
         var document = this.mapping.write(entity, "", errors, []);
         if(errors.length > 0) {
-            return new Error("Error serializing document:\n" + this._getMappingErrorMessage(errors));
+            return new Result(new Error("Error serializing document:\n" + this._getMappingErrorMessage(errors)));
         }
 
         batch.addInsert(document, this);
-        return document;
+        return new Result(null, document);
     }
 
     remove(batch: Batch, entity: any): void {
@@ -73,9 +78,7 @@ class EntityPersister {
             if (err) return callback(err);
 
             var errors: MappingError[] = [];
-
-            // TODO: read into the current entity
-            this.mapping.read(document, "", errors);
+            this.mapping.refresh(session, entity, document, errors);
             if(errors.length > 0) {
                 return callback(new Error("Error deserializing document:\n" + this._getMappingErrorMessage(errors)));
             }
@@ -84,7 +87,34 @@ class EntityPersister {
         });
     }
 
-    find(session: InternalSession, id: Identifier, callback: ResultCallback<any>): void {
+    find(session: InternalSession, criteria: any): Cursor {
+
+        return new Cursor(session, this, this.collection.find(criteria));
+    }
+
+    private _load(session: InternalSession, documents: any[]): Result<any[]> {
+
+        if(!documents || documents.length == 0) {
+            return new Result(null, []);
+        }
+
+        var entities = new Array(documents.length);
+        var j = 0;
+        for(var i = 0, l = documents.length; i < l; i++) {
+            var result = this._loadOne(session, documents[i]);
+            if(result.error) {
+                return new Result(result.error, null);
+            }
+            // Filter any null values from the result because null means the object is scheduled for remove
+            if(result.value !== null) {
+                entities[j++] = result.value;
+            }
+        }
+        entities.length = j;
+        return new Result(null, entities);
+    }
+
+    findOneById(session: InternalSession, id: Identifier, callback: ResultCallback<any>): void {
 
         // Check to see if object is already loaded. Note explicit check for undefined here. Null means
         // that the object is loaded but scheduled for delete so null should be returned.
@@ -93,68 +123,68 @@ class EntityPersister {
             return process.nextTick(() => callback(null, entity));
         }
 
-        this.load(session, { _id: id }, callback);
+        this.findOne(session, { _id: id }, callback);
     }
 
-    load(session: InternalSession, criteria: any, callback: ResultCallback<any>): void {
+    findOne(session: InternalSession, criteria: any, callback: ResultCallback<any>): void {
 
         // TODO: error when findOne can't find document?
         this.collection.findOne(criteria, (err, document) => {
             if (err) return callback(err);
-            this._load(session, document, callback);
+            this._loadOne(session, document).handleCallback(callback);
         });
     }
 
-    // only call within async function
-    private _load<T>(session: InternalSession, document: any, callback: ResultCallback<T>): void {
+    private _loadOne(session: InternalSession, document: any): Result<any> {
 
-        // if the document is null or undefined then return undefined
+        var entity: any;
+
         if (!document) {
-            // note that we are not ensuring the callback is called async because _load will only
-            // be called within an async function
-            return callback(null);
+            entity = null;
+        }
+        else {
+            // Check to see if object is already loaded. Note explicit check for undefined here. Null means
+            // that the object is loaded but scheduled for delete so null should be returned.
+            entity = session.getObject(document["_id"]);
+            if (entity === undefined) {
+
+                var errors: MappingError[] = [];
+                entity = this.mapping.read(session, document, "", errors);
+                if (errors.length > 0) {
+                    return new Result(new Error("Error deserializing document:\n" + this._getMappingErrorMessage(errors)));
+                }
+
+                session.registerManaged(this, entity, document);
+            }
         }
 
-        // Check to see if object is already loaded. Note explicit check for undefined here. Null means
-        // that the object is loaded but scheduled for delete so null should be returned.
-        var entity = session.getObject(document["_id"]);
-        if (entity !== undefined) {
-            return callback(null, entity);
-        }
-
-        var errors: MappingError[] = [];
-        var entity = this.mapping.read(document, "", errors);
-        if(errors.length > 0) {
-            return callback(new Error("Error deserializing document:\n" + this._getMappingErrorMessage(errors)));
-        }
-
-        session.registerManaged(this, entity, document);
-        callback(null, entity);
+        return new Result(null, entity);
     }
 
-    getReferencedEntities(session: InternalSession, obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
+    getReferencedEntities(session: InternalSession, entity: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
         var entities: any[] = [],
             embedded: any[] = [];
 
-        this._walk(session, obj, flags, entities, embedded, err => {
+        this._walk(session, this.mapping, entity, flags, entities, embedded, err => {
             if(err) return process.nextTick(() => callback(err));
             return process.nextTick(() => callback(null, entities));
         });
     }
 
-    private _walk(session: InternalSession, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+    private _walk(session: InternalSession, mapping: EntityMapping, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
 
         var references: Reference[] = [];
-        this.mapping.walk(session, entity, flags, entities, embedded, references);
+        mapping.walk(session, entity, flags, entities, embedded, references);
 
         // TODO: load references in batches grouped by root mapping
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
 
-            this.find(session, reference.id, (err: Error, entity: any) => {
-                if (err) return done(err);
+            var persister = this._factory.getPersisterForMapping(reference.mapping);
 
-                this.factory.getPersisterForMapping(reference.mapping)._walk(session, entity, flags, entities, embedded, done);
+            persister.findOneById(session, reference.id, (err: Error, entity: any) => {
+                if (err) return done(err);
+                this._walk(session, persister.mapping, entity, flags, entities, embedded, done);
             });
         }, callback);
     }
@@ -174,4 +204,4 @@ class EntityPersister {
 
 }
 
-export = EntityPersister;
+export = PersisterImpl;

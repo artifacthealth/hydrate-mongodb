@@ -52,7 +52,20 @@ class EntityMapping extends ClassMapping {
         this.indexes.push(index);
     }
 
-    read(value: any, path: string, errors: MappingError[]): any {
+    refresh(session: InternalSession, entity: any, document: any, errors: MappingError[]): any {
+
+        var path = "";
+        var mapping = this.inheritanceRoot.getMapping(document, path, errors);
+        if (mapping) {
+            if(mapping != this) {
+                errors.push({ message: "Refresh does not support changing instantiated class of entity.", path: path, value: document });
+                return;
+            }
+            return this.readObject(session, entity, document, path, errors, /* checkRemoved */ true);
+        }
+    }
+
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
         var id: any;
 
@@ -76,13 +89,15 @@ class EntityMapping extends ClassMapping {
             return;
         }
 
-        // if this is not the top level then just return the id
+        // if this is not the top level
         if(path) {
-            // TODO: check session to see if entity is already loaded and return entity instead?
-            return id;
+            // TODO: confirm how we want to handle ObjectState.Removed. The code here will return null.
+            // if entity is already loaded then return the entity; otherwise, return the id.
+            var obj = session.getObject(id);
+            return obj !== undefined ? obj : id;
         }
 
-        var obj = super.read(value, path, errors);
+        var obj = super.read(session, value, path, errors);
         obj["_id"] = id;
         return obj;
     }

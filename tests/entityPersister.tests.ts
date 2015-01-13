@@ -9,7 +9,7 @@ import assert = chai.assert;
 import Configuration = require("../src/config/configuration");
 import InternalSession = require("../src/internalSession");
 import InternalSessionFactory = require("../src/internalSessionFactory");
-import EntityPersister = require("../src/entityPersister");
+import Persister = require("../src/persisterImpl");
 import PropertyFlags = require("../src/mapping/propertyFlags");
 import model = require("./fixtures/model");
 

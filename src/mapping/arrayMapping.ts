@@ -14,7 +14,7 @@ class ArrayMapping extends MappingBase {
         super(MappingFlags.Array);
     }
 
-    read(value: any, path: string, errors: MappingError[]): any {
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
         if(!Array.isArray(value)) {
             errors.push({ message: "Expected array.", path: path, value: value });
@@ -31,7 +31,7 @@ class ArrayMapping extends MappingBase {
             if(item === undefined) {
                 item = null;
             }
-            result[i] = mapping.read(item, path, errors);
+            result[i] = mapping.read(session, item, path, errors);
         }
 
         return result;

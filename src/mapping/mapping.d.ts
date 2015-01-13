@@ -10,7 +10,7 @@ interface Mapping {
 
     id: number;
     flags: MappingFlags;
-    read(value: any, path: string, errors: MappingError[]): any;
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any;
     write(value: any, path: string, errors: MappingError[], visited: any[]): any;
     walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void;

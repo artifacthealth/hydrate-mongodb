@@ -3,6 +3,7 @@ import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
+import InternalSession = require("../internalSession");
 
 class DateMapping extends MappingBase {
 
@@ -10,7 +11,7 @@ class DateMapping extends MappingBase {
         super(MappingFlags.Date);
     }
 
-    read(value: any, path: string, errors: MappingError[]): any {
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
         if(!(value instanceof Date)) {
             errors.push({ message: "Expected Date.", path: path, value: value });

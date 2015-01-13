@@ -13,7 +13,7 @@ class TupleMapping extends MappingBase {
         super(MappingFlags.Tuple);
     }
 
-    read(value: any, path: string, errors: MappingError[]): any {
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
         if(!Array.isArray(value)) {
             errors.push({ message: "Expected tuple.", path: path, value: value });
@@ -28,7 +28,7 @@ class TupleMapping extends MappingBase {
 
         var result = new Array(value.length);
         for (var i = 0, l = mappings.length; i < l; i++) {
-            result[i] = mappings[i].read(value[i], path + "." + i, errors);
+            result[i] = mappings[i].read(session, value[i], path + "." + i, errors);
         }
 
         return result;

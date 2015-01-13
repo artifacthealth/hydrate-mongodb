@@ -4,6 +4,7 @@ import MappingError = require("./mappingError");
 import RegExpUtil = require("../core/regExpUtil");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
+import InternalSession = require("../internalSession");
 
 class RegExpMapping extends MappingBase {
 
@@ -11,7 +12,7 @@ class RegExpMapping extends MappingBase {
         super(MappingFlags.RegExp);
     }
 
-    read(value: any, path: string, errors: MappingError[]): any {
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
         if(!(value instanceof RegExp)) {
             errors.push({ message: "Expected RegExp.", path: path, value: value });

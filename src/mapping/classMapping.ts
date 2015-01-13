@@ -48,28 +48,40 @@ class ClassMapping extends ObjectMapping {
     }
 
 
-    read(value: any, path: string, errors: MappingError[]): any {
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
-        var root = this.inheritanceRoot;
-
-        var discriminatorValue = value[root.discriminatorField];
-        if(discriminatorValue === undefined) {
-            errors.push({ message: "Expected discriminator field '" + root.discriminatorField + "'.", path: path, value: value });
-            return;
+        var mapping = this.inheritanceRoot.getMapping(value, path, errors);
+        if (mapping) {
+            return mapping.readClass(session, value, path, errors);
         }
-
-        var mapping = root._discriminatorMap[discriminatorValue];
-        if(mapping === undefined) {
-            errors.push({ message: "Unknown discriminator value '" + discriminatorValue + "'.", path: path, value: value });
-            return;
-        }
-
-        return mapping.readClass(value, path, errors);
     }
 
-    protected readClass(value: any, path: string, errors: MappingError[]): any {
+    /**
+     * Gets the mapping for the specified document. Note that this method can only be called on an inheritance root.
+     * @param document The document.
+     * @param path The current path. Used for error reporting.
+     * @param errors An array of reported errors.
+     */
+    getMapping(document: any, path: string, errors: MappingError[]): ClassMapping {
 
-        return this.readObject(Object.create(this.classConstructor.prototype), value, path, errors);
+        var discriminatorValue = document[this.discriminatorField];
+        if(discriminatorValue === undefined) {
+            errors.push({ message: "Expected discriminator field '" + this.discriminatorField + "'.", path: path, value: document });
+            return;
+        }
+
+        var mapping = this._discriminatorMap[discriminatorValue];
+        if(mapping === undefined) {
+            errors.push({ message: "Unknown discriminator value '" + discriminatorValue + "'.", path: path, value: document });
+            return;
+        }
+
+        return mapping;
+    }
+
+    protected readClass(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+
+        return this.readObject(session, Object.create(this.classConstructor.prototype), value, path, errors, /*checkRemoved*/ false);
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {

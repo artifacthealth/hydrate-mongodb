@@ -5,11 +5,13 @@ import Session = require("./session");
 import SessionImpl = require("./sessionImpl");
 import InternalSessionFactory = require("./internalSessionFactory");
 import Constructor = require("./core/constructor");
-import EntityPersister = require("./entityPersister");
+import Persister = require("./persister");
+import PersisterImpl = require("./persisterImpl");
 import Mapping = require("./mapping/mapping");
 import MappingFlags = require("./mapping/mappingFlags");
 import ClassMapping = require("./mapping/classMapping");
 import EntityMapping = require("./mapping/entityMapping");
+import BatchImpl = require("./batchImpl");
 import Batch = require("./batch");
 
 
@@ -17,7 +19,7 @@ class SessionFactoryImpl implements InternalSessionFactory {
 
     private _collections: CollectionTable;
     private _mappingRegistry: MappingRegistry;
-    private _persisterByMapping: EntityPersister[] = [];
+    private _persisterByMapping: Persister[] = [];
 
     constructor(collections: CollectionTable, mappingRegistry: MappingRegistry) {
 
@@ -31,7 +33,7 @@ class SessionFactoryImpl implements InternalSessionFactory {
         return new SessionImpl(this);
     }
 
-    getPersisterForObject(obj: any): EntityPersister {
+    getPersisterForObject(obj: any): Persister {
 
         var mapping = this._mappingRegistry.getMappingForObject(obj);
         if(mapping && (mapping.flags & MappingFlags.Entity)) {
@@ -39,7 +41,7 @@ class SessionFactoryImpl implements InternalSessionFactory {
         }
     }
 
-    getPersisterForConstructor(ctr: Constructor<any>): EntityPersister {
+    getPersisterForConstructor(ctr: Constructor<any>): Persister {
 
         var mapping = this._mappingRegistry.getMappingForConstructor(ctr);
         if(mapping && (mapping.flags & MappingFlags.Entity)) {
@@ -47,17 +49,17 @@ class SessionFactoryImpl implements InternalSessionFactory {
         }
     }
 
-    getPersisterForMapping(mapping: EntityMapping): EntityPersister {
+    getPersisterForMapping(mapping: EntityMapping): Persister {
 
         var persister = this._persisterByMapping[mapping.id];
         if(persister === undefined) {
-            persister = new EntityPersister(this, mapping, this._collections[mapping.inheritanceRoot.id]);
+            persister = new PersisterImpl(this, mapping, this._collections[mapping.inheritanceRoot.id]);
         }
         return persister;
     }
 
     createBatch(): Batch {
-        return new Batch();
+        return new BatchImpl();
     }
 }
 

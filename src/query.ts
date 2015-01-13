@@ -1,15 +1,15 @@
 import ResultCallback = require("./core/resultCallback");
 import Callback = require("./core/callback");
-import EntityPersister = require("./entityPersister");
+import Persister = require("./persister");
 import Cursor = require("./cursor");
 import InternalSession = require("./internalSession");
 
 class Query<T> {
 
-    private _persister: EntityPersister;
+    private _persister: Persister;
     private _session: InternalSession;
 
-    constructor(session: InternalSession, persister: EntityPersister) {
+    constructor(session: InternalSession, persister: Persister) {
         this._persister = persister;
         this._session = session;
     }

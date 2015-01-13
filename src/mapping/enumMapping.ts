@@ -4,6 +4,7 @@ import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
+import InternalSession = require("../internalSession");
 
 interface EnumValues {
     [value: number]: string;
@@ -27,7 +28,7 @@ class EnumMapping extends MappingBase {
         }
     }
 
-    read(value: any, path: string, errors: MappingError[]): any {
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
         if(typeof value === "number") {
             return value;

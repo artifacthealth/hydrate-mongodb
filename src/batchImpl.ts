@@ -2,11 +2,12 @@
 
 import async = require("async");
 import Callback = require("./core/callback");
-import EntityPersister = require("./entityPersister");
+import Persister = require("./persister");
 import Bulk = require("./driver/bulk");
 import BulkWriteResult = require("./driver/bulkWriteResult");
 import InternalSession = require("./internalSession");
 import Changes = require("./mapping/changes");
+import Batch = require("./batch");
 
 interface CollectionBatch {
 
@@ -19,12 +20,12 @@ interface CollectionBatch {
 
 // TODO: consider performance with a write concern of 0 and checking errors afterwards. See https://blog.compose.io/faster-updates-with-mongodb-2-4/
 // TODO: retry write after error? updates need to be idempotent so you can reapply full batch without side-effects
-class PersisterBatch {
+class BatchImpl implements Batch {
 
     private _batchTable: { [id: number]: CollectionBatch } = {};
     private _batches: CollectionBatch[] = [];
 
-    addInsert(document: any, persister: EntityPersister): void {
+    addInsert(document: any, persister: Persister): void {
 
         var batch = this._getBatch(persister);
         batch.inserted++;
@@ -32,7 +33,7 @@ class PersisterBatch {
         //console.log("INSERT: " + JSON.stringify(document, null, "\t"));
     }
 
-    addReplace(document: any, persister: EntityPersister): void {
+    addReplace(document: any, persister: Persister): void {
 
         var query: any = {
             _id: document["_id"]
@@ -44,7 +45,7 @@ class PersisterBatch {
         //console.log("REPLACE: " + JSON.stringify(document, null, "\t"));
     }
 
-    addUpdate(id: any, changes: Changes, persister: EntityPersister): void {
+    addUpdate(id: any, changes: Changes, persister: Persister): void {
 
         var query: any = {
             _id: id
@@ -56,7 +57,7 @@ class PersisterBatch {
         //console.log("UPDATE: " + JSON.stringify(changes, null, "\t"));
     }
 
-    addRemove(id: any, persister: EntityPersister): void {
+    addRemove(id: any, persister: Persister): void {
 
         var query: any = {
             _id: id
@@ -97,7 +98,7 @@ class PersisterBatch {
         }, callback);
     }
 
-    private _getBatch(persister: EntityPersister): CollectionBatch {
+    private _getBatch(persister: Persister): CollectionBatch {
 
         var id = persister.mapping.inheritanceRoot.id,
             batch = this._batchTable[id];
@@ -118,4 +119,4 @@ class PersisterBatch {
     }
 }
 
-export = PersisterBatch;
+export = BatchImpl;

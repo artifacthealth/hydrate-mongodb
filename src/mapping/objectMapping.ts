@@ -65,16 +65,15 @@ class ObjectMapping extends MappingBase {
         return ret;
     }
 
-    read(value: any, path: string, errors: MappingError[]): any {
+    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
-        return this.readObject({}, value, path, errors);
+        return this.readObject(session, {}, value, path, errors, /*checkRemoved*/ false);
     }
 
-    protected readObject(obj: any, value: any, path: string, errors: MappingError[]): any {
+    protected readObject(session: InternalSession, obj: any, value: any, path: string, errors: MappingError[], checkRemoved: boolean): any {
 
         var base = path ? path + "." : "",
-            properties = this.properties,
-            propertyValue: any;
+            properties = this.properties;
 
         for (var i = 0, l = properties.length; i < l; i++) {
             var property = properties[i];
@@ -84,24 +83,36 @@ class ObjectMapping extends MappingBase {
                 continue;
             }
             // TODO: how to handle inverse side of reference? probably should be in the code that does reference population
+            var fieldValue = property.getFieldValue(value),
+                propertyValue: any;
 
-            var fieldValue = property.getFieldValue(value);
-            if (fieldValue === undefined) {
-                // skip undefined values
-                continue;
-            }
-            if (fieldValue === null) {
+            // skip undefined values
+            if (fieldValue !== undefined) {
                 // skip null values unless allowed
-                if (!(property.flags & PropertyFlags.Nullable)) {
-                    continue;
+                if (fieldValue === null) {
+                    if (property.flags & PropertyFlags.Nullable) {
+                        propertyValue = null;
+                    }
                 }
-                propertyValue = null;
+                else {
+                    propertyValue = property.mapping.read(session, fieldValue, base + property.name, errors);
+                }
+            }
+
+            if(propertyValue !== undefined) {
+                property.setPropertyValue(obj, propertyValue);
             }
             else {
-                propertyValue = property.mapping.read(fieldValue, base + property.name, errors);
+                // If the flag to check for removed properties is set, delete the property if the object has a value
+                // but the document does not.
+                if(checkRemoved && property.getPropertyValue(obj) !== undefined) {
+                    // Deleting a property from an object causes the object to become non-optimized in V8. So we
+                    // will just set the property value to undefined instead of deleting it. The resulting object is
+                    // not exactly the same as if we had called delete but it's not worth the performance hit to
+                    // call delete.
+                    property.setPropertyValue(obj, undefined);
+                }
             }
-
-            property.setPropertyValue(obj, propertyValue);
         }
 
         return obj;
