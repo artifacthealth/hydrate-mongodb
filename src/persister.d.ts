@@ -9,7 +9,6 @@ import Batch = require("./batch");
 import ChangeTracking = require("./mapping/changeTracking");
 import IdentityGenerator = require("./id/identityGenerator");
 import EntityMapping = require("./mapping/entityMapping");
-import Collection = require("./driver/collection");
 import Result = require("./core/result");
 import Cursor = require("./cursor");
 import Callback = require("./core/callback");

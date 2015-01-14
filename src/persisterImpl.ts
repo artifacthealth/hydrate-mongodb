@@ -175,7 +175,6 @@ class PersisterImpl implements Persister {
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
 
             var persister = this._factory.getPersisterForMapping(reference.mapping);
-
             persister.findOneById(session, reference.id, (err: Error, entity: any) => {
                 if (err) return done(err);
                 persister.walk(session, entity, flags, entities, embedded, done);
