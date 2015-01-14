@@ -1,6 +1,7 @@
 /// <reference path="../../../typings/tsreflect.d.ts" />
 
 import reflect = require("tsreflect");
+import Table = require("../../core/table");
 import ResultCallback = require("../../core/resultCallback");
 import Mapping = require("../mapping");
 import MappingRegistry = require("../mappingRegistry");
@@ -80,11 +81,6 @@ enum MappingKind {
     Global
 }
 
-interface TypeTable {
-
-    [id: number]: TypeLinks;
-}
-
 interface TypeLinks {
 
     type: reflect.Type;
@@ -95,7 +91,7 @@ interface TypeLinks {
 class MappingBuilder {
 
     private _objectTypes: reflect.Type[] = [];
-    private _typeTable: TypeTable = {};
+    private _typeTable: Table<TypeLinks> = [];
     private _errors: string[] = [];
     private _registry = new MappingRegistry();
 

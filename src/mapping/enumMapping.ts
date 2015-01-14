@@ -1,3 +1,4 @@
+import Table = require("../core/table");
 import Map = require("../core/map");
 import Mapping = require("./mapping");
 import MappingBase = require("./mappingBase");
@@ -6,15 +7,11 @@ import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
 import InternalSession = require("../internalSession");
 
-interface EnumValues {
-    [value: number]: string;
-}
-
 class EnumMapping extends MappingBase {
 
     ignoreCase = false;
 
-    private _values: EnumValues = {};
+    private _values: Table<string> = [];
 
     constructor(public members: Map<number>) {
         super(MappingFlags.Enum);

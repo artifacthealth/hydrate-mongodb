@@ -13,7 +13,7 @@ import DatabaseDriver = require("../driver/databaseDriver");
 import MongoDriver = require("../driver/mongoDriver");
 import Connection = require("../driver/connection");
 import Collection = require("../driver/collection");
-import CollectionTable = require("../driver/collectionTable");
+import Table = require("../core/table");
 import Mapping = require("../mapping/mapping");
 import MappingFlags = require("../mapping/mappingFlags");
 import MappingRegistry = require("../mapping/mappingRegistry");
@@ -102,11 +102,11 @@ class Configuration {
         });
     }
 
-    private _buildCollections(connection: Connection, registry: MappingRegistry, callback: ResultCallback<CollectionTable>): void {
+    private _buildCollections(connection: Connection, registry: MappingRegistry, callback: ResultCallback<Table<Collection>>): void {
 
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
-        var collections: CollectionTable = {};
+        var collections: Table<Collection> = [];
         var names: Map<boolean> = {};
 
         async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {

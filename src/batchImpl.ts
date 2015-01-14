@@ -1,6 +1,7 @@
 /// <reference path="../typings/async.d.ts" />
 
 import async = require("async");
+import Table = require("./core/table");
 import Callback = require("./core/callback");
 import Persister = require("./persister");
 import Bulk = require("./driver/bulk");
@@ -22,7 +23,7 @@ interface CollectionBatch {
 // TODO: retry write after error? updates need to be idempotent so you can reapply full batch without side-effects
 class BatchImpl implements Batch {
 
-    private _batchTable: { [id: number]: CollectionBatch } = {};
+    private _batchTable: Table<CollectionBatch> = [];
     private _batches: CollectionBatch[] = [];
 
     addInsert(document: any, persister: Persister): void {

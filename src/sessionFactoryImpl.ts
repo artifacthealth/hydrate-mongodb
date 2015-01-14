@@ -1,4 +1,5 @@
-import CollectionTable = require("./driver/collectionTable");
+import Table = require("./core/table");
+import Collection = require("./driver/collection");
 import Connection = require("./driver/connection");
 import MappingRegistry = require("./mapping/mappingRegistry");
 import Session = require("./session");
@@ -17,11 +18,11 @@ import Batch = require("./batch");
 
 class SessionFactoryImpl implements InternalSessionFactory {
 
-    private _collections: CollectionTable;
+    private _collections: Table<Collection>;
     private _mappingRegistry: MappingRegistry;
-    private _persisterByMapping: Persister[] = [];
+    private _persisterByMapping: Table<Persister> = [];
 
-    constructor(collections: CollectionTable, mappingRegistry: MappingRegistry) {
+    constructor(collections: Table<Collection>, mappingRegistry: MappingRegistry) {
 
         this._collections = collections;
         // TODO: get rid of mapping registry and handle directly in session factory

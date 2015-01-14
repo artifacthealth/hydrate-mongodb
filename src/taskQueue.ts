@@ -1,4 +1,5 @@
 import ResultCallback = require("./core/resultCallback");
+import Table = require("./core/table");
 
 interface Task {
 
@@ -10,15 +11,10 @@ interface Task {
     next?: Task;
 }
 
-interface ActiveCount {
-
-    [operation: number]: number;
-}
-
 class TaskQueue {
 
     private _execute: (operation: number, arg: any, callback: ResultCallback<any>) => void;
-    private _activeCounts: ActiveCount = {};
+    private _activeCounts: Table<number> = [];
     private _active: number = 0;
     private _head: Task;
     private _tail: Task;

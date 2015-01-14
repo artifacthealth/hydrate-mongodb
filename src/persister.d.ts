@@ -1,6 +1,7 @@
 /// <reference path="../typings/async.d.ts" />
 
 import Identifier = require('./id/identifier');
+import Table = require("./core/table");
 import ResultCallback = require("./core/resultCallback");
 import InternalSession = require("./internalSession");
 import PropertyFlags = require("./mapping/propertyFlags");
@@ -22,6 +23,12 @@ interface Persister {
     dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any>;
     insert(batch: Batch, entity: any): Result<any>;
     remove(batch: Batch, entity: any): void;
+
+    /**
+     * Gets the appropriate batch from the list of available batches or creates a new one and adds it to the list.
+     * @param batches The current list of batches.
+     */
+    selectBatch(batches: Table<Batch>): Batch;
 
     refresh(session: InternalSession, entity: any, callback: ResultCallback<any>): void;
     find(session: InternalSession, criteria: any): Cursor;

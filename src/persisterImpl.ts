@@ -16,8 +16,9 @@ import Reference = require("./mapping/reference")
 import PropertyFlags = require("./mapping/propertyFlags");
 import Cursor = require("./cursor");
 import Result = require("./core/result");
+import Persister = require("./persister");
 
-class PersisterImpl {
+class PersisterImpl implements Persister {
 
     changeTracking: ChangeTracking;
     identity: IdentityGenerator;
