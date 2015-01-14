@@ -15,6 +15,7 @@ import InternalSessionFactory = require("./internalSessionFactory");
 import TaskQueue = require("./taskQueue");
 import Persister = require("./persister");
 import Query = require("./query");
+import Batch = require("./batch");
 
 enum ObjectState {
 
@@ -202,13 +203,7 @@ class SessionImpl implements InternalSession {
 
     private _save(obj: any, callback: Callback): void {
 
-        var persister = this.factory.getPersisterForObject(obj);
-        if (!persister) {
-            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-            return;
-        }
-
-        persister.getReferencedEntities(this, obj, PropertyFlags.CascadeSave, (err, entities) => {
+        this._findReferences(obj, PropertyFlags.CascadeSave, (err, entities) => {
             if(err) return callback(err);
             this._saveEntities(entities, callback);
         });
@@ -254,13 +249,7 @@ class SessionImpl implements InternalSession {
 
     private _remove(obj: any, callback: Callback): void {
 
-        var persister = this.factory.getPersisterForObject(obj);
-        if (!persister) {
-            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-            return;
-        }
-
-        persister.getReferencedEntities(this, obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
+        this._findReferences(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
             if(err) return callback(err);
             this._removeEntities(entities, callback);
         });
@@ -299,13 +288,7 @@ class SessionImpl implements InternalSession {
 
     private _detach(obj: any, callback: Callback): void {
 
-        var persister = this.factory.getPersisterForObject(obj);
-        if (!persister) {
-            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-            return;
-        }
-
-        persister.getReferencedEntities(this, obj, PropertyFlags.CascadeDetach, (err, entities) => {
+        this._findReferences(obj, PropertyFlags.CascadeDetach, (err, entities) => {
             if(err) return callback(err);
             this._detachEntities(entities, callback);
         });
@@ -325,13 +308,7 @@ class SessionImpl implements InternalSession {
 
     private _refresh(obj: any, callback: Callback): void {
 
-        var persister = this.factory.getPersisterForObject(obj);
-        if (!persister) {
-            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-            return;
-        }
-
-        persister.getReferencedEntities(this, obj, PropertyFlags.CascadeRefresh, (err, entities) => {
+        this._findReferences(obj, PropertyFlags.CascadeRefresh, (err, entities) => {
             if(err) return callback(err);
             this._refreshEntities(entities, callback);
         });
@@ -360,7 +337,7 @@ class SessionImpl implements InternalSession {
         // to have to iterate through the list several times.
         var list = this._getAllObjectLinks();
 
-        var batch = this.factory.createBatch();
+        var batch = new Batch();
 
         // Add operations to batch group by operation type. MongoDB bulk operations need to be ordered by operation
         // type or they are not executed as bulk operations.
@@ -501,6 +478,22 @@ class SessionImpl implements InternalSession {
         }
     }
 
+    private _findReferences(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
+
+        var persister = this.factory.getPersisterForObject(obj);
+        if (!persister) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
+
+        var entities: any[] = [],
+            embedded: any[] = [];
+
+        persister.walk(this, obj, flags, entities, embedded, err => {
+            if(err) return process.nextTick(() => callback(err));
+            return process.nextTick(() => callback(null, entities));
+        });
+    }
 }
 
 export = SessionImpl;

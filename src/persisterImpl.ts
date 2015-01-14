@@ -9,7 +9,7 @@ import InternalSession = require("./internalSession");
 import InternalSessionFactory = require("./internalSessionFactory");
 import ChangeTracking = require("./mapping/changeTracking");
 import IdentityGenerator = require("./id/identityGenerator");
-import Batch = require("./batchImpl");
+import Batch = require("./batch");
 import Callback = require("./core/callback");
 import MappingError = require("./mapping/mappingError");
 import Reference = require("./mapping/reference")
@@ -17,6 +17,10 @@ import PropertyFlags = require("./mapping/propertyFlags");
 import Cursor = require("./cursor");
 import Result = require("./core/result");
 import Persister = require("./persister");
+import Command = require("./core/command");
+import Bulk = require("./driver/bulk");
+import BulkWriteResult = require("./driver/bulkWriteResult");
+import Changes = require("./mapping/changes");
 
 class PersisterImpl implements Persister {
 
@@ -41,7 +45,7 @@ class PersisterImpl implements Persister {
         }
 
         if(!this.mapping.areDocumentsEqual(originalDocument, document)) {
-            batch.addReplace(document, this);
+            this._getCommand(batch).addReplace(document);
         }
 
         return new Result(null, document);
@@ -55,13 +59,13 @@ class PersisterImpl implements Persister {
             return new Result(new Error("Error serializing document:\n" + this._getMappingErrorMessage(errors)));
         }
 
-        batch.addInsert(document, this);
+        this._getCommand(batch).addInsert(document);
         return new Result(null, document);
     }
 
     remove(batch: Batch, entity: any): void {
 
-        batch.addRemove(entity["_id"], this);
+        this._getCommand(batch).addRemove(entity["_id"]);
     }
 
     /**
@@ -162,21 +166,10 @@ class PersisterImpl implements Persister {
         return new Result(null, entity);
     }
 
-    getReferencedEntities(session: InternalSession, entity: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
-
-        var entities: any[] = [],
-            embedded: any[] = [];
-
-        this._walk(session, this.mapping, entity, flags, entities, embedded, err => {
-            if(err) return process.nextTick(() => callback(err));
-            return process.nextTick(() => callback(null, entities));
-        });
-    }
-
-    private _walk(session: InternalSession, mapping: EntityMapping, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+    walk(session: InternalSession, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
 
         var references: Reference[] = [];
-        mapping.walk(session, entity, flags, entities, embedded, references);
+        this.mapping.walk(session, entity, flags, entities, embedded, references);
 
         // TODO: load references in batches grouped by root mapping
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
@@ -185,7 +178,7 @@ class PersisterImpl implements Persister {
 
             persister.findOneById(session, reference.id, (err: Error, entity: any) => {
                 if (err) return done(err);
-                this._walk(session, persister.mapping, entity, flags, entities, embedded, done);
+                persister.walk(session, entity, flags, entities, embedded, done);
             });
         }, callback);
     }
@@ -203,6 +196,93 @@ class PersisterImpl implements Persister {
         return message.join("");
     }
 
+    private _getCommand(batch: Batch): BulkOperationCommand {
+        var id = this.mapping.inheritanceRoot.id;
+        var command = <BulkOperationCommand>batch.getCommand(id);
+        if(!command) {
+            command = new BulkOperationCommand(this.collection);
+            batch.addCommand(id, command);
+        }
+        return command;
+    }
+}
+
+class BulkOperationCommand implements Command {
+
+    collectionName: string;
+    operation: Bulk;
+    inserted: number;
+    updated: number;
+    removed: number;
+
+    constructor(collection: Collection) {
+
+        this.collectionName = collection.collectionName,
+        this.operation = collection.initializeUnorderedBulkOp(),
+        this.inserted = this.updated = this.removed = 0;
+    }
+
+    addInsert(document: any): void {
+
+        this.inserted++;
+        this.operation.insert(document);
+        //console.log("INSERT: " + JSON.stringify(document, null, "\t"));
+    }
+
+    addReplace(document: any): void {
+
+        var query: any = {
+            _id: document["_id"]
+        }
+
+        this.updated++;
+        this.operation.find(query).replaceOne(document);
+        //console.log("REPLACE: " + JSON.stringify(document, null, "\t"));
+    }
+
+    addUpdate(id: any, changes: Changes): void {
+
+        var query: any = {
+            _id: id
+        }
+
+        this.updated++;
+        this.operation.find(query).update(changes);
+        //console.log("UPDATE: " + JSON.stringify(changes, null, "\t"));
+    }
+
+    addRemove(id: any): void {
+
+        var query: any = {
+            _id: id
+        }
+
+        this.removed++;
+        this.operation.find(query).removeOne();
+        //console.log("REMOVE: " + JSON.stringify(document, null, "\t"));
+    }
+
+    execute(callback: Callback): void {
+
+        this.operation.execute((err: Error, result: BulkWriteResult) => {
+            if(err) return callback(err);
+
+            // TODO: provide more detailed error information
+            if((result.nInserted || 0) != this.inserted) {
+                return callback(new Error("Flush failed for collection '" + this.collectionName + "'. Expected to insert " + this.inserted + " documents but only inserted " + (result.nInserted || 0) + "."));
+            }
+
+            if((result.nModified || 0) != this.updated) {
+                return callback(new Error("Flush failed for collection '" + this.collectionName + "'. Expected to update " + this.updated + " documents but only updated " + (result.nModified || 0) + "."));
+            }
+
+            if((result.nRemoved || 0) != this.removed) {
+                return callback(new Error("Flush failed for collection '" + this.collectionName + "'. Expected to remove " + this.removed + " documents but only removed " + (result.nRemoved || 0) + "."));
+            }
+
+            callback();
+        });
+    }
 }
 
 export = PersisterImpl;

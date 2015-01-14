@@ -13,13 +13,14 @@ import MappingRegistry = require("../src/mapping/mappingRegistry");
 import model = require("./fixtures/model");
 import Result = require("../src/core/result");
 import Cursor = require("../src/cursor");
+import Callback = require("../src/core/callback");
 
 class MockPersister implements Persister {
 
+    private _mapping: EntityMapping;
+
     changeTracking: ChangeTracking;
     identity: IdentityGenerator;
-    mapping: EntityMapping;
-    collection: Collection;
 
     insertCalled = 0;
     inserted: any[] = [];
@@ -38,7 +39,7 @@ class MockPersister implements Persister {
         mapping.identity = new MockIdentityGenerator();
         mapping.classConstructor = model.Address;
         this._registry.addMapping(mapping);
-        this.mapping = mapping;
+        this._mapping = mapping;
         this.identity = mapping.identity;
     }
 
@@ -93,8 +94,11 @@ class MockPersister implements Persister {
 
     }
 
-    getReferencedEntities(session: InternalSession, entity: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
-        process.nextTick(() => callback(null, [entity]));
+    walk(session: InternalSession, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+        if(entities.indexOf(entity) == -1) {
+            entities.push(entity);
+        }
+        process.nextTick(() => callback(null));
     }
 }
 

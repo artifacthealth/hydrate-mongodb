@@ -10,6 +10,5 @@ interface InternalSessionFactory extends SessionFactory {
     getPersisterForObject(obj: any): Persister;
     getPersisterForConstructor(ctr: Constructor<any>): Persister;
     getPersisterForMapping(mapping: EntityMapping): Persister;
-    createBatch(): Batch;
 }
 export = InternalSessionFactory;

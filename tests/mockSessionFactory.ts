@@ -4,7 +4,6 @@ import Persister = require("../src/persister");
 import EntityMapping = require("../src/mapping/entityMapping");
 import Batch = require("../src/batch");
 import Session = require("../src/session");
-import MockBatch = require("./mockBatch");
 import MockPersister = require("./mockPersister");
 
 class MockSessionFactory implements InternalSessionFactory {
@@ -21,10 +20,6 @@ class MockSessionFactory implements InternalSessionFactory {
 
     getPersisterForMapping(mapping: EntityMapping): Persister {
         return this.persister;
-    }
-
-    createBatch(): Batch {
-        return new MockBatch();
     }
 
     createSession(): Session {

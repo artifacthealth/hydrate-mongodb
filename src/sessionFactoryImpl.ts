@@ -12,8 +12,6 @@ import Mapping = require("./mapping/mapping");
 import MappingFlags = require("./mapping/mappingFlags");
 import ClassMapping = require("./mapping/classMapping");
 import EntityMapping = require("./mapping/entityMapping");
-import BatchImpl = require("./batchImpl");
-import Batch = require("./batch");
 
 
 class SessionFactoryImpl implements InternalSessionFactory {
@@ -57,10 +55,6 @@ class SessionFactoryImpl implements InternalSessionFactory {
             persister = new PersisterImpl(this, mapping, this._collections[mapping.inheritanceRoot.id]);
         }
         return persister;
-    }
-
-    createBatch(): Batch {
-        return new BatchImpl();
     }
 }
 
