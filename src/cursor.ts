@@ -28,12 +28,6 @@ class Cursor {
         return this;
     }
 
-    batchSize(value: number): Cursor {
-
-        this._cursor.batchSize(value);
-        return this;
-    }
-
     limit(value: number): Cursor {
 
         this._cursor.limit(value);
@@ -90,11 +84,6 @@ class Cursor {
     isClosed(): boolean {
 
         return this._cursor.isClosed();
-    }
-
-    explain(callback: (err: Error, result: any) => void) {
-
-        return this._cursor.explain(callback);
     }
 
     rewind(): Cursor {

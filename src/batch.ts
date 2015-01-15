@@ -9,6 +9,7 @@ class Batch implements Command {
 
     private _commandTable: Table<Command> = [];
     private _commands: Command[] = [];
+    private _executed = false;
 
     /**
      * Gets a command from the batch.
@@ -40,6 +41,11 @@ class Batch implements Command {
      * @param callback Callback called when execution completes.
      */
     execute(callback: Callback): void {
+
+        if(this._executed) {
+            throw new Error("Batch had already been executed.");
+        }
+        this._executed = true;
 
         if(this._commands.length == 0) {
             return process.nextTick(() => callback());
