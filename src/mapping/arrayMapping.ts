@@ -3,7 +3,7 @@ import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
-import Reference = require("./reference");
+import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 
@@ -116,7 +116,7 @@ class ArrayMapping extends MappingBase {
     }
 
 
-    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (value === null || value === undefined || !Array.isArray(value)) {
             return;
@@ -124,7 +124,7 @@ class ArrayMapping extends MappingBase {
 
         var mapping = this.elementMapping;
         for (var i = 0, l = value.length; i < l; i++) {
-            mapping.walk(session, value[i], flags, entities, embedded, references);
+            mapping.walk(value[i], flags, entities, embedded, references);
         }
     }
 }

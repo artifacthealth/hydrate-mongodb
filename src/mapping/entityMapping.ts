@@ -11,7 +11,7 @@ import CollectionOptions = require("../driver/collectionOptions");
 import MappingRegistry = require("./mappingRegistry");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
-import Reference = require("./reference");
+import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 
@@ -92,10 +92,8 @@ class EntityMapping extends ClassMapping {
 
         // if this is not the top level
         if(path) {
-            // TODO: confirm how we want to handle ObjectState.Removed. The code here will return null.
-            // if entity is already loaded then return the entity; otherwise, return the id.
-            var obj = session.getObject(id);
-            return obj !== undefined ? obj : id;
+            // TODO: confirm how we want to handle ObjectState.Removed.
+            return session.getReferenceInternal(this, id);
         }
 
         var obj = super.read(session, value, path, errors);
@@ -111,9 +109,9 @@ class EntityMapping extends ClassMapping {
         // the mapping for the current object in Class.write.
         // TODO: validate mapping that all classes inherit from inheritanceRoot or this ^ may not work
         // if the value is not an instance of the entity's constructor then it should be an identifier or DBRef
-        if(!(value instanceof this.classConstructor)) {
+        if(Reference.isReference(value)) {
             // TODO: handle DBRef
-            id = value;
+            id = (<Reference>value).id;
         }
         else {
             // otherwise, retrieve the id from the object
@@ -185,23 +183,20 @@ class EntityMapping extends ClassMapping {
         return (<EntityMapping>this.inheritanceRoot).identity.areEqual(id1, id2)
     }
 
-    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (value === null || value === undefined || typeof value !== "object") return;
 
-        if(!(value instanceof this.classConstructor)) {
+        if(Reference.isReference(value)) {
             // TODO: handle DBRef
-            if(!(<EntityMapping>this.inheritanceRoot).identity.validate(value)) {
-                return;
-            }
-            var entity = session.getObject(value);
+            var entity = (<Reference>value).getObject();
             if (entity) {
                 value = entity;
             }
             else {
                 if(flags & PropertyFlags.Dereference) {
                     // store reference to resolve later
-                    references.push({ mapping: this, id: value });
+                    references.push(value);
                 }
                 return;
             }
@@ -210,7 +205,7 @@ class EntityMapping extends ClassMapping {
         if (entities.indexOf(value) !== -1) return;
         entities.push(value);
 
-        super.walk(session, value, flags, entities, embedded, references);
+        super.walk(value, flags, entities, embedded, references);
     }
 }
 

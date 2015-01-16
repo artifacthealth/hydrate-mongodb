@@ -175,9 +175,13 @@ class SessionImpl implements InternalSession {
      */
     getReference<T>(ctr: Constructor<T>, id: Identifier): T {
 
-        // TODO: maybe return null on ObjectState.Removed i.e. check for getObject(id) !== undefined
-        var entity = this.getObject(id);
-        return entity ? entity : <any>new Reference(ctr, id);
+        return this.getReferenceInternal(this.factory.getMappingForConstructor(ctr), id);
+    }
+
+    getReferenceInternal(mapping: EntityMapping, id: Identifier): any {
+
+        // TODO: should we cache references so all references with the same id share the same object?
+        return this.getObject(id) || new Reference(this, mapping, id);
     }
 
     /**
@@ -234,7 +238,7 @@ class SessionImpl implements InternalSession {
 
     private _save(obj: any, callback: Callback): void {
 
-        this._findReferences(obj, PropertyFlags.CascadeSave, (err, entities) => {
+        this._findReferencedEntities(obj, PropertyFlags.CascadeSave, (err, entities) => {
             if(err) return callback(err);
             this._saveEntities(entities, callback);
         });
@@ -280,7 +284,7 @@ class SessionImpl implements InternalSession {
 
     private _remove(obj: any, callback: Callback): void {
 
-        this._findReferences(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
+        this._findReferencedEntities(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
             if(err) return callback(err);
             this._removeEntities(entities, callback);
         });
@@ -319,7 +323,7 @@ class SessionImpl implements InternalSession {
 
     private _detach(obj: any, callback: Callback): void {
 
-        this._findReferences(obj, PropertyFlags.CascadeDetach, (err, entities) => {
+        this._findReferencedEntities(obj, PropertyFlags.CascadeDetach, (err, entities) => {
             if(err) return callback(err);
             this._detachEntities(entities, callback);
         });
@@ -339,7 +343,7 @@ class SessionImpl implements InternalSession {
 
     private _refresh(obj: any, callback: Callback): void {
 
-        this._findReferences(obj, PropertyFlags.CascadeRefresh, (err, entities) => {
+        this._findReferencedEntities(obj, PropertyFlags.CascadeRefresh, (err, entities) => {
             if(err) return callback(err);
             this._refreshEntities(entities, callback);
         });
@@ -430,16 +434,15 @@ class SessionImpl implements InternalSession {
 
     private _fetch(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
-        if(!Reference.isReference(obj)) {
-            this._fetchPaths(obj, paths, callback);
-            return;
+        if(Reference.isReference(obj)) {
+            (<Reference>obj).fetch((err, entity) => {
+                if(err) return callback(err);
+                this._fetchPaths(entity, paths, callback);
+            });
         }
-
-        // TODO: maybe add Reference.fetch?
-        this._find((<Reference>obj).ctr, (<Reference>obj).id, (err, entity) => {
-            if(err) return callback(err);
-            this._fetchPaths(entity, paths, callback);
-        });
+        else {
+            this._fetchPaths(obj, paths, callback);
+        }
     }
 
     private _fetchPaths(obj: any, paths: string[], callback: ResultCallback<any>): void {
@@ -528,7 +531,7 @@ class SessionImpl implements InternalSession {
         }
     }
 
-    private _findReferences(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
+    private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
         var persister = this._getPersisterForObject(obj);
         if (!persister) {

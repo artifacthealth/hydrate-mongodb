@@ -11,7 +11,7 @@ import IdentityGenerator = require("./id/identityGenerator");
 import Batch = require("./batch");
 import Callback = require("./core/callback");
 import MappingError = require("./mapping/mappingError");
-import Reference = require("./mapping/reference")
+import Reference = require("./reference");
 import PropertyFlags = require("./mapping/propertyFlags");
 import Cursor = require("./cursor");
 import Result = require("./core/result");
@@ -172,16 +172,20 @@ class PersisterImpl implements Persister {
 
     walk(entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
 
+        this._walk(this._mapping, entity, flags, entities, embedded, callback);
+    }
+
+    private _walk(mapping: EntityMapping, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+
         var references: Reference[] = [];
-        this._mapping.walk(this._session, entity, flags, entities, embedded, references);
+        mapping.walk(entity, flags, entities, embedded, references);
 
         // TODO: load references in batches grouped by root mapping
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
 
-            var persister = this._session.getPersister(reference.mapping);
-            persister.findOneById(reference.id, (err: Error, entity: any) => {
+            reference.fetch((err: Error, entity: any) => {
                 if (err) return done(err);
-                persister.walk(entity, flags, entities, embedded, done);
+                this._walk(reference.mapping, entity, flags, entities, embedded, done);
             });
         }, callback);
     }

@@ -4,7 +4,7 @@ import ObjectMapping = require("./objectMapping");
 import MappingRegistry = require("./mappingRegistry");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
-import Reference = require("./reference");
+import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 
@@ -144,15 +144,15 @@ class ClassMapping extends ObjectMapping {
         return super.areEqual(documentValue1, documentValue2);
     }
 
-    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (value === null || value === undefined || typeof value !== "object") return;
 
-        return (this.registry.getMappingForObject(value) || this)._walk(session, value, flags, entities, embedded, references);
+        return (this.registry.getMappingForObject(value) || this)._walk(value, flags, entities, embedded, references);
     }
 
-    private _walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
-        super.walk(session, value, flags, entities, embedded, references);
+    private _walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+        super.walk(value, flags, entities, embedded, references);
     }
 
 }
