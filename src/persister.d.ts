@@ -22,11 +22,11 @@ interface Persister {
     insert(batch: Batch, entity: any): Result<any>;
     remove(batch: Batch, entity: any): void;
 
-    walk(session: InternalSession, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void;
-    refresh(session: InternalSession, entity: any, callback: ResultCallback<any>): void;
-    find(session: InternalSession, criteria: any): Cursor;
-    findOneById(session: InternalSession, id: Identifier, callback: ResultCallback<any>): void;
-    findOne(session: InternalSession, criteria: any, callback: ResultCallback<any>): void;
+    walk(entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void;
+    refresh(entity: any, callback: ResultCallback<any>): void;
+    find(criteria: any): Cursor;
+    findOneById(id: Identifier, callback: ResultCallback<any>): void;
+    findOne(criteria: any, callback: ResultCallback<any>): void;
 }
 
 export = Persister;

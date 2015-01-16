@@ -6,7 +6,6 @@ import Collection = require("./driver/collection");
 import Identifier = require('./id/identifier');
 import ResultCallback = require("./core/resultCallback");
 import InternalSession = require("./internalSession");
-import InternalSessionFactory = require("./internalSessionFactory");
 import ChangeTracking = require("./mapping/changeTracking");
 import IdentityGenerator = require("./id/identityGenerator");
 import Batch = require("./batch");
@@ -27,11 +26,16 @@ class PersisterImpl implements Persister {
     changeTracking: ChangeTracking;
     identity: IdentityGenerator;
 
-    private _factory: InternalSessionFactory;
+    private _mapping: EntityMapping;
+    private _collection: Collection;
+    private _session: InternalSession;
 
-    constructor(factory: InternalSessionFactory, public mapping: EntityMapping, public collection: Collection) {
+    constructor(session: InternalSession, mapping: EntityMapping, collection: Collection) {
 
-        this._factory = factory;
+        this._session = session;
+        this._mapping = mapping;
+        this._collection = collection;
+
         this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
@@ -39,12 +43,12 @@ class PersisterImpl implements Persister {
     dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any> {
 
         var errors: MappingError[] = [];
-        var document = this.mapping.write(entity, "", errors, []);
+        var document = this._mapping.write(entity, "", errors, []);
         if(errors.length > 0) {
-            return new Result(new Error("Error serializing document:\n" + this._getMappingErrorMessage(errors)));
+            return new Result(new Error("Error serializing document:\n" + MappingError.createErrorMessage(errors)));
         }
 
-        if(!this.mapping.areDocumentsEqual(originalDocument, document)) {
+        if(!this._mapping.areDocumentsEqual(originalDocument, document)) {
             this._getCommand(batch).addReplace(document);
         }
 
@@ -54,9 +58,9 @@ class PersisterImpl implements Persister {
     insert(batch: Batch, entity: any): Result<any> {
 
         var errors: MappingError[] = [];
-        var document = this.mapping.write(entity, "", errors, []);
+        var document = this._mapping.write(entity, "", errors, []);
         if(errors.length > 0) {
-            return new Result(new Error("Error serializing document:\n" + this._getMappingErrorMessage(errors)));
+            return new Result(new Error("Error serializing document:\n" + MappingError.createErrorMessage(errors)));
         }
 
         this._getCommand(batch).addInsert(document);
@@ -76,28 +80,28 @@ class PersisterImpl implements Persister {
      * @param callback The callback to call when method completes. The results parameter contains the new database
      * document.
      */
-    refresh(session: InternalSession, entity: any, callback: ResultCallback<any>): void {
+    refresh(entity: any, callback: ResultCallback<any>): void {
 
         // TODO: error when findOne can't find document?
-        this.collection.findOne({ _id: entity["_id"] }, (err, document) => {
+        this._collection.findOne({ _id: entity["_id"] }, (err, document) => {
             if (err) return callback(err);
 
             var errors: MappingError[] = [];
-            this.mapping.refresh(session, entity, document, errors);
+            this._mapping.refresh(this._session, entity, document, errors);
             if(errors.length > 0) {
-                return callback(new Error("Error deserializing document:\n" + this._getMappingErrorMessage(errors)));
+                return callback(new Error("Error deserializing document:\n" + MappingError.createErrorMessage(errors)));
             }
 
             callback(null, document);
         });
     }
 
-    find(session: InternalSession, criteria: any): Cursor {
+    find(criteria: any): Cursor {
 
-        return new Cursor(session, this, this.collection.find(criteria));
+        return new Cursor(this._session, this, this._collection.find(criteria));
     }
 
-    private _load(session: InternalSession, documents: any[]): Result<any[]> {
+    private _load(documents: any[]): Result<any[]> {
 
         if(!documents || documents.length == 0) {
             return new Result(null, []);
@@ -106,7 +110,7 @@ class PersisterImpl implements Persister {
         var entities = new Array(documents.length);
         var j = 0;
         for(var i = 0, l = documents.length; i < l; i++) {
-            var result = this._loadOne(session, documents[i]);
+            var result = this._loadOne(documents[i]);
             if(result.error) {
                 return new Result(result.error, null);
             }
@@ -119,28 +123,28 @@ class PersisterImpl implements Persister {
         return new Result(null, entities);
     }
 
-    findOneById(session: InternalSession, id: Identifier, callback: ResultCallback<any>): void {
+    findOneById(id: Identifier, callback: ResultCallback<any>): void {
 
         // Check to see if object is already loaded. Note explicit check for undefined here. Null means
         // that the object is loaded but scheduled for delete so null should be returned.
-        var entity = session.getObject(id);
+        var entity = this._session.getObject(id);
         if (entity !== undefined) {
             return process.nextTick(() => callback(null, entity));
         }
 
-        this.findOne(session, { _id: id }, callback);
+        this.findOne({ _id: id }, callback);
     }
 
-    findOne(session: InternalSession, criteria: any, callback: ResultCallback<any>): void {
+    findOne(criteria: any, callback: ResultCallback<any>): void {
 
         // TODO: error when findOne can't find document?
-        this.collection.findOne(criteria, (err, document) => {
+        this._collection.findOne(criteria, (err, document) => {
             if (err) return callback(err);
-            this._loadOne(session, document).handleCallback(callback);
+            this._loadOne(document).handleCallback(callback);
         });
     }
 
-    private _loadOne(session: InternalSession, document: any): Result<any> {
+    private _loadOne(document: any): Result<any> {
 
         var entity: any;
 
@@ -150,56 +154,43 @@ class PersisterImpl implements Persister {
         else {
             // Check to see if object is already loaded. Note explicit check for undefined here. Null means
             // that the object is loaded but scheduled for delete so null should be returned.
-            entity = session.getObject(document["_id"]);
+            entity = this._session.getObject(document["_id"]);
             if (entity === undefined) {
 
                 var errors: MappingError[] = [];
-                entity = this.mapping.read(session, document, "", errors);
+                entity = this._mapping.read(this._session, document, "", errors);
                 if (errors.length > 0) {
-                    return new Result(new Error("Error deserializing document:\n" + this._getMappingErrorMessage(errors)));
+                    return new Result(new Error("Error deserializing document:\n" + MappingError.createErrorMessage(errors)));
                 }
 
-                session.registerManaged(this, entity, document);
+                this._session.registerManaged(this, entity, document);
             }
         }
 
         return new Result(null, entity);
     }
 
-    walk(session: InternalSession, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+    walk(entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
 
         var references: Reference[] = [];
-        this.mapping.walk(session, entity, flags, entities, embedded, references);
+        this._mapping.walk(this._session, entity, flags, entities, embedded, references);
 
         // TODO: load references in batches grouped by root mapping
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
 
-            var persister = this._factory.getPersisterForMapping(reference.mapping);
-            persister.findOneById(session, reference.id, (err: Error, entity: any) => {
+            var persister = this._session.getPersister(reference.mapping);
+            persister.findOneById(reference.id, (err: Error, entity: any) => {
                 if (err) return done(err);
-                persister.walk(session, entity, flags, entities, embedded, done);
+                persister.walk(entity, flags, entities, embedded, done);
             });
         }, callback);
     }
 
-    private _getMappingErrorMessage(errors: MappingError[]): string {
-
-        var message: string[] = [];
-
-        for(var i = 0, l = errors.length; i < l; i++) {
-            var error = errors[i];
-
-            message.push(error.path, ": ", error.message, "\n");
-        }
-
-        return message.join("");
-    }
-
     private _getCommand(batch: Batch): BulkOperationCommand {
-        var id = this.mapping.inheritanceRoot.id;
+        var id = this._mapping.inheritanceRoot.id;
         var command = <BulkOperationCommand>batch.getCommand(id);
         if(!command) {
-            command = new BulkOperationCommand(this.collection);
+            command = new BulkOperationCommand(this._collection);
             batch.addCommand(id, command);
         }
         return command;

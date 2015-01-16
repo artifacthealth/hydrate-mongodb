@@ -31,16 +31,10 @@ class MockPersister implements Persister {
     removeCalled = 0;
     removed: any[] = [];
 
-    private _registry: MappingRegistry;
-
-    constructor() {
-        this._registry = new MappingRegistry();
-        var mapping = new EntityMapping(this._registry);
-        mapping.identity = new MockIdentityGenerator();
-        mapping.classConstructor = model.Address;
-        this._registry.addMapping(mapping);
+    constructor(mapping: EntityMapping) {
         this._mapping = mapping;
         this.identity = mapping.identity;
+        this.changeTracking = mapping.changeTracking;
     }
 
     dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any> {
@@ -79,22 +73,22 @@ class MockPersister implements Persister {
         return this.removed.indexOf(entity) !== -1;
     }
 
-    refresh(session: InternalSession, entity: any, callback: ResultCallback<any>): void {
+    refresh(entity: any, callback: ResultCallback<any>): void {
     }
 
-    find(session: InternalSession, criteria: any): Cursor {
+    find(criteria: any): Cursor {
         return null;
     }
 
-    findOneById(session: InternalSession, id: Identifier, callback: ResultCallback<any>): void {
+    findOneById(id: Identifier, callback: ResultCallback<any>): void {
 
     }
 
-    findOne(session: InternalSession, criteria: any, callback: ResultCallback<any>): void {
+    findOne(criteria: any, callback: ResultCallback<any>): void {
 
     }
 
-    walk(session: InternalSession, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+    walk(entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
         if(entities.indexOf(entity) == -1) {
             entities.push(entity);
         }

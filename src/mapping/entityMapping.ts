@@ -58,6 +58,7 @@ class EntityMapping extends ClassMapping {
         var mapping = this.inheritanceRoot.getMapping(document, path, errors);
         if (mapping) {
             if(mapping != this) {
+                // http://jsperf.com/change-proto-on-class
                 errors.push({ message: "Refresh does not support changing instantiated class of entity.", path: path, value: document });
                 return;
             }
