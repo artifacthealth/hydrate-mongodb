@@ -442,7 +442,7 @@ class SessionImpl implements InternalSession {
         });
     }
 
-    private  _fetch(obj: any, paths: string[], callback: ResultCallback<any>): void {
+    private _fetch(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
         // TODO: when a reference is resolved do we update the referenced object? __proto__ issue
         if(Reference.isReference(obj)) {
@@ -458,11 +458,24 @@ class SessionImpl implements InternalSession {
 
     private _fetchPaths(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
-        if(!paths || paths.length == 0) {
+        var links = this._getObjectLinks(obj);
+        if (!links || links.state != ObjectState.Managed) {
+            return callback(new Error("Object is not managed."));
+        }
+
+        if(!paths || paths.length === 0) {
             process.nextTick(() => callback(null, obj));
         }
 
+        var persister = links.persister;
 
+        async.each(paths, (path: string, done: (err?: Error) => void) => {
+            persister.resolve(obj, path, done);
+        },
+        (err) => {
+            if(err) return callback(err);
+            callback(null, obj);
+        });
     }
 
     /**

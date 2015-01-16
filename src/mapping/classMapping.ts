@@ -7,6 +7,7 @@ import Changes = require("./changes");
 import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
+import ResultCallback = require("../core/resultCallback");
 
 class ClassMapping extends ObjectMapping {
 
@@ -146,13 +147,25 @@ class ClassMapping extends ObjectMapping {
 
     walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
-        if (value === null || value === undefined || typeof value !== "object") return;
+        if (!value || typeof value !== "object") return;
 
         return (this.registry.getMappingForObject(value) || this)._walk(value, flags, entities, embedded, references);
     }
 
     private _walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
         super.walk(value, flags, entities, embedded, references);
+    }
+
+    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+        if (!value || typeof value !== "object") {
+            return callback(null, value);
+        }
+
+        return (this.registry.getMappingForObject(value) || this)._resolve(value, path, depth, callback);
+    }
+
+    private _resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+        super.resolve(value, path, depth, callback);
     }
 
 }

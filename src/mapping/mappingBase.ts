@@ -4,6 +4,7 @@ import Changes = require("./changes");
 import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
+import ResultCallback = require("../core/resultCallback");
 
 var nextMappingId = 1;
 
@@ -29,7 +30,7 @@ class MappingBase {
 
     compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
 
-        if(objectValue !== documentValue) {
+        if (objectValue !== documentValue) {
             (changes["$set"] || (changes["$set"] = {}))[path] = objectValue;
         }
     }
@@ -42,6 +43,17 @@ class MappingBase {
 
         return false;
     }
+
+    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+
+        if(depth == path.length) {
+            callback(null, value);
+        }
+        else {
+            callback(new Error("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
+        }
+    }
+
 }
 
 export = MappingBase;

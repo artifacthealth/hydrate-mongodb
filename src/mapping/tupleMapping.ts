@@ -6,6 +6,7 @@ import Changes = require("./changes");
 import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
+import ResultCallback = require("../core/resultCallback");
 
 class TupleMapping extends MappingBase {
 
@@ -120,7 +121,7 @@ class TupleMapping extends MappingBase {
 
     walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
-        if (value === null || value === undefined || !Array.isArray(value)) {
+        if (!Array.isArray(value)) {
             return;
         }
 
@@ -128,6 +129,27 @@ class TupleMapping extends MappingBase {
         for (var i = 0, l = Math.min(value.length, mappings.length); i < l; i++) {
             mappings[i].walk(value[i], flags, entities, embedded, references);
         }
+    }
+
+    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+
+        if(!Array.isArray(value) || depth == path.length) {
+            return callback(null, value);
+        }
+
+        var index = parseInt(path[depth]);
+        if(isNaN(index) || index < 0 || index >= this.elementMappings.length) {
+            return callback(new Error("Undefined tuple index '" + path[depth] + "' in path '"+ path.join(".") + "'."));
+        }
+
+        var item = value[index];
+        this.elementMappings[index].resolve(item, path, depth + 1, (err, result) => {
+            if(err) return callback(err);
+            if(item !== result) {
+                value[index] = item;
+            }
+            callback(null, value);
+        });
     }
 }
 

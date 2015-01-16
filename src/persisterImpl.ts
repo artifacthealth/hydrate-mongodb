@@ -84,8 +84,7 @@ class PersisterImpl implements Persister {
      */
     refresh(entity: any, callback: ResultCallback<any>): void {
 
-        // TODO: error when findOne can't find document?
-        this._collection.findOne({ _id: entity["_id"] }, (err, document) => {
+        this.findOneById(entity["_id"], (err, document) => {
             if (err) return callback(err);
 
             var errors: MappingError[] = [];
@@ -96,6 +95,15 @@ class PersisterImpl implements Persister {
 
             callback(null, document);
         });
+    }
+
+    resolve(entity: any, path: string, callback: Callback): void {
+
+        if(typeof path !== "string") {
+            return callback(new Error("Path must be a string."));
+        }
+
+        this._mapping.resolve(entity, path.split("."), 0, callback);
     }
 
     find(criteria: any): Cursor {
@@ -133,6 +141,8 @@ class PersisterImpl implements Persister {
         if (entity !== undefined) {
             return process.nextTick(() => callback(null, entity));
         }
+
+        // TODO: what about two concurrent calls for the same id? Any way to make sure only one request is done?
 
         (this._findQueue || (this._findQueue = new FindQueue(this))).add(id, callback);
     }
@@ -294,9 +304,9 @@ class FindQueue {
 
         // check for simple case of only a single find in the queue
         if(ids.length == 1) {
-            var id = ids[0];
-            var callback = callbacks[id.toString()]
-            // TODO: error if findone result is empty?
+            var id = ids[0],
+                callback = callbacks[id.toString()]
+
             this._persister.findOne({ _id:  id }, (err, entity) => {
                 if(err) return callback(err);
 
@@ -309,23 +319,24 @@ class FindQueue {
         }
 
         this._persister.find({ _id: { $in: ids }}).forEach((entity) => {
-                var id = entity["_id"].toString();
-                var callback = callbacks[id];
-                callback(null, entity);
-                // mark the callback as called
-                callbacks[id] = undefined;
-            },
-            (err) => {
-                // pass error message to any callbacks that have not been called yet
-                for (var id in callbacks) {
-                    if (callbacks.hasOwnProperty(id)) {
-                        var callback = callbacks[id];
-                        if(callback) {
-                            callback(err || new Error("Unable to find document with identifier '" + id + "'."));
-                        }
+            var id = entity["_id"].toString(),
+                callback = callbacks[id];
+
+            callback(null, entity);
+            // mark the callback as called
+            callbacks[id] = undefined;
+        },
+        (err) => {
+            // pass error message to any callbacks that have not been called yet
+            for (var id in callbacks) {
+                if (callbacks.hasOwnProperty(id)) {
+                    var callback = callbacks[id];
+                    if(callback) {
+                        callback(err || new Error("Unable to find document with identifier '" + id + "'."));
                     }
                 }
-            });
+            }
+        });
     }
 }
 

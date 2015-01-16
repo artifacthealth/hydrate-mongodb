@@ -1,3 +1,4 @@
+import Async = require("../core/async");
 import Mapping = require("./mapping");
 import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
@@ -6,7 +7,7 @@ import Changes = require("./changes");
 import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
-
+import ResultCallback = require("../core/resultCallback");
 
 class ArrayMapping extends MappingBase {
 
@@ -118,7 +119,7 @@ class ArrayMapping extends MappingBase {
 
     walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
-        if (value === null || value === undefined || !Array.isArray(value)) {
+        if (!Array.isArray(value)) {
             return;
         }
 
@@ -127,6 +128,31 @@ class ArrayMapping extends MappingBase {
             mapping.walk(value[i], flags, entities, embedded, references);
         }
     }
+
+    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+
+        // TODO: resolve inverse side?
+        if(!Array.isArray(value) || value.length == 0) {
+            return callback(null, value);
+        }
+
+        var mapping = this.elementMapping;
+        Async.forEach(value, (item, index, done) => {
+            // note, depth is not incremented for array
+            mapping.resolve(item, path, depth, (err, result) => {
+                if(err) return done(err);
+                if(item !== result) {
+                    value[index] = result;
+                }
+                done();
+            });
+        }, (err) => {
+            if(err) return callback(err);
+            callback(null, value);
+        });
+    }
 }
 
 export = ArrayMapping;
+
+

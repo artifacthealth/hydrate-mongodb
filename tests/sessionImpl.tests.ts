@@ -72,7 +72,11 @@ describe('SessionImpl', () => {
             async.each(ids, (id: string, done: (err?: Error) => void) => {
                 session.find(model.Person, id, (err, entity) => {
                     if(err) return done(err);
-                    done();
+
+                    session.fetch(entity, ["parents"], (err, result) => {
+                        if(err) return done(err);
+                        done();
+                    });
                 });
             }, done);
 

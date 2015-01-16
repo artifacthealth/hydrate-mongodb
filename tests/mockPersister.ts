@@ -84,6 +84,10 @@ class MockPersister implements Persister {
     refresh(entity: any, callback: ResultCallback<any>): void {
     }
 
+    resolve(entity: any, path: string, callback: Callback): void {
+        process.nextTick(callback);
+    }
+
     find(criteria: any): Cursor {
         return null;
     }

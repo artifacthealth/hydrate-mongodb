@@ -14,6 +14,7 @@ import Changes = require("./changes");
 import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
+import ResultCallback = require("../core/resultCallback");
 
 class EntityMapping extends ClassMapping {
 
@@ -185,7 +186,7 @@ class EntityMapping extends ClassMapping {
 
     walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
-        if (value === null || value === undefined || typeof value !== "object") return;
+        if (!value || typeof value !== "object") return;
 
         if(Reference.isReference(value)) {
             // TODO: handle DBRef
@@ -206,6 +207,25 @@ class EntityMapping extends ClassMapping {
         entities.push(value);
 
         super.walk(value, flags, entities, embedded, references);
+    }
+
+    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+
+        if (!value || typeof value !== "object") return;
+
+        if(Reference.isReference(value)) {
+            // TODO: handle DBRef
+            // We don't bother with the call to getObject here since fetch will call getObject. The reason we have the
+            // separate call to getObject in 'walk' above is that walk only calls fetch if ProperFlags.Dereference is
+            // passed in but should still include the object in the found entities if the object is managed.
+            (<Reference>value).fetch((err, entity) => {
+                if(err) return callback(err);
+                super.resolve(entity, path, depth, callback);
+            });
+            return;
+        }
+
+        super.resolve(value, path, depth, callback);
     }
 }
 

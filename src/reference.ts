@@ -33,6 +33,7 @@ class Reference {
     }
 
     static isReference(obj: any): boolean {
+
         return obj instanceof Reference;
     }
 }

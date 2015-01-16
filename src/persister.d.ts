@@ -25,10 +25,12 @@ interface Persister {
     load(documents: any[]): Result<any[]>;
     loadOne(document: any): Result<any>;
 
-    refresh(entity: any, callback: ResultCallback<any>): void;
     find(criteria: any): Cursor;
     findOneById(id: Identifier, callback: ResultCallback<any>): void;
     findOne(criteria: any, callback: ResultCallback<any>): void;
+
+    resolve(entity: any, path: string, callback: Callback): void;
+    refresh(entity: any, callback: ResultCallback<any>): void;
 }
 
 export = Persister;

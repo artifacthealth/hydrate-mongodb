@@ -8,7 +8,7 @@ import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
 import Reference = require("../reference");
 import InternalSession = require("../internalSession");
-
+import ResultCallback = require("../core/resultCallback");
 
 class ObjectMapping extends MappingBase {
 
@@ -260,7 +260,7 @@ class ObjectMapping extends MappingBase {
 
     walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
-        if (value === null || value === undefined || typeof value !== "object") return;
+        if (!value || typeof value !== "object") return;
 
         if(this.flags & MappingFlags.Embeddable) {
             if (embedded.indexOf(value) !== -1) return;
@@ -275,6 +275,29 @@ class ObjectMapping extends MappingBase {
                 property.mapping.walk(property.getPropertyValue(value), flags, entities, embedded, references);
             }
         }
+    }
+
+    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+
+        if(!value || typeof value !== "object" || depth == path.length) {
+            return callback(null, value);
+        }
+
+        var property = this.getProperty(path[depth]);
+        if (property === undefined) {
+            return callback(new Error("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
+        }
+
+        var propertyValue = property.getPropertyValue(value);
+        property.mapping.resolve(propertyValue, path, depth + 1, (err, result) => {
+            if(err) return callback(err);
+
+            if(propertyValue !== result) {
+                property.setPropertyValue(value, result);
+            }
+
+            callback(null, result);
+        });
     }
 }
 
