@@ -88,7 +88,8 @@ class SessionImpl implements InternalSession {
 
     constructor(public factory: InternalSessionFactory) {
 
-        this._queue = new TaskQueue(this._execute.bind(this));
+        // Using a delegate is faster than bind http://jsperf.com/bind-vs-function-delegate
+        this._queue = new TaskQueue((action, args, callback) => this._execute(action, args, callback));
     }
 
     save(obj: any, callback?: Callback): void {
@@ -121,7 +122,7 @@ class SessionImpl implements InternalSession {
         this._queue.add(Action.Flush, Action.All, undefined, callback);
     }
 
-    find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void {
+    find<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void {
 
         this._queue.add(Action.Find, Action.All & ~(Action.Find | Action.Fetch), [ctr, id], callback);
     }
@@ -147,7 +148,7 @@ class SessionImpl implements InternalSession {
      * Gets the database identifier for an entity.
      * @param obj The entity.
      */
-    getId(obj: any): Identifier {
+    getId(obj: any): any {
 
         return obj["_id"];
     }
@@ -173,9 +174,18 @@ class SessionImpl implements InternalSession {
      * @param id The id of the entity
      * @returns The entity instance or a reference to the entity instance.
      */
-    getReference<T>(ctr: Constructor<T>, id: Identifier): T {
+    getReference<T>(ctr: Constructor<T>, id: any): T {
 
-        return this.getReferenceInternal(this.factory.getMappingForConstructor(ctr), id);
+        // If mapping is not found, the reference is still created and an error is returned when the client tries
+        // to resolve the reference.
+        var mapping = this.factory.getMappingForConstructor(ctr);
+        if (mapping) {
+            if(typeof id === "string") {
+                id = mapping.identity.fromString(id);
+            }
+        }
+
+        return this.getReferenceInternal(mapping, id);
     }
 
     getReferenceInternal(mapping: EntityMapping, id: Identifier): any {
@@ -432,8 +442,9 @@ class SessionImpl implements InternalSession {
         });
     }
 
-    private _fetch(obj: any, paths: string[], callback: ResultCallback<any>): void {
+    private  _fetch(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
+        // TODO: when a reference is resolved do we update the referenced object? __proto__ issue
         if(Reference.isReference(obj)) {
             (<Reference>obj).fetch((err, entity) => {
                 if(err) return callback(err);
@@ -446,6 +457,11 @@ class SessionImpl implements InternalSession {
     }
 
     private _fetchPaths(obj: any, paths: string[], callback: ResultCallback<any>): void {
+
+        if(!paths || paths.length == 0) {
+            process.nextTick(() => callback(null, obj));
+        }
+
 
     }
 
@@ -476,11 +492,15 @@ class SessionImpl implements InternalSession {
         process.nextTick(callback);
     }
 
-    private _find(ctr: Constructor<any>, id: Identifier, callback: ResultCallback<any>): void {
+    private _find(ctr: Constructor<any>, id: any, callback: ResultCallback<any>): void {
 
         var persister = this._getPersisterForConstructor(ctr);
         if (!persister) {
             return process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+        }
+
+        if(typeof id === "string") {
+            id = persister.identity.fromString(id);
         }
 
         persister.findOneById(id, callback);
@@ -533,8 +553,8 @@ class SessionImpl implements InternalSession {
 
     private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
-        var persister = this._getPersisterForObject(obj);
-        if (!persister) {
+        var mapping = this.factory.getMappingForObject(obj);
+        if (!mapping) {
             process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
             return;
         }
@@ -542,10 +562,25 @@ class SessionImpl implements InternalSession {
         var entities: any[] = [],
             embedded: any[] = [];
 
-        persister.walk(obj, flags, entities, embedded, err => {
+        this._walk(mapping, obj, flags, entities, embedded, err => {
             if(err) return process.nextTick(() => callback(err));
             return process.nextTick(() => callback(null, entities));
         });
+    }
+
+    private _walk(mapping: EntityMapping, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+
+        var references: Reference[] = [];
+        mapping.walk(entity, flags, entities, embedded, references);
+
+        // TODO: load references in batches grouped by root mapping
+        async.each(references, (reference: Reference, done: (err?: Error) => void) => {
+
+            reference.fetch((err: Error, entity: any) => {
+                if (err) return done(err);
+                this._walk(reference.mapping, entity, flags, entities, embedded, done);
+            });
+        }, callback);
     }
 
     private _getPersisterForObject(obj: any): Persister {

@@ -1,15 +1,12 @@
 import DriverCursor = require("./driver/cursor");
 import Persister = require("./persister");
-import InternalSession = require("./internalSession");
 
 class Cursor {
 
-    private _session: InternalSession;
     private _persister: Persister;
     private _cursor: DriverCursor;
 
-    constructor(session: InternalSession, persister: Persister, cursor: DriverCursor) {
-        this._session = session;
+    constructor(persister: Persister, cursor: DriverCursor) {
         this._persister = persister;
         this._cursor = cursor;
     }
@@ -40,34 +37,51 @@ class Cursor {
         return this;
     }
 
-    nextObject(callback: (err: Error, result: any) => void): void {
+    nextObject(callback: (err: Error, entity?: any) => void): void {
 
-        this._cursor.nextObject((err, result) => {
+        this._cursor.nextObject((err, document) => {
             if(err) return callback(err, undefined);
-            // TODO: load single entity
+            var result = this._persister.loadOne(document);
+            if(result.error) {
+                return callback(result.error);
+            }
+            callback(null, result.value);
         });
     }
 
-    each(callback: (err: Error, result: any) => boolean): void {
+    each(callback: (err: Error, entity?: any) => boolean): void {
 
-        this._cursor.each((err, result) => {
+        this._cursor.each((err, document) => {
             if(err) return callback(err, undefined);
-            // TODO: load single entity
+            var result = this._persister.loadOne(document);
+            if(result.error) {
+                return callback(result.error);
+            }
+            callback(null, result.value);
         });
     }
 
-    forEach(iterator: (value: any) => void, callback: (err: Error) => void): void {
+    forEach(iterator: (entity: any) => void, callback: (err: Error) => void): void {
 
-        this._cursor.forEach((value) => {
-            // TODO: load single entity
+        this._cursor.forEach((document) => {
+            var result = this._persister.loadOne(document);
+            if(result.error) {
+                return callback(result.error);
+            }
+            iterator(result.value);
         }, callback);
     }
 
-    toArray(callback: (err: Error, results: any[]) => void): void {
+    toArray(callback: (err: Error, results?: any[]) => void): void {
 
-        this._cursor.toArray((err, results) => {
+        this._cursor.toArray((err, documents) => {
             if(err) return callback(err, undefined);
-            // TODO: load array of entities
+
+            var result = this._persister.load(documents);
+            if(result.error) {
+                return callback(result.error);
+            }
+            callback(null, result.value);
         });
     }
 

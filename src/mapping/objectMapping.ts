@@ -84,7 +84,7 @@ class ObjectMapping extends MappingBase {
             }
             // TODO: how to handle inverse side of reference? probably should be in the code that does reference population
             var fieldValue = property.getFieldValue(value),
-                propertyValue: any;
+                propertyValue: any = undefined;
 
             // skip undefined values
             if (fieldValue !== undefined) {

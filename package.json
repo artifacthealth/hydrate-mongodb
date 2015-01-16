@@ -22,7 +22,7 @@
     "test": "grunt"
   },
   "dependencies": {
-    "mongodb": "^1.4.10",
+    "mongodb": "^2.0.13",
     "tsreflect": "git+ssh://git@bitbucket.org/mgottlieb/tsreflect.git"
   },
   "devDependencies": {

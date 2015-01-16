@@ -15,9 +15,11 @@ class MockCollection implements Collection {
         return new MockCursor();
     }
 
-    findOne(selector: Object, callback?: (err: Error, result: any) => void): Cursor {
+    findOne(selector: Object, callback?: (err: Error, result: any) => void): any {
 
-        return new MockCursor();
+        process.nextTick(() => {
+           callback(null, null);
+        });
     }
 
     initializeUnorderedBulkOp(): Bulk {

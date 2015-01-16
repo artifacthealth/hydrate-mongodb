@@ -34,7 +34,7 @@ declare module "mongodb" {
     public close(forceClose?: boolean, callback?: (err: Error, result: any) => void ): void;
     public admin(callback: (err: Error, result: any) => void ): any;
     public collectionsInfo(collectionName: string, callback?: (err: Error, result: any) => void ): void;
-    public collectionNames(collectionName: string, options: any, callback?: (err: Error, result: any) => void ): void;
+    public listCollections(collectionName: string): Cursor;
 
     public collection(collectionName: string): Collection;
     public collection(collectionName: string, callback: (err: Error, collection: Collection) => void ): Collection;

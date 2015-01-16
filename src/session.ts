@@ -1,7 +1,6 @@
 import Callback = require("./core/callback");
 import ResultCallback = require("./core/resultCallback");
 import Constructor = require("./core/constructor");
-import Identifier = require("./id/identifier");
 import LockMode = require("./lockMode");
 
 interface Session {
@@ -13,9 +12,9 @@ interface Session {
     flush(callback?: Callback): void;
     clear(callback?: Callback): void;
     contains(obj: any): boolean;
-    getId(obj: any): Identifier;
-    getReference<T>(ctr: Constructor<T>, id: Identifier): T;
-    find<T>(ctr: Constructor<T>, id: Identifier, callback: ResultCallback<T>): void;
+    getId(obj: any): any;
+    getReference<T>(ctr: Constructor<T>, id: any): T;
+    find<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void;
 
     fetch<T>(obj: T, callback: ResultCallback<T>): void;
     fetch<T>(obj: T, path: string, callback: ResultCallback<T>): void;

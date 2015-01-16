@@ -20,12 +20,14 @@ import Command = require("./core/command");
 import Bulk = require("./driver/bulk");
 import BulkWriteResult = require("./driver/bulkWriteResult");
 import Changes = require("./mapping/changes");
+import Map = require("./core/map");
 
 class PersisterImpl implements Persister {
 
     changeTracking: ChangeTracking;
     identity: IdentityGenerator;
 
+    private _findQueue: FindQueue;
     private _mapping: EntityMapping;
     private _collection: Collection;
     private _session: InternalSession;
@@ -98,10 +100,10 @@ class PersisterImpl implements Persister {
 
     find(criteria: any): Cursor {
 
-        return new Cursor(this._session, this, this._collection.find(criteria));
+        return new Cursor(this, this._collection.find(criteria));
     }
 
-    private _load(documents: any[]): Result<any[]> {
+    load(documents: any[]): Result<any[]> {
 
         if(!documents || documents.length == 0) {
             return new Result(null, []);
@@ -110,7 +112,7 @@ class PersisterImpl implements Persister {
         var entities = new Array(documents.length);
         var j = 0;
         for(var i = 0, l = documents.length; i < l; i++) {
-            var result = this._loadOne(documents[i]);
+            var result = this.loadOne(documents[i]);
             if(result.error) {
                 return new Result(result.error, null);
             }
@@ -132,7 +134,7 @@ class PersisterImpl implements Persister {
             return process.nextTick(() => callback(null, entity));
         }
 
-        this.findOne({ _id: id }, callback);
+        (this._findQueue || (this._findQueue = new FindQueue(this))).add(id, callback);
     }
 
     findOne(criteria: any, callback: ResultCallback<any>): void {
@@ -140,11 +142,11 @@ class PersisterImpl implements Persister {
         // TODO: error when findOne can't find document?
         this._collection.findOne(criteria, (err, document) => {
             if (err) return callback(err);
-            this._loadOne(document).handleCallback(callback);
+            this.loadOne(document).handleCallback(callback);
         });
     }
 
-    private _loadOne(document: any): Result<any> {
+    loadOne(document: any): Result<any> {
 
         var entity: any;
 
@@ -168,26 +170,6 @@ class PersisterImpl implements Persister {
         }
 
         return new Result(null, entity);
-    }
-
-    walk(entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
-
-        this._walk(this._mapping, entity, flags, entities, embedded, callback);
-    }
-
-    private _walk(mapping: EntityMapping, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
-
-        var references: Reference[] = [];
-        mapping.walk(entity, flags, entities, embedded, references);
-
-        // TODO: load references in batches grouped by root mapping
-        async.each(references, (reference: Reference, done: (err?: Error) => void) => {
-
-            reference.fetch((err: Error, entity: any) => {
-                if (err) return done(err);
-                this._walk(reference.mapping, entity, flags, entities, embedded, done);
-            });
-        }, callback);
     }
 
     private _getCommand(batch: Batch): BulkOperationCommand {
@@ -276,6 +258,74 @@ class BulkOperationCommand implements Command {
 
             callback();
         });
+    }
+}
+
+class FindQueue {
+
+    private _persister: Persister;
+    private _ids: Identifier[];
+    private _callbacks: Map<ResultCallback<any>>;
+
+    constructor(persister: Persister) {
+        this._persister = persister;
+    }
+
+    add(id: Identifier, callback: ResultCallback<any>): void {
+        if(!this._ids) {
+            // this is the first entry in the queue so create the queue and schedule processing on the next tick
+            this._ids = [];
+            this._callbacks = {};
+            process.nextTick(() => this._process());
+        }
+
+        this._ids.push(id);
+        this._callbacks[id.toString()] = callback;
+    }
+
+    private _process(): void {
+
+        // pull values local
+        var callbacks = this._callbacks,
+            ids = this._ids;
+
+        // clear queue
+        this._ids = this._callbacks = undefined;
+
+        // check for simple case of only a single find in the queue
+        if(ids.length == 1) {
+            var id = ids[0];
+            var callback = callbacks[id.toString()]
+            // TODO: error if findone result is empty?
+            this._persister.findOne({ _id:  id }, (err, entity) => {
+                if(err) return callback(err);
+
+                if(!entity) {
+                    return callback(new Error("Unable to find document with identifier '" + id.toString() + "'."));
+                }
+                callback(null, entity);
+            });
+            return;
+        }
+
+        this._persister.find({ _id: { $in: ids }}).forEach((entity) => {
+                var id = entity["_id"].toString();
+                var callback = callbacks[id];
+                callback(null, entity);
+                // mark the callback as called
+                callbacks[id] = undefined;
+            },
+            (err) => {
+                // pass error message to any callbacks that have not been called yet
+                for (var id in callbacks) {
+                    if (callbacks.hasOwnProperty(id)) {
+                        var callback = callbacks[id];
+                        if(callback) {
+                            callback(err || new Error("Unable to find document with identifier '" + id + "'."));
+                        }
+                    }
+                }
+            });
     }
 }
 

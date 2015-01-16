@@ -37,6 +37,14 @@ class MockPersister implements Persister {
         this.changeTracking = mapping.changeTracking;
     }
 
+    load(documents: any[]): Result<any[]> {
+        return new Result(null, documents);
+    }
+
+    loadOne(document: any): Result<any> {
+        return new Result(null, document);
+    }
+
     dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any> {
         this.dirtyCheckCalled++;
         if (!this.wasDirtyChecked(entity)) {

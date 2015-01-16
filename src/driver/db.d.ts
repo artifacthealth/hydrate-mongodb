@@ -1,6 +1,7 @@
 import Collection = require("./collection");
 import CollectionOptions = require("./collectionOptions");
 import IndexOptions = require("./indexOptions");
+import Cursor = require("./cursor");
 
 interface Db {
 
@@ -11,7 +12,7 @@ interface Db {
     collection(collectionName: string, options: CollectionOptions, callback: (err: Error, collection: Collection) => void ): Collection;
     createCollection(collectionName: string, options: CollectionOptions, callback?: (err: Error, result: any) => void ): void;
     ensureIndex(collectionName: any, fieldOrSpec: any, options: IndexOptions, callback: Function): void;
-    collectionNames(collectionName: string, options: any, callback?: (err: Error, result: any) => void ): void;
+    listCollections(collectionName: string): Cursor;
 }
 
 export = Db;

@@ -22,7 +22,9 @@ interface Persister {
     insert(batch: Batch, entity: any): Result<any>;
     remove(batch: Batch, entity: any): void;
 
-    walk(entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void;
+    load(documents: any[]): Result<any[]>;
+    loadOne(document: any): Result<any>;
+
     refresh(entity: any, callback: ResultCallback<any>): void;
     find(criteria: any): Cursor;
     findOneById(id: Identifier, callback: ResultCallback<any>): void;
