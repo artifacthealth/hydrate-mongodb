@@ -25,8 +25,11 @@ interface Persister {
     load(documents: any[]): Result<any[]>;
     loadOne(document: any): Result<any>;
 
-    find(criteria: any): Cursor;
+    findInverseOf(id: Identifier, path: string, callback: ResultCallback<any[]>): void;
+    findOneInverseOf(id: Identifier, path: string, callback: ResultCallback<any>): void;
     findOneById(id: Identifier, callback: ResultCallback<any>): void;
+
+    find(criteria: any): Cursor;
     findOne(criteria: any, callback: ResultCallback<any>): void;
 
     resolve(entity: any, path: string, callback: Callback): void;

@@ -182,6 +182,32 @@ class PersisterImpl implements Persister {
         return new Result(null, entity);
     }
 
+    findInverseOf(id: any, path: string, callback: ResultCallback<any[]>): void {
+
+        var property = this._mapping.getProperty(path);
+        if(property === undefined) {
+            return callback(new Error("Missing property '" + path + "'."));
+        }
+
+        var query = {};
+        property.setFieldValue(query, id);
+
+        this.find(query).toArray(callback);
+    }
+
+    findOneInverseOf(id: any, path: string, callback: ResultCallback<any>): void {
+
+        var property = this._mapping.getProperty(path);
+        if(property === undefined) {
+            return callback(new Error("Missing property '" + path + "'."));
+        }
+
+        var query = {};
+        property.setFieldValue(query, id);
+
+        this.findOne(query, callback);
+    }
+
     private _getCommand(batch: Batch): BulkOperationCommand {
         var id = this._mapping.inheritanceRoot.id;
         var command = <BulkOperationCommand>batch.getCommand(id);
@@ -273,11 +299,11 @@ class BulkOperationCommand implements Command {
 
 class FindQueue {
 
-    private _persister: Persister;
+    private _persister: PersisterImpl;
     private _ids: Identifier[];
     private _callbacks: Map<ResultCallback<any>>;
 
-    constructor(persister: Persister) {
+    constructor(persister: PersisterImpl) {
         this._persister = persister;
     }
 

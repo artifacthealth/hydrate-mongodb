@@ -239,16 +239,7 @@ class EntityMapping extends ClassMapping {
             return callback(new Error("Missing identifier on parent entity."));
         }
 
-        var property = this.getProperty(propertyName);
-        if(property === undefined) {
-            return callback(new Error("Missing property '" + propertyName + "'."));
-        }
-
-        var query = {};
-        property.setFieldValue(query, id);
-
-        var persister = session.getPersister(this);
-        persister.findOne(query, (err, value) => {
+        session.getPersister(this).findOneInverseOf(id, propertyName, (err, value) => {
             if(err) return callback(err);
             super.resolve(session, this, value, path, depth, callback);
         });

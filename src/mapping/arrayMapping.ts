@@ -168,18 +168,7 @@ class ArrayMapping extends MappingBase {
             return callback(new Error("Element mapping must be an entity to resolve inverse relationship."));
         }
 
-        var mapping = <EntityMapping>this.elementMapping;
-
-        var property = mapping.getProperty(propertyName);
-        if(property === undefined) {
-            return callback(new Error("Missing property '" + propertyName + "'."));
-        }
-
-        var query = {};
-        property.setFieldValue(query, id);
-
-        var persister = session.getPersister(mapping);
-        persister.find(query).toArray((err, value) => {
+        session.getPersister(<EntityMapping>this.elementMapping).findInverseOf(id, propertyName, (err, value) => {
             if(err) return callback(err);
             this.resolve(session, this, value, path, depth, callback);
         });
