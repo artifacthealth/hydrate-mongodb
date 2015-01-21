@@ -44,7 +44,7 @@ class MappingBase {
         return false;
     }
 
-    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(depth == path.length) {
             callback(null, value);
@@ -54,6 +54,10 @@ class MappingBase {
         }
     }
 
+    resolveInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
+
+        callback(new Error("Mapping does not support inverse relationships."));
+    }
 }
 
 export = MappingBase;

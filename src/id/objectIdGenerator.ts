@@ -7,7 +7,10 @@ import IdentityGenerator = require("./identityGenerator");
 
 class ObjectIdGenerator implements IdentityGenerator {
 
-    // TODO: Set cacheHexString on ObjectID? https://github.com/mongodb/js-bson/blob/master/lib/bson/objectid.js
+    constructor() {
+        // Turn on caching of the hex string representation of the ObjectID
+        (<any>mongodb.ObjectID).cacheHexString = true;
+    }
 
     generate(): Identifier {
         return <Identifier>new ObjectID();

@@ -1,4 +1,4 @@
-enum MappingFlags {
+const enum MappingFlags {
 
     Array               = 0x00000001,
     Boolean             = 0x00000002,

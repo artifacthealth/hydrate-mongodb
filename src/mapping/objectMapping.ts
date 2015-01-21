@@ -82,7 +82,6 @@ class ObjectMapping extends MappingBase {
             if (property.flags & (PropertyFlags.Ignored | PropertyFlags.InverseSide)) {
                 continue;
             }
-            // TODO: how to handle inverse side of reference? probably should be in the code that does reference population
             var fieldValue = property.getFieldValue(value),
                 propertyValue: any = undefined;
 
@@ -277,7 +276,7 @@ class ObjectMapping extends MappingBase {
         }
     }
 
-    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!value || typeof value !== "object" || depth == path.length) {
             return callback(null, value);
@@ -288,16 +287,24 @@ class ObjectMapping extends MappingBase {
             return callback(new Error("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
         }
 
+        // TODO: In mapping validation, throw error if object that holds inverse side of relationship is not an entity
+
         var propertyValue = property.getPropertyValue(value);
-        property.mapping.resolve(propertyValue, path, depth + 1, (err, result) => {
+        if((property.flags & PropertyFlags.InverseSide) && propertyValue === undefined) {
+            property.mapping.resolveInverse(session, parentEntity, property.inverseOf, path, depth + 1, handleCallback);
+        } else {
+            property.mapping.resolve(session, parentEntity, propertyValue, path, depth + 1, handleCallback);
+        }
+
+        function handleCallback(err: Error, result: any) {
             if(err) return callback(err);
 
             if(propertyValue !== result) {
                 property.setPropertyValue(value, result);
             }
 
-            callback(null, result);
-        });
+            callback(null, value);
+        }
     }
 }
 

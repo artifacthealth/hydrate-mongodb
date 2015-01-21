@@ -58,7 +58,7 @@ describe('SessionImpl', () => {
 
 
 
-            var ids = ["54b8a19659731ff8ccfc2fe7", "54b8a19659731ff8ccfc2fe5"];
+            var ids = ["54b8a19659731ff8ccfc2fe7"];
             //var ids = ["54b8a19659731ff8ccfc2fe7"];
 
             /*
@@ -73,7 +73,7 @@ describe('SessionImpl', () => {
                 session.find(model.Person, id, (err, entity) => {
                     if(err) return done(err);
 
-                    session.fetch(entity, ["parents"], (err, result) => {
+                    session.fetch(entity, "children", (err, result) => {
                         if(err) return done(err);
                         done();
                     });
@@ -255,10 +255,79 @@ describe('SessionImpl', () => {
 
     describe('detach', () => {
 
+        it('makes managed object unmanaged but does not remove identifier', (done) => {
+
+            var fixture = createFixture();
+            var entity: any = {};
+
+            fixture.session.save(entity);
+            fixture.session.flush();
+            fixture.session.detach(entity, err => {
+                if(err) return done(err);
+
+                assert.isTrue(entity["_id"] !== undefined, "Detach operation should not remove identifier");
+                assert.isUndefined(fixture.session.getObject(entity["_id"]), "Object is still managed")
+                done();
+            });
+        });
+
+        it('does not throw an error when passed an unmanaged object', (done) => {
+
+            var fixture = createFixture();
+
+            // pass unmanaged object to detach
+            fixture.session.detach({}, done);
+        });
+
+        it('does not throw an error when passed a removed object', (done) => {
+            var fixture = createFixture();
+            var entity: any = {};
+
+            fixture.session.save(entity);
+            fixture.session.flush();
+            fixture.session.remove(entity);
+            fixture.session.detach(entity, done);
+        });
     });
 
     describe('clear', () => {
 
+        it('detaches all managed entities', (done) => {
+
+            var fixture = createFixture();
+            var entity1: any = {}, entity2: any = {};
+
+            fixture.session.save(entity1);
+            fixture.session.save(entity2);
+            fixture.session.flush();
+            fixture.session.clear(err => {
+                if(err) return done(err);
+
+                assertDetached(entity1);
+                assertDetached(entity2);
+                done();
+
+                function assertDetached(entity: any) {
+                    assert.isTrue(entity["_id"] !== undefined, "Clear operation should not remove identifier");
+                    assert.isUndefined(fixture.session.getObject(entity["_id"]), "Object is still managed")
+                }
+            });
+        });
+
+        it('discards object modifications that have not been flushed', (done) => {
+
+            var fixture = createFixture();
+            var entity: any = {};
+
+            fixture.session.save(entity);
+            fixture.session.clear();
+            fixture.session.flush((err) => {
+                if(err) return done(err);
+
+                assert.equal(fixture.persister.insertCalled, 0);
+                done();
+            });
+        });
     });
 
     describe('flush', () => {

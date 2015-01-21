@@ -209,7 +209,7 @@ class EntityMapping extends ClassMapping {
         super.walk(value, flags, entities, embedded, references);
     }
 
-    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if (!value || typeof value !== "object") return;
 
@@ -220,12 +220,38 @@ class EntityMapping extends ClassMapping {
             // passed in but should still include the object in the found entities if the object is managed.
             (<Reference>value).fetch((err, entity) => {
                 if(err) return callback(err);
-                super.resolve(entity, path, depth, callback);
+                super.resolve(session, entity, entity, path, depth, callback);
             });
             return;
         }
 
-        super.resolve(value, path, depth, callback);
+        super.resolve(session, value, value, path, depth, callback);
+    }
+
+    resolveInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
+
+        if(!parentEntity) {
+            return callback(new Error("Parent entity required to resolve inverse relationship."));
+        }
+
+        var id = session.getId(parentEntity);
+        if(id === undefined) {
+            return callback(new Error("Missing identifier on parent entity."));
+        }
+
+        var property = this.getProperty(propertyName);
+        if(property === undefined) {
+            return callback(new Error("Missing property '" + propertyName + "'."));
+        }
+
+        var query = {};
+        property.setFieldValue(query, id);
+
+        var persister = session.getPersister(this);
+        persister.findOne(query, (err, value) => {
+            if(err) return callback(err);
+            super.resolve(session, this, value, path, depth, callback);
+        });
     }
 }
 

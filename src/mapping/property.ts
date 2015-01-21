@@ -14,9 +14,9 @@ class Property {
     field: string
 
     /**
-     * The property in the target TypeMapping that is used to retrieve the value of this property.
+     * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
      */
-    inverseOf: Property;
+    inverseOf: string;
 
     /**
      * The mapping of the property.

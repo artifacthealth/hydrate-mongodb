@@ -137,7 +137,7 @@ class MappingBuilder {
             }
         }
 
-        // create every thing else
+        // create everything else
         for(var i = 0, l = objectTypes.length; i < l; i++) {
             var links = this._typeTable[objectTypes[i].getId()];
             if(links.kind != MappingKind.RootEntity && links.kind !== MappingKind.RootEmbeddable) {
@@ -500,6 +500,9 @@ class MappingBuilder {
                         // are applied because we may not know the field name yet.
                         (indexAnnotations || (indexAnnotations = [])).push(annotation);
                         break;
+                    case "inverse":
+                        this._setInverse(property, annotation.value);
+                        break;
                 }
             }
         }
@@ -741,8 +744,12 @@ class MappingBuilder {
 
     private _setCascade(property: Property, value: any): void {
 
+        if(value === undefined) {
+            throw new Error("Type of cascade must be specified.");
+        }
+
         if(typeof value !== "string") {
-            throw new Error("Property 'cascade' should be of type string.")
+            throw new Error("Value must be of type string.")
         }
 
         var cascades = value.split(",");
@@ -782,6 +789,22 @@ class MappingBuilder {
             }
         }
     }
+
+    private _setInverse(property: Property, value: any): void {
+
+        if(value === undefined) {
+            throw new Error("The name of the field in the target class must be specified that represents the inverse relationship.");
+        }
+
+        if(typeof value !== "string") {
+            throw new Error("Value must be of type string.")
+        }
+
+        // TODO: validate inverse relationship
+        property.inverseOf = value;
+        property.setFlags(PropertyFlags.InverseSide);
+    }
+
 
     private _assertEntityMapping(mapping: Mapping): void {
 

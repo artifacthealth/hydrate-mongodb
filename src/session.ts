@@ -16,9 +16,9 @@ interface Session {
     getReference<T>(ctr: Constructor<T>, id: any): T;
     find<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void;
 
-    fetch<T>(obj: T, callback: ResultCallback<T>): void;
-    fetch<T>(obj: T, path: string, callback: ResultCallback<T>): void;
-    fetch<T>(obj: T, paths: string[], callback: ResultCallback<T>): void;
+    fetch<T>(obj: T, callback?: ResultCallback<T>): void;
+    fetch<T>(obj: T, path: string, callback?: ResultCallback<T>): void;
+    fetch<T>(obj: T, paths: string[], callback?: ResultCallback<T>): void;
 }
 
 export = Session;

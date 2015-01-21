@@ -103,7 +103,7 @@ class PersisterImpl implements Persister {
             return callback(new Error("Path must be a string."));
         }
 
-        this._mapping.resolve(entity, path.split("."), 0, callback);
+        this._mapping.resolve(this._session, undefined, entity, path.split("."), 0, callback);
     }
 
     find(criteria: any): Cursor {

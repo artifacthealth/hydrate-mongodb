@@ -156,16 +156,16 @@ class ClassMapping extends ObjectMapping {
         super.walk(value, flags, entities, embedded, references);
     }
 
-    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
         if (!value || typeof value !== "object") {
             return callback(null, value);
         }
 
-        return (this.registry.getMappingForObject(value) || this)._resolve(value, path, depth, callback);
+        return (this.registry.getMappingForObject(value) || this)._resolve(session, parentEntity, value, path, depth, callback);
     }
 
-    private _resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
-        super.resolve(value, path, depth, callback);
+    private _resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+        super.resolve(session, parentEntity, value, path, depth, callback);
     }
 
 }

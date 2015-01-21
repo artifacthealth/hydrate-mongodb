@@ -1,13 +1,15 @@
 import ClassMapping = require("./classMapping");
 import EntityMapping = require("./entityMapping");
 import Constructor = require("../core/constructor");
-import Map = require("../core/map");
+import Table = require("../core/table");
+import TableKey = require("../core/tableKey");
 import Mapping = require("./mapping");
 import MappingFlags = require("./mappingFlags");
 
 class MappingRegistry {
 
-    private _mappingByConstructor: Map<ClassMapping> = {};
+    private _mappingByConstructor: ClassMapping[] = [];
+    private _key = new TableKey();
 
     addMapping(mapping: ClassMapping): void {
 
@@ -15,41 +17,21 @@ class MappingRegistry {
             throw new Error("Class mapping is missing classConstructor.");
         }
 
-        var key = Map.getHashCode(mapping.classConstructor);
-        if(Map.hasProperty(this._mappingByConstructor, key)) {
+        if(this._key.hasValue(mapping.classConstructor)) {
             throw new Error("Mapping '" + mapping.name + "' has already been registered.");
         }
-        this._mappingByConstructor[key] = mapping;
-       // (<any>entityMapping.classConstructor)["mapping"] = mapping;
+
+        this._mappingByConstructor[this._key.ensureValue(mapping.classConstructor)] = mapping;
     }
 
     getEntityMappings(): EntityMapping[] {
 
-        var mappings: EntityMapping[] = [];
-
-        for(var key in this._mappingByConstructor) {
-            if(this._mappingByConstructor.hasOwnProperty(key)) {
-                var mapping = this._mappingByConstructor[key];
-                if(mapping.flags & MappingFlags.Entity) {
-                    mappings.push(<EntityMapping>mapping);
-                }
-            }
-        }
-
-        return mappings;
+        return <EntityMapping[]>this._mappingByConstructor.filter(mapping => (mapping.flags & MappingFlags.Entity) !== 0);
     }
 
     getMappings(): ClassMapping[] {
 
-        var mappings: ClassMapping[] = [];
-
-        for(var key in this._mappingByConstructor) {
-            if(this._mappingByConstructor.hasOwnProperty(key)) {
-                mappings.push(this._mappingByConstructor[key]);
-            }
-        }
-
-        return mappings;
+        return this._mappingByConstructor;
     }
 
     getMappingForObject(obj: any): ClassMapping {
@@ -60,7 +42,7 @@ class MappingRegistry {
     getMappingForConstructor(ctr: Constructor<any>): ClassMapping {
 
         if(ctr) {
-            return this._mappingByConstructor[Map.getHashCode(ctr)];
+            return this._mappingByConstructor[this._key.getValue(ctr)];
         }
     }
 }

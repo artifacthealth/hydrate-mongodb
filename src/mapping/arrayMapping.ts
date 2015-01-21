@@ -8,6 +8,7 @@ import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
+import EntityMapping = require("./entityMapping");
 
 class ArrayMapping extends MappingBase {
 
@@ -17,8 +18,8 @@ class ArrayMapping extends MappingBase {
 
     read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
-        if(!Array.isArray(value)) {
-            errors.push({ message: "Expected array.", path: path, value: value });
+        if (!Array.isArray(value)) {
+            errors.push({message: "Expected array.", path: path, value: value});
             return;
         }
 
@@ -29,7 +30,7 @@ class ArrayMapping extends MappingBase {
             var item = value[i];
 
             // treat undefined values as null
-            if(item === undefined) {
+            if (item === undefined) {
                 item = null;
             }
             result[i] = mapping.read(session, item, path, errors);
@@ -40,8 +41,8 @@ class ArrayMapping extends MappingBase {
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
 
-        if(!Array.isArray(value)) {
-            errors.push({ message: "Expected array.", path: path, value: value });
+        if (!Array.isArray(value)) {
+            errors.push({message: "Expected array.", path: path, value: value});
         }
 
         var result = new Array(value.length),
@@ -51,7 +52,7 @@ class ArrayMapping extends MappingBase {
             var item = value[i];
 
             // treat undefined values as null
-            if(item === undefined) {
+            if (item === undefined) {
                 item = null;
             }
             result[i] = mapping.write(item, path, errors, visited);
@@ -75,18 +76,18 @@ class ArrayMapping extends MappingBase {
             var item = objectValue[i]
 
             // treat undefined values as null
-            if(item === undefined) {
+            if (item === undefined) {
                 item = null;
             }
 
             var documentItem = documentValue[i];
 
-            if(item === documentItem) {
+            if (item === documentItem) {
                 continue;
             }
 
             // check for null value
-            if(item === null) {
+            if (item === null) {
                 (changes["$set"] || (changes["$set"] = {}))[path + "." + i] = null;
                 continue;
             }
@@ -108,7 +109,7 @@ class ArrayMapping extends MappingBase {
             var fieldValue1 = documentValue1[i];
             var fieldValue2 = documentValue2[i];
 
-            if(fieldValue1 !== fieldValue2 && !mapping.areEqual(fieldValue1, fieldValue2)) {
+            if (fieldValue1 !== fieldValue2 && !mapping.areEqual(fieldValue1, fieldValue2)) {
                 return false;
             }
         }
@@ -129,17 +130,17 @@ class ArrayMapping extends MappingBase {
         }
     }
 
-    resolve(value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
-        // TODO: resolve inverse side?
         if(!Array.isArray(value) || value.length == 0) {
             return callback(null, value);
         }
 
+        // TODO: warn in documentation that if array is modified before this callback returns then results are unpredictable
         var mapping = this.elementMapping;
         Async.forEach(value, (item, index, done) => {
             // note, depth is not incremented for array
-            mapping.resolve(item, path, depth, (err, result) => {
+            mapping.resolve(session, parentEntity, item, path, depth, (err, result) => {
                 if(err) return done(err);
                 if(item !== result) {
                     value[index] = result;
@@ -151,6 +152,39 @@ class ArrayMapping extends MappingBase {
             callback(null, value);
         });
     }
+
+    resolveInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
+
+        if(!parentEntity) {
+            return callback(new Error("Parent entity required to resolve inverse relationship."));
+        }
+
+        var id = session.getId(parentEntity);
+        if(id === undefined) {
+            return callback(new Error("Missing identifier on parent entity."));
+        }
+
+        if(!(this.elementMapping.flags & MappingFlags.Entity)) {
+            return callback(new Error("Element mapping must be an entity to resolve inverse relationship."));
+        }
+
+        var mapping = <EntityMapping>this.elementMapping;
+
+        var property = mapping.getProperty(propertyName);
+        if(property === undefined) {
+            return callback(new Error("Missing property '" + propertyName + "'."));
+        }
+
+        var query = {};
+        property.setFieldValue(query, id);
+
+        var persister = session.getPersister(mapping);
+        persister.find(query).toArray((err, value) => {
+            if(err) return callback(err);
+            this.resolve(session, this, value, path, depth, callback);
+        });
+    }
+
 }
 
 export = ArrayMapping;

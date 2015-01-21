@@ -30,6 +30,9 @@ export class Person extends Party {
 
     /** @cascade "save, remove" */
     parents: Person[];
+
+    /** @cascade "save, remove" */
+    /** @inverse "parents" */
     children: Person[];
 
     attributes: { [ name: string ]: string };
