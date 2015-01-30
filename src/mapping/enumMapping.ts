@@ -74,12 +74,6 @@ class EnumMapping extends MappingBase {
         }
         return name;
     }
-
-    compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
-        // TODO: handle errors/visited
-       super.compare(this.write(objectValue, path, [], []), documentValue, changes, path);
-    }
 }
 
 export = EnumMapping;

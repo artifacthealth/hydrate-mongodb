@@ -167,69 +167,6 @@ class ObjectMapping extends MappingBase {
         return document;
     }
 
-    compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
-        // TODO: throw error if objectValue is not an object.
-        // TODO: throw error if objectValue or documentValue are null or undefined?
-        // TODO: handle errors/visited
-        // TODO: perhaps maintain documentPath and objectPath?
-        // TODO: see if optimization similar to setFieldValue works here
-
-        // check if document value is not an object
-        if (typeof documentValue !== "object" || Array.isArray(documentValue) || (documentValue instanceof Date) || (documentValue instanceof RegExp)) {
-
-            (changes["$set"] || (changes["$set"] = {}))[path] = this.write(objectValue, path, [], []);
-            return;
-        }
-
-        var base = path ? path + "." : "",
-            properties = this.properties;
-
-        for (var i = 0, l = properties.length; i < l; i++) {
-            var property = properties[i],
-                flags = property.flags;
-
-            // skip fields that are not persisted
-            if (flags & (PropertyFlags.Ignored | PropertyFlags.InverseSide)) {
-                continue;
-            }
-
-            // get the field value from the document
-            var fieldValue = property.getFieldValue(documentValue);
-
-            // get the property value from the object
-            var propertyValue = property.getPropertyValue(objectValue);
-            // handle null properties as undefined if property is not nullable
-            if (propertyValue === null && !(flags & PropertyFlags.Nullable)) {
-                propertyValue = undefined;
-            }
-
-            if (propertyValue === fieldValue) {
-                continue;
-            }
-
-            // check for undefined property
-            if (propertyValue === undefined) {
-                (changes["$unset"] || (changes["$unset"] = {}))[base + property.field] = 1;
-                continue;
-            }
-
-            // check for null property
-            if (propertyValue === null) {
-                (changes["$set"] || (changes["$set"] = {}))[base + property.field] = null;
-            }
-
-            // check for null or undefined field
-            if (fieldValue === undefined || fieldValue === null) {
-                (changes["$set"] || (changes["$set"] = {}))[base + property.field] = property.mapping.write(propertyValue, base + property.field, [], []);
-                continue;
-            }
-
-            // check for changed values
-            property.mapping.compare(propertyValue, fieldValue, changes, base + property.field);
-        }
-    }
-
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
         if (typeof documentValue1 !== "object" || typeof documentValue2 !== "object") {

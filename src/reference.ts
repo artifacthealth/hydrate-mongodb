@@ -14,6 +14,10 @@ class Reference {
 
     fetch(callback: ResultCallback<any>): void {
 
+        if(!this._session) {
+            return callback(new Error("Cannot fetch detached reference."));
+        }
+
         if(this.mapping) {
             var persister = this._session.getPersister(this.mapping);
         }
@@ -29,7 +33,17 @@ class Reference {
 
     getObject(): any {
 
-        return this._session.getObject(this.id);
+        return this._session && this._session.getObject(this.id);
+    }
+
+    detach(): void {
+
+        this._session = undefined;
+    }
+
+    attach(session: InternalSession): void {
+
+        this._session = session;
     }
 
     static isReference(obj: any): boolean {

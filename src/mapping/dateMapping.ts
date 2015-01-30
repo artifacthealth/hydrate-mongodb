@@ -29,18 +29,6 @@ class DateMapping extends MappingBase {
         return new Date(value.getTime());
     }
 
-    compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
-        // TODO: throw if objectValue is not Date
-
-        var objectTime = objectValue.getTime();
-        if(documentValue instanceof Date && objectTime === documentValue.getTime()) {
-            return;
-        }
-
-        (changes["$set"] || (changes["$set"] = {}))[path] = new Date(objectTime);
-    }
-
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
         if (documentValue1 instanceof Date && documentValue2 instanceof Date) {

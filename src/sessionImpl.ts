@@ -107,6 +107,11 @@ class SessionImpl implements InternalSession {
         this._queue.add(Action.Refresh, Action.All & ~Action.Refresh, obj, callback);
     }
 
+    merge(obj: any, callback: ResultCallback<any>): void {
+
+        this._queue.add(Action.Merge, Action.All & ~Action.Merge, obj, callback);
+    }
+
     detach(obj: any, callback?: Callback): void {
 
         this._queue.add(Action.Detach, Action.All & ~Action.Detach, obj, callback);
@@ -374,6 +379,14 @@ class SessionImpl implements InternalSession {
         }, callback);
     }
 
+    private _merge(obj: any, callback: ResultCallback<any>): void {
+
+    }
+
+    private _mergeEntities(entities: any[], callback: Callback): void {
+
+    }
+
     // TODO: if flush fails, mark session invalid and don't allow any further operations?
     // TODO: if operations fails (e.g. save, etc.) should session become invalid? Perhaps have two classes of errors, those that cause the session to become invalid and those that do not?
     private _flush(callback: Callback): void {
@@ -562,6 +575,8 @@ class SessionImpl implements InternalSession {
         if (links.scheduledOperation == ScheduledOperation.Insert || links.state == ObjectState.Removed) {
             delete links.object["_id"];
         }
+
+        // TODO: need to detach all references contained in this entity and any embedded objects or arrays
     }
 
     private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {

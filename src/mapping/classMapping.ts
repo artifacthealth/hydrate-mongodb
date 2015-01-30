@@ -100,23 +100,6 @@ class ClassMapping extends ObjectMapping {
         return this.writeObject(document, value, path, errors, visited);
     }
 
-    compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
-        var objectMapping = (this.registry.getMappingForObject(objectValue) || this);
-
-        /*
-        TODO: handle situation where objectMapping != documentMapping
-        var discriminatorValue = documentValue[this.inheritanceRoot.discriminatorField];
-        var documentMapping = this.inheritanceRoot._discriminatorMap[discriminatorValue];
-        */
-
-        objectMapping._compare(objectValue, documentValue, changes, path);
-    }
-
-    private _compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-        super.compare(objectValue, documentValue, changes, path);
-    }
-
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
         var root = this.inheritanceRoot;

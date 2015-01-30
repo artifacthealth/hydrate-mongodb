@@ -28,13 +28,6 @@ class MappingBase {
 
     }
 
-    compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
-        if (objectValue !== documentValue) {
-            (changes["$set"] || (changes["$set"] = {}))[path] = objectValue;
-        }
-    }
-
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
         if (documentValue1 === documentValue2) return true;

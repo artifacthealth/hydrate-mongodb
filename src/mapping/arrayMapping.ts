@@ -61,42 +61,6 @@ class ArrayMapping extends MappingBase {
         return result;
     }
 
-    compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
-        // TODO: throw error if objectValue is not an array
-
-        if (!Array.isArray(documentValue) || objectValue.length != documentValue.length) {
-
-            (changes["$set"] || (changes["$set"] = {}))[path] = this.write(objectValue, path, [], []);
-            return;
-        }
-
-        var mapping = this.elementMapping;
-        for (var i = 0, l = objectValue.length; i < l; i++) {
-            var item = objectValue[i]
-
-            // treat undefined values as null
-            if (item === undefined) {
-                item = null;
-            }
-
-            var documentItem = documentValue[i];
-
-            if (item === documentItem) {
-                continue;
-            }
-
-            // check for null value
-            if (item === null) {
-                (changes["$set"] || (changes["$set"] = {}))[path + "." + i] = null;
-                continue;
-            }
-
-            // check if array element has changed
-            mapping.compare(item, documentItem, changes, path + "." + i);
-        }
-    }
-
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
         if (!Array.isArray(documentValue1) || !Array.isArray(documentValue2) || documentValue1.length != documentValue2.length) {

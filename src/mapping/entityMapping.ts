@@ -140,33 +140,6 @@ class EntityMapping extends ClassMapping {
         return document;
     }
 
-    compare(objectValue: any, documentValue: any, changes: Changes, path: string): void {
-
-        // if this is the top level then do a full comparison; otherwise, just compare id's
-        if(!path) {
-            super.compare(objectValue, documentValue, changes, path);
-            return;
-        }
-
-        var id: any;
-        // if the value is not an instance of the entity's constructor then it should be an identifier or DBRef
-        if(!(objectValue instanceof this.classConstructor)) {
-            // TODO: handle DBRef
-            id = objectValue;
-        }
-        else {
-            // otherwise, retrieve the id from the object
-            if(!(id = objectValue["_id"])) {
-                // TODO: handle missing identifier
-                return;
-            }
-        }
-
-        if(!(<EntityMapping>this.inheritanceRoot).identity.areEqual(id, documentValue)) {
-            (changes["$set"] || (changes["$set"] = {}))[path] = id;
-        }
-    }
-
     areDocumentsEqual(document1: any, document2: any): boolean {
 
         return super.areEqual(document1, document2);
