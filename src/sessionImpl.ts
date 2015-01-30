@@ -569,14 +569,32 @@ class SessionImpl implements InternalSession {
 
     private _unlinkObject(links: ObjectLinks): void {
 
+        this._detachReferences(links.object);
+
         delete this._objectLinks[links.object["_id"].toString()];
 
         // if the object was never persisted or if it has been removed, then clear it's identifier as well
         if (links.scheduledOperation == ScheduledOperation.Insert || links.state == ObjectState.Removed) {
             delete links.object["_id"];
         }
+    }
 
-        // TODO: need to detach all references contained in this entity and any embedded objects or arrays
+    private _detachReferences(obj: any): void {
+
+        // TODO: get mapping from persisiter?
+        var mapping = this.factory.getMappingForObject(obj);
+        if (!mapping) {
+            return;
+        }
+
+        // Find all reference in the entity and in arrays and embedded objects contained within the entity. Do not walk
+        // into other entities referenced by this one.
+        var references: Reference[] = [];
+        mapping.walk(obj, PropertyFlags.Dereference, [], [], references);
+
+        for(var i = 0, l = references.length; i < l; i++) {
+            references[i].detach();
+        }
     }
 
     private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
@@ -599,7 +617,7 @@ class SessionImpl implements InternalSession {
     private _walk(mapping: EntityMapping, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
 
         var references: Reference[] = [];
-        mapping.walk(entity, flags, entities, embedded, references);
+        mapping.walk(entity, flags | PropertyFlags.WalkEntities, entities, embedded, references);
 
         // TODO: load references in batches grouped by root mapping
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {

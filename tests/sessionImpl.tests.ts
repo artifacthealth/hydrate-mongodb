@@ -54,12 +54,9 @@ describe('SessionImpl', () => {
 
                 session.flush(done);
             });*/
-                //54b8a19659731ff8ccfc2fe5
 
-
-
-            var ids = ["54b8a19659731ff8ccfc2fe7"];
             //var ids = ["54b8a19659731ff8ccfc2fe7"];
+            var ids = ["54b8a19659731ff8ccfc2fe5"];
 
             /*
             session.find(model.Person, <any>mongodb.ObjectID.createFromHexString("54b8a19659731ff8ccfc2fe5"), (err, entity) => {
@@ -72,6 +69,11 @@ describe('SessionImpl', () => {
             async.each(ids, (id: string, done: (err?: Error) => void) => {
                 session.find(model.Person, id, (err, entity) => {
                     if(err) return done(err);
+
+                    session.detach(entity, (err: Error) => {
+                        done();
+                    });
+                    return;
 
                     session.fetch(entity, "children", (err, result) => {
                         if(err) return done(err);

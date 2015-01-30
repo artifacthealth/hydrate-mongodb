@@ -179,6 +179,9 @@ class EntityMapping extends ClassMapping {
         if (entities.indexOf(value) !== -1) return;
         entities.push(value);
 
+        // If this isn't the first entity, only continue if we have the WalkEntities flag
+        if((this.flags & PropertyFlags.WalkEntities) == 0 && entities.length > 1) return;
+
         super.walk(value, flags, entities, embedded, references);
     }
 

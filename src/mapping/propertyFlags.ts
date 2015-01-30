@@ -10,7 +10,11 @@ const enum PropertyFlags {
     InverseSide = 0x00000040,
     Nullable = 0x00000080,
     OrphanRemoval = 0x00000100,
-    Dereference = 0x00000200
+    All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval,
+
+    // walk flags
+    WalkEntities = 0x00000200,
+    Dereference = 0x00000400
 }
 
 export = PropertyFlags;

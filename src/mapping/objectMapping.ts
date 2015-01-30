@@ -207,7 +207,7 @@ class ObjectMapping extends MappingBase {
         for (var i = 0, l = properties.length; i < l; i++) {
             var property = properties[i];
             // if the property is not ignored and it has the specified flags, then walk the value of the property
-            if (!(property.flags & PropertyFlags.Ignored) && (property.flags & flags)) {
+            if (!(property.flags & PropertyFlags.Ignored) && ((property.flags & flags) || ((flags & PropertyFlags.All) == 0))) {
                 property.mapping.walk(property.getPropertyValue(value), flags, entities, embedded, references);
             }
         }
