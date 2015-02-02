@@ -52,11 +52,11 @@ function createFixture() {
     var fixture = helpers.requireFixture("model");
     var registry = new MappingRegistry();
 
-    var partyMapping = new EntityMapping(registry);
+    var partyMapping = new EntityMapping();
     partyMapping.classConstructor = model.Party;
-    var personMapping = new EntityMapping(registry, partyMapping);
+    var personMapping = new EntityMapping(partyMapping);
     personMapping.classConstructor = model.Person;
-    var addressMapping = new ClassMapping(registry);
+    var addressMapping = new ClassMapping();
     addressMapping.classConstructor = model.Address;
 
     registry.addMapping(partyMapping);

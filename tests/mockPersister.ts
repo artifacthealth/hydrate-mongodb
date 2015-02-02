@@ -33,8 +33,8 @@ class MockPersister implements Persister {
 
     constructor(mapping: EntityMapping) {
         this._mapping = mapping;
-        this.identity = mapping.identity;
-        this.changeTracking = mapping.changeTracking;
+        this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
+        this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
     load(documents: any[]): Result<any[]> {

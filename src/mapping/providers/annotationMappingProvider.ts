@@ -129,23 +129,15 @@ class MappingBuilder {
             this._scanPropertiesForEmbeddedTypes(objectTypes[i]);
         }
 
-        // create root types first
+        // Create mappings. We need to create the mappings before we populate so we can create property mappings.
         for(var i = 0, l = objectTypes.length; i < l; i++) {
             var links = this._typeTable[objectTypes[i].getId()];
-            if(links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable) {
+            if(!links.mapping) {
                 this._createMapping(links);
             }
         }
 
-        // create everything else
-        for(var i = 0, l = objectTypes.length; i < l; i++) {
-            var links = this._typeTable[objectTypes[i].getId()];
-            if(links.kind != MappingKind.RootEntity && links.kind !== MappingKind.RootEmbeddable) {
-                this._createMapping(links);
-            }
-        }
-
-        // Populate mappings. We need to create the mappings before we populate so we can create property mappings.
+        // Populate mappings.
         for(var i = 0, l = objectTypes.length; i < l; i++) {
             this._populateMapping(this._typeTable[objectTypes[i].getId()]);
         }
@@ -273,46 +265,60 @@ class MappingBuilder {
         return false;
     }
 
-    private _createMapping(links: TypeLinks): void {
+    private _createMapping(links: TypeLinks): Mapping {
 
         var mapping: Mapping,
             type = links.type;
 
         switch(links.kind) {
             case MappingKind.RootEmbeddable:
-                mapping = new ClassMapping(this._registry);
+                mapping = new ClassMapping();
                 break;
             case MappingKind.Embeddable:
                 if (type.isClass()) {
-                    mapping = new ClassMapping(this._registry, this._getInheritanceRoot(type));
+                    mapping = new ClassMapping(this._getParentMapping(type));
                 }
                 else {
                     mapping = new ObjectMapping();
                 }
                 break;
             case MappingKind.RootEntity:
-                mapping = new EntityMapping(this._registry);
+                mapping = new EntityMapping();
                 break;
             case MappingKind.Entity:
-                mapping = new EntityMapping(this._registry, this._getInheritanceRoot(type));
+                var parentMapping = this._getParentMapping(type);
+                if(parentMapping && (parentMapping.flags & MappingFlags.Entity) == 0) {
+                    this._addError("Parent of mapping for '" + type.getFullName() + "' must be an entity mapping.");
+                }
+                mapping = new EntityMapping(<EntityMapping>parentMapping);
                 break;
         }
 
-        links.mapping = mapping;
+        return links.mapping = mapping;
     }
 
-    private _getInheritanceRoot(type: reflect.Type): EntityMapping {
+    private _getParentMapping(type: reflect.Type): ClassMapping {
 
-        var baseClass = type;
-        while(baseClass) {
+        var baseClass = type.getBaseClass();
+        if(baseClass) {
             var links = this._typeTable[baseClass.getId()];
-            if(links && (links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable)) {
-                return <EntityMapping>links.mapping;
+            var mapping = links.mapping
+            if(!mapping) {
+                // If the mapping for the parent class does not exist, creat it
+                mapping = this._createMapping(links);
+                if(!mapping) {
+                    this._addError("Error creating parent mapping for '" + type.getFullName() + "'.");
+                    return undefined;
+                }
             }
-            baseClass = baseClass.getBaseClass();
-        }
 
-        this._addError("Could not find inheritance root for type '" + type.getFullName() + "'.");
+            if((mapping.flags & MappingFlags.Class) == 0) {
+                this._addError("Parent of mapping for '" + type.getFullName() + "' must be a class mapping.");
+                return undefined;
+            }
+
+            return <ClassMapping>links.mapping;
+        }
     }
 
     private _populateMapping(links: TypeLinks) {

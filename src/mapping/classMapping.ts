@@ -11,21 +11,36 @@ import ResultCallback = require("../core/resultCallback");
 
 class ClassMapping extends ObjectMapping {
 
+    private _baseClass: ClassMapping;
+    private _subclasses: ClassMapping[];
     private _discriminatorMap: Map<ClassMapping>;
+    private _registry: MappingRegistry;
+
+    inheritanceRoot: ClassMapping;
 
     name: string;
     discriminatorField: string;
     discriminatorValue: string;
     classConstructor: Function;
 
-    constructor(protected registry: MappingRegistry, public inheritanceRoot?: ClassMapping) {
+    constructor(baseClass?: ClassMapping) {
         super();
 
         this.flags |= MappingFlags.Class;
 
-        if(!inheritanceRoot) {
+        this._baseClass = baseClass;
+        if(!baseClass) {
             this.flags |= MappingFlags.InheritanceRoot;
             this.inheritanceRoot = this;
+        }
+        else {
+            var previous = baseClass;
+            while(baseClass) {
+                baseClass._addSubClass(this);
+                previous = baseClass;
+                baseClass = baseClass._baseClass;
+            }
+            this.inheritanceRoot = previous;
         }
     }
 
@@ -33,6 +48,14 @@ class ClassMapping extends ObjectMapping {
 
         this.discriminatorValue = value;
         this.inheritanceRoot._addDiscriminatorMapping(value, this);
+    }
+
+    private _addSubClass(subclass: ClassMapping): void {
+
+        if(!this._subclasses) {
+            this._subclasses = [];
+        }
+        this._subclasses.push(subclass);
     }
 
     private _addDiscriminatorMapping(value: string, mapping: ClassMapping): void {
@@ -48,6 +71,20 @@ class ClassMapping extends ObjectMapping {
         this._discriminatorMap[value] = mapping;
     }
 
+    private _ensureRegistry(): MappingRegistry {
+
+        if(!this._registry) {
+            this._registry = new MappingRegistry();
+            if(this._subclasses) {
+                var subclasses = this._subclasses;
+                for (var i = 0, l = subclasses.length; i < l; i++) {
+                    this._registry.addMapping(subclasses[i]);
+                }
+            }
+        }
+
+        return this._registry;
+    }
 
     read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
 
@@ -89,7 +126,7 @@ class ClassMapping extends ObjectMapping {
 
         // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
         // does not exist, default to current mapping.
-        return (this.registry.getMappingForObject(value) || this).writeClass(value, path, errors, visited);
+        return (this._ensureRegistry().getMappingForObject(value) || this).writeClass(value, path, errors, visited);
     }
 
     protected writeClass(value: any, path: string, errors: MappingError[], visited: any[]): any {
@@ -132,7 +169,7 @@ class ClassMapping extends ObjectMapping {
 
         if (!value || typeof value !== "object") return;
 
-        return (this.registry.getMappingForObject(value) || this)._walk(value, flags, entities, embedded, references);
+        return (this._ensureRegistry().getMappingForObject(value) || this)._walk(value, flags, entities, embedded, references);
     }
 
     private _walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
@@ -144,7 +181,7 @@ class ClassMapping extends ObjectMapping {
             return callback(null, value);
         }
 
-        return (this.registry.getMappingForObject(value) || this)._resolve(session, parentEntity, value, path, depth, callback);
+        return (this._ensureRegistry().getMappingForObject(value) || this)._resolve(session, parentEntity, value, path, depth, callback);
     }
 
     private _resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {

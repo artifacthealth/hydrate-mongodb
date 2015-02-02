@@ -20,7 +20,9 @@ class TableKey {
     getValue: (obj: any) => number;
 
     ensureValue(obj: any): number {
-        return this.getValue(obj) || this.setValue(obj, this._nextValue++);
+        var value = this.getValue(obj);
+        if(value !== undefined) return value;
+        return this.setValue(obj, this._nextValue++);
     }
 
     setValue(obj: any, value: number): number {

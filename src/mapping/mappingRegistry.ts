@@ -9,6 +9,7 @@ import MappingFlags = require("./mappingFlags");
 class MappingRegistry {
 
     private _mappingByConstructor: ClassMapping[] = [];
+
     private _key = new TableKey();
 
     addMapping(mapping: ClassMapping): void {
@@ -17,7 +18,8 @@ class MappingRegistry {
             throw new Error("Class mapping is missing classConstructor.");
         }
 
-        if(this._key.hasValue(mapping.classConstructor)) {
+        var key = this._key.ensureValue(mapping.classConstructor);
+        if(this._mappingByConstructor[key] !== undefined) {
             throw new Error("Mapping '" + mapping.name + "' has already been registered.");
         }
 

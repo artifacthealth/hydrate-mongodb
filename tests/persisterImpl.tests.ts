@@ -21,30 +21,28 @@ import SessionFactory = require("../src/sessionFactory");
 import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
 import Configuration = require("../src/config/configuration");
 import helpers = require("./helpers");
-
+-
 describe('PersisterImpl', () => {
 
     describe('findOneById', () => {
 
         it.skip('', (done) => {
-            var factory = new MockSessionFactory();
-            var registry = new MappingRegistry();
-            factory.mapping = new EntityMapping(registry);
-            factory.mapping.identity = new MockIdentityGenerator();
-            factory.mapping.classConstructor = model.Person;
-            registry.addMapping(factory.mapping);
 
-            var session = new SessionImpl(factory);
-            var collection = new MockCollection();
-            var persister = new PersisterImpl(session, factory.mapping, collection);
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            persister.findOneById(1, (err, entity) => {
-                if(err) return done(err);
-                done();
-            });
-            persister.findOneById(1, (err, entity) => {
-                if(err) return done(err);
-                done();
+                var session = factory.createSession();
+                var collection = new MockCollection();
+                var persister = new PersisterImpl(session, factory.getMappingForConstructor(model.Person), collection);
+
+                persister.findOneById(1, (err, entity) => {
+                    if (err) return done(err);
+                    done();
+                });
+                persister.findOneById(1, (err, entity) => {
+                    if (err) return done(err);
+                    done();
+                });
             });
         });
     });
@@ -154,3 +152,4 @@ describe('PersisterImpl', () => {
     });
 
 });
+

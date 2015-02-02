@@ -1,29 +1,28 @@
-import InternalSessionFactory = require("../src/internalSessionFactory");
+import SessionFactoryImpl = require("../src/sessionFactoryImpl");
 import InternalSession = require("../src/internalSession");
-import Constructor = require("../src/core/constructor");
 import Persister = require("../src/persister");
 import EntityMapping = require("../src/mapping/entityMapping");
-import Session = require("../src/session");
+import MappingRegistry = require("../src/mapping/mappingRegistry");
+import MockPersister = require("./mockPersister");
 
-class MockSessionFactory implements InternalSessionFactory {
+class MockSessionFactory extends SessionFactoryImpl {
 
-    persister: Persister;
-    mapping: EntityMapping;
-
-    getMappingForObject(obj: any): EntityMapping {
-        return this.mapping;
-    }
-
-    getMappingForConstructor(ctr: Constructor<any>): EntityMapping {
-        return this.mapping;
+    constructor(mappingRegistry: MappingRegistry) {
+        super(null, mappingRegistry);
     }
 
     createPersister(session: InternalSession, mapping: EntityMapping): Persister {
-        return this.persister;
+
+        return new MockPersister(mapping);
     }
 
-    createSession(): Session {
-        throw new Error("Not implemented");
+    createSession(): InternalSession {
+
+        return <InternalSession>super.createSession();
+    }
+
+    getPersisterForObject(session: InternalSession, obj: any): MockPersister {
+        return <MockPersister>session.getPersister(this.getMappingForObject(obj));
     }
 }
 

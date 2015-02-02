@@ -33,8 +33,8 @@ class EntityMapping extends ClassMapping {
     lockable: boolean;
     lockField: string;
 
-    constructor(registry: MappingRegistry, inheritanceRoot?: EntityMapping) {
-        super(registry, inheritanceRoot);
+    constructor(baseClass?: EntityMapping) {
+        super(baseClass);
 
         this.flags &= ~MappingFlags.Embeddable;
         this.flags |= MappingFlags.Entity;

@@ -7,27 +7,24 @@ import mongodb = require("mongodb");
 import async = require("async");
 import chai = require("chai");
 import assert = chai.assert;
+import helpers = require("./helpers");
 
 import Configuration = require("../src/config/configuration");
 import SessionFactory = require("../src/sessionFactory");
 import SessionFactoryImpl = require("../src/sessionFactoryImpl");
 import SessionImpl = require("../src/sessionImpl");
-import model = require("./fixtures/model");
-import MockSessionFactory = require("./mockSessionFactory");
-import MappingRegistry = require("../src/mapping/mappingRegistry");
 import EntityMapping = require("../src/mapping/entityMapping");
-import MockIdentityGenerator = require("./id/mockIdentityGenerator");
 import MockPersister = require("./mockPersister");
+import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
+import MappingRegistry = require("../src/mapping/mappingRegistry");
 
-interface SessionFixture {
-    session: SessionImpl;
-    persister: MockPersister;
-    factory: MockSessionFactory;
-}
+// Fixtures
+import model = require("./fixtures/model");
+import cascade = require("./fixtures/cascade");
 
 describe('SessionImpl', () => {
 
-    it('test against mongodb', (done) => {
+    it.skip('test against mongodb', (done) => {
 
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/model.d.json");
@@ -89,78 +86,123 @@ describe('SessionImpl', () => {
     describe('save', () => {
 
         it('generates an identifier for the object', (done) => {
-            var fixture = createFixture();
-            var entity: any = {};
 
-            fixture.session.save(entity, (err) => {
+            helpers.createFactory("model", (err, factory) => {
                 if(err) return done(err);
 
-                assert.equal(entity["_id"], 1, "Entity was not assigned an identifier");
-                done();
+                var entity = createEntity();
+                factory.createSession().save(entity, (err) => {
+                    if (err) return done(err);
+
+                    assert.isTrue(entity["_id"] !== undefined, "Entity was not assigned an identifier");
+                    done();
+                });
             });
         });
 
         it('returns an error if a persister cannot be found for the object', (done) => {
-            var fixture = createFixture();
-            fixture.factory.persister = undefined;
-            var session = new SessionImpl(fixture.factory);
 
-            session.save({}, (err) => {
-                // TODO: check error code
-                assert.instanceOf(err, Error);
-                done();
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                factory.createSession().save({}, (err) => {
+                    // TODO: check error code
+                    assert.instanceOf(err, Error);
+                    done();
+                });
             });
         });
 
         it('returns an error if the object is a detached entity', (done) => {
-            var fixture = createFixture();
-            fixture.session.save({ _id: 1 }, (err) => {
-                // TODO: check error code
-                assert.instanceOf(err, Error);
-                done();
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var entity = createEntity(1);
+
+                factory.createSession().save(entity, (err) => {
+                    // TODO: check error code
+                    assert.instanceOf(err, Error);
+                    done();
+                });
             });
         });
 
         it('schedules newly managed objects for insert', (done) => {
-            var fixture = createFixture();
-            var entity: any = {};
 
-            fixture.session.save(entity);
-            fixture.session.flush((err) => {
-                if(err) return done(err);
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-                assert.equal(fixture.persister.insertCalled, 1);
-                assert.isTrue(fixture.persister.wasInserted(entity));
-                done();
+                var entity = createEntity();
+                var session = factory.createSession();
+
+                session.save(entity);
+                session.flush((err) => {
+                    if (err) return done(err);
+
+                    var persister = factory.getPersisterForObject(session, entity);
+
+                    assert.equal(persister.insertCalled, 1);
+                    assert.isTrue(persister.wasInserted(entity));
+                    done();
+                });
             });
         });
 
         it('cancels pending removal for saved entity', (done) => {
-            var fixture = createFixture();
-            var entity: any = {};
 
-            fixture.session.save(entity);
-            // Flush after save because if we call remove after save without a flush, it cancels the save operations
-            // and never schedules a remove operation to begin with.
-            fixture.session.flush();
-            fixture.session.remove(entity, (err) => {
-                if(err) return done(err);
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-                // Confirm that entity has been removed. GetObject returns null (as opposed to undefined) if object
-                // is managed but scheduled for removal.
-                assert.isNull(fixture.session.getObject(1), "Object is not scheduled for remove");
+                var entity = createEntity();
+                var session = factory.createSession();
 
-                fixture.session.save(entity, (err) => {
-                    if(err) return done(err);
+                session.save(entity);
+                // Flush after save because if we call remove after save without a flush, it cancels the save operations
+                // and never schedules a remove operation to begin with.
+                session.flush();
+                session.remove(entity, (err) => {
+                    if (err) return done(err);
 
-                    assert.equal(fixture.session.getObject(1), entity, "Scheduled remove operation was not cancelled");
+                    var id = entity._id;
 
-                    fixture.session.flush((err) => {
-                        if(err) return done(err);
+                    // Confirm that entity has been removed. GetObject returns null (as opposed to undefined) if object
+                    // is managed but scheduled for removal.
+                    assert.isNull(session.getObject(id), "Object is not scheduled for remove");
 
-                        assert.equal(fixture.persister.removeCalled, 0);
-                        assert.equal(fixture.persister.insertCalled, 1);
+                    session.save(entity, (err) => {
+                        if (err) return done(err);
+
+                        assert.equal(session.getObject(id), entity, "Scheduled remove operation was not cancelled");
+
+                        session.flush((err) => {
+                            if (err) return done(err);
+
+                            var persister = factory.getPersisterForObject(session, entity);
+
+                            assert.equal(persister.removeCalled, 0);
+                            assert.equal(persister.insertCalled, 1);
+                        });
+                        done();
                     });
+                });
+            });
+        });
+
+        it('cascades save operation to properties that have the cascade flag', (done) => {
+
+            helpers.createFactory("cascade", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var entity = cascade.SaveTest.create();
+
+                session.save(entity);
+                session.flush(err => {
+                    if (err) return done(err);
+
+                    var persister = factory.getPersisterForObject(session, entity);
+                    assert.equal(persister.insertCalled, entity.cascadeArray.length + 2);
                     done();
                 });
             });
@@ -171,82 +213,111 @@ describe('SessionImpl', () => {
 
         it('cancels pending insert for newly manged objects', (done) => {
 
-            var fixture = createFixture();
-            var entity: any = {};
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            fixture.session.save(entity);
-            fixture.session.remove(entity, err => {
+                var entity = createEntity();
+                var session = factory.createSession();
 
-                assert.isUndefined(entity["_id"], "Identifier was not removed from the object");
+                session.save(entity);
+                session.remove(entity, err => {
 
-                fixture.session.flush(err => {
-                    if(err) return done(err);
+                    assert.isUndefined(entity["_id"], "Identifier was not removed from the object");
 
-                    assert.equal(fixture.persister.removeCalled, 0, "Remove should not have been called because object was never persister");
-                    assert.equal(fixture.persister.insertCalled, 0, "Scheduled insert operation was not canceled");
-                    done();
+                    session.flush(err => {
+                        if (err) return done(err);
+
+                        var persister = factory.getPersisterForObject(session, entity);
+                        assert.equal(persister.removeCalled, 0, "Remove should not have been called because object was never persister");
+                        assert.equal(persister.insertCalled, 0, "Scheduled insert operation was not canceled");
+                        done();
+                    });
                 });
             });
         });
 
         it('schedules persisted object for removal', (done) => {
 
-            var fixture = createFixture();
-            var entity: any = {};
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            fixture.session.save(entity);
-            fixture.session.flush();
-            fixture.session.remove(entity, err => {
-                if(err) return done(err);
+                var entity = createEntity();
+                var session = factory.createSession();
 
-                assert.isTrue(entity["_id"] !== undefined, "Remove operation should not remove identifier until after flush since entity is persisted");
+                session.save(entity);
+                session.flush();
+                session.remove(entity, err => {
+                    if (err) return done(err);
 
-                fixture.session.flush(err => {
-                    if(err) return done(err);
+                    assert.isTrue(entity["_id"] !== undefined, "Remove operation should not remove identifier until after flush since entity is persisted");
 
-                    assert.isUndefined(entity["_id"], "Identifier was not removed from the object after flush");
-                    assert.equal(fixture.persister.removeCalled, 1);
-                    done();
+                    session.flush(err => {
+                        if (err) return done(err);
+
+                        assert.isUndefined(entity["_id"], "Identifier was not removed from the object after flush");
+
+                        var persister = factory.getPersisterForObject(session, entity);
+                        assert.equal(persister.removeCalled, 1);
+                        done();
+                    });
                 });
             });
         });
 
         it('returns an error if the object is a detached entity', (done) => {
-            var fixture = createFixture();
-            fixture.session.remove({ _id: 1 }, (err) => {
-                // TODO: check error code
-                assert.instanceOf(err, Error);
-                done();
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var entity = createEntity(1);
+                var session = factory.createSession();
+
+                session.remove(entity, (err) => {
+                    // TODO: check error code
+                    assert.instanceOf(err, Error);
+                    done();
+                });
             });
         });
 
         it('does nothing for unmanaged objects', (done) => {
 
-            var fixture = createFixture();
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            // pass unmanaged object to remove
-            fixture.session.remove({});
-            fixture.session.flush(err => {
-                if(err) return done(err);
-                assert.equal(fixture.persister.removeCalled, 0);
-                done();
+                var entity = createEntity();
+                var session = factory.createSession();
+
+                // pass unmanaged object to remove
+                session.remove(entity);
+                session.flush(err => {
+                    if (err) return done(err);
+
+                    var persister = factory.getPersisterForObject(session, entity);
+                    assert.equal(persister.removeCalled, 0);
+                    done();
+                });
             });
         });
 
         it('does nothing for persisted objects pending removal', (done) => {
 
-            var fixture = createFixture();
-            var entity: any = {};
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            fixture.session.save(entity);
-            fixture.session.flush();
-            // call remove twice but it should result it only one call to persister.remove
-            fixture.session.remove(entity);
-            fixture.session.remove(entity);
-            fixture.session.flush(err => {
-                if(err) return done(err);
-                assert.equal(fixture.persister.removeCalled, 1);
-                done();
+                var entity = createEntity();
+                var session = factory.createSession();
+
+                session.save(entity);
+                session.flush();
+                // call remove twice but it should result it only one call to persister.remove
+                session.remove(entity);
+                session.remove(entity);
+                session.flush(err => {
+                    if (err) return done(err);
+                    var persister = factory.getPersisterForObject(session, entity);
+                    assert.equal(persister.removeCalled, 1);
+                    done();
+                });
             });
         });
     });
@@ -259,36 +330,50 @@ describe('SessionImpl', () => {
 
         it('makes managed object unmanaged but does not remove identifier', (done) => {
 
-            var fixture = createFixture();
-            var entity: any = {};
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            fixture.session.save(entity);
-            fixture.session.flush();
-            fixture.session.detach(entity, err => {
-                if(err) return done(err);
+                var entity = createEntity();
+                var session = factory.createSession();
 
-                assert.isTrue(entity["_id"] !== undefined, "Detach operation should not remove identifier");
-                assert.isUndefined(fixture.session.getObject(entity["_id"]), "Object is still managed")
-                done();
+                session.save(entity);
+                session.flush();
+                session.detach(entity, err => {
+                    if (err) return done(err);
+
+                    assert.isTrue(entity["_id"] !== undefined, "Detach operation should not remove identifier");
+                    assert.isUndefined(session.getObject(entity["_id"]), "Object is still managed")
+                    done();
+                });
             });
         });
 
         it('does not throw an error when passed an unmanaged object', (done) => {
 
-            var fixture = createFixture();
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            // pass unmanaged object to detach
-            fixture.session.detach({}, done);
+                var entity = createEntity();
+                var session = factory.createSession();
+
+                // pass unmanaged object to detach
+                session.detach(entity, done);
+            });
         });
 
         it('does not throw an error when passed a removed object', (done) => {
-            var fixture = createFixture();
-            var entity: any = {};
 
-            fixture.session.save(entity);
-            fixture.session.flush();
-            fixture.session.remove(entity);
-            fixture.session.detach(entity, done);
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var entity = createEntity();
+                var session = factory.createSession();
+
+                session.save(entity);
+                session.flush();
+                session.remove(entity);
+                session.detach(entity, done);
+            });
         });
     });
 
@@ -296,38 +381,48 @@ describe('SessionImpl', () => {
 
         it('detaches all managed entities', (done) => {
 
-            var fixture = createFixture();
-            var entity1: any = {}, entity2: any = {};
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            fixture.session.save(entity1);
-            fixture.session.save(entity2);
-            fixture.session.flush();
-            fixture.session.clear(err => {
-                if(err) return done(err);
+                var session = factory.createSession();
+                var entity1 = createEntity();
+                var entity2 = createEntity();
 
-                assertDetached(entity1);
-                assertDetached(entity2);
-                done();
+                session.save(entity1);
+                session.save(entity2);
+                session.flush();
+                session.clear(err => {
+                    if (err) return done(err);
 
-                function assertDetached(entity: any) {
-                    assert.isTrue(entity["_id"] !== undefined, "Clear operation should not remove identifier");
-                    assert.isUndefined(fixture.session.getObject(entity["_id"]), "Object is still managed")
-                }
+                    assertDetached(entity1);
+                    assertDetached(entity2);
+                    done();
+
+                    function assertDetached(entity: any) {
+                        assert.isTrue(entity["_id"] !== undefined, "Clear operation should not remove identifier");
+                        assert.isUndefined(session.getObject(entity["_id"]), "Object is still managed")
+                    }
+                });
             });
         });
 
         it('discards object modifications that have not been flushed', (done) => {
 
-            var fixture = createFixture();
-            var entity: any = {};
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            fixture.session.save(entity);
-            fixture.session.clear();
-            fixture.session.flush((err) => {
-                if(err) return done(err);
+                var session = factory.createSession();
+                var entity = createEntity();
 
-                assert.equal(fixture.persister.insertCalled, 0);
-                done();
+                session.save(entity);
+                session.clear();
+                session.flush((err) => {
+                    if (err) return done(err);
+
+                    var persister = factory.getPersisterForObject(session, entity);
+                    assert.equal(persister.insertCalled, 0);
+                    done();
+                });
             });
         });
     });
@@ -342,12 +437,18 @@ describe('SessionImpl', () => {
 
     describe('getId', () => {
 
-        var session = new SessionImpl(new MockSessionFactory());
+        it('returns the identifier of the object', (done) => {
 
-        it('returns the identifier of the object', () => {
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
 
-            var id = "identifier value";
-            assert.equal(session.getId({ _id: id }), id);
+                var session = factory.createSession();
+                var id = "identifier value";
+                var entity = createEntity(id);
+
+                assert.equal(session.getId({_id: id}), id);
+                done();
+            });
         });
     });
 
@@ -367,8 +468,8 @@ describe('SessionImpl', () => {
 
         it('caches the persister for each mapping', () => {
             var registry = new MappingRegistry();
-            var mappingA = new EntityMapping(registry);
-            var mappingB = new EntityMapping(registry);
+            var mappingA = new EntityMapping();
+            var mappingB = new EntityMapping();
 
             var factory = new SessionFactoryImpl([], registry);
             var session = new SessionImpl(factory);
@@ -391,21 +492,10 @@ describe('SessionImpl', () => {
 
 });
 
-function createFixture(): SessionFixture {
-
-    var factory = new MockSessionFactory();
-    var registry = new MappingRegistry();
-    factory.mapping = new EntityMapping(registry);
-    factory.mapping.identity = new MockIdentityGenerator();
-    factory.mapping.classConstructor = model.Address;
-    registry.addMapping(factory.mapping);
-    var persister = new MockPersister(factory.mapping);
-    factory.persister = persister;
-    var session = new SessionImpl(factory);
-
-    return {
-        session: session,
-        persister: persister,
-        factory: factory
+function createEntity(id?: any): any {
+    var ret = new model.Person(new model.PersonName("Jones"));
+    if(id !== undefined) {
+        (<any>ret)._id = id;
     }
+    return ret;
 }
