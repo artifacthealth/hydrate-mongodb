@@ -14,6 +14,7 @@ import MappingError = require("./mapping/mappingError");
 import Reference = require("./reference");
 import PropertyFlags = require("./mapping/propertyFlags");
 import Cursor = require("./cursor");
+import DriverCursor = require("./driver/cursor");
 import Result = require("./core/result");
 import Persister = require("./persister");
 import Command = require("./core/command");
@@ -57,7 +58,7 @@ class PersisterImpl implements Persister {
         return new Result(null, document);
     }
 
-    insert(batch: Batch, entity: any): Result<any> {
+    addInsert(batch: Batch, entity: any): Result<any> {
 
         var errors: MappingError[] = [];
         var document = this._mapping.write(entity, "", errors, []);
@@ -69,7 +70,7 @@ class PersisterImpl implements Persister {
         return new Result(null, document);
     }
 
-    remove(batch: Batch, entity: any): void {
+    addRemove(batch: Batch, entity: any): void {
 
         this._getCommand(batch).addRemove(entity["_id"]);
     }
@@ -106,9 +107,9 @@ class PersisterImpl implements Persister {
         this._mapping.resolve(this._session, undefined, entity, path.split("."), 0, callback);
     }
 
-    find(criteria: any): Cursor {
+    findAll(criteria: any): Cursor<any> {
 
-        return new Cursor(this, this._collection.find(criteria));
+        return new CursorImpl(this, this._collection.find(criteria));
     }
 
     load(documents: any[]): Result<any[]> {
@@ -136,20 +137,17 @@ class PersisterImpl implements Persister {
     findOneById(id: Identifier, callback: ResultCallback<any>): void {
 
         // Check to see if object is already loaded. Note explicit check for undefined here. Null means
-        // that the object is loaded but scheduled for delete so null should be returned.
+        // that the object is loa ded but scheduled for delete so null should be returned.
         var entity = this._session.getObject(id);
         if (entity !== undefined) {
             return process.nextTick(() => callback(null, entity));
         }
 
-        // TODO: what about two concurrent calls for the same id? Any way to make sure only one request is done?
-
         (this._findQueue || (this._findQueue = new FindQueue(this))).add(id, callback);
     }
 
-    findOne(criteria: any, callback: ResultCallback<any>): void {
+    findOne(criteria: Object, callback: ResultCallback<any>): void {
 
-        // TODO: error when findOne can't find document?
         this._collection.findOne(criteria, (err, document) => {
             if (err) return callback(err);
             this.loadOne(document).handleCallback(callback);
@@ -192,7 +190,7 @@ class PersisterImpl implements Persister {
         var query = {};
         property.setFieldValue(query, id);
 
-        this.find(query).toArray(callback);
+        this.findAll(query).toArray(callback);
     }
 
     findOneInverseOf(id: any, path: string, callback: ResultCallback<any>): void {
@@ -208,6 +206,38 @@ class PersisterImpl implements Persister {
         this.findOne(query, callback);
     }
 
+    findOneAndRemove(criteria: Object, sort: [string, number][], callback: ResultCallback<any>): void {
+
+    }
+
+    findOneAndUpdate(criteria: Object, sort: [string, number][], returnNew: boolean, updateDocument: Object, callback: ResultCallback<any>): void {
+
+    }
+
+    distinct(key: string, criteria: Object, callback: ResultCallback<any[]>): void {
+
+    }
+
+    count(criteria: Object, limit: number, skip: number, callback: ResultCallback<number>): void {
+
+    }
+
+    removeAll(criteria: Object, callback?: ResultCallback<number>): void {
+
+    }
+
+    removeOne(criteria: Object, callback?: Callback): void {
+
+    }
+
+    updateAll(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
+
+    }
+
+    updateOne(criteria: Object, updateDocument: Object, callback?: Callback): void {
+
+    }
+
     private _getCommand(batch: Batch): BulkOperationCommand {
         var id = this._mapping.inheritanceRoot.id;
         var command = <BulkOperationCommand>batch.getCommand(id);
@@ -217,6 +247,7 @@ class PersisterImpl implements Persister {
         }
         return command;
     }
+
 }
 
 class BulkOperationCommand implements Command {
@@ -315,8 +346,16 @@ class FindQueue {
             process.nextTick(() => this._process());
         }
 
-        this._ids.push(id);
-        this._callbacks[id.toString()] = callback;
+        var key = id.toString();
+        var existingCallback = this._callbacks[key];
+        if(existingCallback === undefined) {
+            this._ids.push(id);
+            this._callbacks[key] = callback;
+        }
+        else {
+            // this id is already in the queue so chain the callbacks
+            this._callbacks[key] = ResultCallback.chain(callback, existingCallback);
+        }
     }
 
     private _process(): void {
@@ -344,7 +383,7 @@ class FindQueue {
             return;
         }
 
-        this._persister.find({ _id: { $in: ids }}).forEach((entity) => {
+        this._persister.findAll({ _id: { $in: ids }}).forEach((entity) => {
             var id = entity["_id"].toString(),
                 callback = callbacks[id];
 
@@ -363,6 +402,116 @@ class FindQueue {
                 }
             }
         });
+    }
+}
+
+class CursorImpl implements Cursor<any> {
+
+    private _persister: PersisterImpl;
+    private _cursor: DriverCursor;
+
+    constructor(persister: PersisterImpl, cursor: DriverCursor) {
+        this._persister = persister;
+        this._cursor = cursor;
+    }
+
+    filter(filter: any): Cursor<any> {
+
+        this._cursor.filter(filter);
+        return this;
+    }
+
+    sort(list: any): Cursor<any>;
+    sort(key: string, direction: number): Cursor<any>;
+    sort(keyOrList: any, direction?: number): Cursor<any> {
+
+        this._cursor.sort(keyOrList, direction);
+        return this;
+    }
+
+    limit(value: number): Cursor<any> {
+
+        this._cursor.limit(value);
+        return this;
+    }
+
+    skip(value: number): Cursor<any> {
+
+        this._cursor.skip(value);
+        return this;
+    }
+
+    nextObject(callback: (err: Error, entity?: any) => void): void {
+
+        this._cursor.nextObject((err, document) => {
+            if (err) return callback(err, undefined);
+            var result = this._persister.loadOne(document);
+            if (result.error) {
+                return callback(result.error);
+            }
+            callback(null, result.value);
+        });
+    }
+
+    each(callback: (err: Error, entity?: any) => boolean): void {
+
+        this._cursor.each((err, document) => {
+            if (err) return callback(err, undefined);
+            var result = this._persister.loadOne(document);
+            if (result.error) {
+                return callback(result.error);
+            }
+            callback(null, result.value);
+        });
+    }
+
+    forEach(iterator: (entity: any) => void, callback: (err: Error) => void): void {
+
+        this._cursor.forEach((document) => {
+            var result = this._persister.loadOne(document);
+            if (result.error) {
+                return callback(result.error);
+            }
+            iterator(result.value);
+        }, callback);
+    }
+
+    toArray(callback: (err: Error, results?: any[]) => void): void {
+
+        this._cursor.toArray((err, documents) => {
+            if (err) return callback(err, undefined);
+
+            var result = this._persister.load(documents);
+            if (result.error) {
+                return callback(result.error);
+            }
+            callback(null, result.value);
+        });
+    }
+
+    count(callback: (err: Error, result: number) => void): void {
+
+        this._cursor.count(false, callback);
+    }
+
+    close(callback: (err: Error) => void): void {
+
+        this._cursor.close(callback);
+    }
+
+    isClosed(): boolean {
+
+        return this._cursor.isClosed();
+    }
+
+    rewind(): Cursor<any> {
+
+        this._cursor.rewind();
+        return this;
+    }
+
+    fetch(path: string | string[]): Cursor<any> {
+        return this;
     }
 }
 

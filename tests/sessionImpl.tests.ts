@@ -17,6 +17,7 @@ import EntityMapping = require("../src/mapping/entityMapping");
 import MockPersister = require("./mockPersister");
 import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
 import MappingRegistry = require("../src/mapping/mappingRegistry");
+import ObjectIdGenerator = require("../src/id/objectIdGenerator");
 
 // Fixtures
 import model = require("./fixtures/model");
@@ -320,6 +321,67 @@ describe('SessionImpl', () => {
                 });
             });
         });
+
+        it('cascades remove operation to properties that have the cascade flag', (done) => {
+
+            helpers.createFactory("cascade", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var entity = cascade.RemoveTest.create();
+
+                session.save(entity);
+                session.flush();
+                session.remove(entity);
+                session.flush(err => {
+                    if (err) return done(err);
+                    var persister = factory.getPersisterForObject(session, entity);
+                    assert.equal(persister.removeCalled, 4);
+                    assert.isFalse(session.contains(entity.cascadeField));
+                    assert.isFalse(session.contains(entity.cascadeArray[0]));
+                    assert.isFalse(session.contains(entity.cascadeArray[1]));
+                    assert.isTrue(session.contains(entity.controlField));
+                    assert.isTrue(session.contains(entity.controlArray[0]));
+                    assert.isTrue(session.contains(entity.controlArray[1]));
+                    done();
+                });
+            });
+        });
+
+        it('resolves references when cascading remove operation to properties that have the cascade flag', (done) => {
+
+            helpers.createFactory("cascade", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var entity = new cascade.RemoveReferenceTest();
+
+                var generator = new ObjectIdGenerator();
+                var ctr = cascade.RemoveTest;
+                entity.cascadeField = session.getReference(ctr, generator.generate());
+                entity.controlField = session.getReference(ctr, generator.generate());
+
+                var persister = factory.getPersisterForConstructor(session, cascade.RemoveTest);
+                persister.onFindOneById = (id, callback) => {
+                    var ret = <any>new cascade.RemoveTest();
+                    ret._id = id;
+                    session.registerManaged(persister, ret, {});
+                    callback(null, ret);
+                }
+
+                session.save(entity);
+                session.flush();
+                session.remove(entity);
+                session.flush(err => {
+                    if (err) return done(err);
+                    // There are two different persisters. The persister for RemoveReferenceTest will call remove
+                    // once and the persister for RemoveTest will cal remove once
+                    assert.equal(factory.getPersisterForConstructor(session, cascade.RemoveReferenceTest).removeCalled, 1);
+                    assert.equal(factory.getPersisterForConstructor(session, cascade.RemoveTest).removeCalled, 1);
+                    done();
+                });
+            });
+        });
     });
 
     describe('refresh', () => {
@@ -373,6 +435,29 @@ describe('SessionImpl', () => {
                 session.flush();
                 session.remove(entity);
                 session.detach(entity, done);
+            });
+        });
+
+        it('cascades detach operation to properties that have the cascade flag', (done) => {
+
+            helpers.createFactory("cascade", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var entity = cascade.DetachTest.create();
+
+                session.save(entity);
+                session.detach(entity, err => {
+                    if (err) return done(err);
+
+                    assert.isFalse(session.contains(entity.cascadeField));
+                    assert.isFalse(session.contains(entity.cascadeArray[0]));
+                    assert.isFalse(session.contains(entity.cascadeArray[1]));
+                    assert.isTrue(session.contains(entity.controlField));
+                    assert.isTrue(session.contains(entity.controlArray[0]));
+                    assert.isTrue(session.contains(entity.controlArray[1]));
+                    done();
+                });
             });
         });
     });
@@ -433,6 +518,80 @@ describe('SessionImpl', () => {
 
     describe('find', () => {
 
+        it('executes callback passing the entity that has the specified id if the entity exists in the database', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onFindOneById = (id, callback) => {
+                    assert.equal(id, 1);
+                    var ret = new model.Person(new model.PersonName("Smith"));
+                    (<any>ret)._id = id;
+                    session.registerManaged(persister, ret, {});
+                    callback(null, ret);
+                }
+
+                session.find(model.Person, 1, (err, entity) => {
+                    assert.equal(entity.personName.last, "Smith");
+                    done();
+                });
+            });
+        });
+
+        it('throws an error if more than one callback is passed to a function in the chain', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) throw err;
+
+                var session = factory.createSession();
+
+                session.find(model.Person, 1, (err, entity) => {
+                    if(err) return done(err);
+                }).fetch("children", (err, entity) => {
+                    // TODO: check error code
+                    assert.instanceOf(err, Error);
+                    done();
+                });
+            });
+        });
+
+        it('allows for fetch function calls to be chained if callback is not passed to find method', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+
+                // session should call this once to find the entity
+                persister.onFindOneById = (id, callback) => {
+                    assert.equal(id, 1);
+                    var ret = new model.Person(new model.PersonName("Smith"));
+                    (<any>ret)._id = id;
+                    session.registerManaged(persister, ret, {});
+                    callback(null, ret);
+                }
+
+                // session should call this once to fetch the children
+                var resolveCalled = 0;
+                persister.onResolve = (entity, path, callback) => {
+                    resolveCalled += 1;
+                    assert.equal(path, "children");
+                    callback();
+                }
+
+                session.find(model.Person, 1).fetch("children", (err, entity) => {
+                    if(err) return done(err);
+
+                    assert.equal(entity.personName.last, "Smith");
+                    assert.equal(resolveCalled, 1);
+                    done();
+                });
+            });
+        });
     });
 
     describe('getId', () => {

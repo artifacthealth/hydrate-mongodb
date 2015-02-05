@@ -18,6 +18,9 @@ import Batch = require("./batch");
 import Reference = require("./reference");
 import Table = require("./core/table");
 import EntityMapping = require("./mapping/entityMapping");
+import Cursor = require("./cursor");
+import Query = require("./query/query");
+import FindOneBuilder = require("./query/findOneBuilder")
 
 enum ObjectState {
 
@@ -47,16 +50,29 @@ enum ObjectFlags {
 
 enum Action {
 
-    Save = 0x00000001,
-    Remove = 0x00000002,
-    Detach = 0x00000004,
-    Flush = 0x00000008,
-    Clear = 0x00000010,
-    Find = 0x00000020,
-    Refresh = 0x00000040,
-    Merge = 0x00000080,
-    Fetch = 0x00000100,
-    All = Save | Remove | Detach | Flush | Clear | Find | Refresh | Merge | Fetch
+    Save                = 0x00000001,
+    Remove              = 0x00000002,
+    Detach              = 0x00000004,
+    Flush               = 0x00000008,
+    Clear               = 0x00000010,
+    Refresh             = 0x00000020,
+    Merge               = 0x00000040,
+    Fetch               = 0x00000080,
+    FindAll             = 0x00000100,
+    FindOne             = 0x00000200,
+    FindOneById         = 0x00000400,
+    FindOneAndRemove    = 0x00000800,
+    FindOneAndUpdate    = 0x00001000,
+    RemoveAll           = 0x00002000,
+    RemoveOne           = 0x00004000,
+    UpdateAll           = 0x00008000,
+    UpdateOne           = 0x00010000,
+    Distinct            = 0x00020000,
+    Count               = 0x00040000,
+
+    Queries = FindAll | FindOne | FindOneById | FindOneAndRemove | FindOneAndUpdate | RemoveAll | RemoveOne | UpdateAll | UpdateOne,
+    ReadOnly = Fetch | FindAll | FindOne | FindOneById | Distinct | Count,
+    All = Save | Remove | Detach | Flush | Clear | Refresh | Merge | Fetch | Queries
 }
 
 enum ScheduledOperation {
@@ -83,6 +99,7 @@ interface ObjectLinks {
 class SessionImpl implements InternalSession {
 
     private _persisterByMapping: Table<Persister> = [];
+    private _queryByMapping: Table<Query<any>> = [];
     private _objectLinks: Map<ObjectLinks> = {};
     private _queue: TaskQueue;
 
@@ -127,9 +144,9 @@ class SessionImpl implements InternalSession {
         this._queue.add(Action.Flush, Action.All, undefined, callback);
     }
 
-    find<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void {
+    find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneBuilder<T> {
 
-        this._queue.add(Action.Find, Action.All & ~(Action.Find | Action.Fetch), [ctr, id], callback);
+        return this.query(ctr).findOneById(id, callback);
     }
 
     fetch<T>(obj: T, pathsOrCallback: any, callback?: ResultCallback<T>): void {
@@ -146,7 +163,62 @@ class SessionImpl implements InternalSession {
             paths = pathsOrCallback;
         }
 
-        this._queue.add(Action.Fetch, Action.All & ~(Action.Find | Action.Fetch), [obj, paths], callback);
+        this._queue.add(Action.Fetch, Action.All & ~Action.ReadOnly, [obj, paths], callback);
+    }
+
+    findAll(persister: Persister, criteria: any): Cursor<any> {
+
+        return null;
+    }
+
+    findOne(persister: Persister, criteria: any, callback: ResultCallback<any>): void {
+
+        this._queue.add(Action.FindOne, Action.All & ~Action.ReadOnly, [persister, criteria], callback);
+    }
+
+    findOneById(persister: Persister, id: Identifier, callback: ResultCallback<any>): void {
+
+        this._queue.add(Action.FindOneById, Action.All & ~Action.ReadOnly, [persister, id], callback);
+    }
+
+    findOneAndRemove(persister: Persister, criteria: Object, sort: [string, number][], callback: ResultCallback<any>): void {
+
+        this._queue.add(Action.FindOneAndRemove, Action.All, [persister, criteria, sort], callback);
+    }
+
+    findOneAndUpdate(persister: Persister, criteria: Object, sort: [string, number][], returnNew: boolean, updateDocument: Object, callback: ResultCallback<any>): void {
+
+        this._queue.add(Action.FindOneAndUpdate, Action.All, [persister, criteria, sort, returnNew, updateDocument], callback);
+    }
+
+    distinct(persister: Persister, key: string, criteria: Object, callback: ResultCallback<any[]>): void {
+
+        this._queue.add(Action.Distinct, Action.All & ~Action.ReadOnly, [persister, key, criteria], callback);
+    }
+
+    count(persister: Persister, criteria: Object, limit: number, skip: number, callback: ResultCallback<number>): void {
+
+        this._queue.add(Action.Count, Action.All & ~Action.ReadOnly, [persister, criteria, limit, skip], callback);
+    }
+
+    removeAll(persister: Persister, criteria: Object, callback?: ResultCallback<number>): void {
+
+        this._queue.add(Action.RemoveAll, Action.All, [persister, criteria], callback);
+    }
+
+    removeOne(persister: Persister, criteria: Object, callback?: Callback): void {
+
+        this._queue.add(Action.RemoveOne, Action.All & ~Action.RemoveOne, [persister, criteria], callback);
+    }
+
+    updateAll(persister: Persister, criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
+
+        this._queue.add(Action.UpdateAll, Action.All, [persister, criteria, updateDocument], callback);
+    }
+
+    updateOne(persister: Persister, criteria: Object, updateDocument: Object, callback?: Callback): void {
+
+        this._queue.add(Action.UpdateOne, Action.All, [persister, criteria, updateDocument], callback);
     }
 
     /**
@@ -167,7 +239,9 @@ class SessionImpl implements InternalSession {
         var id = obj["_id"];
         if(id) {
             var links = this._objectLinks[id.toString()];
-            return links && links.state != ObjectState.Removed;
+            if(links && links.state != ObjectState.Removed) {
+                return true;
+            }
         }
 
         return false;
@@ -218,6 +292,29 @@ class SessionImpl implements InternalSession {
         this._linkObject(entity, persister).originalDocument = document;
     }
 
+    getPersister(mapping: EntityMapping): Persister {
+
+        return this._persisterByMapping[mapping.id]
+            || (this._persisterByMapping[mapping.id] = this.factory.createPersister(this, mapping));
+    }
+
+    query<T>(ctr: Constructor<T>): Query<T> {
+
+        var mapping = this.factory.getMappingForConstructor(ctr);
+        if(!mapping) {
+            // TODO: instead of throwing error, return a placeholder Query object that will return an error when one of it's functions are called
+            throw new Error("Object type is not mapped as an entity.");
+        }
+
+        var query = this._queryByMapping[mapping.id];
+        if(!query) {
+            query = new Query<any>(this, this.getPersister(mapping));
+            this._queryByMapping[mapping.id] = query;
+        }
+
+        return query;
+    }
+
     /**
      * Called by TaskQueue to execute an operation.
      * @param action The action to execute.
@@ -242,11 +339,40 @@ class SessionImpl implements InternalSession {
             case Action.Flush:
                 this._flush(callback);
                 break;
-            case Action.Find:
-                this._find(arg[0], arg[1], callback);
-                break;
             case Action.Fetch:
-                this._fetch(arg[0], arg[1], callback);
+                this.fetchInternal(arg[0], arg[1], callback);
+                break;
+            case Action.FindAll:
+                break;
+            case Action.FindOne:
+                (<Persister>arg[0]).findOne(arg[1], callback);
+                break;
+            case Action.FindOneById:
+                (<Persister>arg[0]).findOneById(arg[1], callback);
+                break;
+            case Action.FindOneAndRemove:
+                (<Persister>arg[0]).findOneAndRemove(arg[1], arg[2], callback)
+                break;
+            case Action.FindOneAndUpdate:
+                (<Persister>arg[0]).findOneAndUpdate(arg[1], arg[2], arg[3], arg[4], callback)
+                break;
+            case Action.RemoveAll:
+                (<Persister>arg[0]).removeAll(arg[1], callback);
+                break;
+            case Action.RemoveOne:
+                (<Persister>arg[0]).removeOne(arg[1], callback);
+                break;
+            case Action.UpdateAll:
+                (<Persister>arg[0]).updateAll(arg[1], callback);
+                break;
+            case Action.UpdateOne:
+                (<Persister>arg[0]).updateOne(arg[1], callback);
+                break;
+            case Action.Distinct:
+                (<Persister>arg[0]).distinct(arg[1], arg[2], callback);
+                break;
+            case Action.Count:
+                (<Persister>arg[0]).count(arg[1], arg[2], arg[3], callback);
                 break;
         }
     }
@@ -420,7 +546,7 @@ class SessionImpl implements InternalSession {
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             if (links.scheduledOperation == ScheduledOperation.Insert) {
-                var result = links.persister.insert(batch, links.object);
+                var result = links.persister.addInsert(batch, links.object);
                 if(result.error) {
                     return callback(result.error);
                 }
@@ -434,7 +560,7 @@ class SessionImpl implements InternalSession {
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             if (links.scheduledOperation == ScheduledOperation.Delete) {
-                links.persister.remove(batch, links.object);
+                links.persister.addRemove(batch, links.object);
             }
         }
 
@@ -455,7 +581,7 @@ class SessionImpl implements InternalSession {
         });
     }
 
-    private _fetch(obj: any, paths: string[], callback: ResultCallback<any>): void {
+    fetchInternal(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
         // TODO: when a reference is resolved do we update the referenced object? __proto__ issue
         if(Reference.isReference(obj)) {
@@ -516,20 +642,6 @@ class SessionImpl implements InternalSession {
 
         this._objectLinks = {};
         process.nextTick(callback);
-    }
-
-    private _find(ctr: Constructor<any>, id: any, callback: ResultCallback<any>): void {
-
-        var persister = this._getPersisterForConstructor(ctr);
-        if (!persister) {
-            return process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-        }
-
-        if(typeof id === "string") {
-            id = persister.identity.fromString(id);
-        }
-
-        persister.findOneById(id, callback);
     }
 
     private _getObjectLinks(obj: any): ObjectLinks {
@@ -644,13 +756,6 @@ class SessionImpl implements InternalSession {
             return this.getPersister(mapping);
         }
     }
-
-    getPersister(mapping: EntityMapping): Persister {
-
-        return this._persisterByMapping[mapping.id]
-            || (this._persisterByMapping[mapping.id] = this.factory.createPersister(this, mapping));
-    }
-
 }
 
 export = SessionImpl;

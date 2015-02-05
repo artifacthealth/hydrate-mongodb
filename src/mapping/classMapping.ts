@@ -23,6 +23,11 @@ class ClassMapping extends ObjectMapping {
     discriminatorValue: string;
     classConstructor: Function;
 
+    /**
+     * Constructs a ClassMapping.
+     * @param baseClass The baseclass mapping for this class. If no baseclass is specified then it is assumed that this
+     * mapping represents the inheritance root.
+     */
     constructor(baseClass?: ClassMapping) {
         super();
 
@@ -104,8 +109,8 @@ class ClassMapping extends ObjectMapping {
 
         var discriminatorValue = document[this.discriminatorField];
         if(discriminatorValue === undefined) {
-            errors.push({ message: "Expected discriminator field '" + this.discriminatorField + "'.", path: path, value: document });
-            return;
+            // If there is not a discriminator field present then use the current mapping
+            return this;
         }
 
         var mapping = this._discriminatorMap[discriminatorValue];

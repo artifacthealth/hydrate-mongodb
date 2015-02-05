@@ -9,12 +9,11 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/mgottlieb/tsreflect.git"
+    "url": "git+ssh://git@bitbucket.org/mgottlieb/hydrate.git"
   },
   "licenses": [
     {
-      "type": "Apache-2.0",
-      "url": "https://github.com/palantir/grunt-tslint/blob/master/LICENSE.txt"
+      "type": "Apache-2.0"
     }
   ],
   "main": "lib/hydrate.js",
@@ -23,7 +22,7 @@
   },
   "dependencies": {
     "mongodb": "^2.0.13",
-    "tsreflect": "git+ssh://git@bitbucket.org/mgottlieb/tsreflect.git"
+    "tsreflect": "^0.1.0"
   },
   "devDependencies": {
     "chai": "^1.9.2",
@@ -36,11 +35,11 @@
     "grunt-typescript": "0.6.1",
     "mocha": "^2.0.1",
     "typescript": "1.4.1",
-    "grunt-tsreflect": "git+ssh://git@bitbucket.org/mgottlieb/grunt-tsreflect.git"
+    "grunt-tsreflect": "^0.1.1"
   },
   "keywords": [
     "odm",
     "typescript",
-    "mongo"
+    "mongodb"
   ]
 }

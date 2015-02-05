@@ -6,19 +6,19 @@ import MockBulk = require("./mockBulk");
 
 class MockCollection implements Collection {
 
-    constructor() {
+    constructor(public contents: any[]) {
 
     }
 
     find(selector: Object, callback?: (err: Error, result: Cursor) => void): Cursor {
 
-        return new MockCursor();
+        return new MockCursor(this.contents);
     }
 
     findOne(selector: Object, callback?: (err: Error, result: any) => void): any {
 
         process.nextTick(() => {
-           callback(null, null);
+           callback(null, this.contents[0]);
         });
     }
 

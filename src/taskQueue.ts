@@ -14,7 +14,7 @@ interface Task {
 class TaskQueue {
 
     private _execute: (operation: number, arg: any, callback: ResultCallback<any>) => void;
-    private _activeCounts: Table<number> = [];
+    private _activeCounts: Table<number> = {};
     private _active: number = 0;
     private _head: Task;
     private _tail: Task;

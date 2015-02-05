@@ -1,8 +1,15 @@
+/// <reference path="../../typings/async.d.ts" />
+
+import async = require("async");
 import Cursor = require("../../src/driver/cursor");
 
 class MockCursor implements Cursor {
 
     private _closed = false;
+
+    constructor(public contents: any[]) {
+
+    }
 
     filter(filter: any): Cursor {
 
@@ -20,7 +27,9 @@ class MockCursor implements Cursor {
     }
 
     toArray(callback: (err: Error, results: any[]) => any) : void {
-
+        process.nextTick(() => {
+            callback(null, this.contents);
+        });
     }
 
     each(callback: (err: Error, item: any) => boolean) : void {
@@ -29,6 +38,7 @@ class MockCursor implements Cursor {
 
     forEach(iterator: (value: any) => void, callback: (err: Error) => void): void {
 
+        async.each(this.contents, iterator, callback);
     }
 
     count(applySkipLimit: boolean, callback: (err: Error, count: number) => void) : void {

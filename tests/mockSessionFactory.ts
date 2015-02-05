@@ -4,6 +4,7 @@ import Persister = require("../src/persister");
 import EntityMapping = require("../src/mapping/entityMapping");
 import MappingRegistry = require("../src/mapping/mappingRegistry");
 import MockPersister = require("./mockPersister");
+import Constructor = require("../src/core/constructor");
 
 class MockSessionFactory extends SessionFactoryImpl {
 
@@ -23,6 +24,10 @@ class MockSessionFactory extends SessionFactoryImpl {
 
     getPersisterForObject(session: InternalSession, obj: any): MockPersister {
         return <MockPersister>session.getPersister(this.getMappingForObject(obj));
+    }
+
+    getPersisterForConstructor(session: InternalSession, ctr: Constructor<any>): MockPersister {
+        return <MockPersister>session.getPersister(this.getMappingForConstructor(ctr));
     }
 }
 

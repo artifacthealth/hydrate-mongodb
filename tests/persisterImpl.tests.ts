@@ -13,36 +13,32 @@ import MockSessionFactory = require("./mockSessionFactory");
 import MockCollection = require("./driver/mockCollection");
 import MappingRegistry = require("../src/mapping/mappingRegistry");
 import EntityMapping = require("../src/mapping/entityMapping");
-import MockIdentityGenerator = require("./id/mockIdentityGenerator");
-
 import InternalSession = require("../src/internalSession");
 import SessionFactoryImpl = require("../src/sessionFactoryImpl");
 import SessionFactory = require("../src/sessionFactory");
 import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
 import Configuration = require("../src/config/configuration");
 import helpers = require("./helpers");
--
+import ObjectIdGenerator = require("../src/id/objectIdGenerator");
+
+
 describe('PersisterImpl', () => {
 
     describe('findOneById', () => {
 
-        it.skip('', (done) => {
+        it('calls the callbacks of all invocations when called multiples times for the same identifier', (done) => {
 
             helpers.createFactory("model", (err, factory) => {
                 if (err) return done(err);
 
+                var generator = new ObjectIdGenerator();
+                var id = generator.generate();
+
                 var session = factory.createSession();
-                var collection = new MockCollection();
+                var collection = new MockCollection([ { _id: id }]);
                 var persister = new PersisterImpl(session, factory.getMappingForConstructor(model.Person), collection);
 
-                persister.findOneById(1, (err, entity) => {
-                    if (err) return done(err);
-                    done();
-                });
-                persister.findOneById(1, (err, entity) => {
-                    if (err) return done(err);
-                    done();
-                });
+                async.each([id, id], (id, done) => persister.findOneById(id, done), done);
             });
         });
     });

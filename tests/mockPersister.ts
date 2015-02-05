@@ -14,6 +14,7 @@ import model = require("./fixtures/model");
 import Result = require("../src/core/result");
 import Cursor = require("../src/cursor");
 import Callback = require("../src/core/callback");
+import Query = require("../src/query/query");
 
 class MockPersister implements Persister {
 
@@ -37,14 +38,6 @@ class MockPersister implements Persister {
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
-    load(documents: any[]): Result<any[]> {
-        return new Result(null, documents);
-    }
-
-    loadOne(document: any): Result<any> {
-        return new Result(null, document);
-    }
-
     dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any> {
         this.dirtyCheckCalled++;
         if (!this.wasDirtyChecked(entity)) {
@@ -58,7 +51,7 @@ class MockPersister implements Persister {
         return this.dirtyChecked.indexOf(entity) !== -1;
     }
 
-    insert(batch: Batch, entity: any): Result<any> {
+    addInsert(batch: Batch, entity: any): Result<any> {
         this.insertCalled++;
         if (!this.wasInserted(entity)) {
             this.inserted.push(entity);
@@ -70,7 +63,7 @@ class MockPersister implements Persister {
         return this.inserted.indexOf(entity) !== -1;
     }
 
-    remove(batch: Batch, entity: any): void {
+    addRemove(batch: Batch, entity: any): void {
         this.removeCalled++;
         if (!this.wasRemoved(entity)) {
             this.removed.push(entity);
@@ -85,23 +78,30 @@ class MockPersister implements Persister {
     }
 
     resolve(entity: any, path: string, callback: Callback): void {
-        process.nextTick(callback);
+        if(this.onResolve) {
+            process.nextTick(() => this.onResolve(entity, path, callback));
+        }
     }
 
-    find(criteria: any): Cursor {
+    onResolve: (entity: any, path: string, callback: Callback) => void;
+
+    findAll(criteria: any): Cursor<any> {
         return null;
     }
 
     findOneById(id: Identifier, callback: ResultCallback<any>): void {
-
+        if(this.onFindOneById) {
+            process.nextTick(() => this.onFindOneById(id, callback));
+        }
     }
+
+    onFindOneById: (id: Identifier, callback: ResultCallback<any>) => void;
 
     findOne(criteria: any, callback: ResultCallback<any>): void {
 
     }
 
     findInverseOf(id: any, path: string, callback: ResultCallback<any[]>): void {
-
 
     }
 
@@ -114,6 +114,42 @@ class MockPersister implements Persister {
             entities.push(entity);
         }
         process.nextTick(() => callback(null));
+    }
+
+    findOneAndRemove(criteria: Object, sort: [string, number][], callback: ResultCallback<any>): void {
+
+    }
+
+    findOneAndUpdate(criteria: Object, sort: [string, number][], returnNew: boolean, updateDocument: Object, callback: ResultCallback<any>): void {
+
+    }
+
+    distinct(key: string, criteria: Object, callback: ResultCallback<any[]>): void {
+
+    }
+
+    count(criteria: Object, limit: number, skip: number, callback: ResultCallback<number>): void {
+        if(this.onCount) {
+            process.nextTick(() => this.onCount(criteria, limit, skip, callback));
+        }
+    }
+
+    onCount: (criteria: Object, limit: number, skip: number, callback: ResultCallback<any>) => void;
+
+    removeAll(criteria: Object, callback?: ResultCallback<number>): void {
+
+    }
+
+    removeOne(criteria: Object, callback?: Callback): void {
+
+    }
+
+    updateAll(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
+
+    }
+
+    updateOne(criteria: Object, updateDocument: Object, callback?: Callback): void {
+
     }
 }
 
