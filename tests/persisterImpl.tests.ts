@@ -74,8 +74,8 @@ describe('PersisterImpl', () => {
                 session.save(list[i]);
             }
 
-            session.save(person, (err) => {
-            //session.flush((err) => {
+            //session.save(person, (err) => {
+            session.flush((err) => {
                 if(err) return done(err);
                 // divide by a million to get nano to milli
                 var elapsed = process.hrtime(start);

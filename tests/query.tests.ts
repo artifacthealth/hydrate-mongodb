@@ -21,7 +21,7 @@ describe('Query', () => {
 
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
-                persister.onCount = (criteria, limit, skip, callback) => {
+                persister.onExecuteQuery = (query, callback) => {
                     callback(null, 10);
                 }
 

@@ -12,9 +12,8 @@ import MockIdentityGenerator = require("./id/mockIdentityGenerator");
 import MappingRegistry = require("../src/mapping/mappingRegistry");
 import model = require("./fixtures/model");
 import Result = require("../src/core/result");
-import Cursor = require("../src/cursor");
 import Callback = require("../src/core/callback");
-import Query = require("../src/query/query");
+import QueryDefinition = require("../src/query/queryDefinition");
 
 class MockPersister implements Persister {
 
@@ -85,8 +84,7 @@ class MockPersister implements Persister {
 
     onResolve: (entity: any, path: string, callback: Callback) => void;
 
-    findAll(criteria: any): Cursor<any> {
-        return null;
+    findAll(criteria: any, callback?: ResultCallback<any[]>): void {
     }
 
     findOneById(id: Identifier, callback: ResultCallback<any>): void {
@@ -116,41 +114,13 @@ class MockPersister implements Persister {
         process.nextTick(() => callback(null));
     }
 
-    findOneAndRemove(criteria: Object, sort: [string, number][], callback: ResultCallback<any>): void {
-
-    }
-
-    findOneAndUpdate(criteria: Object, sort: [string, number][], returnNew: boolean, updateDocument: Object, callback: ResultCallback<any>): void {
-
-    }
-
-    distinct(key: string, criteria: Object, callback: ResultCallback<any[]>): void {
-
-    }
-
-    count(criteria: Object, limit: number, skip: number, callback: ResultCallback<number>): void {
-        if(this.onCount) {
-            process.nextTick(() => this.onCount(criteria, limit, skip, callback));
+    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
+        if(this.onExecuteQuery) {
+            process.nextTick(() => this.onExecuteQuery(query, callback));
         }
     }
 
-    onCount: (criteria: Object, limit: number, skip: number, callback: ResultCallback<any>) => void;
-
-    removeAll(criteria: Object, callback?: ResultCallback<number>): void {
-
-    }
-
-    removeOne(criteria: Object, callback?: Callback): void {
-
-    }
-
-    updateAll(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
-
-    }
-
-    updateOne(criteria: Object, updateDocument: Object, callback?: Callback): void {
-
-    }
+    onExecuteQuery: (query: QueryDefinition, callback: ResultCallback<any>) => void;
 }
 
 export = MockPersister;

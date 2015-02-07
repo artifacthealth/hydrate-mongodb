@@ -13,8 +13,6 @@ import Callback = require("./core/callback");
 import MappingError = require("./mapping/mappingError");
 import Reference = require("./reference");
 import PropertyFlags = require("./mapping/propertyFlags");
-import Cursor = require("./cursor");
-import DriverCursor = require("./driver/cursor");
 import Result = require("./core/result");
 import Persister = require("./persister");
 import Command = require("./core/command");
@@ -22,6 +20,40 @@ import Bulk = require("./driver/bulk");
 import BulkWriteResult = require("./driver/bulkWriteResult");
 import Changes = require("./mapping/changes");
 import Map = require("./core/map");
+import QueryDefinition = require("./query/queryDefinition");
+import QueryKind = require("./query/queryKind");
+import IteratorCallback = require("./core/iteratorCallback");
+import Cursor = require("./driver/cursor");
+
+interface FindOneQuery {
+
+    criteria: any;
+    fetchPaths?: string[];
+}
+
+interface FindAllQuery extends FindOneQuery {
+
+    sortBy?: [string, number][];
+    limitCount?: number;
+    skipCount?: number;
+}
+
+interface FindEachQuery extends FindAllQuery {
+
+    iterator: IteratorCallback<any>;
+}
+
+interface FindAndModifyOptions {
+    safe?: any;
+    remove?: boolean;
+    upsert?: boolean;
+    new?: boolean;
+}
+
+interface RemoveOptions {
+    safe?: any;
+    single?: boolean;
+}
 
 class PersisterImpl implements Persister {
 
@@ -107,31 +139,30 @@ class PersisterImpl implements Persister {
         this._mapping.resolve(this._session, undefined, entity, path.split("."), 0, callback);
     }
 
-    findAll(criteria: any): Cursor<any> {
+    findInverseOf(id: any, path: string, callback: ResultCallback<any[]>): void {
 
-        return new CursorImpl(this, this._collection.find(criteria));
+        var property = this._mapping.getProperty(path);
+        if(property === undefined) {
+            return callback(new Error("Missing property '" + path + "'."));
+        }
+
+        var query = {};
+        property.setFieldValue(query, id);
+
+        this.findAll({ criteria: query }, callback);
     }
 
-    load(documents: any[]): Result<any[]> {
+    findOneInverseOf(id: any, path: string, callback: ResultCallback<any>): void {
 
-        if(!documents || documents.length == 0) {
-            return new Result(null, []);
+        var property = this._mapping.getProperty(path);
+        if(property === undefined) {
+            return callback(new Error("Missing property '" + path + "'."));
         }
 
-        var entities = new Array(documents.length);
-        var j = 0;
-        for(var i = 0, l = documents.length; i < l; i++) {
-            var result = this.loadOne(documents[i]);
-            if(result.error) {
-                return new Result(result.error, null);
-            }
-            // Filter any null values from the result because null means the object is scheduled for remove
-            if(result.value !== null) {
-                entities[j++] = result.value;
-            }
-        }
-        entities.length = j;
-        return new Result(null, entities);
+        var query = {};
+        property.setFieldValue(query, id);
+
+        this.findOne(query, callback);
     }
 
     findOneById(id: Identifier, callback: ResultCallback<any>): void {
@@ -150,11 +181,280 @@ class PersisterImpl implements Persister {
 
         this._collection.findOne(criteria, (err, document) => {
             if (err) return callback(err);
-            this.loadOne(document).handleCallback(callback);
+            var result = this._loadOne(document);
+            callback(result.error, result.value);
         });
     }
 
-    loadOne(document: any): Result<any> {
+    findAll(query: FindAllQuery, callback: ResultCallback<any[]>): void {
+
+        this._prepareFind(query).toArray((err, documents) => {
+            if(err) return callback(err);
+
+            var result = this._loadAll(documents);
+            callback(result.error, result.value);
+        });
+    }
+
+    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
+
+        switch(query.kind) {
+            case QueryKind.FindOne:
+                this.findOne(query.criteria, this._fetchOne(query, callback));
+                break;
+            case QueryKind.FindOneById:
+                this.findOneById(query.criteria, this._fetchOne(query, callback));
+                break;
+            case QueryKind.FindAll:
+                this.findAll(query, this._fetchAll(query, callback));
+                break;
+            case QueryKind.FindEach:
+                this._findEach(query, callback);
+                break;
+            case QueryKind.FindEachSeries:
+                this._findEachSeries(query, callback);
+                break;
+            case QueryKind.FindOneAndRemove:
+            case QueryKind.FindOneAndUpdate:
+                this._findAndModify(query, callback);
+                break;
+            case QueryKind.RemoveOne:
+            case QueryKind.RemoveAll:
+                this._remove(query, callback);
+                break;
+        }
+    }
+
+    // TODO: optimize this function by using underlying cursor from core directly
+    private _findEach(query: FindEachQuery, callback: Callback): void {
+
+        var cursor = this._prepareFind(query);
+        var iterator = this._fetchIterator(query);
+
+        var completed = 0,
+            started = 0,
+            finished = false,
+            self = this;
+
+        // We process all buffered items in parallel. When the buffer is empty, we replenish the buffer. Repeat.
+        replenish();
+
+        function replenish() {
+            // try to retrieve a document from the cursor
+            cursor.nextObject((err: Error, item: any) => {
+                if(err) return error(err);
+
+                // if the document is null then the cursor is finished
+                if (item == null) {
+                    // if all items have been processed then call callback; otherwise, we'll check later in 'done'.
+                    if (completed >= started) {
+                        callback();
+                    }
+                    finished = true;
+                    return;
+                }
+
+                // otherwise, process the item returned
+                process(err, item);
+
+                // then process the rest of the items in the buffer
+                while(cursor.bufferedCount() > 0) {
+                    cursor.nextObject(process);
+                }
+            });
+        }
+
+        function process(err: Error, item: any): void {
+            if (err) return error(err);
+
+            started++;
+
+            // convert the document to an entity
+            var result = self._loadOne(item);
+            if(result.error) {
+                return error(result.error);
+            }
+
+            // pass the entity to the iterator, and wait for done to be called
+            iterator(result.value, Callback.onlyOnce(done));
+        }
+
+        function done(err: Error) {
+            if (err) return error(err);
+
+            completed++;
+            // if all buffered items have been processed, check if the cursor is finished. if it's finished then
+            // we are done; otherwise, replenish the buffer.
+            if(cursor.bufferedCount() == 0 && completed >= started) {
+
+                if(finished) return callback();
+                replenish();
+            }
+        }
+
+        function error(err: Error) {
+            callback(err);
+            callback = function () {}; // if called for error, make sure it can't be called again
+        }
+    }
+
+    // TODO: optimize this function by using underlying cursor from core directly
+    private _findEachSeries(query: FindEachQuery, callback: Callback): void {
+
+        var cursor = this._prepareFind(query),
+            iterator = this._fetchIterator(query),
+            self = this;
+
+        (function next(err?: Error) {
+            if (err) return error(err);
+
+            cursor.nextObject((err: Error, item: any) => {
+                if (err) return error(err);
+
+                if (item == null) {
+                    return callback();
+                }
+
+                var result = self._loadOne(item);
+                if(result.error) {
+                    return error(result.error);
+                }
+
+                iterator(result.value, next);
+            });
+        })();
+
+        function error(err: Error) {
+            callback(err);
+            callback = function () {}; // if called for error, make sure it can't be called again
+        }
+    }
+
+    private _prepareFind(query: FindAllQuery): Cursor {
+
+        var cursor = this._collection.find(query.criteria);
+        var cursor = this._collection.find(query.criteria);
+
+        if(query.sortBy !== undefined) {
+            cursor.sort(query.sortBy);
+        }
+
+        if(query.skipCount !== undefined) {
+            cursor.skip(query.skipCount);
+        }
+
+        if(query.limitCount !== undefined) {
+            cursor.limit(query.limitCount);
+        }
+
+        return cursor;
+    }
+
+    private _findAndModify(query: QueryDefinition, callback: ResultCallback<any>): void {
+
+        var options: FindAndModifyOptions = {};
+
+        if(query.kind == QueryKind.FindOneAndRemove) {
+            options.remove = true;
+        }
+
+        if(query.wantsUpdated && !options.remove) {
+            options.new = true;
+        }
+
+        this._collection.findAndModify(query.criteria, query.sortBy, query.updateDocument, options, (err, document) => {
+            if (err) return callback(err);
+
+            // TODO: handle this
+            // if options.new is false
+            //      - if entity is managed then detach the entity
+            //      - either way, load the entity detached using value returned
+            // if options.new is true
+            //      - if entity is managed then refresh entity using value returned
+            //      - if entity is not managed then load entity
+            // either way we should handle the fetchPaths options
+        });
+    }
+
+    private _remove(query: QueryDefinition, callback: ResultCallback<number>): void {
+
+        var options: RemoveOptions = {};
+
+        if(query.kind == QueryKind.RemoveOne) {
+            options.single = true;
+        }
+
+        this._collection.remove(query.criteria, options, (err: Error, response: any) => {
+            if(err) return callback(err);
+            callback(null, response.result.n);
+        });
+    }
+
+    private _fetchOne(query: FindOneQuery, callback: ResultCallback<any>): ResultCallback<any> {
+
+        if(!query.fetchPaths) {
+            return callback;
+        }
+
+        return (err: Error, entity: any) => {
+            if(err) return callback(err);
+            this._session.fetchInternal(entity, query.fetchPaths, callback);
+        }
+    }
+
+    private _fetchAll(query: FindAllQuery, callback: ResultCallback<any[]>): ResultCallback<any[]> {
+
+        if(!query.fetchPaths) {
+            return callback;
+        }
+
+        return (err: Error, entities: any) => {
+            if(err) return callback(err);
+            async.each(entities, (entity, done) => this._session.fetchInternal(entity, query.fetchPaths, done), err => {
+                if(err) return callback(err);
+                callback(null, entities);
+            });
+        }
+    }
+
+    private _fetchIterator(query: FindEachQuery): IteratorCallback<any[]> {
+
+        if(!query.fetchPaths) {
+            return query.iterator;
+        }
+
+        return (entity: any, done: (err?: Error) => void) => {
+
+            this._session.fetchInternal(entity, query.fetchPaths, (err: Error, result: any) => {
+                if(err) return done(err);
+                query.iterator(result, done);
+            });
+        }
+    }
+
+    private _loadAll(documents: any[]): Result<any[]> {
+
+        if(!documents || documents.length == 0) {
+            return new Result(null, []);
+        }
+
+        var entities = new Array(documents.length);
+        var j = 0;
+        for(var i = 0, l = documents.length; i < l; i++) {
+            var result = this._loadOne(documents[i]);
+            if(result.error) {
+                return new Result(result.error, null);
+            }
+            // Filter any null values from the result because null means the object is scheduled for remove
+            if(result.value !== null) {
+                entities[j++] = result.value;
+            }
+        }
+        entities.length = j;
+        return new Result(null, entities);
+    }
+
+    private _loadOne(document: any): Result<any> {
 
         var entity: any;
 
@@ -178,64 +478,6 @@ class PersisterImpl implements Persister {
         }
 
         return new Result(null, entity);
-    }
-
-    findInverseOf(id: any, path: string, callback: ResultCallback<any[]>): void {
-
-        var property = this._mapping.getProperty(path);
-        if(property === undefined) {
-            return callback(new Error("Missing property '" + path + "'."));
-        }
-
-        var query = {};
-        property.setFieldValue(query, id);
-
-        this.findAll(query).toArray(callback);
-    }
-
-    findOneInverseOf(id: any, path: string, callback: ResultCallback<any>): void {
-
-        var property = this._mapping.getProperty(path);
-        if(property === undefined) {
-            return callback(new Error("Missing property '" + path + "'."));
-        }
-
-        var query = {};
-        property.setFieldValue(query, id);
-
-        this.findOne(query, callback);
-    }
-
-    findOneAndRemove(criteria: Object, sort: [string, number][], callback: ResultCallback<any>): void {
-
-    }
-
-    findOneAndUpdate(criteria: Object, sort: [string, number][], returnNew: boolean, updateDocument: Object, callback: ResultCallback<any>): void {
-
-    }
-
-    distinct(key: string, criteria: Object, callback: ResultCallback<any[]>): void {
-
-    }
-
-    count(criteria: Object, limit: number, skip: number, callback: ResultCallback<number>): void {
-
-    }
-
-    removeAll(criteria: Object, callback?: ResultCallback<number>): void {
-
-    }
-
-    removeOne(criteria: Object, callback?: Callback): void {
-
-    }
-
-    updateAll(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
-
-    }
-
-    updateOne(criteria: Object, updateDocument: Object, callback?: Callback): void {
-
     }
 
     private _getCommand(batch: Batch): BulkOperationCommand {
@@ -383,135 +625,36 @@ class FindQueue {
             return;
         }
 
-        this._persister.findAll({ _id: { $in: ids }}).forEach((entity) => {
-            var id = entity["_id"].toString(),
-                callback = callbacks[id];
+        this._persister.findAll({ criteria: { _id: { $in: ids }}}, (err, entities) => {
+            if(err) return this._handleCallbacks(err);
 
-            callback(null, entity);
-            // mark the callback as called
-            callbacks[id] = undefined;
-        },
-        (err) => {
-            // pass error message to any callbacks that have not been called yet
-            for (var id in callbacks) {
-                if (callbacks.hasOwnProperty(id)) {
-                    var callback = callbacks[id];
-                    if(callback) {
-                        callback(err || new Error("Unable to find document with identifier '" + id + "'."));
-                    }
+            for(var i = 0, l = entities.length; i < l; i++) {
+                var entity = entities[i];
+
+                var id = entity["_id"].toString(),
+                    callback = callbacks[id];
+
+                callback(null, entity);
+                // mark the callback as called
+                callbacks[id] = undefined;
+            }
+
+            this._handleCallbacks();
+        });
+    }
+
+    private _handleCallbacks(err?: Error): void {
+
+        // pass error message to any callbacks that have not been called yet
+        var callbacks = this._callbacks;
+        for (var id in callbacks) {
+            if (callbacks.hasOwnProperty(id)) {
+                var callback = callbacks[id];
+                if(callback) {
+                    callback(err || new Error("Unable to find document with identifier '" + id + "'."));
                 }
             }
-        });
-    }
-}
-
-class CursorImpl implements Cursor<any> {
-
-    private _persister: PersisterImpl;
-    private _cursor: DriverCursor;
-
-    constructor(persister: PersisterImpl, cursor: DriverCursor) {
-        this._persister = persister;
-        this._cursor = cursor;
-    }
-
-    filter(filter: any): Cursor<any> {
-
-        this._cursor.filter(filter);
-        return this;
-    }
-
-    sort(list: any): Cursor<any>;
-    sort(key: string, direction: number): Cursor<any>;
-    sort(keyOrList: any, direction?: number): Cursor<any> {
-
-        this._cursor.sort(keyOrList, direction);
-        return this;
-    }
-
-    limit(value: number): Cursor<any> {
-
-        this._cursor.limit(value);
-        return this;
-    }
-
-    skip(value: number): Cursor<any> {
-
-        this._cursor.skip(value);
-        return this;
-    }
-
-    nextObject(callback: (err: Error, entity?: any) => void): void {
-
-        this._cursor.nextObject((err, document) => {
-            if (err) return callback(err, undefined);
-            var result = this._persister.loadOne(document);
-            if (result.error) {
-                return callback(result.error);
-            }
-            callback(null, result.value);
-        });
-    }
-
-    each(callback: (err: Error, entity?: any) => boolean): void {
-
-        this._cursor.each((err, document) => {
-            if (err) return callback(err, undefined);
-            var result = this._persister.loadOne(document);
-            if (result.error) {
-                return callback(result.error);
-            }
-            callback(null, result.value);
-        });
-    }
-
-    forEach(iterator: (entity: any) => void, callback: (err: Error) => void): void {
-
-        this._cursor.forEach((document) => {
-            var result = this._persister.loadOne(document);
-            if (result.error) {
-                return callback(result.error);
-            }
-            iterator(result.value);
-        }, callback);
-    }
-
-    toArray(callback: (err: Error, results?: any[]) => void): void {
-
-        this._cursor.toArray((err, documents) => {
-            if (err) return callback(err, undefined);
-
-            var result = this._persister.load(documents);
-            if (result.error) {
-                return callback(result.error);
-            }
-            callback(null, result.value);
-        });
-    }
-
-    count(callback: (err: Error, result: number) => void): void {
-
-        this._cursor.count(false, callback);
-    }
-
-    close(callback: (err: Error) => void): void {
-
-        this._cursor.close(callback);
-    }
-
-    isClosed(): boolean {
-
-        return this._cursor.isClosed();
-    }
-
-    rewind(): Cursor<any> {
-
-        this._cursor.rewind();
-        return this;
-    }
-
-    fetch(path: string | string[]): Cursor<any> {
-        return this;
+        }
     }
 }
 

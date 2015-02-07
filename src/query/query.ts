@@ -1,25 +1,18 @@
 import Callback = require("../core/callback");
 import ResultCallback = require("../core/resultCallback");
+import IteratorCallback = require("../core/iteratorCallback");
+
 import InternalSession = require("../internalSession");
 import Persister = require("../persister");
-import Cursor = require("../cursor");
-import FindOneBuilder = require("./findOneBuilder");
-import FindOneAndRemoveBuilder = require("./findOneAndRemoveBuilder");
-import FindOneAndUpdateBuilder = require("./findOneAndUpdateBuilder");
-import CountBuilder = require("./countBuilder");
+import QueryDefinition = require("./queryDefinition");
+import QueryKind = require("./queryKind");
 
-/*
+import FindOneAndRemoveQuery = require("./findOneAndRemoveQuery");
+import FindOneAndUpdateQuery = require("./findOneAndUpdateQuery");
+import FindOneQuery = require("./findOneQuery");
+import FindQuery = require("./findQuery");
+import CountQuery = require("./countQuery");
 
-session.query(Patient).findOne({ name: 'Bob' }).fetch("children", (err, result) => {
-session.query(Patient).findOneAndRemove({ name: 'Bob' }).sort("name", 1, (err, result) => {
-session.query(Patient).findAll({ name: 'Bob' }).toArray((err, results) => {
-session.query(Patient).findAll({ name: 'Bob' }).sort("name", 1).toArray((err, results) => {
-session.query(Patient).findAll({ name: 'Bob' }).sort("name", 1, (err, cursor) => {
-
-
-});
-
- */
 class Query<T> {
 
     private _session: InternalSession;
@@ -31,249 +24,235 @@ class Query<T> {
         this._persister = persister;
     }
 
-    findAll(criteria: Object): Cursor<T> {
+    findAll(criteria: Object, callback?: ResultCallback<T[]>): FindQuery<T> {
 
-        return null;
+        var query = this._createQuery(QueryKind.FindAll);
+        query.criteria = criteria;
+        return query.handleCallback(callback);
     }
 
-    findOne(criteria: Object, callback?: ResultCallback<T>): FindOneBuilder<T> {
+    findOne(criteria: Object, callback?: ResultCallback<T>): FindOneQuery<T> {
 
-        if(callback) {
-            this._session.findOne(this._persister, criteria, callback);
-            return TerminalBuilder.instance;
-        }
-
-        // no callback specified so additional options are expected.
-        return new Builder((options, callback) => {
-
-            this._session.findOne(this._persister, criteria, (err, obj) => {
-                if(err) return callback(err);
-                this._session.fetchInternal(obj, options.fetches, callback);
-            });
-        });
+        var query = this._createQuery(QueryKind.FindOne);
+        query.criteria = criteria;
+        return query.handleCallback(callback);
     }
 
-    findOneById(id: any, callback: ResultCallback<any>): FindOneBuilder<T> {
+    findOneById(id: any, callback?: ResultCallback<any>): FindOneQuery<T> {
 
         if(typeof id === "string") {
             id = this._persister.identity.fromString(id);
         }
 
-        if(callback) {
-            this._session.findOneById(this._persister, id, callback);
-            return TerminalBuilder.instance;
-        }
-
-        // no callback specified so additional options are expected.
-        return new Builder((options, callback) => {
-
-            this._session.findOneById(this._persister, id, (err, obj) => {
-                if(err) return callback(err);
-                this._session.fetchInternal(obj, options.fetches, callback);
-            });
-        });
+        var query = this._createQuery(QueryKind.FindOneById);
+        query.criteria = id;
+        return query.handleCallback(callback);
     }
 
-    findOneAndRemove(criteria: Object, callback?: ResultCallback<T>): FindOneAndRemoveBuilder<T> {
+    findOneAndRemove(criteria: Object, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T> {
 
-        if(callback) {
-            this._session.findOneAndRemove(this._persister, criteria, undefined, callback);
-            return TerminalBuilder.instance;
-        }
-
-        // no callback specified so additional options are expected.
-        return new Builder((options, callback) => {
-
-            this._session.findOneAndRemove(this._persister, criteria, options.sorts, (err, obj) => {
-                if(err) return callback(err);
-
-                if(options.fetches.length == 0) {
-                    callback(null, obj);
-                }
-                else {
-                    this._session.fetchInternal(obj, options.fetches, callback);
-                }
-            });
-        });
+        var query = this._createQuery(QueryKind.FindOneAndRemove);
+        query.criteria = criteria;
+        return query.handleCallback(callback);
     }
 
-    findOneAndUpdate(criteria: Object, updateDocument: Object, callback?: ResultCallback<T>): FindOneAndUpdateBuilder<T> {
+    findOneAndUpdate(criteria: Object, updateDocument: Object, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> {
 
-        if(callback) {
-            this._session.findOneAndUpdate(this._persister, criteria, undefined, false, updateDocument, callback);
-            return TerminalBuilder.instance;
-        }
-
-        // no callback specified so additional options are expected.
-        return new Builder((options, callback) => {
-
-            this._session.findOneAndUpdate(this._persister, criteria, options.sorts, options.wantsUpdated, updateDocument, (err, obj) => {
-                if(err) return callback(err);
-
-                if(options.fetches.length == 0) {
-                    callback(null, obj);
-                }
-                else {
-                    this._session.fetchInternal(obj, options.fetches, callback);
-                }
-            });
-        });
+        var query = this._createQuery(QueryKind.FindOneAndUpdate);
+        query.criteria = criteria;
+        query.updateDocument = updateDocument;
+        return query.handleCallback(callback);
     }
 
     removeAll(criteria: Object, callback?: ResultCallback<number>): void {
 
-        this._session.removeAll(this._persister, criteria, callback);
+        var query = this._createQuery(QueryKind.RemoveAll);
+        query.criteria = criteria;
+        query.handleCallback(callback);
     }
 
-    removeOne(criteria: Object, callback?: Callback): void {
+    removeOne(criteria: Object, callback?: ResultCallback<number>): void {
 
-        this._session.removeOne(this._persister, criteria, callback);
+        var query = this._createQuery(QueryKind.RemoveOne);
+        query.criteria = criteria;
+        query.handleCallback(callback);
     }
 
     updateAll(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
 
-        this._session.updateAll(this._persister, criteria, updateDocument, callback);
+        var query = this._createQuery(QueryKind.UpdateAll);
+        query.criteria = criteria;
+        query.updateDocument = updateDocument;
+        query.handleCallback(callback);
     }
 
-    updateOne(criteria: Object, updateDocument: Object, callback?: Callback): void {
+    updateOne(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
 
-        this._session.updateOne(this._persister, criteria, updateDocument, callback);
+        var query = this._createQuery(QueryKind.UpdateOne);
+        query.criteria = criteria;
+        query.updateDocument = updateDocument;
+        query.handleCallback(callback);
     }
 
     distinct(key: string, criteria: Object, callback: ResultCallback<T[]>): void {
 
-        this._session.distinct(this._persister, key, criteria, callback);
+        var query = this._createQuery(QueryKind.UpdateOne);
+        query.key = key;
+        query.criteria = criteria;
+        query.handleCallback(callback);
     }
 
-    count(criteria: Object, callback?: ResultCallback<number>): CountBuilder<number> {
+    count(criteria: Object, callback?: ResultCallback<number>): CountQuery {
 
-        if(callback) {
-            this._session.count(this._persister, criteria, undefined, undefined, callback);
-            return TerminalBuilder.instance;
+        var query = this._createQuery(QueryKind.Count);
+        query.criteria = criteria;
+        return query.handleCallback(callback);
+    }
+
+    private _createQuery(kind: QueryKind): QueryObject {
+
+        return new QueryObject(this._session, this._persister, kind);
+    }
+}
+
+class QueryObject implements QueryDefinition, FindQuery<any>, FindOneQuery<any>, FindOneAndRemoveQuery<any>, FindOneAndUpdateQuery<any>, CountQuery {
+
+    key: string;
+    criteria: any;
+    updateDocument: any;
+
+    wantsUpdated: boolean;
+    fetchPaths: string[];
+    sortBy: [string, number][];
+    limitCount: number;
+    skipCount: number;
+    iterator: IteratorCallback<any>;
+
+    private _session: InternalSession;
+    private _persister: Persister;
+    private _executed: boolean;
+
+    constructor(session: InternalSession, persister: Persister, public kind: QueryKind) {
+
+        this._session = session;
+        this._persister = persister;
+    }
+
+    get readOnly(): boolean {
+        return (this.kind & QueryKind.ReadOnly) !== 0;
+    }
+
+    fetch(path: string | string[], callback?: ResultCallback<any>): QueryObject {
+
+        if(!this.fetchPaths) {
+            this.fetchPaths = [];
         }
-
-        // no callback specified so additional options are expected.
-        return new Builder((options, callback) => this._session.count(this._persister, criteria, options.limitValue, options.skipValue, callback));
-    }
-}
-
-interface QueryOptions {
-
-    fetches: string[];
-    sorts: [string, number][];
-    wantsUpdated: boolean;
-    limitValue: number;
-    skipValue: number;
-}
-
-class Builder<T> implements QueryOptions, FindOneBuilder<T>, FindOneAndRemoveBuilder<T>, FindOneAndUpdateBuilder<T>, CountBuilder<T> {
-
-    private _execute: (options: QueryOptions, callback: ResultCallback<T>) => void;
-
-    fetches: string[] = [];
-    sorts: [string, number][];
-    wantsUpdated: boolean;
-    limitValue: number;
-    skipValue: number;
-
-    constructor(execute: (options: QueryOptions, callback: ResultCallback<T>) => void) {
-        this._execute = execute;
-    }
-
-    fetch(path: string | string[], callback?: ResultCallback<T>): any {
 
         if(typeof path === "string") {
-            this.fetches.push(path);
+            this.fetchPaths.push(path);
         }
         else {
-            this.fetches = this.fetches.concat(path);
+            this.fetchPaths = this.fetchPaths.concat(path);
         }
 
-        return this._handleCallback(callback);
+        return this.handleCallback(callback);
     }
 
-    sort(field: string | [string, number][], directionOrCallback: number | ResultCallback<T>, callback?: ResultCallback<T>): any {
+    sort(field: string | [string, number][], directionOrCallback: number | ResultCallback<any>, callback?: ResultCallback<any>): QueryObject {
+
+        if(!this.sortBy) {
+            this.sortBy = [];
+        }
 
         if(typeof field === "string" ) {
             if(typeof directionOrCallback === "number") {
-                this.sorts.push([field, directionOrCallback]);
+                this.sortBy.push([field, directionOrCallback]);
             }
             else {
                 throw new Error("Expected second parameter to be the sort direction when first parameter is a string.");
             }
         }
         else {
-            this.sorts = this.sorts.concat(field);
+            this.sortBy = this.sortBy.concat(field);
         }
 
         if(typeof directionOrCallback === "number") {
-            return this._handleCallback(callback);
+            return this.handleCallback(callback);
         }
         else {
-            return this._handleCallback(directionOrCallback);
+            return this.handleCallback(directionOrCallback);
         }
     }
 
-    returnUpdated(callback?: ResultCallback<T>): any {
+    returnUpdated(callback?: ResultCallback<any>): QueryObject {
 
         this.wantsUpdated = true;
-        return this._handleCallback(callback);
+        return this.handleCallback(callback);
     }
 
-    limit(value: number, callback?: ResultCallback<T>): any {
+    limit(value: number, callback?: ResultCallback<any>): QueryObject {
 
-        this.limitValue = value;
-        return this._handleCallback(callback);
+        this.limitCount = value;
+        return this.handleCallback(callback);
     }
 
-    skip(value: number, callback?: ResultCallback<T>): any {
+    skip(value: number, callback?: ResultCallback<any>): QueryObject {
 
-        this.skipValue = value;
-        return this._handleCallback(callback);
+        this.skipCount = value;
+        return this.handleCallback(callback);
     }
 
-    private _handleCallback(callback?: ResultCallback<T>): any {
+    each(iterator: IteratorCallback<any>, callback: Callback): void {
+
+        if(!iterator) {
+            throw new Error("Missing required argument 'iterator'.");
+        }
+
+        if(!callback) {
+            throw new Error("Missing required argument 'callback'.");
+        }
+
+        this.kind = QueryKind.FindEach;
+        this.iterator = iterator;
+        this.handleCallback(callback);
+    }
+
+    eachSeries(iterator: IteratorCallback<any>, callback: Callback): void {
+
+        if(!iterator) {
+            throw new Error("Missing required argument 'iterator'.");
+        }
+
+        if(!callback) {
+            throw new Error("Missing required argument 'callback'.");
+        }
+
+        this.kind = QueryKind.FindEachSeries;
+        this.iterator = iterator;
+        this.handleCallback(callback);
+    }
+
+    handleCallback(callback: ResultCallback<any>): QueryObject {
 
         if(callback) {
-            // we've reached the end of the chain
-            this._execute(this, callback);
-            return TerminalBuilder.instance;
+            if(this._executed) {
+                callback(new Error("Query already executed. A callback can only be passed to one function in the chain."));
+            }
+            else {
+                this._session.executeQuery(this, callback);
+                this._executed = true;
+            }
         }
 
         return this;
     }
-}
 
-class TerminalBuilder<T>  implements FindOneBuilder<T>, FindOneAndRemoveBuilder<T>, FindOneAndUpdateBuilder<T>, CountBuilder<T> {
+    execute(callback: ResultCallback<any>): void {
 
-    static instance = new TerminalBuilder<any>();
-
-    fetch(path: any, callback?: ResultCallback<T>): TerminalBuilder<T> {
-        return this._handleCallback(callback);
-    }
-
-    sort(fields: any, directionOrCallback: any, callback?: ResultCallback<T>): TerminalBuilder<T> {
-        return this._handleCallback(callback || directionOrCallback);
-    }
-
-    returnUpdated(callback?: ResultCallback<T>): TerminalBuilder<T> {
-        return this._handleCallback(callback);
-    }
-
-    limit(value: number, callback?: ResultCallback<T>): TerminalBuilder<T> {
-        return this._handleCallback(callback);
-    }
-
-    skip(value: number, callback?: ResultCallback<T>): TerminalBuilder<T> {
-        return this._handleCallback(callback);
-    }
-
-    private _handleCallback(callback: ResultCallback<T>): TerminalBuilder<T> {
-        if(callback) {
-            callback(new Error("Only one function in the chain can be passed a callback."));
-        }
-        return this;
+        this._persister.executeQuery(this, callback);
     }
 }
 
 export = Query;
+
+

@@ -18,11 +18,11 @@ import Batch = require("./batch");
 import Reference = require("./reference");
 import Table = require("./core/table");
 import EntityMapping = require("./mapping/entityMapping");
-import Cursor = require("./cursor");
 import Query = require("./query/query");
-import FindOneBuilder = require("./query/findOneBuilder")
+import FindOneQuery = require("./query/findOneQuery");
+import QueryDescriptor = require("./query/queryDefinition");
 
-enum ObjectState {
+const enum ObjectState {
 
     /**
      * Managed entities have a persistent identity and are associated with a session.
@@ -42,46 +42,36 @@ enum ObjectState {
     Removed
 }
 
-enum ObjectFlags {
+const enum ObjectFlags {
 
     None = 0,
     ReadOnly = 0x00000001
 }
 
-enum Action {
-
-    Save                = 0x00000001,
-    Remove              = 0x00000002,
-    Detach              = 0x00000004,
-    Flush               = 0x00000008,
-    Clear               = 0x00000010,
-    Refresh             = 0x00000020,
-    Merge               = 0x00000040,
-    Fetch               = 0x00000080,
-    FindAll             = 0x00000100,
-    FindOne             = 0x00000200,
-    FindOneById         = 0x00000400,
-    FindOneAndRemove    = 0x00000800,
-    FindOneAndUpdate    = 0x00001000,
-    RemoveAll           = 0x00002000,
-    RemoveOne           = 0x00004000,
-    UpdateAll           = 0x00008000,
-    UpdateOne           = 0x00010000,
-    Distinct            = 0x00020000,
-    Count               = 0x00040000,
-
-    Queries = FindAll | FindOne | FindOneById | FindOneAndRemove | FindOneAndUpdate | RemoveAll | RemoveOne | UpdateAll | UpdateOne,
-    ReadOnly = Fetch | FindAll | FindOne | FindOneById | Distinct | Count,
-    All = Save | Remove | Detach | Flush | Clear | Refresh | Merge | Fetch | Queries
-}
-
-enum ScheduledOperation {
+const enum ScheduledOperation {
 
     None = 0,
     Insert,
     Update,
     Delete,
     DirtyCheck
+}
+
+const enum Action {
+
+    Save        = 0x00000001,
+    Remove      = 0x00000002,
+    Detach      = 0x00000004,
+    Flush       = 0x00000008,
+    Clear       = 0x00000010,
+    Refresh     = 0x00000020,
+    Merge       = 0x00000040,
+    Fetch       = 0x00000080,
+    FindQuery   = 0x00000100,
+    ModifyQuery = 0x00000200,
+
+    ReadOnly = Fetch | FindQuery,
+    All = Save | Remove | Detach | Flush | Clear | Refresh | Merge | Fetch | FindQuery | ModifyQuery
 }
 
 // TODO: option to use weak reference until object is removed or modified and attach event to unlink if garbage collected? https://github.com/TooTallNate/node-weak
@@ -144,7 +134,7 @@ class SessionImpl implements InternalSession {
         this._queue.add(Action.Flush, Action.All, undefined, callback);
     }
 
-    find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneBuilder<T> {
+    find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         return this.query(ctr).findOneById(id, callback);
     }
@@ -166,59 +156,14 @@ class SessionImpl implements InternalSession {
         this._queue.add(Action.Fetch, Action.All & ~Action.ReadOnly, [obj, paths], callback);
     }
 
-    findAll(persister: Persister, criteria: any): Cursor<any> {
+    executeQuery(query: QueryDescriptor, callback: ResultCallback<any>): void {
 
-        return null;
-    }
-
-    findOne(persister: Persister, criteria: any, callback: ResultCallback<any>): void {
-
-        this._queue.add(Action.FindOne, Action.All & ~Action.ReadOnly, [persister, criteria], callback);
-    }
-
-    findOneById(persister: Persister, id: Identifier, callback: ResultCallback<any>): void {
-
-        this._queue.add(Action.FindOneById, Action.All & ~Action.ReadOnly, [persister, id], callback);
-    }
-
-    findOneAndRemove(persister: Persister, criteria: Object, sort: [string, number][], callback: ResultCallback<any>): void {
-
-        this._queue.add(Action.FindOneAndRemove, Action.All, [persister, criteria, sort], callback);
-    }
-
-    findOneAndUpdate(persister: Persister, criteria: Object, sort: [string, number][], returnNew: boolean, updateDocument: Object, callback: ResultCallback<any>): void {
-
-        this._queue.add(Action.FindOneAndUpdate, Action.All, [persister, criteria, sort, returnNew, updateDocument], callback);
-    }
-
-    distinct(persister: Persister, key: string, criteria: Object, callback: ResultCallback<any[]>): void {
-
-        this._queue.add(Action.Distinct, Action.All & ~Action.ReadOnly, [persister, key, criteria], callback);
-    }
-
-    count(persister: Persister, criteria: Object, limit: number, skip: number, callback: ResultCallback<number>): void {
-
-        this._queue.add(Action.Count, Action.All & ~Action.ReadOnly, [persister, criteria, limit, skip], callback);
-    }
-
-    removeAll(persister: Persister, criteria: Object, callback?: ResultCallback<number>): void {
-
-        this._queue.add(Action.RemoveAll, Action.All, [persister, criteria], callback);
-    }
-
-    removeOne(persister: Persister, criteria: Object, callback?: Callback): void {
-
-        this._queue.add(Action.RemoveOne, Action.All & ~Action.RemoveOne, [persister, criteria], callback);
-    }
-
-    updateAll(persister: Persister, criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
-
-        this._queue.add(Action.UpdateAll, Action.All, [persister, criteria, updateDocument], callback);
-    }
-
-    updateOne(persister: Persister, criteria: Object, updateDocument: Object, callback?: Callback): void {
-
-        this._queue.add(Action.UpdateOne, Action.All, [persister, criteria, updateDocument], callback);
+        if(query.readOnly) {
+            this._queue.add(Action.FindQuery, Action.All & ~Action.ReadOnly, query, callback);
+        }
+        else {
+            this._queue.add(Action.ModifyQuery, Action.All, query, callback);
+        }
     }
 
     /**
@@ -342,37 +287,9 @@ class SessionImpl implements InternalSession {
             case Action.Fetch:
                 this.fetchInternal(arg[0], arg[1], callback);
                 break;
-            case Action.FindAll:
-                break;
-            case Action.FindOne:
-                (<Persister>arg[0]).findOne(arg[1], callback);
-                break;
-            case Action.FindOneById:
-                (<Persister>arg[0]).findOneById(arg[1], callback);
-                break;
-            case Action.FindOneAndRemove:
-                (<Persister>arg[0]).findOneAndRemove(arg[1], arg[2], callback)
-                break;
-            case Action.FindOneAndUpdate:
-                (<Persister>arg[0]).findOneAndUpdate(arg[1], arg[2], arg[3], arg[4], callback)
-                break;
-            case Action.RemoveAll:
-                (<Persister>arg[0]).removeAll(arg[1], callback);
-                break;
-            case Action.RemoveOne:
-                (<Persister>arg[0]).removeOne(arg[1], callback);
-                break;
-            case Action.UpdateAll:
-                (<Persister>arg[0]).updateAll(arg[1], callback);
-                break;
-            case Action.UpdateOne:
-                (<Persister>arg[0]).updateOne(arg[1], callback);
-                break;
-            case Action.Distinct:
-                (<Persister>arg[0]).distinct(arg[1], arg[2], callback);
-                break;
-            case Action.Count:
-                (<Persister>arg[0]).count(arg[1], arg[2], arg[3], callback);
+            case Action.FindQuery:
+            case Action.ModifyQuery:
+                (<QueryDescriptor>arg).execute(callback);
                 break;
         }
     }
@@ -583,7 +500,7 @@ class SessionImpl implements InternalSession {
 
     fetchInternal(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
-        // TODO: when a reference is resolved do we update the referenced object? __proto__ issue
+        // TODO: when a reference is resolved do we update the referenced object? __proto__ issue.
         if(Reference.isReference(obj)) {
             (<Reference>obj).fetch((err, entity) => {
                 if(err) return callback(err);
@@ -597,6 +514,7 @@ class SessionImpl implements InternalSession {
 
     private _fetchPaths(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
+        // TODO: Is it necessary to restrict fetch to managed objects?
         var links = this._getObjectLinks(obj);
         if (!links || links.state != ObjectState.Managed) {
             return callback(new Error("Object is not managed."));
@@ -731,7 +649,6 @@ class SessionImpl implements InternalSession {
         var references: Reference[] = [];
         mapping.walk(entity, flags | PropertyFlags.WalkEntities, entities, embedded, references);
 
-        // TODO: load references in batches grouped by root mapping
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
 
             reference.fetch((err: Error, entity: any) => {

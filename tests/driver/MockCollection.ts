@@ -22,6 +22,14 @@ class MockCollection implements Collection {
         });
     }
 
+    findAndModify(query: Object, sort: any[], doc: Object, options: { safe?: any; remove?: boolean; upsert?: boolean; new?: boolean; }, callback: (err: Error, result: any) => void): void {
+
+    }
+
+    remove(selector: Object, options: { safe?: any; single?: boolean; }, callback?: (err: Error, result: any) => void): void {
+
+    }
+
     initializeUnorderedBulkOp(): Bulk {
 
         return new MockBulk();

@@ -18,6 +18,7 @@ import MockPersister = require("./mockPersister");
 import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
 import MappingRegistry = require("../src/mapping/mappingRegistry");
 import ObjectIdGenerator = require("../src/id/objectIdGenerator");
+import QueryKind = require("../src/query/queryKind");
 
 // Fixtures
 import model = require("./fixtures/model");
@@ -25,7 +26,7 @@ import cascade = require("./fixtures/cascade");
 
 describe('SessionImpl', () => {
 
-    it.skip('test against mongodb', (done) => {
+    it('test against mongodb', (done) => {
 
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/model.d.json");
@@ -34,27 +35,60 @@ describe('SessionImpl', () => {
 
             var session = sessionFactory.createSession();
 
+            /*
+            session.query(model.Person).removeAll({ 'personName.first': 'Mary' }, (err, count) => {
+                if(err) return done(err);
+                console.log("Removed " + count + " items.");
+                done();
+            });
+            */
+
+            var count = 0;
+            var start = process.hrtime();
+            session.query(model.Person).findAll({ 'personName.last': 'Jones' }).each((entity, done) => {
+                count++;
+                process.nextTick(done);
+            }, (err) => {
+                if(err) return done(err);
+                var elapsed = process.hrtime(start);
+                console.log("findAll.each processed " + count + " items in " + elapsed[0] + "s, " + (elapsed[1]/1000000).toFixed(3) + "ms");
+                done();
+            });
+
+            /*
+            var start = process.hrtime();
+            session.query(model.Person).findAll({ 'personName.last': 'Jones' }, (err, entities) => {
+                if(err) return done(err);
+                var elapsed = process.hrtime(start);
+                console.log("findAll processed " + entities.length + " items in " + elapsed[0] + "s, " + (elapsed[1]/1000000).toFixed(3) + "ms");
+                done();
+            });
+            */
+
+            return;
+
             /*var person = new model.Person(new model.PersonName("Jones", "Bob"));
 
-            person.phones = [ new model.Phone("303-258-1111", model.PhoneType.Work) ];
+             person.phones = [ new model.Phone("303-258-1111", model.PhoneType.Work) ];
 
-            var parent1 = new model.Person(new model.PersonName("Jones", "Mary"));
-            person.addParent(parent1);
+             var parent1 = new model.Person(new model.PersonName("Jones", "Mary"));
+             person.addParent(parent1);
 
-            var parent2 = new model.Person(new model.PersonName("Jones", "Jack"));
-            person.addParent(parent2);
+             var parent2 = new model.Person(new model.PersonName("Jones", "Jack"));
+             person.addParent(parent2);
 
-            session.save(person);
-            session.flush((err) => {
-                if(err) return done(err);
+             session.save(person);
+             session.flush((err) => {
+             if(err) return done(err);
 
-                person.birthDate = new Date(1977, 7, 18);
+             person.birthDate = new Date(1977, 7, 18);
 
-                session.flush(done);
-            });*/
+             session.flush(done);
+             });*/
+
 
             //var ids = ["54b8a19659731ff8ccfc2fe7"];
-            var ids = ["54b8a19659731ff8ccfc2fe5"];
+            var ids = ["54b8a19659731ff8ccfc2fe5", "54b8a19659731ff8ccfc2fe7"];
 
             /*
             session.find(model.Person, <any>mongodb.ObjectID.createFromHexString("54b8a19659731ff8ccfc2fe5"), (err, entity) => {
@@ -64,21 +98,20 @@ describe('SessionImpl', () => {
             });
             */
 
-            async.each(ids, (id: string, done: (err?: Error) => void) => {
-                session.find(model.Person, id, (err, entity) => {
+            for(var i = 0; i < ids.length; i++) {
+                session.find(model.Person, ids[i], (err, entity) => {
                     if(err) return done(err);
-
-                    session.detach(entity, (err: Error) => {
-                        done();
-                    });
-                    return;
 
                     session.fetch(entity, "children", (err, result) => {
                         if(err) return done(err);
                         done();
                     });
                 });
-            }, done);
+            }
+
+            session.flush((err) => {
+                done(err);
+            });
 
         });
     });
@@ -526,10 +559,11 @@ describe('SessionImpl', () => {
                 var session = factory.createSession();
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
-                persister.onFindOneById = (id, callback) => {
-                    assert.equal(id, 1);
+                persister.onExecuteQuery = (query, callback) => {
+                    assert.equal(query.kind, QueryKind.FindOneById);
+                    assert.equal(query.criteria, 1);
                     var ret = new model.Person(new model.PersonName("Smith"));
-                    (<any>ret)._id = id;
+                    (<any>ret)._id = query.criteria;
                     session.registerManaged(persister, ret, {});
                     callback(null, ret);
                 }
@@ -566,28 +600,22 @@ describe('SessionImpl', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
 
+                var executeQueryCalled = 0;
                 // session should call this once to find the entity
-                persister.onFindOneById = (id, callback) => {
-                    assert.equal(id, 1);
-                    var ret = new model.Person(new model.PersonName("Smith"));
-                    (<any>ret)._id = id;
-                    session.registerManaged(persister, ret, {});
-                    callback(null, ret);
-                }
+                persister.onExecuteQuery = (query, callback) => {
+                    executeQueryCalled++;
 
-                // session should call this once to fetch the children
-                var resolveCalled = 0;
-                persister.onResolve = (entity, path, callback) => {
-                    resolveCalled += 1;
-                    assert.equal(path, "children");
-                    callback();
+                    assert.equal(query.kind, QueryKind.FindOneById);
+                    assert.equal(query.criteria, 1);
+
+                    assert.isTrue(query.fetchPaths.length > 0, "Fetch was not added to the query");
+
+                    callback(null, null);
                 }
 
                 session.find(model.Person, 1).fetch("children", (err, entity) => {
                     if(err) return done(err);
-
-                    assert.equal(entity.personName.last, "Smith");
-                    assert.equal(resolveCalled, 1);
+                    assert.equal(executeQueryCalled, 1);
                     done();
                 });
             });

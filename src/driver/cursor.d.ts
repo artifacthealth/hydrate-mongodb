@@ -17,6 +17,7 @@ interface Cursor {
     explain(callback: (err: Error, result: any) => void) : void;
     close(callback: (err: Error, result: any) => void) : void;
     isClosed(): boolean;
+    bufferedCount?(): number;
 }
 
 export = Cursor;

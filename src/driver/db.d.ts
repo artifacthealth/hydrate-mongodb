@@ -12,7 +12,7 @@ interface Db {
     collection(collectionName: string, options: CollectionOptions, callback: (err: Error, collection: Collection) => void ): Collection;
     createCollection(collectionName: string, options: CollectionOptions, callback?: (err: Error, result: any) => void ): void;
     ensureIndex(collectionName: any, fieldOrSpec: any, options: IndexOptions, callback: Function): void;
-    listCollections(collectionName: string): Cursor;
+    listCollections(filter: Object): Cursor;
 }
 
 export = Db;

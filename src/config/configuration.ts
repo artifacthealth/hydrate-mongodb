@@ -131,7 +131,7 @@ class Configuration {
                 db = db.db(mapping.databaseName);
             }
 
-            db.listCollections(mapping.collectionName).toArray((err: Error, names: string[]): void => {
+            db.listCollections({ name: mapping.collectionName }).toArray((err: Error, names: string[]): void => {
                 if(err) return done(err);
 
                 if(names.length == 0) {
