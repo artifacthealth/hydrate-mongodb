@@ -36,6 +36,7 @@ interface FindAllQuery extends FindOneQuery {
     sortBy?: [string, number][];
     limitCount?: number;
     skipCount?: number;
+    batchSizeValue?: number;
 }
 
 interface FindEachQuery extends FindAllQuery {
@@ -43,16 +44,29 @@ interface FindEachQuery extends FindAllQuery {
     iterator: IteratorCallback<any>;
 }
 
-interface FindAndModifyOptions {
-    safe?: any;
+interface WriteOptions {
+    w?: number;
+    wtimeout?: number;
+    j?: number;
+}
+
+interface FindAndModifyOptions extends WriteOptions {
     remove?: boolean;
     upsert?: boolean;
     new?: boolean;
 }
 
-interface RemoveOptions {
-    safe?: any;
+interface RemoveOptions extends WriteOptions {
     single?: boolean;
+}
+
+interface UpdateOptions extends WriteOptions {
+    multi?: boolean;
+}
+
+interface CountOptions {
+    limit: number;
+    skip: number;
 }
 
 class PersisterImpl implements Persister {
@@ -177,6 +191,7 @@ class PersisterImpl implements Persister {
         (this._findQueue || (this._findQueue = new FindQueue(this))).add(id, callback);
     }
 
+    // TODO: findOne uses find under the hood in the mongodb driver. Consider optimizing to not use findOne function on mongodb driver.
     findOne(criteria: Object, callback: ResultCallback<any>): void {
 
         this._collection.findOne(criteria, (err, document) => {
@@ -215,12 +230,24 @@ class PersisterImpl implements Persister {
                 this._findEachSeries(query, callback);
                 break;
             case QueryKind.FindOneAndRemove:
+                this._findOneAndRemove(query, callback);
+                break;
             case QueryKind.FindOneAndUpdate:
-                this._findAndModify(query, callback);
+                this._findOneAndUpdate(query, callback);
                 break;
             case QueryKind.RemoveOne:
             case QueryKind.RemoveAll:
                 this._remove(query, callback);
+                break;
+            case QueryKind.UpdateOne:
+            case QueryKind.UpdateAll:
+                this._update(query, callback);
+                break;
+            case QueryKind.Distinct:
+                this._distinct(query, callback);
+                break;
+            case QueryKind.Count:
+                this._count(query, callback);
                 break;
         }
     }
@@ -246,7 +273,8 @@ class PersisterImpl implements Persister {
 
                 // if the document is null then the cursor is finished
                 if (item == null) {
-                    // if all items have been processed then call callback; otherwise, we'll check later in 'done'.
+                    // if all items have been processed then call callback; otherwise, set flag and we'll check
+                    // later in 'done'.
                     if (completed >= started) {
                         callback();
                     }
@@ -254,10 +282,9 @@ class PersisterImpl implements Persister {
                     return;
                 }
 
-                // otherwise, process the item returned
+                // otherwise, process the item returned then process the rest of the items in the buffer
                 process(err, item);
 
-                // then process the rest of the items in the buffer
                 while(cursor.bufferedCount() > 0) {
                     cursor.nextObject(process);
                 }
@@ -333,7 +360,6 @@ class PersisterImpl implements Persister {
     private _prepareFind(query: FindAllQuery): Cursor {
 
         var cursor = this._collection.find(query.criteria);
-        var cursor = this._collection.find(query.criteria);
 
         if(query.sortBy !== undefined) {
             cursor.sort(query.sortBy);
@@ -347,46 +373,126 @@ class PersisterImpl implements Persister {
             cursor.limit(query.limitCount);
         }
 
+        if(query.batchSizeValue !== undefined) {
+            cursor.batchSize(query.batchSizeValue);
+        }
+
         return cursor;
     }
 
-    private _findAndModify(query: QueryDefinition, callback: ResultCallback<any>): void {
+    private _findOneAndRemove(query: QueryDefinition, callback: ResultCallback<any>): void {
 
-        var options: FindAndModifyOptions = {};
-
-        if(query.kind == QueryKind.FindOneAndRemove) {
-            options.remove = true;
+        var options: FindAndModifyOptions = {
+            remove: true
         }
 
-        if(query.wantsUpdated && !options.remove) {
-            options.new = true;
+        this._collection.findAndModify(query.criteria, query.sortBy, undefined, options, (err, response) => {
+            if (err) return callback(err);
+
+            var document = response.value;
+
+            // load the deleted document
+            var result = this._loadOne(document);
+            if(result.error) {
+                return callback(result.error);
+            }
+
+            // Notify session that entity has been removed from the database to cascade the remove and unlink the,
+            // entity. We pass the id instead of the entity because _loadOne can return null for the result if the
+            // object is scheduled for delete. We still need to call notifyRemoved in this case so we can unlink
+            // the entity.
+            this._session.notifyRemoved(document["_id"], (err) => {
+                if(err) return callback(err);
+                callback(null, result.value);
+            });
+        });
+    }
+
+    private _findOneAndUpdate(query: QueryDefinition, callback: ResultCallback<any>): void {
+
+        var options: FindAndModifyOptions = {
+            new: query.wantsUpdated
         }
 
-        this._collection.findAndModify(query.criteria, query.sortBy, query.updateDocument, options, (err, document) => {
+        this._collection.findAndModify(query.criteria, query.sortBy, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
 
             // TODO: handle this
-            // if options.new is false
-            //      - if entity is managed then detach the entity
-            //      - either way, load the entity detached using value returned
-            // if options.new is true
-            //      - if entity is managed then refresh entity using value returned
-            //      - if entity is not managed then load entity
-            // either way we should handle the fetchPaths options
+            // if options.remove is false
+            //      - if options.new is false
+            //          - if entity is managed then detach the entity
+            //          - either way, load the entity detached using value returned
+            //      - if options.new is true
+            //          - if entity is managed then refresh entity using value returned
+            //          - if entity is not managed then load entity
+            //      - either way we should handle the fetchPaths options
         });
     }
 
     private _remove(query: QueryDefinition, callback: ResultCallback<number>): void {
 
-        var options: RemoveOptions = {};
-
-        if(query.kind == QueryKind.RemoveOne) {
-            options.single = true;
+        var options: RemoveOptions = {
+            single: query.kind == QueryKind.RemoveOne
         }
 
         this._collection.remove(query.criteria, options, (err: Error, response: any) => {
             if(err) return callback(err);
             callback(null, response.result.n);
+        });
+    }
+
+    private _update(query: QueryDefinition, callback: ResultCallback<number>): void {
+
+        var options: UpdateOptions = {
+            multi: query.kind == QueryKind.UpdateAll
+        }
+
+        this._collection.update(query.criteria, query.updateDocument, options, (err: Error, response: any) => {
+            if(err) return callback(err);
+            callback(null, response.result.nModified);
+        });
+    }
+
+    private _distinct(query: QueryDefinition, callback: ResultCallback<any[]>): void {
+
+        // TODO: add options for readpreference
+
+        // TODO: resolve field path for distinct e.g. 'personName.last' is a valid key. Are we going to allow resolving across entities? inverse relationships?
+        var property = this._mapping.getPropertyForField(query.key);
+        if(property === undefined) {
+            return callback(new Error("Unknown field '" + query.key + "' for entity '" + this._mapping.name + "'."));
+        }
+
+        this._collection.distinct(query.key, query.criteria, undefined, (err: Error, results: any[]) => {
+            if(err) return callback(err);
+
+            // read results based on property mapping
+            var errors: MappingError[] = [],
+                mapping = property.mapping;
+
+            for(var i = 0, l = results.length; i < l; i++) {
+                results[i] = mapping.read(this._session, results[i], "", errors);
+                if (errors.length > 0) {
+                    return callback(new Error("Error deserializing distinct values for property '" + property.name + "':\n" + MappingError.createErrorMessage(errors)));
+                }
+            }
+
+            callback(null, results);
+        });
+    }
+
+    private _count(query: QueryDefinition, callback: ResultCallback<number>): void {
+
+        // TODO: add options for readpreference
+
+        var options: CountOptions = {
+            limit: query.limitCount,
+            skip: query.skipCount
+        }
+
+        this._collection.count(query.criteria, options, (err: Error, result: number) => {
+            if(err) return callback(err);
+            callback(null, result);
         });
     }
 
@@ -626,35 +732,31 @@ class FindQueue {
         }
 
         this._persister.findAll({ criteria: { _id: { $in: ids }}}, (err, entities) => {
-            if(err) return this._handleCallbacks(err);
+            if(!err) {
+                for (var i = 0, l = entities.length; i < l; i++) {
+                    var entity = entities[i];
 
-            for(var i = 0, l = entities.length; i < l; i++) {
-                var entity = entities[i];
+                    var id = entity["_id"].toString(),
+                        callback = callbacks[id];
 
-                var id = entity["_id"].toString(),
-                    callback = callbacks[id];
-
-                callback(null, entity);
-                // mark the callback as called
-                callbacks[id] = undefined;
-            }
-
-            this._handleCallbacks();
-        });
-    }
-
-    private _handleCallbacks(err?: Error): void {
-
-        // pass error message to any callbacks that have not been called yet
-        var callbacks = this._callbacks;
-        for (var id in callbacks) {
-            if (callbacks.hasOwnProperty(id)) {
-                var callback = callbacks[id];
-                if(callback) {
-                    callback(err || new Error("Unable to find document with identifier '" + id + "'."));
+                    callback(null, entity);
+                    // mark the callback as called
+                    callbacks[id] = undefined;
                 }
             }
-        }
+
+            // TODO: add test to make sure callbacks are called if document cannot be found
+
+            // pass error message to any callbacks that have not been called yet
+            for (var id in callbacks) {
+                if (callbacks.hasOwnProperty(id)) {
+                    var callback = callbacks[id];
+                    if(callback) {
+                        callback(err || new Error("Unable to find document with identifier '" + id + "'."));
+                    }
+                }
+            }
+        });
     }
 }
 

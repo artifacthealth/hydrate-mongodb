@@ -94,11 +94,19 @@ class Query<T> {
         query.handleCallback(callback);
     }
 
-    distinct(key: string, criteria: Object, callback: ResultCallback<T[]>): void {
+    distinct(key: string, callback: ResultCallback<T[]>): void;
+    distinct(key: string, criteria: Object, callback: ResultCallback<T[]>): void;
+    distinct(key: string, criteriaOrCallback: any, callback?: ResultCallback<T[]>): void {
 
-        var query = this._createQuery(QueryKind.UpdateOne);
+        var query = this._createQuery(QueryKind.Distinct);
         query.key = key;
-        query.criteria = criteria;
+        if(typeof criteriaOrCallback === "function") {
+            query.criteria = {};
+            callback = criteriaOrCallback;
+        }
+        else {
+            query.criteria = criteriaOrCallback;
+        }
         query.handleCallback(callback);
     }
 
@@ -127,6 +135,7 @@ class QueryObject implements QueryDefinition, FindQuery<any>, FindOneQuery<any>,
     limitCount: number;
     skipCount: number;
     iterator: IteratorCallback<any>;
+    batchSizeValue: number;
 
     private _session: InternalSession;
     private _persister: Persister;
@@ -199,6 +208,11 @@ class QueryObject implements QueryDefinition, FindQuery<any>, FindOneQuery<any>,
     skip(value: number, callback?: ResultCallback<any>): QueryObject {
 
         this.skipCount = value;
+        return this.handleCallback(callback);
+    }
+
+    batchSize(value: number, callback?: ResultCallback<any>): QueryObject {
+        this.batchSizeValue = value;
         return this.handleCallback(callback);
     }
 

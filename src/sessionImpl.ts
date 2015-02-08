@@ -69,9 +69,10 @@ const enum Action {
     Fetch       = 0x00000080,
     FindQuery   = 0x00000100,
     ModifyQuery = 0x00000200,
+    Wait        = 0x00000400,
 
     ReadOnly = Fetch | FindQuery,
-    All = Save | Remove | Detach | Flush | Clear | Refresh | Merge | Fetch | FindQuery | ModifyQuery
+    All = Save | Remove | Detach | Flush | Clear | Refresh | Merge | Fetch | FindQuery | ModifyQuery | Wait
 }
 
 // TODO: option to use weak reference until object is removed or modified and attach event to unlink if garbage collected? https://github.com/TooTallNate/node-weak
@@ -132,6 +133,11 @@ class SessionImpl implements InternalSession {
     flush(callback?: Callback): void {
 
         this._queue.add(Action.Flush, Action.All, undefined, callback);
+    }
+
+    wait(callback?: Callback): void {
+
+        this._queue.add(Action.Wait, Action.All, undefined, callback);
     }
 
     find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T> {
@@ -284,6 +290,9 @@ class SessionImpl implements InternalSession {
             case Action.Flush:
                 this._flush(callback);
                 break;
+            case Action.Wait:
+                if(callback) callback(null);
+                break;
             case Action.Fetch:
                 this.fetchInternal(arg[0], arg[1], callback);
                 break;
@@ -338,6 +347,33 @@ class SessionImpl implements InternalSession {
         }
 
         callback();
+    }
+
+    /**
+     * Notifies session that entity has been removed from outside of the session. Cascade the remove operation
+     * and then immediately unlink the entity. Any cascaded remove operations will not be executed until flush.
+     * @param entity
+     * @param callback
+     */
+    notifyRemoved(id: Identifier, callback: Callback): void {
+
+        // check to see if object is scheduled for delete
+        var links = this._objectLinks[id.toString()];
+        if(links.scheduledOperation == ScheduledOperation.Delete) {
+            // if scheduled for removal, immediately unlink object since it has already been removed from database
+            this._unlinkObject(links);
+            return callback();
+        }
+
+        // otherwise, cascade the remove operations
+        this._remove(links.object, (err) => {
+            if(err) return callback(err);
+
+            // Then unlink object since it has already been removed from database. Any removals that were scheduled
+            // from the cascade will be executed on next flush.
+            this._unlinkObject(links);
+            callback();
+        });
     }
 
     private _remove(obj: any, callback: Callback): void {

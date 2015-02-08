@@ -17,6 +17,8 @@ interface QueryDefinition {
     limitCount: number;
     skipCount: number;
     iterator: IteratorCallback<any>;
+    batchSizeValue: number;
+    // TODO: add read preference. Use string or enumeration or static class with core values?
 
     execute(callback: ResultCallback<any>): void;
 }

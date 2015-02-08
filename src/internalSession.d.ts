@@ -16,6 +16,7 @@ interface InternalSession extends Session {
     getPersister(mapping: EntityMapping): Persister;
     getReferenceInternal(mapping: EntityMapping, id: Identifier): any;
     fetchInternal(obj: any, paths: string[], callback: ResultCallback<any>): void;
+    notifyRemoved(id: Identifier, callback: Callback): void;
     executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void;
 }
 

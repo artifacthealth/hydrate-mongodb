@@ -22,6 +22,7 @@ interface Session {
     fetch<T>(obj: T, path: string, callback?: ResultCallback<T>): void;
     fetch<T>(obj: T, paths: string[], callback?: ResultCallback<T>): void;
     query<T>(ctr: Constructor<T>): Query<T>;
+    wait(callback?: Callback): void;
 }
 
 export = Session;

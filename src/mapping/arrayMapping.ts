@@ -23,6 +23,8 @@ class ArrayMapping extends MappingBase {
             return;
         }
 
+        // TODO: remove items scheduled for delete from array
+
         var result = new Array(value.length),
             mapping = this.elementMapping;
 

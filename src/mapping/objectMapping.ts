@@ -72,6 +72,15 @@ class ObjectMapping extends MappingBase {
 
     protected readObject(session: InternalSession, obj: any, value: any, path: string, errors: MappingError[], checkRemoved: boolean): any {
 
+        if(value === null || value === undefined) {
+            return null;
+        }
+
+        if(typeof value !== "object") {
+            errors.push({message: "Expected value to be an object.", path: path, value: value});
+            return;
+        }
+
         var base = path ? path + "." : "",
             properties = this.properties;
 

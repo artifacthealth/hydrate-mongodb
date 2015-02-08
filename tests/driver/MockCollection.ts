@@ -30,6 +30,18 @@ class MockCollection implements Collection {
 
     }
 
+    update(selector: Object, document: any, options: { safe?: boolean; upsert?: any; multi?: boolean; serializeFunctions?: boolean; }, callback: (err: Error, result: any) => void): void {
+
+    }
+
+    count(query: Object, options: { readPreference?: string; limit?: number; skip?: number}, callback: (err: Error, result: any) => void): void {
+
+    }
+
+    distinct(key: string, query: Object, options: { readPreference: string; }, callback: (err: Error, result: any) => void): void {
+
+    }
+
     initializeUnorderedBulkOp(): Bulk {
 
         return new MockBulk();

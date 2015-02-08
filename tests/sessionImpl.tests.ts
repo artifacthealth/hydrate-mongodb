@@ -34,15 +34,25 @@ describe('SessionImpl', () => {
             if(err) throw err;
 
             var session = sessionFactory.createSession();
+            session.query(model.Person).findOneAndRemove({ 'personName.first': 'Bob' }, (err, result) => {
+                if(err) return done(err);
+                console.log("IN FINDONEANDREMOVE RESULT");
+                done();
+            });
 
             /*
-            session.query(model.Person).removeAll({ 'personName.first': 'Mary' }, (err, count) => {
+            session.query(model.Person).distinct("personName", { 'personName.first': 'Mary' }, (err, results) => {
                 if(err) return done(err);
-                console.log("Removed " + count + " items.");
-                done();
+                console.log("Distinct:");
+                for(var i = 0; i < results.length; i++) {
+                    console.log(results[i]);
+                }
             });
             */
 
+          //  session.wait(done);
+
+            /*
             var count = 0;
             var start = process.hrtime();
             session.query(model.Person).findAll({ 'personName.last': 'Jones' }).each((entity, done) => {
@@ -54,6 +64,7 @@ describe('SessionImpl', () => {
                 console.log("findAll.each processed " + count + " items in " + elapsed[0] + "s, " + (elapsed[1]/1000000).toFixed(3) + "ms");
                 done();
             });
+            */
 
             /*
             var start = process.hrtime();
