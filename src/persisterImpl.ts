@@ -389,6 +389,10 @@ class PersisterImpl implements Persister {
             new: query.wantsUpdated
         }
 
+        if(query.updateDocument) {
+            // TODO: prepare update document. This should include incrementing the version.
+        }
+
         this._collection.findAndModify(query.criteria, query.sortBy, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
 
@@ -404,7 +408,7 @@ class PersisterImpl implements Persister {
             }
             else {
                 // If the entity is not in the session, then it will be loaded and added to the session as managed.
-                // The state may be changed to Removed or Obsolete below.
+                // The state may be changed to Removed below.
                 var result = this._loadOne(document);
                 if (result.error) {
                     return callback(result.error);
@@ -412,30 +416,35 @@ class PersisterImpl implements Persister {
                 entity = result.value;
             }
 
-            // If the entity was not already in the session as removed, then see if we need to refresh the entity
-            // from the updated document or notify the session that the entity is now removed or obsolete.
+            // If the entity is not pending deletion, then see if we need to refresh the entity from the updated
+            // document or notify the session that the entity is now removed.
+
+            // Note that if the entity is pending deletion in the session then the callback will be called with null
+            // for the result. This is a little funny but seems most consistent with other methods such as findOne.
             if(entity) {
                 if (options.remove) {
                     // If entity was removed then notify the session that the entity has been removed from the
                     // database. Note that the remove operation is not cascaded.
                     this._session.notifyRemoved(result.value);
                 }
-                else if (!options.new) {
-                    // If findAndModify did not return the updated document, notify the session that the entity no
-                    // longer reflects the state of the persistent entity.
-                    this._session.notifyObsolete(entity);
-                }
-                else if (alreadyLoaded) {
+                else if (options.new && alreadyLoaded) {
                     // If findAndModify returned the updated document and the entity was already part of the session
                     // before findAndModify was executed, then refresh the entity from the returned document. Note
                     // that the refresh operation is not cascaded.
-                    this._refreshFromDocument(entity, document, callback);
+                    this._refreshFromDocument(entity, document, (err: Error) => {
+                        if(err) return callback(err);
+                        callback(null, entity);
+                    });
                     return;
                 }
             }
 
-            // Note that if the entity has already been removed from the session then the callback will contain null
-            // for the result. This is a little funny but seems most consistent with other methods such as findOne.
+            // Note that if the updated document is not returned, the old version of the entity will remain or be
+            // loaded into the session. If the entity is saved then an error will occur because the version will
+            // not match. This is most consistent with an entity being modified from outside of the session, which
+            // is essentially what is happening if findOneAndUpdate is called without returning the new document. If a
+            // user wants to see the old version of the document and then make changes, they can always call refresh
+            // after findOneAndUpdate.
             callback(null, entity);
         });
     }
@@ -731,7 +740,7 @@ class FindQueue {
         // check for simple case of only a single find in the queue
         if(ids.length == 1) {
             var id = ids[0],
-                callback = callbacks[id.toString()]
+                callback = callbacks[id.toString()];
 
             this._persister.findOne({ _id:  id }, (err, entity) => {
                 if(err) return callback(err);

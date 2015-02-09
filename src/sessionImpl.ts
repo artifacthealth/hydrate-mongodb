@@ -387,19 +387,6 @@ class SessionImpl implements InternalSession {
         }
     }
 
-    /**
-     * Notifies session that a managed entity is out of date and no longer reflects the state of the persistent
-     * entity.
-     * @param entity The entity that is now obsolete.
-     */
-    notifyObsolete(entity: Object): void {
-
-        var links = this._getObjectLinks(entity);
-        if(links && links.state == ObjectState.Managed) {
-            links.state = ObjectState.Obsolete;
-        }
-    }
-
     private _remove(obj: any, callback: Callback): void {
 
         this._findReferencedEntities(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {

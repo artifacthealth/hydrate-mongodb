@@ -48,8 +48,8 @@ describe('SessionImpl', () => {
             */
 
             session.query(model.Person).findOne({ 'name': 'Jones, Mary' }, (err, result) => {
-                session.remove(result);
-                session.query(model.Person).findOneAndUpdate({ 'name': 'Jones, Mary' }, { $set: { name: 'Mary' }}, (err, result) => {
+                //session.remove(result);
+                session.query(model.Person).findOneAndUpdate({ 'name': 'Jones, Mary' }, { $set: { name: 'Mary' }}).returnUpdated((err, result) => {
                     if(err) return done(err);
                     console.log("IN FINDONEANDUPDATE RESULT");
                     done();

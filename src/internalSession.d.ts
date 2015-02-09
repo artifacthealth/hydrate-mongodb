@@ -13,7 +13,6 @@ interface InternalSession extends Session {
     getObject(id: any): any;
     registerManaged(persister: Persister, entity: Object, document: any): void;
     notifyRemoved(entity: Object): void;
-    notifyObsolete(entity: Object): void;
     getPersister(mapping: EntityMapping): Persister;
     getReferenceInternal(mapping: EntityMapping, id: any): any;
     fetchInternal(entity: Object, paths: string[], callback: ResultCallback<any>): void;
