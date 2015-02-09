@@ -36,10 +36,16 @@ const enum ObjectState {
 
     /**
      * Removed entities have a persistent identity, are associated with a session, and are scheduled for deletion
-     * from the mongodb. Once the entity is deleted from the mongodb, the entity is no longer managed and is
+     * from the database. Once the entity is deleted from the database, the entity is no longer managed and is
      * considered a new entity.
      */
-    Removed
+    Removed,
+
+    /**
+     * Obsolete entities have a persistent identity and are associated with a session, but are known to not reflect
+     * the current state of the database.
+     */
+    Obsolete
 }
 
 const enum ObjectFlags {
@@ -79,10 +85,14 @@ const enum Action {
 interface ObjectLinks {
 
     state: ObjectState;
-    scheduledOperation: ScheduledOperation;
-    object: any;
+    scheduledOperation?: ScheduledOperation;
+    object?: any;
     originalDocument?: any;
-    persister: Persister;
+    persister?: Persister;
+}
+
+var detachedLinks = {
+    state: ObjectState.Detached
 }
 
 // TODO: read-only query results. perhaps not needed if we can use Object.observe in Node v12 to be notified of which objects have changed.
@@ -190,7 +200,7 @@ class SessionImpl implements InternalSession {
         var id = obj["_id"];
         if(id) {
             var links = this._objectLinks[id.toString()];
-            if(links && links.state != ObjectState.Removed) {
+            if(links && links.state == ObjectState.Managed) {
                 return true;
             }
         }
@@ -229,12 +239,19 @@ class SessionImpl implements InternalSession {
      * returned. If the object is not found then undefined is returned; otherwise, the object is returned.
      * @param id The object identifier.
      */
-    getObject(id: Identifier): any {
+    getObject(id: any): any {
 
         var links = this._objectLinks[id.toString()];
         if (links) {
-            return links.state == ObjectState.Removed ? null : links.object;
+            switch(links.state) {
+                case ObjectState.Removed:
+                    return null
+                case ObjectState.Managed:
+                    return links.object
+            }
         }
+
+        // otherwise, return undefined
     }
 
     registerManaged(persister: Persister, entity: any, document: any): void {
@@ -338,8 +355,16 @@ class SessionImpl implements InternalSession {
                         callback(new Error("Cannot save a detached object."));
                         return;
                     case ObjectState.Removed:
-                        // Cancel delete operation and make managed.
-                        links.scheduledOperation = ScheduledOperation.None;
+                        if (links.scheduledOperation == ScheduledOperation.Delete) {
+                            // if object is schedule for delete then cancel the pending delete operation.
+                            links.scheduledOperation = ScheduledOperation.None;
+                        }
+                        else {
+                            // otherwise, this means the entity has already been removed from the database so queue
+                            // object for insert operation.
+                            links.scheduledOperation = ScheduledOperation.Insert;
+                        }
+
                         links.state = ObjectState.Managed;
                         break;
                 }
@@ -350,30 +375,29 @@ class SessionImpl implements InternalSession {
     }
 
     /**
-     * Notifies session that entity has been removed from outside of the session. Cascade the remove operation
-     * and then immediately unlink the entity. Any cascaded remove operations will not be executed until flush.
-     * @param entity
-     * @param callback
+     * Notifies session that a managed entity has been removed from the database from outside of the session.
+     * @param entity The entity that was removed.
      */
-    notifyRemoved(id: Identifier, callback: Callback): void {
+    notifyRemoved(entity: Object): void {
 
-        // check to see if object is scheduled for delete
-        var links = this._objectLinks[id.toString()];
-        if(links.scheduledOperation == ScheduledOperation.Delete) {
-            // if scheduled for removal, immediately unlink object since it has already been removed from database
-            this._unlinkObject(links);
-            return callback();
+        // Remove entity. No need to schedule delete operation since it is already removed from the database.
+        if(!this._removeEntity(entity, /* scheduleDelete */ false)) {
+            // this should never happen
+            throw new Error("Cannot remove a detached object.");
         }
+    }
 
-        // otherwise, cascade the remove operations
-        this._remove(links.object, (err) => {
-            if(err) return callback(err);
+    /**
+     * Notifies session that a managed entity is out of date and no longer reflects the state of the persistent
+     * entity.
+     * @param entity The entity that is now obsolete.
+     */
+    notifyObsolete(entity: Object): void {
 
-            // Then unlink object since it has already been removed from database. Any removals that were scheduled
-            // from the cascade will be executed on next flush.
-            this._unlinkObject(links);
-            callback();
-        });
+        var links = this._getObjectLinks(entity);
+        if(links && links.state == ObjectState.Managed) {
+            links.state = ObjectState.Obsolete;
+        }
     }
 
     private _remove(obj: any, callback: Callback): void {
@@ -390,29 +414,41 @@ class SessionImpl implements InternalSession {
         for(var i = entities.length - 1; i >= 0; i--) {
             var obj = entities[i];
 
-            var links = this._getObjectLinks(obj);
-            if (links) {
-                switch (links.state) {
-                    case ObjectState.Managed:
-                        if (links.scheduledOperation == ScheduledOperation.Insert) {
-                            // if the object has never been persisted then unlink the object and clear it's id
-                            this._unlinkObject(links);
-                        }
-                        else {
-                            // queue object for delete operation
-                            links.scheduledOperation = ScheduledOperation.Delete;
-                            links.state = ObjectState.Removed;
-                            // object is unlinked after flush
-                        }
-                        break;
-                    case ObjectState.Detached:
-                        callback(new Error("Cannot remove a detached object."));
-                        return;
-                }
+            if(!this._removeEntity(obj, /* scheduleDelete */ true)) {
+                callback(new Error("Cannot remove a detached object."));
+                return;
             }
         }
 
         callback();
+    }
+
+    private _removeEntity(obj: any, scheduleDelete: boolean): boolean {
+
+        var links = this._getObjectLinks(obj);
+        if (links) {
+            switch (links.state) {
+                case ObjectState.Managed:
+                    // set state as removed, object wil be unlinked after flush.
+                    links.state = ObjectState.Removed;
+
+                    if (links.scheduledOperation == ScheduledOperation.Insert) {
+                        // if the object has never been persisted then clear the insert operation
+                        links.scheduledOperation = ScheduledOperation.None;
+                    }
+                    else {
+                        // otherwise, queue object for delete operation
+                        if(scheduleDelete) {
+                            links.scheduledOperation = ScheduledOperation.Delete;
+                        }
+                    }
+                    break;
+                case ObjectState.Detached:
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     private _detach(obj: any, callback: Callback): void {
@@ -523,9 +559,11 @@ class SessionImpl implements InternalSession {
 
             for (var i = 0, l = list.length; i < l; i++) {
                 var links = list[i];
-                if(links.scheduledOperation == ScheduledOperation.Delete) {
-                    // after a successful delete operation unlink the object
+                if(links.state == ObjectState.Removed) {
+                    // unlink any removed objects.
                     this._unlinkObject(links);
+                    // then remove it's identifier
+                    this._clearIdentifier(links);
                 }
                 // clear any scheduled operations
                 links.scheduledOperation = ScheduledOperation.None;
@@ -552,8 +590,8 @@ class SessionImpl implements InternalSession {
 
         // TODO: Is it necessary to restrict fetch to managed objects?
         var links = this._getObjectLinks(obj);
-        if (!links || links.state != ObjectState.Managed) {
-            return callback(new Error("Object is not managed."));
+        if (!links || links.state == ObjectState.Detached) {
+            return callback(new Error("Object is not associated with the session."));
         }
 
         if(!paths || paths.length === 0) {
@@ -581,7 +619,10 @@ class SessionImpl implements InternalSession {
         var objectLinks = this._objectLinks;
         for (var id in objectLinks) {
             if (objectLinks.hasOwnProperty(id)) {
-                ret.push(objectLinks[id]);
+                var links = objectLinks[id];
+                if(links) {
+                    ret.push(objectLinks[id]);
+                }
             }
         }
 
@@ -594,6 +635,15 @@ class SessionImpl implements InternalSession {
      */
     private _clear(callback: Callback): void {
 
+        var objectLinks = this._objectLinks;
+        for (var id in objectLinks) {
+            if (objectLinks.hasOwnProperty(id)) {
+                var links = objectLinks[id];
+                if(links) {
+                    this._unlinkObject(links);
+                }
+            }
+        }
         this._objectLinks = {};
         process.nextTick(callback);
     }
@@ -603,14 +653,12 @@ class SessionImpl implements InternalSession {
         var id = obj["_id"];
         if (id) {
             var links = this._objectLinks[id.toString()];
-            if (!links) {
+            if (!links || links.object !== obj) {
                 // If we have an id but no links then the object must be detached since we assume that we manage
                 // the assignment of the identifier.
-                var persister = this._getPersisterForObject(obj);
-                if (!persister) return;
-
-                links = this._linkObject(obj, persister);
-                links.state = ObjectState.Detached;
+                // Also, we the id is linked but the object in the session is different than the object passed in
+                // then we also have a detached object.
+                return detachedLinks;
             }
             return links;
         }
@@ -620,7 +668,7 @@ class SessionImpl implements InternalSession {
 
         var id = obj["_id"].toString();
         if(this._objectLinks[id]) {
-            throw new Error("Session already contains a managed entity with identifier '" + id + "'.");
+            throw new Error("Session already contains an entity with identifier '" + id + "'.");
         }
 
         var links = {
@@ -637,12 +685,17 @@ class SessionImpl implements InternalSession {
 
         this._detachReferences(links.object);
 
-        delete this._objectLinks[links.object["_id"].toString()];
+        this._objectLinks[links.object["_id"].toString()] = undefined;
 
-        // if the object was never persisted or if it has been removed, then clear it's identifier as well
-        if (links.scheduledOperation == ScheduledOperation.Insert || links.state == ObjectState.Removed) {
-            delete links.object["_id"];
+        // if the object was never persisted, then clear it's identifier as well
+        if (links.scheduledOperation == ScheduledOperation.Insert) {
+            this._clearIdentifier(links);
         }
+    }
+
+    private _clearIdentifier(links: ObjectLinks): void {
+
+        delete links.object["_id"];
     }
 
     private _detachReferences(obj: any): void {

@@ -16,7 +16,7 @@ interface QueryDefinition {
     sortBy: [string, number][];
     limitCount: number;
     skipCount: number;
-    iterator: IteratorCallback<any>;
+    iterator: IteratorCallback<Object>;
     batchSizeValue: number;
     // TODO: add read preference. Use string or enumeration or static class with core values?
 

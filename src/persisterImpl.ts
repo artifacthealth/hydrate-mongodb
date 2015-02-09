@@ -129,19 +129,23 @@ class PersisterImpl implements Persister {
      * @param callback The callback to call when method completes. The results parameter contains the new database
      * document.
      */
-    refresh(entity: any, callback: ResultCallback<any>): void {
+    refresh(entity: any, callback: ResultCallback<Object>): void {
 
         this.findOneById(entity["_id"], (err, document) => {
             if (err) return callback(err);
-
-            var errors: MappingError[] = [];
-            this._mapping.refresh(this._session, entity, document, errors);
-            if(errors.length > 0) {
-                return callback(new Error("Error deserializing document:\n" + MappingError.createErrorMessage(errors)));
-            }
-
-            callback(null, document);
+            this._refreshFromDocument(entity, document, callback);
         });
+    }
+
+    private _refreshFromDocument(entity: Object, document: Object, callback: ResultCallback<Object>): void {
+
+        var errors: MappingError[] = [];
+        this._mapping.refresh(this._session, entity, document, errors);
+        if(errors.length > 0) {
+            return callback(new Error("Error deserializing document:\n" + MappingError.createErrorMessage(errors)));
+        }
+
+        callback(null, document);
     }
 
     resolve(entity: any, path: string, callback: Callback): void {
@@ -230,10 +234,8 @@ class PersisterImpl implements Persister {
                 this._findEachSeries(query, callback);
                 break;
             case QueryKind.FindOneAndRemove:
-                this._findOneAndRemove(query, callback);
-                break;
             case QueryKind.FindOneAndUpdate:
-                this._findOneAndUpdate(query, callback);
+                this._findOneAndModify(query, this._fetchOne(query, callback));
                 break;
             case QueryKind.RemoveOne:
             case QueryKind.RemoveAll:
@@ -380,52 +382,61 @@ class PersisterImpl implements Persister {
         return cursor;
     }
 
-    private _findOneAndRemove(query: QueryDefinition, callback: ResultCallback<any>): void {
+    private _findOneAndModify(query: QueryDefinition, callback: ResultCallback<Object>): void {
 
         var options: FindAndModifyOptions = {
-            remove: true
-        }
-
-        this._collection.findAndModify(query.criteria, query.sortBy, undefined, options, (err, response) => {
-            if (err) return callback(err);
-
-            var document = response.value;
-
-            // load the deleted document
-            var result = this._loadOne(document);
-            if(result.error) {
-                return callback(result.error);
-            }
-
-            // Notify session that entity has been removed from the database to cascade the remove and unlink the,
-            // entity. We pass the id instead of the entity because _loadOne can return null for the result if the
-            // object is scheduled for delete. We still need to call notifyRemoved in this case so we can unlink
-            // the entity.
-            this._session.notifyRemoved(document["_id"], (err) => {
-                if(err) return callback(err);
-                callback(null, result.value);
-            });
-        });
-    }
-
-    private _findOneAndUpdate(query: QueryDefinition, callback: ResultCallback<any>): void {
-
-        var options: FindAndModifyOptions = {
+            remove: query.kind == QueryKind.FindOneAndRemove,
             new: query.wantsUpdated
         }
 
         this._collection.findAndModify(query.criteria, query.sortBy, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
 
-            // TODO: handle this
-            // if options.remove is false
-            //      - if options.new is false
-            //          - if entity is managed then detach the entity
-            //          - either way, load the entity detached using value returned
-            //      - if options.new is true
-            //          - if entity is managed then refresh entity using value returned
-            //          - if entity is not managed then load entity
-            //      - either way we should handle the fetchPaths options
+            var document = response.value;
+            if (!document) return callback(null); // no match for criteria
+
+            // check if the entity is already in the session
+            var entity = this._session.getObject(document["_id"]);
+            if(entity !== undefined) {
+                // We check to see if the entity is already in the session so we know if we need to refresh the
+                // entity or not.
+                var alreadyLoaded = true;
+            }
+            else {
+                // If the entity is not in the session, then it will be loaded and added to the session as managed.
+                // The state may be changed to Removed or Obsolete below.
+                var result = this._loadOne(document);
+                if (result.error) {
+                    return callback(result.error);
+                }
+                entity = result.value;
+            }
+
+            // If the entity was not already in the session as removed, then see if we need to refresh the entity
+            // from the updated document or notify the session that the entity is now removed or obsolete.
+            if(entity) {
+                if (options.remove) {
+                    // If entity was removed then notify the session that the entity has been removed from the
+                    // database. Note that the remove operation is not cascaded.
+                    this._session.notifyRemoved(result.value);
+                }
+                else if (!options.new) {
+                    // If findAndModify did not return the updated document, notify the session that the entity no
+                    // longer reflects the state of the persistent entity.
+                    this._session.notifyObsolete(entity);
+                }
+                else if (alreadyLoaded) {
+                    // If findAndModify returned the updated document and the entity was already part of the session
+                    // before findAndModify was executed, then refresh the entity from the returned document. Note
+                    // that the refresh operation is not cascaded.
+                    this._refreshFromDocument(entity, document, callback);
+                    return;
+                }
+            }
+
+            // Note that if the entity has already been removed from the session then the callback will contain null
+            // for the result. This is a little funny but seems most consistent with other methods such as findOne.
+            callback(null, entity);
         });
     }
 
@@ -504,6 +515,7 @@ class PersisterImpl implements Persister {
 
         return (err: Error, entity: any) => {
             if(err) return callback(err);
+            if(!entity) return callback(null);
             this._session.fetchInternal(entity, query.fetchPaths, callback);
         }
     }
@@ -523,13 +535,14 @@ class PersisterImpl implements Persister {
         }
     }
 
-    private _fetchIterator(query: FindEachQuery): IteratorCallback<any[]> {
+    private _fetchIterator(query: FindEachQuery): IteratorCallback<Object> {
 
         if(!query.fetchPaths) {
             return query.iterator;
         }
 
         return (entity: any, done: (err?: Error) => void) => {
+            if(!entity) return done();
 
             this._session.fetchInternal(entity, query.fetchPaths, (err: Error, result: any) => {
                 if(err) return done(err);
@@ -538,7 +551,7 @@ class PersisterImpl implements Persister {
         }
     }
 
-    private _loadAll(documents: any[]): Result<any[]> {
+    private _loadAll(documents: any[]): Result<Object[]> {
 
         if(!documents || documents.length == 0) {
             return new Result(null, []);
@@ -551,7 +564,7 @@ class PersisterImpl implements Persister {
             if(result.error) {
                 return new Result(result.error, null);
             }
-            // Filter any null values from the result because null means the object is scheduled for remove
+            // Filter any null values from the result because null means the object is scheduled for removal
             if(result.value !== null) {
                 entities[j++] = result.value;
             }
@@ -560,7 +573,7 @@ class PersisterImpl implements Persister {
         return new Result(null, entities);
     }
 
-    private _loadOne(document: any): Result<any> {
+    private _loadOne(document: any): Result<Object> {
 
         var entity: any;
 
