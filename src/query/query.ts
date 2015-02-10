@@ -24,17 +24,37 @@ class Query<T> {
         this._persister = persister;
     }
 
-    findAll(criteria: Object, callback?: ResultCallback<T[]>): FindQuery<T> {
+    findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
+    findAll(criteria: Object, callback?: ResultCallback<T[]>): FindQuery<T>;
+    findAll(criteriaOrCallback?: any, callback?: ResultCallback<T[]>): FindQuery<T> {
 
         var query = this._createQuery(QueryKind.FindAll);
-        query.criteria = criteria;
+
+        if(typeof criteriaOrCallback == "function") {
+            callback = criteriaOrCallback;
+            query.criteria = {};
+        }
+        else {
+            query.criteria = criteriaOrCallback || {};
+        }
+
         return query.handleCallback(callback);
     }
 
-    findOne(criteria: Object, callback?: ResultCallback<T>): FindOneQuery<T> {
+    findOne(callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOne(criteria: Object, callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOne(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         var query = this._createQuery(QueryKind.FindOne);
-        query.criteria = criteria;
+
+        if(typeof criteriaOrCallback == "function") {
+            callback = criteriaOrCallback;
+            query.criteria = {};
+        }
+        else {
+            query.criteria = criteriaOrCallback || {};
+        }
+
         return query.handleCallback(callback);
     }
 
@@ -49,54 +69,117 @@ class Query<T> {
         return query.handleCallback(callback);
     }
 
-    findOneAndRemove(criteria: Object, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T> {
+    findOneAndRemove(callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndRemove(criteria: Object, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T> {
 
         var query = this._createQuery(QueryKind.FindOneAndRemove);
-        query.criteria = criteria;
+
+        if(typeof criteriaOrCallback == "function") {
+            callback = criteriaOrCallback;
+            query.criteria = {};
+        }
+        else {
+            query.criteria = criteriaOrCallback || {};
+        }
+
         return query.handleCallback(callback);
     }
 
-    findOneAndUpdate(criteria: Object, updateDocument: Object, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> {
+    findOneAndUpdate(updateDocument: Object, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
+    findOneAndUpdate(criteria: Object, updateDocument: Object, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
+    findOneAndUpdate(criteriaOrUpdateDocument: Object, updateDocumentOrCallback: any, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>  {
 
         var query = this._createQuery(QueryKind.FindOneAndUpdate);
-        query.criteria = criteria;
-        query.updateDocument = updateDocument;
+
+        if(typeof updateDocumentOrCallback == "function" || updateDocumentOrCallback === undefined) {
+            callback = updateDocumentOrCallback;
+            query.updateDocument = criteriaOrUpdateDocument;
+            query.criteria = {};
+        }
+        else {
+            query.updateDocument = updateDocumentOrCallback;
+            query.criteria = criteriaOrUpdateDocument;
+        }
+
         return query.handleCallback(callback);
     }
 
-    removeAll(criteria: Object, callback?: ResultCallback<number>): void {
+    removeAll(callback?: ResultCallback<number>): void;
+    removeAll(criteria: Object, callback?: ResultCallback<number>): void;
+    removeAll(criteriaOrCallback?: any, callback?: ResultCallback<number>): void {
 
         var query = this._createQuery(QueryKind.RemoveAll);
-        query.criteria = criteria;
+
+        if(typeof criteriaOrCallback == "function") {
+            callback = criteriaOrCallback;
+            query.criteria = {};
+        }
+        else {
+            query.criteria = criteriaOrCallback || {};
+        }
+
         query.handleCallback(callback);
     }
 
-    removeOne(criteria: Object, callback?: ResultCallback<number>): void {
+    removeOne(callback?: ResultCallback<number>): void;
+    removeOne(criteria: Object, callback?: ResultCallback<number>): void;
+    removeOne(criteriaOrCallback?: any, callback?: ResultCallback<number>): void {
 
         var query = this._createQuery(QueryKind.RemoveOne);
-        query.criteria = criteria;
+
+        if(typeof criteriaOrCallback == "function") {
+            callback = criteriaOrCallback;
+            query.criteria = {};
+        }
+        else {
+            query.criteria = criteriaOrCallback || {};
+        }
+
         query.handleCallback(callback);
     }
 
-    updateAll(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
+    updateAll(updateDocument: Object, callback?: ResultCallback<number>): void;
+    updateAll(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void;
+    updateAll(criteriaOrUpdateDocument: Object, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
 
         var query = this._createQuery(QueryKind.UpdateAll);
-        query.criteria = criteria;
-        query.updateDocument = updateDocument;
+
+        if(typeof updateDocumentOrCallback == "function" || updateDocumentOrCallback === undefined) {
+            callback = updateDocumentOrCallback;
+            query.updateDocument = criteriaOrUpdateDocument;
+            query.criteria = {};
+        }
+        else {
+            query.updateDocument = updateDocumentOrCallback;
+            query.criteria = criteriaOrUpdateDocument;
+        }
+
         query.handleCallback(callback);
     }
 
-    updateOne(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void {
+    updateOne(updateDocument: Object, callback?: ResultCallback<number>): void;
+    updateOne(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void;
+    updateOne(criteriaOrUpdateDocument: Object, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
 
         var query = this._createQuery(QueryKind.UpdateOne);
-        query.criteria = criteria;
-        query.updateDocument = updateDocument;
+
+        if(typeof updateDocumentOrCallback == "function" || updateDocumentOrCallback === undefined) {
+            callback = updateDocumentOrCallback;
+            query.updateDocument = criteriaOrUpdateDocument;
+            query.criteria = {};
+        }
+        else {
+            query.updateDocument = updateDocumentOrCallback;
+            query.criteria = criteriaOrUpdateDocument;
+        }
+
         query.handleCallback(callback);
     }
 
-    distinct(key: string, callback: ResultCallback<T[]>): void;
-    distinct(key: string, criteria: Object, callback: ResultCallback<T[]>): void;
-    distinct(key: string, criteriaOrCallback: any, callback?: ResultCallback<T[]>): void {
+    distinct(key: string, callback: ResultCallback<any[]>): void;
+    distinct(key: string, criteria: Object, callback: ResultCallback<any[]>): void;
+    distinct(key: string, criteriaOrCallback: any, callback?: ResultCallback<any[]>): void {
 
         var query = this._createQuery(QueryKind.Distinct);
         query.key = key;
@@ -105,15 +188,25 @@ class Query<T> {
             callback = criteriaOrCallback;
         }
         else {
-            query.criteria = criteriaOrCallback;
+            query.criteria = criteriaOrCallback || {};
         }
         query.handleCallback(callback);
     }
 
-    count(criteria: Object, callback?: ResultCallback<number>): CountQuery {
+    count(callback?: ResultCallback<number>): CountQuery;
+    count(criteria: Object, callback?: ResultCallback<number>): CountQuery;
+    count(criteriaOrCallback?: any, callback?: ResultCallback<number>): CountQuery {
 
         var query = this._createQuery(QueryKind.Count);
-        query.criteria = criteria;
+
+        if(typeof criteriaOrCallback == "function") {
+            callback = criteriaOrCallback;
+            query.criteria = {};
+        }
+        else {
+            query.criteria = criteriaOrCallback || {};
+        }
+
         return query.handleCallback(callback);
     }
 
@@ -123,18 +216,18 @@ class Query<T> {
     }
 }
 
-class QueryObject implements QueryDefinition, FindQuery<any>, FindOneQuery<any>, FindOneAndRemoveQuery<any>, FindOneAndUpdateQuery<any>, CountQuery {
+class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Object>, FindOneAndRemoveQuery<Object>, FindOneAndUpdateQuery<Object>, CountQuery {
 
     key: string;
-    criteria: any;
-    updateDocument: any;
+    criteria: Object;
+    updateDocument: Object;
 
     wantsUpdated: boolean;
     fetchPaths: string[];
     sortBy: [string, number][];
     limitCount: number;
     skipCount: number;
-    iterator: IteratorCallback<any>;
+    iterator: IteratorCallback<Object>;
     batchSizeValue: number;
 
     private _session: InternalSession;
@@ -216,7 +309,7 @@ class QueryObject implements QueryDefinition, FindQuery<any>, FindOneQuery<any>,
         return this.handleCallback(callback);
     }
 
-    each(iterator: IteratorCallback<any>, callback: Callback): void {
+    each(iterator: IteratorCallback<Object>, callback: Callback): void {
 
         if(!iterator) {
             throw new Error("Missing required argument 'iterator'.");
@@ -231,7 +324,7 @@ class QueryObject implements QueryDefinition, FindQuery<any>, FindOneQuery<any>,
         this.handleCallback(callback);
     }
 
-    eachSeries(iterator: IteratorCallback<any>, callback: Callback): void {
+    eachSeries(iterator: IteratorCallback<Object>, callback: Callback): void {
 
         if(!iterator) {
             throw new Error("Missing required argument 'iterator'.");
@@ -246,7 +339,7 @@ class QueryObject implements QueryDefinition, FindQuery<any>, FindOneQuery<any>,
         this.handleCallback(callback);
     }
 
-    handleCallback(callback: ResultCallback<any>): QueryObject {
+    handleCallback(callback: ResultCallback<Object>): QueryObject {
 
         if(callback) {
             if(this._executed) {
@@ -261,7 +354,7 @@ class QueryObject implements QueryDefinition, FindQuery<any>, FindOneQuery<any>,
         return this;
     }
 
-    execute(callback: ResultCallback<any>): void {
+    execute(callback: ResultCallback<Object>): void {
 
         this._persister.executeQuery(this, callback);
     }

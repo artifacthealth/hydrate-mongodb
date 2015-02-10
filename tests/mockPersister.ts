@@ -31,6 +31,8 @@ class MockPersister implements Persister {
     removeCalled = 0;
     removed: any[] = [];
 
+    executeQueryCalled = 0;
+
     constructor(mapping: EntityMapping) {
         this._mapping = mapping;
         this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
@@ -114,9 +116,13 @@ class MockPersister implements Persister {
         process.nextTick(() => callback(null));
     }
 
-    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
+    executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {
+        this.executeQueryCalled++;
         if(this.onExecuteQuery) {
             process.nextTick(() => this.onExecuteQuery(query, callback));
+        }
+        else {
+            process.nextTick(() => callback(null));
         }
     }
 

@@ -8,8 +8,8 @@ interface QueryDefinition {
     readOnly: boolean;
 
     key: string;
-    criteria: any;
-    updateDocument: any;
+    criteria: Object;
+    updateDocument: Object;
 
     wantsUpdated: boolean;
     fetchPaths: string[];
@@ -20,7 +20,7 @@ interface QueryDefinition {
     batchSizeValue: number;
     // TODO: add read preference. Use string or enumeration or static class with core values?
 
-    execute(callback: ResultCallback<any>): void;
+    execute(callback: ResultCallback<Object>): void;
 }
 
 export = QueryDefinition;

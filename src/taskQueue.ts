@@ -51,6 +51,7 @@ class TaskQueue {
         }
     }
 
+    // TODO: if an error occurs should we stop processing of the queue altogether and set the session as invalid?
     // TODO: if an error occurs that is not handled by a callback, should we skip all other scheduled tasks until
     // we get one that has a callback to pass the error to?
     private _process(): void {

@@ -26,7 +26,7 @@ import cascade = require("./fixtures/cascade");
 
 describe('SessionImpl', () => {
 
-    it('test against mongodb', (done) => {
+    it.skip('test against mongodb', (done) => {
 
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/model.d.json");

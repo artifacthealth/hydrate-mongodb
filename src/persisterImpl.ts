@@ -215,7 +215,7 @@ class PersisterImpl implements Persister {
         });
     }
 
-    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
+    executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {
 
         switch(query.kind) {
             case QueryKind.FindOne:
