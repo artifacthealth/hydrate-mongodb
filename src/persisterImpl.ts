@@ -3,7 +3,6 @@
 import async = require("async");
 import EntityMapping = require("./mapping/entityMapping");
 import Collection = require("./driver/collection");
-import Identifier = require('./id/identifier');
 import ResultCallback = require("./core/resultCallback");
 import InternalSession = require("./internalSession");
 import ChangeTracking = require("./mapping/changeTracking");
@@ -24,6 +23,7 @@ import QueryDefinition = require("./query/queryDefinition");
 import QueryKind = require("./query/queryKind");
 import IteratorCallback = require("./core/iteratorCallback");
 import Cursor = require("./driver/cursor");
+import Criteria = require("./query/criteria");
 
 interface FindOneQuery {
 
@@ -89,7 +89,7 @@ class PersisterImpl implements Persister {
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
-    dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any> {
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object> {
 
         var errors: MappingError[] = [];
         var document = this._mapping.write(entity, "", errors, []);
@@ -104,7 +104,7 @@ class PersisterImpl implements Persister {
         return new Result(null, document);
     }
 
-    addInsert(batch: Batch, entity: any): Result<any> {
+    addInsert(batch: Batch, entity: Object): Result<Object> {
 
         var errors: MappingError[] = [];
         var document = this._mapping.write(entity, "", errors, []);
@@ -148,13 +148,13 @@ class PersisterImpl implements Persister {
         callback(null, document);
     }
 
-    resolve(entity: any, path: string, callback: Callback): void {
+    fetch(entity: any, path: string, callback: Callback): void {
 
         if(typeof path !== "string") {
             return callback(new Error("Path must be a string."));
         }
 
-        this._mapping.resolve(this._session, undefined, entity, path.split("."), 0, callback);
+        this._mapping.fetch(this._session, undefined, entity, path.split("."), 0, callback);
     }
 
     findInverseOf(id: any, path: string, callback: ResultCallback<any[]>): void {
@@ -183,14 +183,16 @@ class PersisterImpl implements Persister {
         this.findOne(query, callback);
     }
 
-    findOneById(id: Identifier, callback: ResultCallback<any>): void {
+    findOneById(id: any, callback: ResultCallback<any>): void {
 
         // Check to see if object is already loaded. Note explicit check for undefined here. Null means
-        // that the object is loa ded but scheduled for delete so null should be returned.
+        // that the object is loaded but scheduled for delete so null should be returned.
         var entity = this._session.getObject(id);
         if (entity !== undefined) {
             return process.nextTick(() => callback(null, entity));
         }
+
+        // TODO: FindQueue should be shared by all persisters with the same collection?
 
         (this._findQueue || (this._findQueue = new FindQueue(this))).add(id, callback);
     }
@@ -198,7 +200,7 @@ class PersisterImpl implements Persister {
     // TODO: findOne uses find under the hood in the mongodb driver. Consider optimizing to not use findOne function on mongodb driver.
     findOne(criteria: Object, callback: ResultCallback<any>): void {
 
-        this._collection.findOne(criteria, (err, document) => {
+        this._collection.findOne(this._prepareCriteria(criteria), (err, document) => {
             if (err) return callback(err);
             var result = this._loadOne(document);
             callback(result.error, result.value);
@@ -361,7 +363,7 @@ class PersisterImpl implements Persister {
 
     private _prepareFind(query: FindAllQuery): Cursor {
 
-        var cursor = this._collection.find(query.criteria);
+        var cursor = this._collection.find(this._prepareCriteria(query.criteria));
 
         if(query.sortBy !== undefined) {
             cursor.sort(query.sortBy);
@@ -382,6 +384,62 @@ class PersisterImpl implements Persister {
         return cursor;
     }
 
+    private _prepareCriteria(criteria: Object): Object {
+
+       // var query = this._prepareQuery(criteria);
+        var query = criteria;
+
+        if(this._mapping.discriminatorValue !== undefined) {
+            // TODO: function in mapping to set discriminator value on object
+            (<any>query)[this._mapping.inheritanceRoot.discriminatorField] = this._mapping.discriminatorValue;
+        }
+
+        return query;
+    }
+
+    private _prepareQueryExpression(query: Criteria): Criteria {
+
+        if(!query) return query;
+
+        var result: Criteria = {};
+
+        for(var key in query) {
+            if(query.hasOwnProperty(key)) {
+                var value = (<any>query)[key];
+
+                // check if this is an operator
+                if(key[0] == "$") {
+                    // check for top level operators that require recursive processing
+                    if (key == "$and" || key == "$or" || key == "$nor") {
+                        if (!Array.isArray(value)) {
+                            throw new Error("Value of '" + key + "' operator should be an array.");
+                        }
+
+                        var arr = new Array(value.length);
+                        for (var i = 0, l = value.length; i < l; i++) {
+                            arr[i] = this._prepareQueryExpression(value[i]);
+                        }
+                        result[key] = arr;
+                    }
+                    else if(key == "$where" || key == "$text") {
+                        // the $text operator doesn't contain any fields and we do not make any attempt to prepare
+                        // field values in a $where operator, so we can just copy the value directly
+                        result[key] = value;
+                    }
+                    else {
+                        // the only valid top-level operators are $and, $or, $nor, $where, and $text
+                        throw new Error("Unknown top-level operator '" + key + "'.");
+                    }
+                }
+                else {
+                    // otherwise, it should be a field path so we need to resolve the path
+                }
+            }
+        }
+
+        return result;
+    }
+
     private _findOneAndModify(query: QueryDefinition, callback: ResultCallback<Object>): void {
 
         var options: FindAndModifyOptions = {
@@ -393,7 +451,7 @@ class PersisterImpl implements Persister {
             // TODO: prepare update document. This should include incrementing the version.
         }
 
-        this._collection.findAndModify(query.criteria, query.sortBy, query.updateDocument, options, (err, response) => {
+        this._collection.findAndModify(this._prepareCriteria(query.criteria), query.sortBy, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
 
             var document = response.value;
@@ -455,7 +513,7 @@ class PersisterImpl implements Persister {
             single: query.kind == QueryKind.RemoveOne
         }
 
-        this._collection.remove(query.criteria, options, (err: Error, response: any) => {
+        this._collection.remove(this._prepareCriteria(query.criteria), options, (err: Error, response: any) => {
             if(err) return callback(err);
             callback(null, response.result.n);
         });
@@ -467,7 +525,7 @@ class PersisterImpl implements Persister {
             multi: query.kind == QueryKind.UpdateAll
         }
 
-        this._collection.update(query.criteria, query.updateDocument, options, (err: Error, response: any) => {
+        this._collection.update(this._prepareCriteria(query.criteria), query.updateDocument, options, (err: Error, response: any) => {
             if(err) return callback(err);
             callback(null, response.result.nModified);
         });
@@ -483,7 +541,7 @@ class PersisterImpl implements Persister {
             return callback(new Error("Unknown field '" + query.key + "' for entity '" + this._mapping.name + "'."));
         }
 
-        this._collection.distinct(query.key, query.criteria, undefined, (err: Error, results: any[]) => {
+        this._collection.distinct(query.key, this._prepareCriteria(query.criteria), undefined, (err: Error, results: any[]) => {
             if(err) return callback(err);
 
             // read results based on property mapping
@@ -510,7 +568,7 @@ class PersisterImpl implements Persister {
             skip: query.skipCount
         }
 
-        this._collection.count(query.criteria, options, (err: Error, result: number) => {
+        this._collection.count(this._prepareCriteria(query.criteria), options, (err: Error, result: number) => {
             if(err) return callback(err);
             callback(null, result);
         });
@@ -701,14 +759,14 @@ class BulkOperationCommand implements Command {
 class FindQueue {
 
     private _persister: PersisterImpl;
-    private _ids: Identifier[];
+    private _ids: any[];
     private _callbacks: Map<ResultCallback<any>>;
 
     constructor(persister: PersisterImpl) {
         this._persister = persister;
     }
 
-    add(id: Identifier, callback: ResultCallback<any>): void {
+    add(id: any, callback: ResultCallback<any>): void {
         if(!this._ids) {
             // this is the first entry in the queue so create the queue and schedule processing on the next tick
             this._ids = [];

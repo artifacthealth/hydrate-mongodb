@@ -96,7 +96,7 @@ class ArrayMapping extends MappingBase {
         }
     }
 
-    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!Array.isArray(value) || value.length == 0) {
             return callback(null, value);
@@ -106,7 +106,7 @@ class ArrayMapping extends MappingBase {
         var mapping = this.elementMapping;
         Async.forEach(value, (item, index, done) => {
             // note, depth is not incremented for array
-            mapping.resolve(session, parentEntity, item, path, depth, (err, result) => {
+            mapping.fetch(session, parentEntity, item, path, depth, (err, result) => {
                 if(err) return done(err);
                 if(item !== result) {
                     value[index] = result;
@@ -119,7 +119,7 @@ class ArrayMapping extends MappingBase {
         });
     }
 
-    resolveInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!parentEntity) {
             return callback(new Error("Parent entity required to resolve inverse relationship."));
@@ -136,7 +136,7 @@ class ArrayMapping extends MappingBase {
 
         session.getPersister(<EntityMapping>this.elementMapping).findInverseOf(id, propertyName, (err, value) => {
             if(err) return callback(err);
-            this.resolve(session, this, value, path, depth, callback);
+            this.fetch(session, this, value, path, depth, callback);
         });
     }
 

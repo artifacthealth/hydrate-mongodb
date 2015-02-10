@@ -58,7 +58,7 @@ class Query<T> {
         return query.handleCallback(callback);
     }
 
-    findOneById(id: any, callback?: ResultCallback<any>): FindOneQuery<T> {
+    findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<T> {
 
         if(typeof id === "string") {
             id = this._persister.identity.fromString(id);
@@ -275,6 +275,9 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
             }
         }
         else {
+            if(!Array.isArray(field)) {
+                throw new Error("Expected first parameter to be a string or array");
+            }
             this.sortBy = this.sortBy.concat(field);
         }
 
@@ -339,7 +342,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
         this.handleCallback(callback);
     }
 
-    handleCallback(callback: ResultCallback<Object>): QueryObject {
+    handleCallback(callback: ResultCallback<any>): QueryObject {
 
         if(callback) {
             if(this._executed) {
@@ -354,7 +357,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
         return this;
     }
 
-    execute(callback: ResultCallback<Object>): void {
+    execute(callback: ResultCallback<any>): void {
 
         this._persister.executeQuery(this, callback);
     }

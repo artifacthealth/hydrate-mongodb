@@ -31,7 +31,7 @@ describe('SessionImpl', () => {
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/model.d.json");
         config.createSessionFactory((err: Error, sessionFactory: SessionFactory) => {
-            if(err) throw err;
+            if(err) return done(err);
 
             var session = sessionFactory.createSession();
 
@@ -144,9 +144,7 @@ describe('SessionImpl', () => {
                 });
             }
 
-            session.flush((err) => {
-                done(err);
-            });
+            session.flush(done);
 
         });
     });

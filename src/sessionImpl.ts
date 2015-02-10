@@ -1,11 +1,12 @@
 /// <reference path="../typings/async.d.ts" />
+/// <reference path="../typings/node.d.ts" />
+import events = require("events");
 
 import async = require("async");
 import Callback = require("./core/callback");
 import ChangeTracking = require("./mapping/changeTracking");
 import Constructor = require("./core/constructor");
 import LockMode = require("./lockMode");
-import Identifier = require("./id/identifier");
 import IteratorCallback = require("./core/iteratorCallback");
 import Map = require("./core/map");
 import PropertyFlags = require("./mapping/propertyFlags");
@@ -97,7 +98,7 @@ var detachedLinks = {
 
 // TODO: read-only query results. perhaps not needed if we can use Object.observe in Node v12 to be notified of which objects have changed.
 // TODO: raise events on UnitOfWork
-class SessionImpl implements InternalSession {
+class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _persisterByMapping: Table<Persister> = [];
     private _queryByMapping: Table<Query<any>> = [];
@@ -105,6 +106,7 @@ class SessionImpl implements InternalSession {
     private _queue: TaskQueue;
 
     constructor(public factory: InternalSessionFactory) {
+        super();
 
         // Using a delegate is faster than bind http://jsperf.com/bind-vs-function-delegate
         this._queue = new TaskQueue((action, args, callback) => this._execute(action, args, callback));
@@ -112,7 +114,7 @@ class SessionImpl implements InternalSession {
 
     save(obj: any, callback?: Callback): void {
 
-        this._queue.add(Action.Save, Action.All & ~Action.Save, obj, callback);
+        this._queue.add(Action.Save, Action.All & ~(Action.Save | Action.ReadOnly), obj, callback);
     }
 
     remove(obj: any, callback?: Callback): void {
@@ -228,7 +230,7 @@ class SessionImpl implements InternalSession {
         return this.getReferenceInternal(mapping, id);
     }
 
-    getReferenceInternal(mapping: EntityMapping, id: Identifier): any {
+    getReferenceInternal(mapping: EntityMapping, id: any): any {
 
         // TODO: should we cache references so all references with the same id share the same object?
         return this.getObject(id) || new Reference(this, mapping, id);
@@ -588,7 +590,7 @@ class SessionImpl implements InternalSession {
         var persister = links.persister;
 
         async.each(paths, (path: string, done: (err?: Error) => void) => {
-            persister.resolve(obj, path, done);
+            persister.fetch(obj, path, done);
         },
         (err) => {
             if(err) return callback(err);

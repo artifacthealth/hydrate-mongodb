@@ -9,7 +9,7 @@ import MappingRegistry = require("../mappingRegistry");
 import MappingProvider = require("./mappingProvider");
 import ReflectHelper = require("../../core/ReflectHelper");
 import Index = require("../index");
-import IndexOptions = require("../../driver/indexOptions");
+import IndexOptions = require("../indexOptions");
 import Property = require("../property");
 import PropertyFlags = require("../propertyFlags");
 import ChangeTracking = require("../changeTracking");
@@ -446,7 +446,7 @@ class MappingBuilder {
         }
 
         // if we are a document type and the the discriminatorValue is not set, default to the class name
-        if (!mapping.discriminatorValue) {
+        if (!mapping.discriminatorValue  && (mapping.hasBaseClass || mapping.hasSubClasses)) {
             // TODO: configurable naming strategy for when discriminator field is not specified?
             mapping.setDiscriminatorValue(mapping.name);
         }
@@ -638,11 +638,11 @@ class MappingBuilder {
         // TODO: allow indexes in embedded types and map to containing root type
         this._assertEntityMapping(mapping);
 
-        var keys: Map<number> = {};
+        var keys: [string, number][] = [];
         var options: IndexOptions;
 
         if(typeof value === "boolean") {
-            keys[property.field] = 1;
+            keys.push([property.field, 1]);
         }
         else {
             var order: number;
@@ -662,7 +662,7 @@ class MappingBuilder {
             else {
                 order = 1;
             }
-            keys[property.field] = order;
+            keys.push([property.field, order]);
             options = value;
         }
 

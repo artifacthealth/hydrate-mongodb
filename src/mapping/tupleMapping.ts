@@ -95,7 +95,7 @@ class TupleMapping extends MappingBase {
         }
     }
 
-    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!Array.isArray(value) || depth == path.length) {
             return callback(null, value);
@@ -107,7 +107,7 @@ class TupleMapping extends MappingBase {
         }
 
         var item = value[index];
-        this.elementMappings[index].resolve(session, parentEntity, item, path, depth + 1, (err, result) => {
+        this.elementMappings[index].fetch(session, parentEntity, item, path, depth + 1, (err, result) => {
             if(err) return callback(err);
             if(item !== result) {
                 value[index] = item;

@@ -1,4 +1,3 @@
-import Identifier = require("../../src/id/identifier");
 import IdentityGenerator = require("../../src/id/identityGenerator");
 
 class MockIdentityGenerator implements IdentityGenerator {
@@ -7,12 +6,12 @@ class MockIdentityGenerator implements IdentityGenerator {
 
     generateCalled = 0;
 
-    generate(): Identifier {
+    generate(): any {
         this.generateCalled++;
         return this.nextId++;
     }
 
-    fromString(text: string): Identifier {
+    fromString(text: string): any {
         return parseInt(text);
     }
 
@@ -20,8 +19,8 @@ class MockIdentityGenerator implements IdentityGenerator {
         return typeof value === "number";
     }
 
-    areEqual(a: Identifier, b: Identifier): boolean {
-        return a === b;
+    areEqual(first: any, second: any): boolean {
+        return first === second;
     }
 }
 

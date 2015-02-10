@@ -1,4 +1,3 @@
-import Identifier = require("./id/identifier");
 import InternalSession = require("./internalSession");
 import EntityMapping = require("./mapping/entityMapping");
 import ResultCallback = require("./core/resultCallback");
@@ -7,7 +6,7 @@ class Reference {
 
     private _session: InternalSession;
 
-    constructor(session: InternalSession, public mapping: EntityMapping, public id: Identifier) {
+    constructor(session: InternalSession, public mapping: EntityMapping, public id: any) {
 
         this._session = session;
     }

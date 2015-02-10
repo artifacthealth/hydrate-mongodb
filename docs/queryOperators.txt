@@ -1,0 +1,62 @@
+    Query Operators
+
+            EXP = { TOP, ... }
+            TOP = FIELD | AND | NOR | OR | WHERE | TEXT
+            FIELD = <name>: <value> | OPERATOR
+            AND = $and: [ EXP, ... ]
+            NOR = $nor: [ EXP, ... ]   (note that TEXT is not allowed in NOR)
+            OR = $or: [ EXP, ... ]
+            WHERE = $where: "javascript"
+            TEXT = $text: { $search: "value", $language: "value" }
+            OPERATOR = GT | GTE | IN | LT | LTE | NE | NIN
+            GT = $gt: <value>
+            GTE = gte: <value>
+            IN = $in: [ <value>, ... ]
+            LT = $lt: <value>
+            LTE = $lte: <value>
+            NE = $ne: <value>
+            NIN = $nin: [ <value>, ... ]
+
+
+
+        comparison
+            gt              { <field>: { $gt: value} }
+            gte             { <field>: { $gte: value} }
+            in              { <field>: { $in: [<value1>, <value2>, ... <valueN> ] } }
+            lt              { <field>: { $lt: value} }
+            lte             { <field>: { $lte: value} }
+            ne              { <field>: { $ne: value} }
+            nin             { <field>: { $nin: [ <value1>, <value2> ... <valueN> ]} }
+
+        logical
+            and             { $and: [ { <expression1> }, { <expression2> } , ... , { <expressionN> } ] }
+            nor             { $nor: [ { <expression1> }, { <expression2> }, ...  { <expressionN> } ] }
+            or              { $or: [ { <expression1> }, { <expression2> }, ... , { <expressionN> } ] }
+            not             { <field>: { $not: { <expression> } } }
+
+        element
+            exists          { <field>: { $exists: <boolean> } }
+            type            { <field>: { $type: <BSON type> } }
+
+        evaluation
+            mod             { <field>: { $mod: [ divisor, remainder ] } }
+            regex           { <field>: { $regex: /pattern/, $options: '<options>' } }
+            regex           { <field>: { $regex: 'pattern', $options: '<options>' } }
+            regex           { <field>: { $regex: /pattern/<options> } }
+            regex           { <field>: /pattern/<options> }
+            text            { $text: { $search: <string>, $language: <string> } }
+            where           { $where: "javascript expression" }
+
+        geospatial
+            geoIntersects   { <field>: { $geoIntersects: { $geometry: { type: "<GeoJSON object type>", coordinates: [ <coordinates> ] } } } }
+            geoWithin       { <field>: { $geoWithin: { $geometry: { type: <"Polygon" or "MultiPolygon"> , coordinates: [ <coordinates> ] } } } }
+            nearSphere      { <field>: { $nearSphere: { $geometry: { type : "Point", coordinates : [ <longitude>, <latitude> ] }, $minDistance: <distance in meters>, $maxDistance: <distance in meters> } } }
+            near            { <field>: { $near: { $geometry: { type: "Point", coordinates: [ <longitude> , <latitude> ] }, $maxDistance: <distance in meters>, $minDistance: <distance in meters> } } }
+
+        array
+            all             { <field>: { $all: [ <value1> , <value2> ... ] } }
+            elemMatach      { <field>: { $elemMatch: { <query1>, <query2>, ... } } }
+            size            { <field>: { $size: <value> } }
+
+        comments
+            comment         { ..., $comment: <comment> }

@@ -1,7 +1,7 @@
 /**
  * @collection
- * @index keys: { a: 1 }
- * @index keys: { a: 1, b: -1 }
+ * @index keys: [ 'a', 1 ]
+ * @index keys: [ ['a', 1], ['b', -1] ]
  */
 export class A {
 
@@ -10,7 +10,7 @@ export class A {
 }
 
 /**
- * @index keys: { c: 1 }
+ * @index keys: [ 'c', 1 ]
  */
 export class B extends A {
 

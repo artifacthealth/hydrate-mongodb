@@ -1,6 +1,6 @@
 import Collection = require("./collection");
-import CollectionOptions = require("./collectionOptions");
-import IndexOptions = require("./indexOptions");
+import CollectionOptions = require("../mapping/collectionOptions");
+import IndexOptions = require("../mapping/indexOptions");
 import Cursor = require("./cursor");
 
 interface Db {

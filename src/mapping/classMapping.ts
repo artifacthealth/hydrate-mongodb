@@ -55,6 +55,14 @@ class ClassMapping extends ObjectMapping {
         this.inheritanceRoot._addDiscriminatorMapping(value, this);
     }
 
+    get hasSubClasses(): boolean {
+        return this._subclasses && this._subclasses.length > 0;
+    }
+
+    get hasBaseClass(): boolean {
+        return this._baseClass !== undefined;
+    }
+
     private _addSubClass(subclass: ClassMapping): void {
 
         if(!this._subclasses) {
@@ -107,19 +115,23 @@ class ClassMapping extends ObjectMapping {
      */
     getMapping(document: any, path: string, errors: MappingError[]): ClassMapping {
 
-        var discriminatorValue = document[this.discriminatorField];
-        if(discriminatorValue === undefined) {
-            // If there is not a discriminator field present then use the current mapping
-            return this;
-        }
-
-        var mapping = this._discriminatorMap[discriminatorValue];
+        var mapping = this._getMappingForDocument(document);
         if(mapping === undefined) {
-            errors.push({ message: "Unknown discriminator value '" + discriminatorValue + "'.", path: path, value: document });
+            errors.push({ message: "Unknown discriminator value '" + this._getDiscriminatorValueForDocument(document) + "'.", path: path, value: document });
             return;
         }
 
         return mapping;
+    }
+
+    private _getMappingForDocument(document: any): ClassMapping {
+
+        var discriminatorValue = this._getDiscriminatorValueForDocument(document);
+        return discriminatorValue === undefined ? this : this.inheritanceRoot._discriminatorMap[discriminatorValue]
+    }
+
+    private _getDiscriminatorValueForDocument(document: any): string {
+        return document[this.inheritanceRoot.discriminatorField];
     }
 
     protected readClass(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
@@ -137,7 +149,9 @@ class ClassMapping extends ObjectMapping {
     protected writeClass(value: any, path: string, errors: MappingError[], visited: any[]): any {
 
         var document: any = {};
-        document[this.inheritanceRoot.discriminatorField] = this.discriminatorValue;
+        if(this.discriminatorValue !== undefined) {
+            document[this.inheritanceRoot.discriminatorField] = this.discriminatorValue;
+        }
 
         return this.writeObject(document, value, path, errors, visited);
     }
@@ -146,16 +160,8 @@ class ClassMapping extends ObjectMapping {
 
         var root = this.inheritanceRoot;
 
-        // get mappings for documents based on discriminator
-        var discriminatorValue1 = documentValue1[root.discriminatorField],
-            discriminatorValue2 = documentValue2[root.discriminatorField];
-
-        if (discriminatorValue1 === undefined || discriminatorValue2 === undefined) {
-            return false;
-        }
-
-        var mapping1 = root._discriminatorMap[discriminatorValue1],
-            mapping2 = root._discriminatorMap[discriminatorValue2];
+        var mapping1 = this._getMappingForDocument(documentValue1);
+        var mapping2 = this._getMappingForDocument(documentValue2);
 
         // make sure both documents have the same mapping
         if(mapping1 === undefined || mapping2 === undefined || mapping1 !== mapping2) {
@@ -181,16 +187,16 @@ class ClassMapping extends ObjectMapping {
         super.walk(value, flags, entities, embedded, references);
     }
 
-    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
         if (!value || typeof value !== "object") {
             return callback(null, value);
         }
 
-        return (this._ensureRegistry().getMappingForObject(value) || this)._resolve(session, parentEntity, value, path, depth, callback);
+        return (this._ensureRegistry().getMappingForObject(value) || this)._fetch(session, parentEntity, value, path, depth, callback);
     }
 
-    private _resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
-        super.resolve(session, parentEntity, value, path, depth, callback);
+    private _fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+        super.fetch(session, parentEntity, value, path, depth, callback);
     }
 
 }

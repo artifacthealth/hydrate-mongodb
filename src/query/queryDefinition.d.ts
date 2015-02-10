@@ -20,7 +20,7 @@ interface QueryDefinition {
     batchSizeValue: number;
     // TODO: add read preference. Use string or enumeration or static class with core values?
 
-    execute(callback: ResultCallback<Object>): void;
+    execute(callback: ResultCallback<any>): void;
 }
 
 export = QueryDefinition;

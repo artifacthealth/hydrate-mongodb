@@ -15,8 +15,8 @@ interface Mapping {
     write(value: any, path: string, errors: MappingError[], visited: any[]): any;
     walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
     areEqual(documentValue1: any, documentValue2: any): boolean;
-    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
-    resolveInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
+    fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
+    fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
 }
 
 export = Mapping;

@@ -1,5 +1,4 @@
 import Persister = require("../src/persister");
-import Identifier = require('../src/id/identifier');
 import ResultCallback = require("../src/core/resultCallback");
 import InternalSession = require("../src/internalSession");
 import PropertyFlags = require("../src/mapping/propertyFlags");
@@ -78,24 +77,24 @@ class MockPersister implements Persister {
     refresh(entity: any, callback: ResultCallback<any>): void {
     }
 
-    resolve(entity: any, path: string, callback: Callback): void {
-        if(this.onResolve) {
-            process.nextTick(() => this.onResolve(entity, path, callback));
+    fetch(entity: any, path: string, callback: Callback): void {
+        if(this.onFetch) {
+            process.nextTick(() => this.onFetch(entity, path, callback));
         }
     }
 
-    onResolve: (entity: any, path: string, callback: Callback) => void;
+    onFetch: (entity: any, path: string, callback: Callback) => void;
 
     findAll(criteria: any, callback?: ResultCallback<any[]>): void {
     }
 
-    findOneById(id: Identifier, callback: ResultCallback<any>): void {
+    findOneById(id: any, callback: ResultCallback<any>): void {
         if(this.onFindOneById) {
             process.nextTick(() => this.onFindOneById(id, callback));
         }
     }
 
-    onFindOneById: (id: Identifier, callback: ResultCallback<any>) => void;
+    onFindOneById: (id: any, callback: ResultCallback<any>) => void;
 
     findOne(criteria: any, callback: ResultCallback<any>): void {
 

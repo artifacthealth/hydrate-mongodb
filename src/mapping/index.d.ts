@@ -1,9 +1,8 @@
-import IndexOptions = require("../driver/indexOptions");
-import Map = require("../core/map");
+import IndexOptions = require("./indexOptions");
 
 interface Index {
 
-    keys: Map<number>;
+    keys: [string, number][];
     options?: IndexOptions;
 }
 

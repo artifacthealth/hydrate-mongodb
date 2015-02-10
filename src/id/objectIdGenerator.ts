@@ -2,7 +2,6 @@
 
 import mongodb = require("mongodb");
 import ObjectID = mongodb.ObjectID;
-import Identifier = require("../id/identifier");
 import IdentityGenerator = require("./identityGenerator");
 
 class ObjectIdGenerator implements IdentityGenerator {
@@ -12,20 +11,20 @@ class ObjectIdGenerator implements IdentityGenerator {
         (<any>mongodb.ObjectID).cacheHexString = true;
     }
 
-    generate(): Identifier {
-        return <Identifier>new ObjectID();
+    generate(): any {
+        return new ObjectID();
     }
 
     validate(value: any): boolean {
         return value instanceof ObjectID;
     }
 
-    fromString(text: string): Identifier {
-        return <Identifier>ObjectID.createFromHexString(text);
+    fromString(text: string): any {
+        return ObjectID.createFromHexString(text);
     }
 
-    areEqual(a: Identifier, b: Identifier): boolean {
-        return (<any>a).equals(b);
+    areEqual(first: any, second: any): boolean {
+        return first.equals(second);
     }
 }
 

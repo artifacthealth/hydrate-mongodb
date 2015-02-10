@@ -6,21 +6,39 @@ import MockBulk = require("./mockBulk");
 
 class MockCollection implements Collection {
 
-    constructor(public contents: any[]) {
+    constructor(public contents?: any[]) {
 
     }
 
     find(selector: Object, callback?: (err: Error, result: Cursor) => void): Cursor {
 
+        if(this.onFind) {
+            return this.onFind(selector);
+        }
+
+        return this.createCursor();
+    }
+
+    createCursor(): Cursor {
         return new MockCursor(this.contents);
     }
 
+    onFind: (selector: Object) => Cursor;
+
     findOne(selector: Object, callback?: (err: Error, result: any) => void): any {
+
+        if(this.onFindOne) {
+            process.nextTick(() => this.onFindOne(selector, callback));
+            return;
+        }
 
         process.nextTick(() => {
            callback(null, this.contents[0]);
         });
     }
+
+    onFindOne: (selector: Object, callback?: (err: Error, result: any) => void) => any;
+
 
     findAndModify(query: Object, sort: any[], doc: Object, options: { safe?: any; remove?: boolean; upsert?: boolean; new?: boolean; }, callback: (err: Error, result: any) => void): void {
 

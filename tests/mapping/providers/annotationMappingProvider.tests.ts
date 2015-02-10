@@ -80,8 +80,8 @@ describe('AnnotationMappingProvider', () => {
                     var mappingD = findMapping(results, "D");
                     assert.lengthOf(mappingD.indexes, 3);
 
-                    assert.equal(mappingD.indexes[0].keys["a"], 1);
-                    assert.equal(mappingD.indexes[1].keys["g"], -1);
+                    assert.deepEqual(mappingD.indexes[0].keys, [['a', 1]]);
+                    assert.deepEqual(mappingD.indexes[1].keys, [['g', -1]]);
                     assert.isTrue(mappingD.indexes[2].options.dropDups);
                 });
             });

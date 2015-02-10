@@ -162,4 +162,18 @@ export class WorkPhone extends Phone {
     }
 }
 
+/**
+ * @collection
+ */
+export class User {
+
+    password: string;
+    person: Person;
+
+    constructor(public username: string) {
+
+    }
+}
+
+
 

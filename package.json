@@ -35,7 +35,7 @@
     "grunt-typescript": "0.6.1",
     "mocha": "^2.0.1",
     "typescript": "1.4.1",
-    "grunt-tsreflect": "^0.1.1"
+    "grunt-tsreflect": "^0.1.2"
   },
   "keywords": [
     "odm",

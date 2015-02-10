@@ -222,7 +222,7 @@ class ObjectMapping extends MappingBase {
         }
     }
 
-    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!value || typeof value !== "object" || depth == path.length) {
             return callback(null, value);
@@ -237,9 +237,9 @@ class ObjectMapping extends MappingBase {
 
         var propertyValue = property.getPropertyValue(value);
         if((property.flags & PropertyFlags.InverseSide) && propertyValue === undefined) {
-            property.mapping.resolveInverse(session, parentEntity, property.inverseOf, path, depth + 1, handleCallback);
+            property.mapping.fetchInverse(session, parentEntity, property.inverseOf, path, depth + 1, handleCallback);
         } else {
-            property.mapping.resolve(session, parentEntity, propertyValue, path, depth + 1, handleCallback);
+            property.mapping.fetch(session, parentEntity, propertyValue, path, depth + 1, handleCallback);
         }
 
         function handleCallback(err: Error, result: any) {

@@ -7,7 +7,7 @@ import MappingError = require("./mappingError");
 import ClassMapping = require("./classMapping");
 import ChangeTracking = require("./changeTracking");
 import Index = require("./index");
-import CollectionOptions = require("../driver/collectionOptions");
+import CollectionOptions = require("./collectionOptions");
 import MappingRegistry = require("./mappingRegistry");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
@@ -185,7 +185,7 @@ class EntityMapping extends ClassMapping {
         super.walk(value, flags, entities, embedded, references);
     }
 
-    resolve(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if (!value || typeof value !== "object") return;
 
@@ -196,15 +196,15 @@ class EntityMapping extends ClassMapping {
             // passed in but should still include the object in the found entities if the object is managed.
             (<Reference>value).fetch((err, entity) => {
                 if(err) return callback(err);
-                super.resolve(session, entity, entity, path, depth, callback);
+                super.fetch(session, entity, entity, path, depth, callback);
             });
             return;
         }
 
-        super.resolve(session, value, value, path, depth, callback);
+        super.fetch(session, value, value, path, depth, callback);
     }
 
-    resolveInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!parentEntity) {
             return callback(new Error("Parent entity required to resolve inverse relationship."));
@@ -217,7 +217,7 @@ class EntityMapping extends ClassMapping {
 
         session.getPersister(this).findOneInverseOf(id, propertyName, (err, value) => {
             if(err) return callback(err);
-            super.resolve(session, this, value, path, depth, callback);
+            super.fetch(session, this, value, path, depth, callback);
         });
     }
 }
