@@ -1,20 +1,20 @@
-/// <reference path="../typings/mocha.d.ts"/>
-/// <reference path="../typings/chai.d.ts"/>
-/// <reference path="../typings/async.d.ts" />
+/// <reference path="../../typings/mocha.d.ts"/>
+/// <reference path="../../typings/chai.d.ts"/>
+/// <reference path="../../typings/async.d.ts" />
 
 import async = require("async");
 import chai = require("chai");
 import assert = chai.assert;
-import helpers = require("./helpers");
-import QueryDefinition = require("../src/query/queryDefinition");
-import QueryKind = require("../src/query/queryKind");
-import Query = require("../src/query/query");
-import ResultCallback = require("../src/core/resultCallback");
-import Callback = require("../src/core/callback");
-import QueryDocument = require("../src/query/queryDocument");
+import helpers = require("../helpers");
+import QueryDefinition = require("../../src/query/queryDefinition");
+import QueryKind = require("../../src/query/queryKind");
+import Query = require("../../src/query/query");
+import ResultCallback = require("../../src/core/resultCallback");
+import Callback = require("../../src/core/callback");
+import QueryDocument = require("../../src/query/queryDocument");
 
 // Fixtures
-import model = require("./fixtures/model");
+import model = require("../fixtures/model");
 
 
 describe('Query', () => {
