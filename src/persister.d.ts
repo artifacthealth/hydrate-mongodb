@@ -28,7 +28,6 @@ interface Persister {
     findOneById(id: any, callback: ResultCallback<any>): void;
     findInverseOf(entity: Object, path: string, callback: ResultCallback<Object[]>): void;
     findOneInverseOf(entity: Object, path: string, callback: ResultCallback<Object>): void;
-
 }
 
 export = Persister;

@@ -19,6 +19,10 @@ import model = require("../fixtures/model");
 
 describe('Query', () => {
 
+    var queryCriteria: QueryDocument = { _name: 'Bob' };
+    var preparedCriteria: QueryDocument = { _name: 'Bob' };
+    var emptyPreparedCriteria: QueryDocument = {};
+
     describe('findAll', () => {
 
         it('correctly sets the query kind and criteria', (done) => {
@@ -27,16 +31,15 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.FindAll);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     done();
                 }
 
-                session.query(model.Person).findAll(criteria, (err, results) => {
+                session.query(model.Person).findAll(queryCriteria, (err, results) => {
                     if(err) return done(err);
                 });
             });
@@ -52,7 +55,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object[]>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     callback(null, resultToReturn)
                 }
 
@@ -150,16 +153,15 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.FindOne);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     done();
                 }
 
-                session.query(model.Person).findOne(criteria, (err, result) => {
+                session.query(model.Person).findOne(queryCriteria, (err, result) => {
                     if(err) return done(err);
                 });
             });
@@ -226,16 +228,15 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.FindOneAndRemove);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     done();
                 }
 
-                session.query(model.Person).findOneAndRemove(criteria, (err, result) => {
+                session.query(model.Person).findOneAndRemove(queryCriteria, (err, result) => {
                     if(err) return done(err);
                 });
             });
@@ -251,7 +252,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     callback(null, resultToReturn)
                 }
 
@@ -311,19 +312,18 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
                 var document: QueryDocument = { $set: { age: 42 }};
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.FindOneAndUpdate);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     assert.deepEqual(query.updateDocument, document);
                     assert.isUndefined(query.wantsUpdated);
                     done();
                 }
 
-                session.query(model.Person).findOneAndUpdate(criteria, document, (err, result) => {
+                session.query(model.Person).findOneAndUpdate(queryCriteria, document, (err, result) => {
                     if(err) return done(err);
                 });
             });
@@ -360,7 +360,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     assert.deepEqual(query.updateDocument, document);
                     callback(null, resultToReturn)
                 }
@@ -401,17 +401,16 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.RemoveAll);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     done();
                 }
 
-                session.query(model.Person).removeAll(criteria, (err, count) => {
-                    if(err) return done(err);
+                session.query(model.Person).removeAll(queryCriteria, (err, count) => {
+                    if (err) return done(err);
                 });
             });
         });
@@ -426,7 +425,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     callback(null, resultToReturn)
                 }
 
@@ -447,16 +446,15 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.RemoveOne);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     done();
                 }
 
-                session.query(model.Person).removeOne(criteria, (err, count) => {
+                session.query(model.Person).removeOne(queryCriteria, (err, count) => {
                     if(err) return done(err);
                 });
             });
@@ -472,7 +470,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     callback(null, resultToReturn)
                 }
 
@@ -493,18 +491,17 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
                 var document: QueryDocument = { $set: { age: 42 }};
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.UpdateAll);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     assert.deepEqual(query.updateDocument, document);
                     done();
                 }
 
-                session.query(model.Person).updateAll(criteria, document, (err, count) => {
+                session.query(model.Person).updateAll(queryCriteria, document, (err, count) => {
                     if(err) return done(err);
                 });
             });
@@ -521,7 +518,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     assert.deepEqual(query.updateDocument, document);
                     callback(null, resultToReturn)
                 }
@@ -543,18 +540,17 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
                 var document: QueryDocument = { $set: { age: 42 }};
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.UpdateOne);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     assert.deepEqual(query.updateDocument, document);
                     done();
                 }
 
-                session.query(model.Person).updateOne(criteria, document, (err, count) => {
+                session.query(model.Person).updateOne(queryCriteria, document, (err, count) => {
                     if(err) return done(err);
                 });
             });
@@ -571,7 +567,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     assert.deepEqual(query.updateDocument, document);
                     callback(null, resultToReturn)
                 }
@@ -593,18 +589,17 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
                 var key = 'test';
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.Distinct);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     assert.equal(query.key, key);
                     done();
                 }
 
-                session.query(model.Person).distinct(key, criteria, (err, results) => {
+                session.query(model.Person).distinct(key, queryCriteria, (err, results) => {
                     if(err) return done(err);
                 });
             });
@@ -621,7 +616,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<any[]>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     assert.equal(query.key, key);
                     callback(null, resultToReturn)
                 }
@@ -643,16 +638,15 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.kind, QueryKind.Count);
-                    assert.deepEqual(query.criteria, criteria);
+                    assert.deepEqual(query.criteria, preparedCriteria);
                     done();
                 }
 
-                session.query(model.Person).count(criteria, (err, count) => {
+                session.query(model.Person).count(queryCriteria, (err, count) => {
                     if(err) return done(err);
                 });
             });
@@ -668,7 +662,7 @@ describe('Query', () => {
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     callback(null, resultToReturn)
                 }
 
@@ -691,7 +685,7 @@ describe('Query', () => {
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.limitCount, 10);
                     assert.equal(query.skipCount, 22);
-                    assert.deepEqual(query.criteria, {}, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
                     done();
                 }
 

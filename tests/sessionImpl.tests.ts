@@ -598,9 +598,9 @@ describe('SessionImpl', () => {
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query, callback) => {
                     assert.equal(query.kind, QueryKind.FindOneById);
-                    assert.equal(query.criteria, 1);
+                    assert.equal(query.id, 1);
                     var ret = new model.Person(new model.PersonName("Smith"));
-                    (<any>ret)._id = query.criteria;
+                    (<any>ret)._id = query.id;
                     session.registerManaged(persister, ret, {});
                     callback(null, ret);
                 }
@@ -643,7 +643,7 @@ describe('SessionImpl', () => {
                     executeQueryCalled++;
 
                     assert.equal(query.kind, QueryKind.FindOneById);
-                    assert.equal(query.criteria, 1);
+                    assert.equal(query.id, 1);
 
                     assert.isTrue(query.fetchPaths.length > 0, "Fetch was not added to the query");
 

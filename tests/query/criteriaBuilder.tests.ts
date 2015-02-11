@@ -2,8 +2,6 @@
 /// <reference path="../../typings/chai.d.ts"/>
 /// <reference path="../../typings/async.d.ts" />
 
-import util = require("util");
-
 import async = require("async");
 import chai = require("chai");
 import assert = chai.assert;
@@ -11,12 +9,14 @@ import assert = chai.assert;
 import model = require("../fixtures/model");
 import helpers = require("../helpers");
 
-import MockCollection = require("../driver/mockCollection");
+import Constructor = require("../../src/core/constructor");
 import Callback = require("../../src/core/callback");
+import CriteriaBuilder = require("../../src/query/criteriaBuilder");
+import QueryDocument = require("../../src/query/queryDocument");
 
 describe('CriteriaBuilder', () => {
 
-    it('results in empty criteria if original critieria is empty and mapping is not part of an inheritance hierarchy', (done) => {
+    it('results in empty criteria if original criteria is empty and mapping is not part of an inheritance hierarchy', (done) => {
 
         assertCriteria(done, {}, {}, model.User);
     });
@@ -169,20 +169,13 @@ describe('CriteriaBuilder', () => {
 
 });
 
-function assertCriteria(done: Callback, originalCriteria: Object, processedCriteria: Object, ctr?: Function): void {
+function assertCriteria(done: Callback, originalCriteria: QueryDocument, expectedCriteria: QueryDocument, ctr?: Constructor<any>): void {
 
-    var collection = new MockCollection();
-    collection.onFind = (query) => {
-        assert.deepEqual(query, processedCriteria);
-        done();
-        return collection.createCursor();
-    }
-
-    helpers.createPersister(collection, ctr || model.Person, (err, persister) => {
+    helpers.createFactory("model", (err, factory) => {
         if (err) return done(err);
 
-        persister.findAll({ criteria: originalCriteria }, (err) => {
-            if(err) return done(err);
-        });
+        var builder = new CriteriaBuilder(factory.getMappingForConstructor(ctr || model.Person))
+        assert.deepEqual(builder.build(originalCriteria), expectedCriteria);
+        done();
     });
 }

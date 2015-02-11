@@ -9,6 +9,7 @@ interface QueryDefinition {
     readOnly: boolean;
 
     key: string;
+    id: any;
     criteria: QueryDocument;
     updateDocument: QueryDocument;
 

@@ -40,7 +40,7 @@ describe('PersisterImpl', () => {
 
             var collection = new MockCollection();
             collection.onFind = (criteria) => {
-                assert.deepEqual(criteria, { __t: "Person", parents: id });
+                assert.deepEqual(criteria, { parents: id });
                 done();
                 return collection.createCursor();
             }
@@ -49,27 +49,6 @@ describe('PersisterImpl', () => {
                 if (err) return done(err);
 
                 persister.findInverseOf(person, "parents", (err, results) => {
-                    if(err) return done(err);
-                });
-            });
-        });
-
-        it("does not include the discriminator in the criteria if the mapping is not part of an inheritance hierarchy", (done) => {
-
-            var person = helpers.createPerson();
-            var id =  (<any>person)._id;
-
-            var collection = new MockCollection();
-            collection.onFind = (criteria) => {
-                assert.deepEqual(criteria, { person: id });
-                done();
-                return collection.createCursor();
-            }
-
-            helpers.createPersister(collection, model.User, (err, persister) => {
-                if (err) return done(err);
-
-                persister.findInverseOf(person, "person", (err, results) => {
                     if(err) return done(err);
                 });
             });
@@ -100,7 +79,7 @@ describe('PersisterImpl', () => {
 
             var collection = new MockCollection();
             collection.onFindOne = (criteria, callback) => {
-                assert.deepEqual(criteria, { __t: "Person", parents: id });
+                assert.deepEqual(criteria, { parents: id });
                 callback(null, { _id: id });
                 done();
             }
@@ -109,27 +88,6 @@ describe('PersisterImpl', () => {
                 if (err) return done(err);
 
                 persister.findOneInverseOf(person, "parents", (err, results) => {
-                    if(err) return done(err);
-                });
-            });
-        });
-
-        it("does not include the discriminator in the criteria if the mapping is not part of an inheritance hierarchy", (done) => {
-
-            var person = helpers.createPerson();
-            var id =  (<any>person)._id;
-
-            var collection = new MockCollection();
-            collection.onFindOne = (criteria, callback) => {
-                assert.deepEqual(criteria, { person: id });
-                callback(null, { _id: id });
-                done();
-            }
-
-            helpers.createPersister(collection, model.User, (err, persister) => {
-                if (err) return done(err);
-
-                persister.findOneInverseOf(person, "person", (err, results) => {
                     if(err) return done(err);
                 });
             });

@@ -66,7 +66,7 @@ class Query<T> {
         }
 
         var query = this._createQuery(QueryKind.FindOneById);
-        query.criteria = id;
+        query.id = id;
         return query.handleCallback(callback);
     }
 
@@ -220,6 +220,7 @@ class Query<T> {
 class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Object>, FindOneAndRemoveQuery<Object>, FindOneAndUpdateQuery<Object>, CountQuery {
 
     key: string;
+    id: any;
     criteria: QueryDocument;
     updateDocument: QueryDocument;
 

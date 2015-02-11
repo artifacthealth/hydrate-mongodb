@@ -26,18 +26,17 @@ class CriteriaBuilder {
 
         this.error = undefined;
 
-        var query = this._prepareQueryDocument(criteria);
-        this._mapping.setDocumentDiscriminator(query);
-        return query;
+        var preparedCriteria = this._prepareQueryDocument(criteria, this._mapping);
+        if(!preparedCriteria) {
+            return null;
+        }
+        this._mapping.setDocumentDiscriminator(preparedCriteria);
+        return preparedCriteria;
     }
 
     private _prepareQueryDocument(query: QueryDocument, mapping?: Mapping, withinField?: boolean): QueryDocument {
 
         if(!query) return query;
-
-        if(!mapping) {
-            mapping = this._mapping;
-        }
 
         var result: QueryDocument = {};
         for(var key in query) {

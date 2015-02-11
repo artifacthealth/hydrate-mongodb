@@ -23,8 +23,8 @@ import QueryDefinition = require("./query/queryDefinition");
 import QueryKind = require("./query/queryKind");
 import IteratorCallback = require("./core/iteratorCallback");
 import Cursor = require("./driver/cursor");
-import CriteriaBuilder = require("./query/criteriaBuilder");
 import QueryDocument = require("./query/queryDocument");
+import CriteriaBuilder = require("./query/criteriaBuilder");
 
 interface FindOneQuery {
 
@@ -89,8 +89,6 @@ class PersisterImpl implements Persister {
 
         this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
-
-        this._criteriaBuilder = new CriteriaBuilder(mapping);
     }
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object> {
@@ -163,30 +161,45 @@ class PersisterImpl implements Persister {
 
     findInverseOf(entity: Object, path: string, callback: ResultCallback<any[]>): void {
 
-        var property = this._mapping.getProperty(path);
-        if(property === undefined) {
-            return callback(new Error("Missing property '" + path + "'."));
+        var query = this._prepareInverseQuery(entity, path, callback);
+        if(query) {
+            this.findAll({criteria: query}, callback);
         }
-
-        // TODO: skip prepareCriteria in findAll and create query document directly for performance?
-        var query: QueryDocument = {};
-        property.setFieldValue(query, entity);
-
-        this.findAll({ criteria: query }, callback);
     }
 
     findOneInverseOf(entity: Object, path: string, callback: ResultCallback<any>): void {
 
+        var query = this._prepareInverseQuery(entity, path, callback);
+        if(query) {
+            this.findOne(query, callback);
+        }
+    }
+
+    /**
+     * Returns a query for finding an inverse relationship. If an error occurs, the callback is called; otherwise,
+     * the callback is not called and is left to the caller to handle. Note that the query prepared does not include
+     * a discriminator but since we assume that ids are globally unique, this doesn't matter.
+     * @param entity The entity that has the inverse relationship
+     * @param path The map to the property in the entity that is the owning side of the relationship.
+     * @param callback Callback called on error.
+     */
+    _prepareInverseQuery(entity: Object, path: string, callback: ResultCallback<any>): QueryDocument {
+
         var property = this._mapping.getProperty(path);
         if(property === undefined) {
-            return callback(new Error("Missing property '" + path + "'."));
+            callback(new Error("Missing property '" + path + "'."));
+            return null;
         }
 
-        // TODO: skip prepareCriteria in findOne and create query document directly for performance?
-        var query: QueryDocument = {};
-        property.setFieldValue(query, entity);
+        var id = (<any>entity)._id;
+        if(id === undefined) {
+            callback(new Error("Missing identifier on entity that is the inverse side of a relationship."));
+            return null;
+        }
 
-        this.findOne(query, callback);
+        var query: QueryDocument = {};
+        property.setFieldValue(query, id);
+        return query;
     }
 
     findOneById(id: any, callback: ResultCallback<any>): void {
@@ -205,7 +218,7 @@ class PersisterImpl implements Persister {
     // TODO: findOne uses find under the hood in the mongodb driver. Consider optimizing to not use findOne function on mongodb driver.
     findOne(criteria: QueryDocument, callback: ResultCallback<any>): void {
 
-        this._collection.findOne(this._prepareCriteria(criteria), (err, document) => {
+        this._collection.findOne(criteria, (err, document) => {
             if (err) return callback(err);
             var result = this._loadOne(document);
             callback(result.error, result.value);
@@ -224,12 +237,16 @@ class PersisterImpl implements Persister {
 
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {
 
+        if(query.criteria) {
+            (this._criteriaBuilder || (this._criteriaBuilder = new CriteriaBuilder(this._mapping))).build(query.criteria);
+        }
+
         switch(query.kind) {
             case QueryKind.FindOne:
                 this.findOne(query.criteria, this._fetchOne(query, callback));
                 break;
             case QueryKind.FindOneById:
-                this.findOneById(query.criteria, this._fetchOne(query, callback));
+                this.findOneById(query.id, this._fetchOne(query, callback));
                 break;
             case QueryKind.FindAll:
                 this.findAll(query, this._fetchAll(query, callback));
@@ -368,7 +385,7 @@ class PersisterImpl implements Persister {
 
     private _prepareFind(query: FindAllQuery): Cursor {
 
-        var cursor = this._collection.find(this._prepareCriteria(query.criteria));
+        var cursor = this._collection.find(query.criteria);
 
         if(query.sortBy !== undefined) {
             cursor.sort(query.sortBy);
@@ -389,14 +406,6 @@ class PersisterImpl implements Persister {
         return cursor;
     }
 
-    private _prepareCriteria(criteria: QueryDocument): QueryDocument {
-
-        return this._criteriaBuilder.build(criteria);
-        //var query = this._prepareQueryDocument(criteria);
-        //this._mapping.setDocumentDiscriminator(query);
-        //return query;
-    }
-
     private _findOneAndModify(query: QueryDefinition, callback: ResultCallback<Object>): void {
 
         var options: FindAndModifyOptions = {
@@ -408,7 +417,7 @@ class PersisterImpl implements Persister {
             // TODO: prepare update document. This should include incrementing the version.
         }
 
-        this._collection.findAndModify(this._prepareCriteria(query.criteria), query.sortBy, query.updateDocument, options, (err, response) => {
+        this._collection.findAndModify(query.criteria, query.sortBy, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
 
             var document = response.value;
@@ -470,7 +479,7 @@ class PersisterImpl implements Persister {
             single: query.kind == QueryKind.RemoveOne
         }
 
-        this._collection.remove(this._prepareCriteria(query.criteria), options, (err: Error, response: any) => {
+        this._collection.remove(query.criteria, options, (err: Error, response: any) => {
             if(err) return callback(err);
             callback(null, response.result.n);
         });
@@ -482,7 +491,7 @@ class PersisterImpl implements Persister {
             multi: query.kind == QueryKind.UpdateAll
         }
 
-        this._collection.update(this._prepareCriteria(query.criteria), query.updateDocument, options, (err: Error, response: any) => {
+        this._collection.update(query.criteria, query.updateDocument, options, (err: Error, response: any) => {
             if(err) return callback(err);
             callback(null, response.result.nModified);
         });
@@ -498,7 +507,7 @@ class PersisterImpl implements Persister {
             return callback(new Error("Unknown field '" + query.key + "' for entity '" + this._mapping.name + "'."));
         }
 
-        this._collection.distinct(query.key, this._prepareCriteria(query.criteria), undefined, (err: Error, results: any[]) => {
+        this._collection.distinct(query.key, query.criteria, undefined, (err: Error, results: any[]) => {
             if(err) return callback(err);
 
             // read results based on property mapping
@@ -525,7 +534,7 @@ class PersisterImpl implements Persister {
             skip: query.skipCount
         }
 
-        this._collection.count(this._prepareCriteria(query.criteria), options, (err: Error, result: number) => {
+        this._collection.count(query.criteria, options, (err: Error, result: number) => {
             if(err) return callback(err);
             callback(null, result);
         });
