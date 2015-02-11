@@ -12,7 +12,9 @@ const enum MappingFlags {
     Tuple               = 0x00000200,
     Entity              = 0x00000400,
     Embeddable          = 0x00000800,
-    InheritanceRoot     = 0x00001000
+    InheritanceRoot     = 0x00001000,
+
+    ArrayLike = Array | Tuple
 }
 
 export = MappingFlags;

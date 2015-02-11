@@ -12,6 +12,7 @@ import FindOneAndUpdateQuery = require("./findOneAndUpdateQuery");
 import FindOneQuery = require("./findOneQuery");
 import FindQuery = require("./findQuery");
 import CountQuery = require("./countQuery");
+import QueryDocument = require("./queryDocument");
 
 class Query<T> {
 
@@ -25,7 +26,7 @@ class Query<T> {
     }
 
     findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
-    findAll(criteria: Object, callback?: ResultCallback<T[]>): FindQuery<T>;
+    findAll(criteria: QueryDocument, callback?: ResultCallback<T[]>): FindQuery<T>;
     findAll(criteriaOrCallback?: any, callback?: ResultCallback<T[]>): FindQuery<T> {
 
         var query = this._createQuery(QueryKind.FindAll);
@@ -42,7 +43,7 @@ class Query<T> {
     }
 
     findOne(callback?: ResultCallback<T>): FindOneQuery<T>;
-    findOne(criteria: Object, callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOne(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneQuery<T>;
     findOne(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         var query = this._createQuery(QueryKind.FindOne);
@@ -70,7 +71,7 @@ class Query<T> {
     }
 
     findOneAndRemove(callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
-    findOneAndRemove(criteria: Object, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
     findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T> {
 
         var query = this._createQuery(QueryKind.FindOneAndRemove);
@@ -86,9 +87,9 @@ class Query<T> {
         return query.handleCallback(callback);
     }
 
-    findOneAndUpdate(updateDocument: Object, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
-    findOneAndUpdate(criteria: Object, updateDocument: Object, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
-    findOneAndUpdate(criteriaOrUpdateDocument: Object, updateDocumentOrCallback: any, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>  {
+    findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
+    findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
+    findOneAndUpdate(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>  {
 
         var query = this._createQuery(QueryKind.FindOneAndUpdate);
 
@@ -106,7 +107,7 @@ class Query<T> {
     }
 
     removeAll(callback?: ResultCallback<number>): void;
-    removeAll(criteria: Object, callback?: ResultCallback<number>): void;
+    removeAll(criteria: QueryDocument, callback?: ResultCallback<number>): void;
     removeAll(criteriaOrCallback?: any, callback?: ResultCallback<number>): void {
 
         var query = this._createQuery(QueryKind.RemoveAll);
@@ -123,7 +124,7 @@ class Query<T> {
     }
 
     removeOne(callback?: ResultCallback<number>): void;
-    removeOne(criteria: Object, callback?: ResultCallback<number>): void;
+    removeOne(criteria: QueryDocument, callback?: ResultCallback<number>): void;
     removeOne(criteriaOrCallback?: any, callback?: ResultCallback<number>): void {
 
         var query = this._createQuery(QueryKind.RemoveOne);
@@ -139,9 +140,9 @@ class Query<T> {
         query.handleCallback(callback);
     }
 
-    updateAll(updateDocument: Object, callback?: ResultCallback<number>): void;
-    updateAll(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void;
-    updateAll(criteriaOrUpdateDocument: Object, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
+    updateAll(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    updateAll(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    updateAll(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
 
         var query = this._createQuery(QueryKind.UpdateAll);
 
@@ -158,9 +159,9 @@ class Query<T> {
         query.handleCallback(callback);
     }
 
-    updateOne(updateDocument: Object, callback?: ResultCallback<number>): void;
-    updateOne(criteria: Object, updateDocument: Object, callback?: ResultCallback<number>): void;
-    updateOne(criteriaOrUpdateDocument: Object, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
+    updateOne(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    updateOne(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    updateOne(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
 
         var query = this._createQuery(QueryKind.UpdateOne);
 
@@ -178,7 +179,7 @@ class Query<T> {
     }
 
     distinct(key: string, callback: ResultCallback<any[]>): void;
-    distinct(key: string, criteria: Object, callback: ResultCallback<any[]>): void;
+    distinct(key: string, criteria: QueryDocument, callback: ResultCallback<any[]>): void;
     distinct(key: string, criteriaOrCallback: any, callback?: ResultCallback<any[]>): void {
 
         var query = this._createQuery(QueryKind.Distinct);
@@ -194,7 +195,7 @@ class Query<T> {
     }
 
     count(callback?: ResultCallback<number>): CountQuery;
-    count(criteria: Object, callback?: ResultCallback<number>): CountQuery;
+    count(criteria: QueryDocument, callback?: ResultCallback<number>): CountQuery;
     count(criteriaOrCallback?: any, callback?: ResultCallback<number>): CountQuery {
 
         var query = this._createQuery(QueryKind.Count);
@@ -219,8 +220,8 @@ class Query<T> {
 class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Object>, FindOneAndRemoveQuery<Object>, FindOneAndUpdateQuery<Object>, CountQuery {
 
     key: string;
-    criteria: Object;
-    updateDocument: Object;
+    criteria: QueryDocument;
+    updateDocument: QueryDocument;
 
     wantsUpdated: boolean;
     fetchPaths: string[];

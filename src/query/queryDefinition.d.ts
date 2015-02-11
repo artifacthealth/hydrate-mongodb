@@ -1,6 +1,7 @@
 import ResultCallback = require("../core/resultCallback");
 import IteratorCallback = require("../core/iteratorCallback");
 import QueryKind = require("./queryKind");
+import QueryDocument = require("./queryDocument");
 
 interface QueryDefinition {
 
@@ -8,8 +9,8 @@ interface QueryDefinition {
     readOnly: boolean;
 
     key: string;
-    criteria: Object;
-    updateDocument: Object;
+    criteria: QueryDocument;
+    updateDocument: QueryDocument;
 
     wantsUpdated: boolean;
     fetchPaths: string[];

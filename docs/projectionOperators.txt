@@ -1,0 +1,11 @@
+Projection Operators
+
+$               The positional operator
+elemMatch       Limits the contents of an array field from the query results to contain only the first element matching the $elemMatch condition
+meta            { $meta: <metaDataKeyword> }
+slice           Controls the number of items of an array that a query returns
+
+db.posts.find( {}, { comments: { $slice: 5 } } )   // returns the first 5 items of an array
+db.posts.find( {}, { comments: { $slice: -5 } } )  // returns the last 5 items of an array
+db.posts.find( {}, { comments: { $slice: [ 20, 10 ] } } )   // returns 10 items after skipping the first 20
+db.posts.find( {}, { comments: { $slice: [ -20, 10 ] } } )  // returns 10 items beginning with the item that is 20th from the last item in the array

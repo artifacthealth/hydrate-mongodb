@@ -19,6 +19,9 @@ export class Person extends Party {
     personName: PersonName;
 
     birthDate: Date;
+    age: number;
+
+    aliases: string[];
 
     /** @field nullable: true */
     gender: Gender;
@@ -27,6 +30,8 @@ export class Person extends Party {
     address: Address;
     phones: Phone[];
     email: string;
+
+    workPhone: WorkPhone;
 
     /** @cascade "save, remove" */
     parents: Person[];
@@ -157,8 +162,16 @@ export class Phone {
 
 export class WorkPhone extends Phone {
 
-    constructor(number: string, public extension: string) {
+    /** @field "extension" */
+    private _extension: string;
+    get extension(): string {
+        return this._extension;
+    }
+
+    constructor(number: string, extension: string) {
         super(number, PhoneType.Work);
+
+        this._extension = extension;
     }
 }
 

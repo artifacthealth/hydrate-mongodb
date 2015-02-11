@@ -9,6 +9,7 @@ import Changes = require("./changes");
 import Reference = require("../reference");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
+import ResolveContext = require("./resolveContext");
 
 class ObjectMapping extends MappingBase {
 
@@ -251,6 +252,24 @@ class ObjectMapping extends MappingBase {
 
             callback(null, value);
         }
+    }
+
+    resolve(context: ResolveContext): void {
+
+        var property = this.getProperty(context.currentProperty);
+        if (property === undefined) {
+            context.setError("Undefined property.");
+            return;
+        }
+
+        if((property.flags & PropertyFlags.InverseSide)) {
+            context.setError("Cannot resolve inverse side of relationship.");
+        }
+
+        if(context.resolveProperty(property.mapping, property.field)) {
+            return; // reached end of path
+        }
+        property.mapping.resolve(context);
     }
 }
 

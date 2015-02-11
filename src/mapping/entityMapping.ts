@@ -15,6 +15,7 @@ import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
+import ResolveContext = require("./resolveContext");
 
 class EntityMapping extends ClassMapping {
 
@@ -210,15 +211,20 @@ class EntityMapping extends ClassMapping {
             return callback(new Error("Parent entity required to resolve inverse relationship."));
         }
 
-        var id = session.getId(parentEntity);
-        if(id === undefined) {
-            return callback(new Error("Missing identifier on parent entity."));
-        }
-
-        session.getPersister(this).findOneInverseOf(id, propertyName, (err, value) => {
+        session.getPersister(this).findOneInverseOf(parentEntity, propertyName, (err, value) => {
             if(err) return callback(err);
             super.fetch(session, this, value, path, depth, callback);
         });
+    }
+
+    resolve(context: ResolveContext): void {
+
+        if(!context.isFirst) {
+            context.setError("Unable to resolve entity mapping. The dot notation can only be used for embedded objects.")
+            return;
+        }
+
+        super.resolve(context);
     }
 }
 

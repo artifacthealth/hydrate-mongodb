@@ -6,6 +6,7 @@ import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
+import ResolveContext = require("./resolveContext");
 
 interface Mapping {
 
@@ -17,6 +18,7 @@ interface Mapping {
     areEqual(documentValue1: any, documentValue2: any): boolean;
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
+    resolve(context: ResolveContext): void;
 }
 
 export = Mapping;

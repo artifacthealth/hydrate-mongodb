@@ -26,8 +26,8 @@ interface Persister {
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void;
 
     findOneById(id: any, callback: ResultCallback<any>): void;
-    findInverseOf(id: any, path: string, callback: ResultCallback<Object[]>): void;
-    findOneInverseOf(id: any, path: string, callback: ResultCallback<Object>): void;
+    findInverseOf(entity: Object, path: string, callback: ResultCallback<Object[]>): void;
+    findOneInverseOf(entity: Object, path: string, callback: ResultCallback<Object>): void;
 
 }
 

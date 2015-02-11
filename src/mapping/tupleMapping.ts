@@ -7,6 +7,7 @@ import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
+import ResolveContext = require("./resolveContext");
 
 class TupleMapping extends MappingBase {
 
@@ -102,7 +103,7 @@ class TupleMapping extends MappingBase {
         }
 
         var index = parseInt(path[depth]);
-        if(isNaN(index) || index < 0 || index >= this.elementMappings.length) {
+        if(index !== index || index < 0 || index >= this.elementMappings.length) {
             return callback(new Error("Undefined tuple index '" + path[depth] + "' in path '"+ path.join(".") + "'."));
         }
 
@@ -114,6 +115,33 @@ class TupleMapping extends MappingBase {
             }
             callback(null, value);
         });
+    }
+
+    resolve(context: ResolveContext): void {
+
+        var property = context.currentProperty;
+        if(property == "$") {
+            // this is the positional operator
+            context.setError("Cannot resolve positional operator for Tuple.");
+            return;
+        }
+        else {
+            // check if it's an array index
+            var index = parseInt(property);
+            if(index !== index || index < 0 || index >= this.elementMappings.length) {
+                context.setError("Index out of range for Tuple.");
+                return;
+            }
+
+            var elementMapping = this.elementMappings[index];
+            if(context.resolveProperty(elementMapping, property)) {
+                return; // reached end of path
+            }
+            elementMapping.resolve(context);
+            return;
+        }
+
+        context.setError("Expected index for Tuple.");
     }
 }
 

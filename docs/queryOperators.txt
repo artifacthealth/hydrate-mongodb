@@ -8,7 +8,7 @@
             OR = $or: [ EXP, ... ]
             WHERE = $where: "javascript"
             TEXT = $text: { $search: "value", $language: "value" }
-            OPERATOR = GT | GTE | IN | LT | LTE | NE | NIN
+            OPERATOR = { GT | GTE | IN | LT | LTE | NE | NIN | ELEMMATCH }
             GT = $gt: <value>
             GTE = gte: <value>
             IN = $in: [ <value>, ... ]
@@ -16,7 +16,8 @@
             LTE = $lte: <value>
             NE = $ne: <value>
             NIN = $nin: [ <value>, ... ]
-
+            ELEMMATCH = $elemMatch: EXP
+            NOT = $not: OPERATOR
 
 
         comparison
@@ -55,7 +56,7 @@
 
         array
             all             { <field>: { $all: [ <value1> , <value2> ... ] } }
-            elemMatach      { <field>: { $elemMatch: { <query1>, <query2>, ... } } }
+            elemMatach      { <field>: { $elemMatch: { <expression1>, <expressionN>, ... } } }
             size            { <field>: { $size: <value> } }
 
         comments

@@ -12,8 +12,14 @@ module MappingError {
         var message: string[] = [];
 
         for(var i = 0, l = errors.length; i < l; i++) {
+            if(i > 0) {
+                message.push("\n");
+            }
             var error = errors[i];
-            message.push(error.path, ": ", error.message, "\n");
+            if(error.path) {
+                message.push(error.path, ": ");
+            }
+            message.push(error.message);
         }
 
         return message.join("");

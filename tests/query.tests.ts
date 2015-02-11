@@ -11,6 +11,7 @@ import QueryKind = require("../src/query/queryKind");
 import Query = require("../src/query/query");
 import ResultCallback = require("../src/core/resultCallback");
 import Callback = require("../src/core/callback");
+import QueryDocument = require("../src/query/queryDocument");
 
 // Fixtures
 import model = require("./fixtures/model");
@@ -26,7 +27,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
+                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
@@ -149,7 +150,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
+                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
@@ -225,7 +226,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
+                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
@@ -310,8 +311,8 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
-                var document = { $set: { age: 42 }};
+                var criteria: QueryDocument = { name: 'Bob' };
+                var document: QueryDocument = { $set: { age: 42 }};
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
@@ -354,7 +355,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var resultToReturn = { name: 'bob' };
-                var document = { $set: { age: 42 }};
+                var document: QueryDocument = { $set: { age: 42 }};
 
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
@@ -400,7 +401,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
+                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
@@ -446,7 +447,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
+                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
@@ -492,8 +493,8 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
-                var document = { $set: { age: 42 }};
+                var criteria: QueryDocument = { name: 'Bob' };
+                var document: QueryDocument = { $set: { age: 42 }};
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
@@ -515,7 +516,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var resultToReturn = 1;
-                var document = { $set: { age: 42 }};
+                var document: QueryDocument = { $set: { age: 42 }};
 
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
@@ -542,8 +543,8 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
-                var document = { $set: { age: 42 }};
+                var criteria: QueryDocument = { name: 'Bob' };
+                var document: QueryDocument = { $set: { age: 42 }};
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
@@ -565,7 +566,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var resultToReturn = 1;
-                var document = { $set: { age: 42 }};
+                var document: QueryDocument = { $set: { age: 42 }};
 
                 var session = factory.createSession();
                 var persister = factory.getPersisterForConstructor(session, model.Person);
@@ -592,7 +593,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
+                var criteria: QueryDocument = { name: 'Bob' };
                 var key = 'test';
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
@@ -642,7 +643,7 @@ describe('Query', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var criteria = { name: 'Bob' };
+                var criteria: QueryDocument = { name: 'Bob' };
 
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {

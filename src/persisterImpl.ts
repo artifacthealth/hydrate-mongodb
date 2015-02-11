@@ -23,7 +23,13 @@ import QueryDefinition = require("./query/queryDefinition");
 import QueryKind = require("./query/queryKind");
 import IteratorCallback = require("./core/iteratorCallback");
 import Cursor = require("./driver/cursor");
-import Criteria = require("./query/criteria");
+import QueryDocument = require("./query/queryDocument");
+import ResolveContext = require("./mapping/resolveContext");
+import MappingFlags = require("./mapping/mappingFlags");
+import ArrayMapping = require("./mapping/arrayMapping");
+import Mapping = require("./mapping/mapping");
+import RegExpUtil = require("./core/regExpUtil");
+import CriteriaBuilder = require("./query/criteriaBuilder");
 
 interface FindOneQuery {
 
@@ -78,6 +84,7 @@ class PersisterImpl implements Persister {
     private _mapping: EntityMapping;
     private _collection: Collection;
     private _session: InternalSession;
+    private _criteriaBuilder: CriteriaBuilder;
 
     constructor(session: InternalSession, mapping: EntityMapping, collection: Collection) {
 
@@ -87,6 +94,8 @@ class PersisterImpl implements Persister {
 
         this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
+
+        this._criteriaBuilder = new CriteriaBuilder(mapping);
     }
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object> {
@@ -157,28 +166,30 @@ class PersisterImpl implements Persister {
         this._mapping.fetch(this._session, undefined, entity, path.split("."), 0, callback);
     }
 
-    findInverseOf(id: any, path: string, callback: ResultCallback<any[]>): void {
+    findInverseOf(entity: Object, path: string, callback: ResultCallback<any[]>): void {
 
         var property = this._mapping.getProperty(path);
         if(property === undefined) {
             return callback(new Error("Missing property '" + path + "'."));
         }
 
-        var query = {};
-        property.setFieldValue(query, id);
+        // TODO: skip prepareCriteria in findAll and create query document directly for performance?
+        var query: QueryDocument = {};
+        property.setFieldValue(query, entity);
 
         this.findAll({ criteria: query }, callback);
     }
 
-    findOneInverseOf(id: any, path: string, callback: ResultCallback<any>): void {
+    findOneInverseOf(entity: Object, path: string, callback: ResultCallback<any>): void {
 
         var property = this._mapping.getProperty(path);
         if(property === undefined) {
             return callback(new Error("Missing property '" + path + "'."));
         }
 
-        var query = {};
-        property.setFieldValue(query, id);
+        // TODO: skip prepareCriteria in findOne and create query document directly for performance?
+        var query: QueryDocument = {};
+        property.setFieldValue(query, entity);
 
         this.findOne(query, callback);
     }
@@ -193,12 +204,11 @@ class PersisterImpl implements Persister {
         }
 
         // TODO: FindQueue should be shared by all persisters with the same collection?
-
         (this._findQueue || (this._findQueue = new FindQueue(this))).add(id, callback);
     }
 
     // TODO: findOne uses find under the hood in the mongodb driver. Consider optimizing to not use findOne function on mongodb driver.
-    findOne(criteria: Object, callback: ResultCallback<any>): void {
+    findOne(criteria: QueryDocument, callback: ResultCallback<any>): void {
 
         this._collection.findOne(this._prepareCriteria(criteria), (err, document) => {
             if (err) return callback(err);
@@ -384,28 +394,26 @@ class PersisterImpl implements Persister {
         return cursor;
     }
 
-    private _prepareCriteria(criteria: Object): Object {
+    private _prepareCriteria(criteria: QueryDocument): QueryDocument {
 
-       // var query = this._prepareQuery(criteria);
-        var query = criteria;
-
-        if(this._mapping.discriminatorValue !== undefined) {
-            // TODO: function in mapping to set discriminator value on object
-            (<any>query)[this._mapping.inheritanceRoot.discriminatorField] = this._mapping.discriminatorValue;
-        }
-
-        return query;
+        return this._criteriaBuilder.build(criteria);
+        //var query = this._prepareQueryDocument(criteria);
+        //this._mapping.setDocumentDiscriminator(query);
+        //return query;
     }
 
-    private _prepareQueryExpression(query: Criteria): Criteria {
+    private _prepareQueryDocument(query: QueryDocument, mapping?: Mapping, withinField?: boolean): QueryDocument {
 
         if(!query) return query;
 
-        var result: Criteria = {};
+        if(!mapping) {
+            mapping = this._mapping;
+        }
 
+        var result: QueryDocument = {};
         for(var key in query) {
             if(query.hasOwnProperty(key)) {
-                var value = (<any>query)[key];
+                var value = query[key];
 
                 // check if this is an operator
                 if(key[0] == "$") {
@@ -417,14 +425,24 @@ class PersisterImpl implements Persister {
 
                         var arr = new Array(value.length);
                         for (var i = 0, l = value.length; i < l; i++) {
-                            arr[i] = this._prepareQueryExpression(value[i]);
+                            arr[i] = this._prepareQueryDocument(value[i], mapping);
                         }
                         result[key] = arr;
                     }
                     else if(key == "$where" || key == "$text") {
                         // the $text operator doesn't contain any fields and we do not make any attempt to prepare
                         // field values in a $where operator, so we can just copy the value directly
+                        if(withinField) {
+                            throw new Error("Operator '" + key + "' is not allowed in $elemMatch.");
+                        }
                         result[key] = value;
+                    }
+                    else if(withinField) {
+                        // if we have an operator and it's not one of the top-level operators, if we are within a field
+                        // then process the query as a query expression. Currently, the only field level operator that
+                        // allows this is $elemMatch.
+                        result = this._prepareQueryExpression(query, mapping);
+                        break;
                     }
                     else {
                         // the only valid top-level operators are $and, $or, $nor, $where, and $text
@@ -432,12 +450,172 @@ class PersisterImpl implements Persister {
                     }
                 }
                 else {
-                    // otherwise, it should be a field path so we need to resolve the path
+                    // If it's not an operator then it should be a field.
+                    if(key == "_id") {
+                        // special case for identity field
+                        if(typeof value === "string") {
+                            value = this.identity.fromString(value);
+                        }
+                        result[key] = value;
+                    }
+                    else {
+                        // resolve field path
+                        var context = new ResolveContext(key);
+                        mapping.resolve(context);
+                        if(context.error) {
+                            // TODO: don't throw errors
+                            throw context.error;
+                        }
+                        var resolvedMapping = context.resolvedMapping,
+                            preparedValue: any;
+
+                        if(this._isQueryExpression(value)) {
+                            // Need to prepare the query expression
+
+                            if(resolvedMapping.flags & MappingFlags.Array) {
+                                // if this is an array mapping then any query operators apply to the element mapping
+                                resolvedMapping = (<ArrayMapping>resolvedMapping).elementMapping;
+                            }
+                            preparedValue = this._prepareQueryExpression(value, resolvedMapping);
+                        }
+                        else {
+                            // Doesn't have any query operators so just write the value
+
+                            if(resolvedMapping.flags & MappingFlags.Array) {
+                                // if the mapping is an array we need to figure out if we are going to use the array
+                                // mapping or the element mapping
+                                var arrayMapping = (<ArrayMapping>resolvedMapping);
+                                if(!Array.isArray(value) || (arrayMapping.nestedDepth > 1 && arrayMapping.nestedDepth > this._findArrayDepth(value))) {
+                                    // use element mapping if the value is not an array OR we have nested arrays and
+                                    // the depth of the nesting in the mapping is deeper than the depth in the value
+                                    resolvedMapping = arrayMapping.elementMapping;
+                                }
+                            }
+
+                            preparedValue = this._prepareQueryValue(context.resolvedPath, value, resolvedMapping);
+                        }
+
+                        result[context.resolvedPath] = preparedValue;
+                    }
                 }
             }
         }
 
         return result;
+    }
+
+    private _prepareQueryExpression(query: QueryDocument, mapping: Mapping): QueryDocument {
+
+        var result: QueryDocument = {};
+
+        for(var key in query) {
+            if (query.hasOwnProperty(key)) {
+                if(key[0] != "$") {
+                    throw new Error("Unexpected value '" + key + "' in query expression.");
+                }
+                var value = query[key],
+                    preparedValue: any;
+
+                switch(key) {
+                    case '$gt':
+                    case '$gte':
+                    case '$lt':
+                    case '$lte':
+                    case '$ne':
+                        // handle value
+                        preparedValue = this._prepareQueryValue(key, value, mapping);
+                        break;
+                    case '$in':
+                    case '$nin':
+                    case '$all':
+                        // handle array of values
+                        if(!Array.isArray(value)) {
+                            throw new Error("Expected array.");
+                        }
+                        preparedValue = new Array(value.length);
+                        for(var i = 0, l = value.length; i < l; i++) {
+                            preparedValue[i] = this._prepareQueryValue(key , value[i], mapping);
+                        }
+                        break;
+                    case '$not':
+                        // recursive expression
+                        preparedValue = this._prepareQueryExpression(value, mapping);
+                        break;
+                    case '$elemMatch':
+                        // recursive query document
+                        preparedValue = this._prepareQueryDocument(value, mapping, /*withinField*/ true);
+                        break;
+                    case '$exists':
+                    case '$type':
+                    case '$mod':
+                    case '$regex':
+                    case '$geoIntersects':
+                    case '$geoWithin':
+                    case '$nearSphere':
+                    case '$near':
+                    case '$size':
+                    case '$comment':
+                        // assign as-is
+                        preparedValue = value;
+                        break;
+                    default:
+                        throw new Error("Unknown query operator '" + key + "'.");
+                }
+
+                result[key] = preparedValue;
+            }
+        }
+
+        return result;
+    }
+
+    private _prepareQueryValue(path: string, value: any, mapping: Mapping): any {
+
+        // Regular expressions are allowed in place of strings
+        if((mapping.flags & MappingFlags.String) && (value instanceof RegExp)) {
+            return RegExpUtil.clone(value);
+        }
+
+        var errors: MappingError[] = [];
+        var preparedValue = mapping.write(value, path, errors, []);
+        if(errors.length > 0) {
+            throw new Error("Bad value: " + MappingError.createErrorMessage(errors));
+        }
+        return preparedValue;
+    }
+
+    /**
+     * Finds the maximum depth of nested arrays
+     * @param value The value to check
+     * @param depth The current depth. Default is 0.
+     */
+    private _findArrayDepth(value: any, depth = 0): number {
+
+        if(value && Array.isArray(value)) {
+            for (var i = 0, l = value.length; i < l; i++) {
+                depth = Math.max(depth, this._findArrayDepth(value[i], depth + 1));
+            }
+        }
+
+        return depth;
+    }
+
+    /**
+     * Return true if the first property is a query operator; otherwise, return false. Query expressions won't mix
+     * operator and non-operator fields like query documents can.
+     * @param value The value to check.
+     */
+    private _isQueryExpression(value: any): boolean {
+
+        if(typeof value === "object") {
+            for (var key in value) {
+                if(value.hasOwnProperty(key)) {
+                    return key[0] == "$";
+                }
+            }
+        }
+
+        return false;
     }
 
     private _findOneAndModify(query: QueryDefinition, callback: ResultCallback<Object>): void {

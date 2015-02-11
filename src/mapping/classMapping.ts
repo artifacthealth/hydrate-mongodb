@@ -51,8 +51,26 @@ class ClassMapping extends ObjectMapping {
 
     setDiscriminatorValue(value: string): void {
 
+        if(typeof value !== "string") {
+            throw new Error("Expected string for discriminator value.");
+        }
         this.discriminatorValue = value;
         this.inheritanceRoot._addDiscriminatorMapping(value, this);
+    }
+
+    setDocumentDiscriminator(obj: any): void {
+
+        if(this.discriminatorValue === undefined) {
+            this.setDocumentDiscriminator = <any>(function() { /*noop*/ });
+            return;
+        }
+
+        // See comment in Property.getPropertyValue. Verified performance improvement for setting a value as well, but for
+        // setting we got almost a 10x performance improvement.
+
+        // TODO: escape discriminatorField and discriminatorValue
+        this.setDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = \"" + this.discriminatorValue + "\""));
+        obj[this.inheritanceRoot.discriminatorField] = this.discriminatorValue;
     }
 
     get hasSubClasses(): boolean {
@@ -149,10 +167,7 @@ class ClassMapping extends ObjectMapping {
     protected writeClass(value: any, path: string, errors: MappingError[], visited: any[]): any {
 
         var document: any = {};
-        if(this.discriminatorValue !== undefined) {
-            document[this.inheritanceRoot.discriminatorField] = this.discriminatorValue;
-        }
-
+        this.setDocumentDiscriminator(document);
         return this.writeObject(document, value, path, errors, visited);
     }
 

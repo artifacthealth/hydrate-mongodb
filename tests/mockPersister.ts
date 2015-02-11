@@ -100,11 +100,11 @@ class MockPersister implements Persister {
 
     }
 
-    findInverseOf(id: any, path: string, callback: ResultCallback<any[]>): void {
+    findInverseOf(entity: Object, path: string, callback: ResultCallback<any[]>): void {
 
     }
 
-    findOneInverseOf(id: any, path: string, callback: ResultCallback<any>): void {
+    findOneInverseOf(entity: Object, path: string, callback: ResultCallback<any>): void {
 
     }
 

@@ -1,0 +1,43 @@
+Field operators
+
+currentDate     { $currentDate: { <field1>: <typeSpecification1>, ... } }
+inc             { $inc: { <field1>: <amount1>, <field2>: <amount2>, ... } }
+max             { $max: { <field1>: <value1>, ... } }
+min             { $min: { <field1>: <value1>, ... } }
+mul             { $mul: { field: <number> } }
+rename          { $rename: { <field1>: <newName1>, <field2>: <newName2>, ... } }
+setOnInsert     { $setOnInsert: { <field1>: <value1>, ... } }  // on for upsert
+set             { $set: { <field1>: <value1>, ... } }
+unset           { $unset: { <field1>: "", ... } }
+
+
+Array operators
+
+$               { "<array>.$" : value }
+addToSet        { $addToSet: { <field1>: <value1>, ... } }
+pop             { $pop: { <field>: <-1 | 1>, ... } }
+pullAll         { $pullAll: { <field1>: [ <value1>, <value2> ... ], ... } }
+pull            { $pull: { <field1>: <value|query>, ... } }
+pushAll         { $pushAll: { <field>: [ <value1>, <value2>, ... ] } }
+push            { $push: { <field1>: <value1>, ... }
+
+
+Modifiers
+
+each            { $addToSet: { <field>: { $each: [ <value1>, <value2> ... ] } } }
+each            { $push: { <field>: { $each: [ <value1>, <value2> ... ] } } }
+position        { $push: { <field>: { $each: [ <value1>, <value2>, ... ], $position: <num> } }}
+slice           { $push: { <field>: { $each: [ <value1>, <value2>, ... ], $slice: <num> }}}
+sort            { $push: { <field>: { $each: [ <value1>, <value2>, ... ], $sort: <sort specification> }}}
+
+
+Bitwise
+
+bit             { $bit: { <field>: { <and|or|xor>: <int> } } }
+
+
+Isolation
+
+isolated        update({ TOP, ..., $isolated: 1 }, { $inc: { count: 1 }}, { multi: 1 })
+
+NOTE HANDLE REGEX

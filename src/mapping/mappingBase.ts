@@ -5,6 +5,7 @@ import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
+import ResolveContext = require("./resolveContext");
 
 var nextMappingId = 1;
 
@@ -51,6 +52,14 @@ class MappingBase {
 
         callback(new Error("Mapping does not support inverse relationships."));
     }
+
+    resolve(context: ResolveContext): void {
+
+        if(!context.isEop) {
+            context.setError("Undefined property.");
+        }
+    }
+
 }
 
 export = MappingBase;

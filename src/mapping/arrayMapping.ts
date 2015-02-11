@@ -9,6 +9,8 @@ import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import EntityMapping = require("./entityMapping");
+import ResolveContext = require("./resolveContext");
+import TupleMapping = require("./tupleMapping");
 
 class ArrayMapping extends MappingBase {
 
@@ -125,19 +127,56 @@ class ArrayMapping extends MappingBase {
             return callback(new Error("Parent entity required to resolve inverse relationship."));
         }
 
-        var id = session.getId(parentEntity);
-        if(id === undefined) {
-            return callback(new Error("Missing identifier on parent entity."));
-        }
-
         if(!(this.elementMapping.flags & MappingFlags.Entity)) {
             return callback(new Error("Element mapping must be an entity to resolve inverse relationship."));
         }
 
-        session.getPersister(<EntityMapping>this.elementMapping).findInverseOf(id, propertyName, (err, value) => {
+        session.getPersister(<EntityMapping>this.elementMapping).findInverseOf(parentEntity, propertyName, (err, value) => {
             if(err) return callback(err);
             this.fetch(session, this, value, path, depth, callback);
         });
+    }
+
+    resolve(context: ResolveContext): void {
+
+        var property = context.currentProperty,
+            index: number;
+
+        if(property == "$" || ((index = parseInt(property)) === index)) {
+            // this is the positional operator or an index
+            if(context.resolveProperty(this.elementMapping, property)) {
+                return; // reached end of path
+            }
+        }
+
+        this.elementMapping.resolve(context);
+    }
+
+    private _nestedDepth: number;
+
+    /**
+     * Gets the maximum depth of nested array and tuple mappings
+     */
+    get nestedDepth(): number {
+        if(this._nestedDepth !== undefined) {
+            this._nestedDepth = this._findNestedDepth(0, this);
+        }
+        return this._nestedDepth;
+    }
+
+    private _findNestedDepth(depth: number, mapping: Mapping): number {
+
+        if(mapping.flags & MappingFlags.Array) {
+            return this._findNestedDepth(depth + 1, (<ArrayMapping>mapping).elementMapping);
+        }
+        else if (mapping.flags & MappingFlags.Tuple) {
+            var elementMappings = (<TupleMapping>mapping).elementMappings;
+            for(var i = 0, l = elementMappings.length; i < l; i++) {
+                depth = Math.max(depth, this._findNestedDepth(depth + 1, elementMappings[i]));
+            }
+        }
+
+        return depth;
     }
 
 }
