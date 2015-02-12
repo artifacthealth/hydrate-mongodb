@@ -21,13 +21,8 @@ class UpdateDocumentBuilder extends CriteriaBuilder {
         for(var operator in updateDocument) {
             if (updateDocument.hasOwnProperty(operator)) {
                 if (operator[0] != "$") {
-                    // all top-level keys in an update document should be operators, so if we don't have an operator
-                    // then this is a replacement document
-                    result = this.prepareQueryValue("", updateDocument, this.mapping);
-                    if(this.error) {
-                        this.error.message = "Error preparing replacement document: " + this.error.message;
-                    }
-                    break; // the result is the replacement document. nothing more to do.
+                    this.error = new Error("Replacement documents are not support in updates. Use the Session's 'save' method.");
+                    return null;
                 }
 
                 var fields = updateDocument[operator];

@@ -100,7 +100,7 @@ describe('UpdateDocumentBuilder', () => {
         assertDocument((err) => {
             // TODO: check error code
             assert.instanceOf(err, Error);
-            done()
+            done();
         }, { $addToSet: { "age": 1 }}, { $addToSet: { "age": 1 } });
     });
 
@@ -158,7 +158,7 @@ describe('UpdateDocumentBuilder', () => {
         assertDocument((err) => {
             // TODO: check error code
             assert.instanceOf(err, Error);
-            done()
+            done();
         }, { $pushAll: { email: [ "bob", "jones" ]}}, { $pushAll: { email: [ "bob", "jones" ]}});
     });
 
@@ -172,11 +172,15 @@ describe('UpdateDocumentBuilder', () => {
         assertDocument(done, { $pull: { phones: { type: model.PhoneType.Work }}}, { $pull: { phones: { "__t": "Phone", type: "Work" }}});
     });
 
-    it('correctly prepares replacement document', (done) => {
+    it('returns error if a document replacement is attempted', (done) => {
 
         var person = helpers.createPerson();
         var id = (<any>person)._id;
-        assertDocument(done, person, {"__t": "Person", "_id": id, "name": "Jones, Bob", "personName": { "first": "Bob", "last": "Jones"  }});
+        assertDocument((err) => {
+            // TODO: check error code
+            assert.instanceOf(err, Error);
+            done();
+        }, person, {"__t": "Person", "_id": id, "name": "Jones, Bob", "personName": { "first": "Bob", "last": "Jones"  }});
     });
 });
 
