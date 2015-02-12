@@ -217,14 +217,14 @@ class EntityMapping extends ClassMapping {
         });
     }
 
-    resolve(context: ResolveContext): void {
+    _resolveCore(context: ResolveContext): void {
 
         if(!context.isFirst) {
             context.setError("Unable to resolve entity mapping. The dot notation can only be used for embedded objects.")
             return;
         }
 
-        super.resolve(context);
+        super._resolveCore(context);
     }
 }
 

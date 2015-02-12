@@ -14,7 +14,6 @@ interface Session extends events.EventEmitter {
     remove(obj: Object, callback?: Callback): void;
     detach(obj: Object, callback?: Callback): void;
     refresh(obj: Object, callback: Callback): void;
-    merge(obj: Object, callback: ResultCallback<Object>): void;
     flush(callback?: Callback): void;
     clear(callback?: Callback): void;
     contains(obj: Object): boolean;

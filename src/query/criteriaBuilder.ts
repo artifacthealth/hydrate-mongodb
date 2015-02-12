@@ -7,6 +7,9 @@ import MappingError = require("../mapping/mappingError");
 import RegExpUtil = require("../core/regExpUtil");
 import EntityMapping = require("../mapping/entityMapping");
 
+/**
+ * Class that builds a database query document.
+ */
 class CriteriaBuilder {
 
     /**
@@ -19,6 +22,10 @@ class CriteriaBuilder {
 
     }
 
+    /**
+     * Builds and validates a database query document
+     * @param criteria The source query document.
+     */
     build(criteria: QueryDocument): QueryDocument {
 
         this.error = undefined;
@@ -90,11 +97,10 @@ class CriteriaBuilder {
                     }
                     else {
                         // resolve field path
-                        var context = new ResolveContext(key);
-                        mapping.resolve(context);
+                        var context = mapping.resolve(key);
                         if(context.error) {
                             this.error = context.error;
-                             return null;
+                            return null;
                         }
                         var resolvedMapping = context.resolvedMapping;
 

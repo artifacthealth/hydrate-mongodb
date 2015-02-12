@@ -6,12 +6,15 @@ import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
+import Map = require("../core/map");
 
 var nextMappingId = 1;
 
 class MappingBase {
 
     id: number;
+
+    private _resolveCache: Map<ResolveContext>;
 
     constructor(public flags: MappingFlags) {
         this.id = nextMappingId++;
@@ -53,13 +56,40 @@ class MappingBase {
         callback(new Error("Mapping does not support inverse relationships."));
     }
 
-    resolve(context: ResolveContext): void {
+    resolve(pathOrContext: any): any {
+
+        var context: ResolveContext,
+            cache = this._resolveCache;
+
+        if(typeof pathOrContext === "string") {
+            if(!cache) {
+                cache = this._resolveCache = {};
+            }
+            else {
+                var context = cache[pathOrContext];
+                if (context) {
+                    return context;
+                }
+            }
+            context = new ResolveContext(pathOrContext);
+        }
+        else {
+            context = pathOrContext;
+        }
+
+        this._resolveCore(context);
+
+        if(cache) {
+            return cache[pathOrContext] = context
+        }
+    }
+
+    protected _resolveCore(context: ResolveContext): void {
 
         if(!context.isEop) {
             context.setError("Undefined property.");
         }
     }
-
 }
 
 export = MappingBase;

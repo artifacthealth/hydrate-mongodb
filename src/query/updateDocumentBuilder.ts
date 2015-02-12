@@ -44,8 +44,7 @@ class UpdateDocumentBuilder extends CriteriaBuilder {
                     for (var field in fields) {
                         if (fields.hasOwnProperty(field)) {
                             // resolve field path
-                            var context = new ResolveContext(field);
-                            this.mapping.resolve(context);
+                            var context = this.mapping.resolve(field);
                             if (context.error) {
                                 this.error = context.error;
                                 return null;

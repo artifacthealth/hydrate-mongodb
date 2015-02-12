@@ -531,8 +531,7 @@ class PersisterImpl implements Persister {
 
         // TODO: add options for readpreference
 
-        var context = new ResolveContext(query.key)
-        this._mapping.resolve(context);
+        var context = this._mapping.resolve(query.key);
         if(context.error) {
             return callback(context.error);
         }
@@ -692,7 +691,6 @@ class BulkOperationCommand implements Command {
 
         this.inserted++;
         this.operation.insert(document);
-        //console.log("INSERT: " + JSON.stringify(document, null, "\t"));
     }
 
     addReplace(document: any): void {
@@ -703,7 +701,6 @@ class BulkOperationCommand implements Command {
 
         this.updated++;
         this.operation.find(query).replaceOne(document);
-        //console.log("REPLACE: " + JSON.stringify(document, null, "\t"));
     }
 
     addUpdate(id: any, changes: Changes): void {
@@ -714,7 +711,6 @@ class BulkOperationCommand implements Command {
 
         this.updated++;
         this.operation.find(query).update(changes);
-        //console.log("UPDATE: " + JSON.stringify(changes, null, "\t"));
     }
 
     addRemove(id: any): void {
@@ -725,7 +721,6 @@ class BulkOperationCommand implements Command {
 
         this.removed++;
         this.operation.find(query).removeOne();
-        //console.log("REMOVE: " + JSON.stringify(document, null, "\t"));
     }
 
     execute(callback: Callback): void {

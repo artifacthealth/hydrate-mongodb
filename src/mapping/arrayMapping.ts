@@ -137,7 +137,7 @@ class ArrayMapping extends MappingBase {
         });
     }
 
-    resolve(context: ResolveContext): void {
+    _resolveCore(context: ResolveContext): void {
 
         var property = context.currentProperty,
             index: number;

@@ -2,22 +2,7 @@ import Mapping = require("./mapping");
 
 class ResolveContext {
 
-    get currentProperty(): string {
-        return this._path[this._depth];
-    }
-
-    get isEop(): boolean {
-        return this._depth >= this._path.length;
-    }
-
-    get isFirst(): boolean {
-        return this._depth == 0;
-    }
-
-    get resolvedPath(): string {
-        return this._resolvePath.join(".");
-    }
-
+    resolvedPath: string;
     resolvedMapping: Mapping;
     error: Error;
 
@@ -34,23 +19,49 @@ class ResolveContext {
         this._depth = 0;
     }
 
+    get currentProperty(): string {
+        return this._path[this._depth];
+    }
+
+    get isEop(): boolean {
+        return this.path === undefined;
+    }
+
+    get isFirst(): boolean {
+        return this._depth === 0;
+    }
+
     setError(message: string): void {
+
         if(this._path.length == 1) {
             this.error = new Error("Invalid path '" + this.path + "': " + message);
         }
         else {
             this.error = new Error("Invalid path '" + this.path + "' at property '" + this.currentProperty + "': " + message);
         }
+        this._finished();
     }
 
     resolveProperty(mapping: Mapping, resolvedProperty: string): boolean {
+
         this._resolvePath[this._depth] = resolvedProperty;
+
         this._depth++;
         if(this._depth === this._path.length) {
+
             this.resolvedMapping = mapping;
+            this.resolvedPath = this._resolvePath.join(".");
+            this._finished();
             return true;
         }
         return false;
+    }
+
+    private _finished(): void {
+        // clear out some variables we are no longer using since we will be caching this class
+        this._depth = undefined;
+        this._path = undefined;
+        this._resolvePath = undefined;
     }
 }
 

@@ -127,11 +127,6 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         this._queue.add(Action.Refresh, Action.All & ~Action.Refresh, obj, callback);
     }
 
-    merge(obj: any, callback: ResultCallback<any>): void {
-
-        this._queue.add(Action.Merge, Action.All & ~Action.Merge, obj, callback);
-    }
-
     detach(obj: any, callback?: Callback): void {
 
         this._queue.add(Action.Detach, Action.All & ~Action.Detach, obj, callback);
@@ -481,14 +476,6 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                 done();
             });
         }, callback);
-    }
-
-    private _merge(obj: any, callback: ResultCallback<any>): void {
-
-    }
-
-    private _mergeEntities(entities: any[], callback: Callback): void {
-
     }
 
     // TODO: if flush fails, mark session invalid and don't allow any further operations?
