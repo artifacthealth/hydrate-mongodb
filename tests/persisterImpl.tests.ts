@@ -13,6 +13,8 @@ import helpers = require("./helpers");
 
 import MockCollection = require("./driver/mockCollection");
 import MockSessionFactory = require("./mockSessionFactory");
+import QueryDefinitionStub = require("./query/queryDefinitionStub");
+import QueryKind = require("../src/query/queryKind");
 
 describe('PersisterImpl', () => {
 
@@ -132,7 +134,96 @@ describe('PersisterImpl', () => {
     });
 
     describe('executeQuery', () => {
-    });
 
+        describe('distinct', () => {
+
+            it('returns an error if the values returned from the collection are not of the type expected', (done) => {
+
+                var collection = new MockCollection();
+                collection.onDistinct = (key, criteria, options, callback) => {
+
+                    callback(null, [ 1, 2, 3 ])
+                }
+
+                helpers.createPersister(collection, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.Distinct);
+                    query.key = "personName.last";
+                    query.criteria = {};
+
+                    persister.executeQuery(query, (err, results) => {
+                        // TODO: check error code
+                        assert.instanceOf(err, Error);
+                        done();
+                    });
+                });
+            });
+
+            it('allows for dot notation in key', (done) => {
+
+                var collection = new MockCollection();
+                collection.onDistinct = (key, criteria, options, callback) => {
+                    callback(null, [ "bob", "joe", "mary" ])
+                }
+
+                helpers.createPersister(collection, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.Distinct);
+                    query.key = "personName.last";
+                    query.criteria = {};
+
+                    persister.executeQuery(query, (err, results) => {
+                        if(err) return done(err);
+                        assert.deepEqual(results, [ "bob", "joe", "mary" ])
+                        done();
+                    });
+                });
+            });
+
+            it('deserializes returned embedded objects', (done) => {
+
+                var collection = new MockCollection();
+                collection.onDistinct = (key, criteria, options, callback) => {
+                    callback(null, [ { last: "Jones", first: "Mary" } ])
+                }
+
+                helpers.createPersister(collection, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.Distinct);
+                    query.key = "personName";
+                    query.criteria = {};
+
+                    persister.executeQuery(query, (err: Error, results: any[]) => {
+                        if(err) return done(err);
+                        assert.instanceOf(results[0], model.PersonName);
+                        done();
+                    });
+                });
+            });
+
+            it('translates property names to field names in key', (done) => {
+                var collection = new MockCollection();
+                collection.onDistinct = (key, criteria, options, callback) => {
+                    assert.equal(key, "name");
+                    done();
+                }
+
+                helpers.createPersister(collection, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.Distinct);
+                    query.key = "_name";
+                    query.criteria = {};
+
+                    persister.executeQuery(query, (err, results) => {
+                        if(err) return done(err);
+                    });
+                });
+            });
+        });
+    });
 });
 

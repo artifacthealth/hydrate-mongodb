@@ -25,6 +25,7 @@ import IteratorCallback = require("./core/iteratorCallback");
 import Cursor = require("./driver/cursor");
 import QueryDocument = require("./query/queryDocument");
 import CriteriaBuilder = require("./query/criteriaBuilder");
+import ResolveContext = require("./mapping/resolveContext");
 
 interface FindOneQuery {
 
@@ -237,8 +238,14 @@ class PersisterImpl implements Persister {
 
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {
 
+        // map query criteria if it's defined.
         if(query.criteria) {
-            (this._criteriaBuilder || (this._criteriaBuilder = new CriteriaBuilder(this._mapping))).build(query.criteria);
+            query.criteria = (this._criteriaBuilder || (this._criteriaBuilder = new CriteriaBuilder(this._mapping))).build(query.criteria);
+
+            // check if we got any error during build
+            if(this._criteriaBuilder.error) {
+                return callback(this._criteriaBuilder.error);
+            }
         }
 
         switch(query.kind) {
@@ -501,23 +508,22 @@ class PersisterImpl implements Persister {
 
         // TODO: add options for readpreference
 
-        // TODO: resolve field path for distinct e.g. 'personName.last' is a valid key. Are we going to allow resolving across entities? inverse relationships?
-        var property = this._mapping.getPropertyForField(query.key);
-        if(property === undefined) {
-            return callback(new Error("Unknown field '" + query.key + "' for entity '" + this._mapping.name + "'."));
+        var context = new ResolveContext(query.key)
+        this._mapping.resolve(context);
+        if(context.error) {
+            return callback(context.error);
         }
 
-        this._collection.distinct(query.key, query.criteria, undefined, (err: Error, results: any[]) => {
+        this._collection.distinct(context.resolvedPath, query.criteria, undefined, (err: Error, results: any[]) => {
             if(err) return callback(err);
 
             // read results based on property mapping
-            var errors: MappingError[] = [],
-                mapping = property.mapping;
+            var errors: MappingError[] = [];
 
             for(var i = 0, l = results.length; i < l; i++) {
-                results[i] = mapping.read(this._session, results[i], "", errors);
+                results[i] = context.resolvedMapping.read(this._session, results[i], context.resolvedPath, errors);
                 if (errors.length > 0) {
-                    return callback(new Error("Error deserializing distinct values for property '" + property.name + "':\n" + MappingError.createErrorMessage(errors)));
+                    return callback(new Error("Error deserializing distinct values for: " + MappingError.createErrorMessage(errors)));
                 }
             }
 

@@ -57,8 +57,12 @@ class MockCollection implements Collection {
     }
 
     distinct(key: string, query: Object, options: { readPreference: string; }, callback: (err: Error, result: any) => void): void {
-
+        if(this.onDistinct) {
+            process.nextTick(() => this.onDistinct(key, query, options, callback));
+            return;
+        }
     }
+    onDistinct: (key: string, query: Object, options: { readPreference: string; }, callback: (err: Error, result: any) => void) => void;
 
     initializeUnorderedBulkOp(): Bulk {
 

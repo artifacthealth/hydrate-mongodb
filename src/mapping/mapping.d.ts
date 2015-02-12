@@ -18,6 +18,7 @@ interface Mapping {
     areEqual(documentValue1: any, documentValue2: any): boolean;
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
+    // TODO: cache results of resolve in mapping
     resolve(context: ResolveContext): void;
 }
 

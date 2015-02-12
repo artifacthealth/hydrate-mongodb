@@ -71,6 +71,7 @@ export function createPersister(collection: MockCollection, ctrOrCallback: any, 
 
     createFactory("model", (err, factory) => {
         if (err) return callback(err);
-        callback(null, new PersisterImpl(factory.createSession(), factory.getMappingForConstructor(ctr), collection));
+        var session = factory.createSession();
+        callback(null, new PersisterImpl(session, factory.getMappingForConstructor(ctr), collection));
     });
 }

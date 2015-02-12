@@ -33,7 +33,7 @@ sort            { $push: { <field>: { $each: [ <value1>, <value2>, ... ], $sort:
 
 Bitwise
 
-bit             { $bit: { <field>: { <and|or|xor>: <int> } } }
+bit             { $bit: { <field1>: { <and|or|xor>: <int> }, ... } }
 
 
 Isolation
