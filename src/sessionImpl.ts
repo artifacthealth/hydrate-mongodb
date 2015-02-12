@@ -493,6 +493,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     // TODO: if flush fails, mark session invalid and don't allow any further operations?
     // TODO: if operations fails (e.g. save, etc.) should session become invalid? Perhaps have two classes of errors, those that cause the session to become invalid and those that do not?
+    // TODO: perhaps break up flush with process.nextTick if executing a large number of operations
     private _flush(callback: Callback): void {
 
         // TODO: put requirement to order operations on the persister, not in the session

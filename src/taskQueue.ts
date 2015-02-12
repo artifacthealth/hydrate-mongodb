@@ -58,7 +58,7 @@ class TaskQueue {
 
         // check to see if this task needs to wait on any of the active tasks
         var task = this._head;
-        if(task && !(task.wait & this._active)) {
+        while(task && !(task.wait & this._active)) {
             // we are not waiting on anything so deque the task
             this._head = this._head.next;
 
@@ -75,9 +75,14 @@ class TaskQueue {
                 this._active |= task.operation;
             }
 
-            this._execute(task.operation, task.arg, (err, result) => this._finished(task, err, result));
-            this._process();
+            this._execute(task.operation, task.arg, this._createCallback(task));
+            task = this._head;
         }
+    }
+
+    private _createCallback(task: Task): ResultCallback<any> {
+
+        return (err, result) => this._finished(task, err, result);
     }
 
     private _finished(task: Task, err: Error, result: any): void {
@@ -101,7 +106,9 @@ class TaskQueue {
             this._error = err;
         }
 
-        this._process();
+        if(this._head) {
+            this._process();
+        }
     }
 }
 
