@@ -49,8 +49,12 @@ class MockCollection implements Collection {
     }
 
     update(selector: Object, document: any, options: { safe?: boolean; upsert?: any; multi?: boolean; serializeFunctions?: boolean; }, callback: (err: Error, result: any) => void): void {
-
+        if(this.onUpdate) {
+            process.nextTick(() => this.onUpdate(selector, document, options, callback));
+            return;
+        }
     }
+    onUpdate: (selector: Object, document: any, options: { safe?: boolean; upsert?: any; multi?: boolean; serializeFunctions?: boolean; }, callback: (err: Error, result: any) => void) => void;
 
     count(query: Object, options: { readPreference?: string; limit?: number; skip?: number}, callback: (err: Error, result: any) => void): void {
 

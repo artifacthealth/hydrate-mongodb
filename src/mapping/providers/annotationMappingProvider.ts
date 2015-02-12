@@ -389,8 +389,9 @@ class MappingBuilder {
                 mapping.lockField = "__l";
             }
 
-            if (!mapping.versionField) {
+            if (!mapping.versionField && mapping.versioned) {
                 mapping.versionField = "__v";
+                mapping.versioned = true;
             }
 
             if (!mapping.changeTracking) {

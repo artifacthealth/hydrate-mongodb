@@ -25,6 +25,7 @@ import IteratorCallback = require("./core/iteratorCallback");
 import Cursor = require("./driver/cursor");
 import QueryDocument = require("./query/queryDocument");
 import CriteriaBuilder = require("./query/criteriaBuilder");
+import UpdateDocumentBuilder = require("./query/updateDocumentBuilder");
 import ResolveContext = require("./mapping/resolveContext");
 
 interface FindOneQuery {
@@ -81,6 +82,7 @@ class PersisterImpl implements Persister {
     private _collection: Collection;
     private _session: InternalSession;
     private _criteriaBuilder: CriteriaBuilder;
+    private _updateDocumentBuilder: UpdateDocumentBuilder;
 
     constructor(session: InternalSession, mapping: EntityMapping, collection: Collection) {
 
@@ -238,13 +240,34 @@ class PersisterImpl implements Persister {
 
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {
 
-        // map query criteria if it's defined.
+        // TODO: change so the query definition is not modified. not sure where to move this to.
+
+        // map query criteria if it's defined
         if(query.criteria) {
             query.criteria = (this._criteriaBuilder || (this._criteriaBuilder = new CriteriaBuilder(this._mapping))).build(query.criteria);
 
             // check if we got any error during build
             if(this._criteriaBuilder.error) {
                 return callback(this._criteriaBuilder.error);
+            }
+        }
+
+        // map update document if it's defined
+        if(query.updateDocument) {
+            query.updateDocument = (this._updateDocumentBuilder || (this._updateDocumentBuilder = new UpdateDocumentBuilder(this._mapping))).build(query.updateDocument);
+
+            // check if we got any error during build
+            if(this._updateDocumentBuilder.error) {
+                return callback(this._updateDocumentBuilder.error);
+            }
+
+            // increment version field if versioned
+            if((<EntityMapping>this._mapping.inheritanceRoot).versioned) {
+                var fields = query.updateDocument["$inc"];
+                if(!fields) {
+                    fields = query.updateDocument["$inc"] = {};
+                }
+                fields[(<EntityMapping>this._mapping.inheritanceRoot).versionField] = 1;
             }
         }
 

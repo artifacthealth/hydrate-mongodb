@@ -28,10 +28,10 @@ class EntityMapping extends ClassMapping {
 
     changeTracking: ChangeTracking;
 
-    versioned: boolean;
+    versioned: boolean = true;
     versionField: string;
 
-    lockable: boolean;
+    lockable: boolean = false;
     lockField: string;
 
     constructor(baseClass?: EntityMapping) {

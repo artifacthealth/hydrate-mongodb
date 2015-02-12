@@ -16,6 +16,7 @@ export class Party {
 
 export class Person extends Party {
 
+    createdAt: Date;
     personName: PersonName;
 
     birthDate: Date;
@@ -177,6 +178,7 @@ export class WorkPhone extends Phone {
 
 /**
  * @collection
+ * @versioned false
  */
 export class User {
 

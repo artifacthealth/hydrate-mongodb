@@ -9,41 +9,38 @@ import EntityMapping = require("../mapping/entityMapping");
 
 class CriteriaBuilder {
 
-    private _mapping: EntityMapping;
-
     /**
      * The last error encounter by the CriteriaBuilder. The value is cleared before each build.
      */
     error: Error;
 
 
-    constructor(mapping: EntityMapping) {
+    constructor(protected mapping: EntityMapping) {
 
-        this._mapping = mapping;
     }
 
     build(criteria: QueryDocument): QueryDocument {
 
         this.error = undefined;
 
-        var preparedCriteria = this._prepareQueryDocument(criteria, this._mapping);
+        var preparedCriteria = this.prepareQueryDocument(criteria, this.mapping);
         if(!preparedCriteria) {
             return null;
         }
-        this._mapping.setDocumentDiscriminator(preparedCriteria);
+        this.mapping.setDocumentDiscriminator(preparedCriteria);
         return preparedCriteria;
     }
 
-    private _prepareQueryDocument(query: QueryDocument, mapping?: Mapping, withinField?: boolean): QueryDocument {
+    protected prepareQueryDocument(query: QueryDocument, mapping?: Mapping, withinField?: boolean): QueryDocument {
 
-        if(!query) return query;
+        if(!query) return {};
 
         var result: QueryDocument = {};
         for(var key in query) {
             if(query.hasOwnProperty(key)) {
                 var value = query[key],
                     preparedKey = key,
-                    preparedValue: any = value;
+                    preparedValue = value;
 
                 // check if this is an operator
                 if(key[0] == "$") {
@@ -56,7 +53,7 @@ class CriteriaBuilder {
 
                         var arr = new Array(value.length);
                         for (var i = 0, l = value.length; i < l; i++) {
-                            arr[i] = this._prepareQueryDocument(value[i], mapping);
+                            arr[i] = this.prepareQueryDocument(value[i], mapping);
                         }
 
                         preparedValue = arr;
@@ -75,7 +72,7 @@ class CriteriaBuilder {
                         // if we have an operator and it's not one of the top-level operators, if we are within a field
                         // then process the query as a query expression. Currently, the only field level operator that
                         // allows this is $elemMatch.
-                        return this._prepareQueryExpression(query, mapping);
+                        return this._prepareQueryExpression(key, query, mapping);
                     }
                     else {
                         // the only valid top-level operators are $and, $or, $nor, $where, and $text
@@ -88,7 +85,7 @@ class CriteriaBuilder {
                     if(key == "_id") {
                         // special case for identity field
                         if(typeof value === "string") {
-                            preparedValue = this._mapping.identity.fromString(value);
+                            preparedValue = this.mapping.identity.fromString(value);
                         }
                     }
                     else {
@@ -97,18 +94,18 @@ class CriteriaBuilder {
                         mapping.resolve(context);
                         if(context.error) {
                             this.error = context.error;
-                            return null;
+                             return null;
                         }
                         var resolvedMapping = context.resolvedMapping;
 
-                        if(this._isQueryExpression(value)) {
+                        if(this.isQueryExpression(value)) {
                             // Need to prepare the query expression
 
                             if(resolvedMapping.flags & MappingFlags.Array) {
                                 // if this is an array mapping then any query operators apply to the element mapping
                                 resolvedMapping = (<ArrayMapping>resolvedMapping).elementMapping;
                             }
-                            preparedValue = this._prepareQueryExpression(value, resolvedMapping);
+                            preparedValue = this._prepareQueryExpression(key, value, resolvedMapping);
                         }
                         else {
                             // Doesn't have any query operators so just write the value
@@ -124,7 +121,7 @@ class CriteriaBuilder {
                                 }
                             }
 
-                            preparedValue = this._prepareQueryValue(context.resolvedPath, value, resolvedMapping);
+                            preparedValue = this.prepareQueryValue(context.resolvedPath, value, resolvedMapping);
                         }
 
                         preparedKey = context.resolvedPath;
@@ -138,7 +135,12 @@ class CriteriaBuilder {
         return result;
     }
 
-    private _prepareQueryExpression(query: QueryDocument, mapping: Mapping): QueryDocument {
+    private _prepareQueryExpression(operator: string, query: QueryDocument, mapping: Mapping): QueryDocument {
+
+        if(!query) {
+            this.error = new Error("Missing value for operator '" + operator + "'.");
+            return null;
+        }
 
         var result: QueryDocument = {};
 
@@ -158,28 +160,21 @@ class CriteriaBuilder {
                     case '$lte':
                     case '$ne':
                         // handle value
-                        preparedValue = this._prepareQueryValue(key, value, mapping);
+                        preparedValue = this.prepareQueryValue(key, value, mapping);
                         break;
                     case '$in':
                     case '$nin':
                     case '$all':
                         // handle array of values
-                        if(!Array.isArray(value)) {
-                            this.error = new Error("Expected array.");
-                            return null;
-                        }
-                        preparedValue = new Array(value.length);
-                        for(var i = 0, l = value.length; i < l; i++) {
-                            preparedValue[i] = this._prepareQueryValue(key , value[i], mapping);
-                        }
+                        preparedValue = this.prepareArrayOfValues(key, value, mapping);
                         break;
                     case '$not':
                         // recursive expression
-                        preparedValue = this._prepareQueryExpression(value, mapping);
+                        preparedValue = this._prepareQueryExpression(key, value, mapping);
                         break;
                     case '$elemMatch':
                         // recursive query document
-                        preparedValue = this._prepareQueryDocument(value, mapping, /*withinField*/ true);
+                        preparedValue = this.prepareQueryDocument(value, mapping, /*withinField*/ true);
                         break;
                     case '$exists':
                     case '$type':
@@ -206,7 +201,22 @@ class CriteriaBuilder {
         return result;
     }
 
-    private _prepareQueryValue(path: string, value: any, mapping: Mapping): any {
+    protected prepareArrayOfValues(operator: string, value: any[], mapping: Mapping): any[] {
+
+        if(!Array.isArray(value)) {
+            this.error = new Error("Expected array for '" + operator +"' operator.");
+            return null;
+        }
+
+        var result = new Array(value.length);
+        for(var i = 0, l = value.length; i < l; i++) {
+            result[i] = this.prepareQueryValue(operator , value[i], mapping);
+        }
+
+        return result;
+    }
+
+    protected prepareQueryValue(path: string, value: any, mapping: Mapping): any {
 
         // Regular expressions are allowed in place of strings
         if((mapping.flags & MappingFlags.String) && (value instanceof RegExp)) {
@@ -243,7 +253,7 @@ class CriteriaBuilder {
      * operator and non-operator fields like query documents can.
      * @param value The value to check.
      */
-    private _isQueryExpression(value: any): boolean {
+    protected isQueryExpression(value: any): boolean {
 
         if(typeof value === "object") {
             for (var key in value) {

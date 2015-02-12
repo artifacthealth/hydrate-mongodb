@@ -137,7 +137,7 @@ describe('PersisterImpl', () => {
 
         describe('distinct', () => {
 
-            it('returns an error if the values returned from the collection are not of the type expected', (done) => {
+            it('returns an error if the values returned from the collection are not of the expected type', (done) => {
 
                 var collection = new MockCollection();
                 collection.onDistinct = (key, criteria, options, callback) => {
@@ -217,6 +217,55 @@ describe('PersisterImpl', () => {
                     var query = new QueryDefinitionStub(QueryKind.Distinct);
                     query.key = "_name";
                     query.criteria = {};
+
+                    persister.executeQuery(query, (err, results) => {
+                        if(err) return done(err);
+                    });
+                });
+            });
+        });
+
+        describe('updateAll', () => {
+
+            it('serializes embedded objects in update document', (done) => {
+
+                var phone = new model.WorkPhone("555-1212", "x15");
+                var collection = new MockCollection();
+                collection.onUpdate = (selector, document, options, callback) => {
+
+                    assert.deepEqual(document, { $inc: { "__v": 1 }, $addToSet: { phones: { "__t": "WorkPhone", "extension": "x15", "number": "555-1212", "type": "Work" }}});
+                    done();
+                }
+
+                helpers.createPersister(collection, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.UpdateAll);
+                    query.criteria = {};
+                    query.updateDocument = { $addToSet: { phones: phone }};
+
+                    persister.executeQuery(query, (err, results) => {
+                        if(err) return done(err);
+                    });
+                });
+            });
+
+            it('does not increment version field if entity is not versioned', (done) => {
+
+                var phone = new model.WorkPhone("555-1212", "x15");
+                var collection = new MockCollection();
+                collection.onUpdate = (selector, document, options, callback) => {
+
+                    assert.deepEqual(document, { $set: { password: "test" }});
+                    done();
+                }
+
+                helpers.createPersister(collection, model.User, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.UpdateAll);
+                    query.criteria = {};
+                    query.updateDocument = { $set: { password: "test" }};
 
                     persister.executeQuery(query, (err, results) => {
                         if(err) return done(err);

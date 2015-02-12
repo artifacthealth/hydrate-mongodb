@@ -10,6 +10,7 @@ import Reference = require("../reference");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
+import ClassMapping = require("./classMapping");
 
 class ObjectMapping extends MappingBase {
 
@@ -258,7 +259,12 @@ class ObjectMapping extends MappingBase {
 
         var property = this.getProperty(context.currentProperty);
         if (property === undefined) {
-            context.setError("Undefined property.");
+            if(this.flags & MappingFlags.Class) {
+                context.setError("Undefined property for class '" + (<ClassMapping>this).name +"'.");
+            }
+            else {
+                context.setError("Undefined property.");
+            }
             return;
         }
 

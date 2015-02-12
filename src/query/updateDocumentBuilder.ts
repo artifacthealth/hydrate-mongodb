@@ -5,150 +5,196 @@ import ArrayMapping = require("../mapping/arrayMapping");
 import Mapping = require("../mapping/mapping");
 import MappingError = require("../mapping/mappingError");
 import RegExpUtil = require("../core/regExpUtil");
+import CriteriaBuilder = require("./criteriaBuilder");
+import ObjectMapping = require("../mapping/objectMapping");
+import ClassMapping = require("../mapping/classMapping");
 import EntityMapping = require("../mapping/entityMapping");
 
-class UpdateDocumentBuilder {
-
-    private _mapping: EntityMapping;
-
-    /**
-     * The last error encounter by the CriteriaBuilder. The value is cleared before each build.
-     */
-    error: Error;
-
-
-    constructor(mapping: EntityMapping) {
-
-        this._mapping = mapping;
-    }
+class UpdateDocumentBuilder extends CriteriaBuilder {
 
     build(updateDocument: QueryDocument): QueryDocument {
 
         this.error = undefined;
-        if(!updateDocument) return updateDocument;
+        if(!updateDocument) return {};
 
         var result: QueryDocument = {};
-        for(var key in updateDocument) {
-            if (updateDocument.hasOwnProperty(key)) {
-                if (key[0] != "$") {
-                    // all top-level keys in an update document should be operators or this is a replacement document
-                    return this._prepareQueryValue("", updateDocument, this._mapping);
+        for(var operator in updateDocument) {
+            if (updateDocument.hasOwnProperty(operator)) {
+                if (operator[0] != "$") {
+                    // all top-level keys in an update document should be operators, so if we don't have an operator
+                    // then this is a replacement document
+                    result = this.prepareQueryValue("", updateDocument, this.mapping);
+                    if(this.error) {
+                        this.error.message = "Error preparing replacement document: " + this.error.message;
+                    }
+                    break; // the result is the replacement document. nothing more to do.
                 }
-                var value = updateDocument[key],
-                    preparedValue: any;
 
-                switch (key) {
-                    case '$currentDate':
-                    case '$inc':
-                    case '$max':
-                    case '$min':
-                    case '$mul':
-                    case '$rename':
-                    case '$setOnInsert':
-                    case '$set':
-                    case '$unset':
-                    case '$addToSet':
-                    case '$pop':
-                    case '$pullAll':
-                    case '$pull':
-                    case '$pushAll':
-                    case '$push':
-                    case 'bit':
-                        break;
-                    default:
-                        this.error = new Error("Unknown query operator '" + key + "'.");
-                        return null;
+                var fields = updateDocument[operator];
+                if(!fields) {
+                    this.error = new Error("Missing value for operator '" + operator + "'.");
+                    return null;
                 }
+
+                var preparedFields: QueryDocument = {};
+
+                if(operator == '$pull') {
+                    // pull operator take a query document
+
+                    // NOTE: unlike most of the other array operators we are not confirming that it's used on properties
+                    // that have an array type.
+                    preparedFields = this.prepareQueryDocument(fields, this.mapping);
+                }
+                else {
+                    for (var field in fields) {
+                        if (fields.hasOwnProperty(field)) {
+                            // resolve field path
+                            var context = new ResolveContext(field);
+                            this.mapping.resolve(context);
+                            if (context.error) {
+                                this.error = context.error;
+                                return null;
+                            }
+
+                            var mapping = context.resolvedMapping,
+                                value = fields[field],
+                                preparedValue: any;
+
+                            switch (operator) {
+                                case '$currentDate':
+                                case '$inc':
+                                case '$mul':
+                                case '$rename':
+                                case '$unset':
+                                case '$pop':
+                                case '$bit':
+                                    //fields with constant
+                                    preparedValue = value;
+                                    break;
+                                case '$addToSet':
+                                case '$push':
+                                    // fields with value and optional modifier
+                                    if (!this._isArray(operator, mapping)) return null;
+                                    if (this.isQueryExpression(value)) {
+                                        preparedValue = this._prepareQueryModifier(operator, value, (<ArrayMapping>mapping).elementMapping);
+                                        break;
+                                    }
+                                    preparedValue = this.prepareQueryValue(operator, value, (<ArrayMapping>mapping).elementMapping);
+                                    break;
+                                case '$max':
+                                case '$min':
+                                case '$setOnInsert':
+                                case '$set':
+                                    // fields with value
+                                    preparedValue = this.prepareQueryValue(operator, value, mapping);
+                                    break;
+                                case '$pullAll':
+                                case '$pushAll':
+                                    // handle array of values
+                                    if (!this._isArray(operator, mapping)) return null;
+                                    preparedValue = this.prepareArrayOfValues(operator, value, (<ArrayMapping>mapping).elementMapping);
+                                    break;
+                                default:
+                                    this.error = new Error("Unknown query operator '" + operator + "'.");
+                                    return null;
+                            }
+
+                            preparedFields[context.resolvedPath] = preparedValue;
+                        }
+                    }
+                }
+
+                result[operator] = preparedFields;
             }
         }
+
+        return result;
     }
 
-    /*
-     currentDate     { $currentDate: { <field1>: <typeSpecification1>, ... } }
-     inc             { $inc: { <field1>: <amount1>, <field2>: <amount2>, ... } }
-     max             { $max: { <field1>: <value1>, ... } }
-     min             { $min: { <field1>: <value1>, ... } }
-     mul             { $mul: { field: <number> } }
-     rename          { $rename: { <field1>: <newName1>, <field2>: <newName2>, ... } }
-     setOnInsert     { $setOnInsert: { <field1>: <value1>, ... } }  // on for upsert
-     set             { $set: { <field1>: <value1>, ... } }
-     unset           { $unset: { <field1>: "", ... } }
-
-
-     Array operators
-
-     $               { "<array>.$" : value }
-     addToSet        { $addToSet: { <field1>: <value1>, ... } }
-     pop             { $pop: { <field>: <-1 | 1>, ... } }
-     pullAll         { $pullAll: { <field1>: [ <value1>, <value2> ... ], ... } }
-     pull            { $pull: { <field1>: <value|query>, ... } }
-     pushAll         { $pushAll: { <field>: [ <value1>, <value2>, ... ] } }
-     push            { $push: { <field1>: <value1>, ... }
-
-
-     Modifiers
-
-     each            { $addToSet: { <field>: { $each: [ <value1>, <value2> ... ] } } }
-     each            { $push: { <field>: { $each: [ <value1>, <value2> ... ] } } }
-     position        { $push: { <field>: { $each: [ <value1>, <value2>, ... ], $position: <num> } }}
-     slice           { $push: { <field>: { $each: [ <value1>, <value2>, ... ], $slice: <num> }}}
-     sort            { $push: { <field>: { $each: [ <value1>, <value2>, ... ], $sort: <sort specification> }}}
-
-
-     Bitwise
-
-     bit             { $bit: { <field1>: { <and|or|xor>: <int> }, ... } }
-
-     */
-
-    private _prepareQueryValue(path: string, value: any, mapping: Mapping): any {
-
-        // Regular expressions are allowed in place of strings
-        if((mapping.flags & MappingFlags.String) && (value instanceof RegExp)) {
-            return RegExpUtil.clone(value);
+    private _isArray(operator: string, mapping: Mapping): boolean {
+        if(!(mapping.flags & MappingFlags.Array)) {
+            this.error = new Error("Operator '" + operator + "' only applies to properties that have an array type.");
+            return false;
         }
+        return true;
+    }
 
-        var errors: MappingError[] = [];
-        var preparedValue = mapping.write(value, path, errors, []);
-        if(errors.length > 0) {
-            this.error = new Error("Bad value: " + MappingError.createErrorMessage(errors));
+    private _prepareQueryModifier(operator: string, query: QueryDocument, mapping: Mapping): QueryDocument {
+
+        if(!query) {
+            this.error = new Error("Missing value for operator '" + operator + "'.");
             return null;
         }
-        return preparedValue;
-    }
 
-    /**
-     * Finds the maximum depth of nested arrays
-     * @param value The value to check
-     * @param depth The current depth. Default is 0.
-     */
-    private _findArrayDepth(value: any, depth = 0): number {
+        var result: QueryDocument = {};
 
-        if(value && Array.isArray(value)) {
-            for (var i = 0, l = value.length; i < l; i++) {
-                depth = Math.max(depth, this._findArrayDepth(value[i], depth + 1));
+        for(var key in query) {
+            if (query.hasOwnProperty(key)) {
+                if(key[0] != "$") {
+                    this.error = new Error("Unexpected value '" + key + "' in query expression.");
+                    return null;
+                }
+                var value = query[key],
+                    preparedValue: any;
+
+                switch(key) {
+                    case '$each':
+                        // handle array of values
+                        preparedValue = this.prepareArrayOfValues(key, value, mapping);
+                        break;
+                    case '$position':
+                    case '$slice':
+                        preparedValue = value;
+                        break;
+                    case '$sort':
+                        preparedValue = this._prepareSortSpecification(value, mapping);
+                        break;
+                    default:
+                        this.error = new Error("Unknown query modifier '" + key + "'.");
+                        return null;
+                }
+
+                result[key] = preparedValue;
             }
         }
 
-        return depth;
+        return result;
     }
 
-    /**
-     * Return true if the first property is a query operator; otherwise, return false. Query expressions won't mix
-     * operator and non-operator fields like query documents can.
-     * @param value The value to check.
-     */
-    private _isQueryExpression(value: any): boolean {
+    private _prepareSortSpecification(sortSpecification: any, mapping: Mapping): any {
 
-        if(typeof value === "object") {
-            for (var key in value) {
-                if(value.hasOwnProperty(key)) {
-                    return key[0] == "$";
+        if(mapping.flags & MappingFlags.Embeddable) {
+            if(typeof sortSpecification !== "object") {
+                this.error = new Error("Value of $sort must be an object if sorting an array of embedded documents.");
+            }
+
+            var result: QueryDocument = {};
+
+            for(var field in sortSpecification) {
+                if (sortSpecification.hasOwnProperty(field)) {
+
+                    var property = (<ObjectMapping>mapping).getProperty(field);
+                    if (property === undefined) {
+                        if(mapping.flags & MappingFlags.Class) {
+                            this.error = new Error("Unknown property '" + field + "' for class '" + (<ClassMapping>mapping).name +"' in $sort.");
+                        }
+                        else {
+                            this.error = new Error("Unknown property '" + field + "' in $sort.");
+                        }
+                        return;
+                    }
+                    property.setFieldValue(result, this.prepareQueryValue(property.name, property.getPropertyValue(sortSpecification), property.mapping));
                 }
             }
+
+            return result;
         }
 
-        return false;
+        if(typeof sortSpecification !== "number") {
+            this.error = new Error("Value of $sort must be a number if sorting an array that does not contain embedded documents.");
+        }
+
+        return sortSpecification;
     }
 }
 
