@@ -14,7 +14,7 @@ class QueryDefinitionStub implements QueryDefinition {
 
     wantsUpdated: boolean;
     fetchPaths: string[];
-    sortBy: [string, number][];
+    sortValue: [string, number][];
     limitCount: number;
     skipCount: number;
     iterator: IteratorCallback<Object>;

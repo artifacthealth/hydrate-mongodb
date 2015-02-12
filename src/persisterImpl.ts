@@ -36,7 +36,7 @@ interface FindOneQuery {
 
 interface FindAllQuery extends FindOneQuery {
 
-    sortBy?: [string, number][];
+    sortValue?: [string, number][];
     limitCount?: number;
     skipCount?: number;
     batchSizeValue?: number;
@@ -417,8 +417,8 @@ class PersisterImpl implements Persister {
 
         var cursor = this._collection.find(query.criteria);
 
-        if(query.sortBy !== undefined) {
-            cursor.sort(query.sortBy);
+        if(query.sortValue !== undefined) {
+            cursor.sort(query.sortValue);
         }
 
         if(query.skipCount !== undefined) {
@@ -447,7 +447,7 @@ class PersisterImpl implements Persister {
             // TODO: prepare update document. This should include incrementing the version.
         }
 
-        this._collection.findAndModify(query.criteria, query.sortBy, query.updateDocument, options, (err, response) => {
+        this._collection.findAndModify(query.criteria, query.sortValue, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
 
             var document = response.value;

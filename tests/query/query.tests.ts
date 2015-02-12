@@ -78,7 +78,7 @@ describe('Query', () => {
                     assert.equal(query.limitCount, 10);
                     assert.equal(query.skipCount, 22);
                     assert.equal(query.batchSizeValue, 10000);
-                    assert.deepEqual(query.sortBy, [['name', 1]]);
+                    assert.deepEqual(query.sortValue, [['name', 1]]);
                     assert.deepEqual(query.fetchPaths, [ 'children' ]);
                     done();
                 }
@@ -279,7 +279,7 @@ describe('Query', () => {
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.deepEqual(query.fetchPaths, [ 'parents' ]);
-                    assert.deepEqual(query.sortBy, [['name',1]]);
+                    assert.deepEqual(query.sortValue, [['name',1]]);
                     done();
                 }
 
@@ -338,7 +338,7 @@ describe('Query', () => {
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.deepEqual(query.fetchPaths, [ 'parents' ]);
-                    assert.deepEqual(query.sortBy, [['name',1]]);
+                    assert.deepEqual(query.sortValue, [['name',1]]);
                     assert.isTrue(query.wantsUpdated);
                     done();
                 }

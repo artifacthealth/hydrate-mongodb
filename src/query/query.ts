@@ -226,7 +226,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
 
     wantsUpdated: boolean;
     fetchPaths: string[];
-    sortBy: [string, number][];
+    sortValue: [string, number][];
     limitCount: number;
     skipCount: number;
     iterator: IteratorCallback<Object>;
@@ -264,13 +264,13 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
 
     sort(field: string | [string, number][], directionOrCallback: number | ResultCallback<any>, callback?: ResultCallback<any>): QueryObject {
 
-        if(!this.sortBy) {
-            this.sortBy = [];
+        if(!this.sortValue) {
+            this.sortValue = [];
         }
 
         if(typeof field === "string" ) {
             if(typeof directionOrCallback === "number") {
-                this.sortBy.push([field, directionOrCallback]);
+                this.sortValue.push([field, directionOrCallback]);
             }
             else {
                 throw new Error("Expected second parameter to be the sort direction when first parameter is a string.");
@@ -280,7 +280,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
             if(!Array.isArray(field)) {
                 throw new Error("Expected first parameter to be a string or array");
             }
-            this.sortBy = this.sortBy.concat(field);
+            this.sortValue = this.sortValue.concat(field);
         }
 
         if(typeof directionOrCallback === "number") {
