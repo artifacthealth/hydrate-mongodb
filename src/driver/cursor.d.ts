@@ -15,7 +15,7 @@ interface Cursor {
     batchSize(batchSize: number, callback?: (err: Error, result: any) => void): Cursor;
     nextObject(callback: (err: Error, doc: any) => void) : void;
     explain(callback: (err: Error, result: any) => void) : void;
-    close(callback: (err: Error, result: any) => void) : void;
+    close(callback?: (err: Error, result: any) => void) : void;
     isClosed(): boolean;
     bufferedCount?(): number;
 }

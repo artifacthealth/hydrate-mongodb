@@ -7,6 +7,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-mocha-test");
     grunt.loadNpmTasks("grunt-tsreflect");
+    grunt.loadNpmTasks("grunt-shell");
 
     // Project configuration.
     grunt.initConfig({

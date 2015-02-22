@@ -746,8 +746,8 @@ class MappingBuilder {
             case "deferredexplicit":
                 mapping.changeTracking = ChangeTracking.DeferredExplicit;
                 break;
-            case "notify":
-                mapping.changeTracking = ChangeTracking.Notify;
+            case "observe":
+                mapping.changeTracking = ChangeTracking.Observe;
                 break;
             default:
                 throw new Error("Unknown change tracking policy: " + value);

@@ -1,4 +1,7 @@
 /// <reference path="../typings/async.d.ts" />
+/// <reference path="../typings/node.d.ts" />
+
+import stream = require("stream");
 
 import async = require("async");
 import EntityMapping = require("./mapping/entityMapping");
@@ -238,7 +241,7 @@ class PersisterImpl implements Persister {
         });
     }
 
-    executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {
+    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
 
         // TODO: change so the query definition is not modified. not sure where to move this to.
 
@@ -376,6 +379,7 @@ class PersisterImpl implements Persister {
         }
 
         function error(err: Error) {
+            cursor.close(); // close the cursor since it may not be exhausted
             callback(err);
             callback = function () {}; // if called for error, make sure it can't be called again
         }
@@ -408,6 +412,7 @@ class PersisterImpl implements Persister {
         })();
 
         function error(err: Error) {
+            cursor.close(); // close the cursor since it may not be exhausted
             callback(err);
             callback = function () {}; // if called for error, make sure it can't be called again
         }
@@ -829,5 +834,40 @@ class FindQueue {
         });
     }
 }
+/*
+class QueryStream extends stream.Readable {
 
+    private _cursor: Cursor;
+
+    constructor(persister: PersisterImpl, cursor: Cursor) {
+        super({ readableObjectMode : true });
+        this._cursor = cursor;
+    }
+
+    _read(): void {
+
+        this._cursor.nextObject((err: Error, item: any) => {
+            if (err) return error(err);
+
+            if (item == null) {
+                // end of cursor
+                this.push(null);
+                return;
+            }
+
+            var result = self._loadOne(item);
+            if(result.error) {
+                return error(result.error);
+            }
+
+            this.push(result.value);
+        });
+
+        function error(err: Error) {
+            this._cursor.close();  // close the cursor since it may not be exhausted
+            this.emit('error', err);
+        }
+    }
+}
+*/
 export = PersisterImpl;

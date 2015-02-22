@@ -1,5 +1,6 @@
 /// <reference path="../typings/async.d.ts" />
 /// <reference path="../typings/node.d.ts" />
+/// <reference path="./core/observe.d.ts" />
 import events = require("events");
 
 import async = require("async");
@@ -40,13 +41,7 @@ const enum ObjectState {
      * from the database. Once the entity is deleted from the database, the entity is no longer managed and is
      * considered a new entity.
      */
-    Removed,
-
-    /**
-     * Obsolete entities have a persistent identity and are associated with a session, but are known to not reflect
-     * the current state of the database.
-     */
-    Obsolete
+    Removed
 }
 
 const enum ObjectFlags {

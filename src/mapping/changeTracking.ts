@@ -2,7 +2,7 @@ enum ChangeTracking {
 
     DeferredImplicit,
     DeferredExplicit,
-    Notify
+    Observe
 }
 
 export = ChangeTracking;
