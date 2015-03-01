@@ -1,6 +1,7 @@
 module.exports = function(grunt) {
 
     grunt.loadNpmTasks("grunt-contrib-clean");
+    grunt.loadNpmTasks("grunt-baseline");
     grunt.loadNpmTasks("grunt-typescript");
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-contrib-concat");
@@ -116,6 +117,17 @@ module.exports = function(grunt) {
                 },
                 src: ['build/tests/**/*.tests.js']
             }
+        },
+
+        baseline: {
+            tests: {
+                options: {
+                    useColors: true
+                },
+                src: [
+                    "build/tests/**/*.bench.js"
+                ]
+            }
         }
     });
 
@@ -123,6 +135,6 @@ module.exports = function(grunt) {
     grunt.registerTask("default", [ "build", "lib", "tests" ]);
     grunt.registerTask("build", [ "clean:build", "typescript:build"/*, "tsreflect:build", "tsreflect:typings", "copy:typings", "clean:typings"*/ ]);
     grunt.registerTask("lib", [ "clean:lib", "concat:lib" ]);
-    grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests" ]);
+    grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests", "baseline:tests" ]);
 
 };

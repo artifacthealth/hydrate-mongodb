@@ -22,12 +22,13 @@
   },
   "dependencies": {
     "async": "^0.9.0",
-    "mongodb": "^2.0.15",
+    "mongodb": "^2.0.18",
     "tsreflect": "^0.1.0"
   },
   "devDependencies": {
     "chai": "^1.9.2",
     "grunt": "^0.4.5",
+    "grunt-baseline": "^0.1.4",
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-concat": "^0.5.0",
     "grunt-contrib-copy": "^0.7.0",

@@ -85,6 +85,7 @@ interface ObjectLinks {
     object?: any;
     originalDocument?: any;
     persister?: Persister;
+    index?: number;
 }
 
 var detachedLinks = {
@@ -97,8 +98,11 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _persisterByMapping: Table<Persister> = [];
     private _queryByMapping: Table<Query<any>> = [];
-    private _objectLinks: Map<ObjectLinks> = {};
+    private _objectLinksById: Map<ObjectLinks> = {};
+    private _objectLinks: ObjectLinks[] = [];
     private _queue: TaskQueue;
+
+    private _insertedEntities: ObjectLinks[] = [];
 
     constructor(public factory: InternalSessionFactory) {
         super();
@@ -191,7 +195,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
         var id = obj["_id"];
         if(id) {
-            var links = this._objectLinks[id.toString()];
+            var links = this._objectLinksById[id.toString()];
             if(links && links.state == ObjectState.Managed) {
                 return true;
             }
@@ -233,7 +237,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
      */
     getObject(id: any): any {
 
-        var links = this._objectLinks[id.toString()];
+        var links = this._objectLinksById[id.toString()];
         if (links) {
             switch(links.state) {
                 case ObjectState.Removed:
@@ -334,7 +338,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
                 // we haven't seen this object before
                 obj["_id"] = persister.identity.generate();
-                this._linkObject(obj, persister, ScheduledOperation.Insert);
+                this._linkObject(obj, persister).scheduledOperation = ScheduledOperation.Insert;
             }
             else {
                 switch (links.state) {
@@ -355,6 +359,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                             // otherwise, this means the entity has already been removed from the database so queue
                             // object for insert operation.
                             links.scheduledOperation = ScheduledOperation.Insert;
+                            this._insertedEntities.push(links);
                         }
 
                         links.state = ObjectState.Managed;
@@ -473,6 +478,18 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }, callback);
     }
 
+    private _flush2(callback: Callback): void {
+
+
+
+        var batch = new Batch();
+        batch.execute(err => {
+            if(err) return callback(err);
+
+            callback();
+        });
+    }
+
     // TODO: if flush fails, mark session invalid and don't allow any further operations?
     // TODO: if operations fails (e.g. save, etc.) should session become invalid? Perhaps have two classes of errors, those that cause the session to become invalid and those that do not?
     // TODO: perhaps break up flush with process.nextTick if executing a large number of operations
@@ -481,7 +498,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         // TODO: put requirement to order operations on the persister, not in the session
         // Get all list of all object links. A for-in loop is slow so build a list from the map since we are going
         // to have to iterate through the list several times.
-        var list = this._getAllObjectLinks();
+        var list = this._objectLinks;
 
         var batch = new Batch();
 
@@ -491,6 +508,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
         for(var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
+            if(!links) continue;
+
             // TODO: ignore read-only objects
             if (links.scheduledOperation == ScheduledOperation.DirtyCheck || (links.persister.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
                 var result = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
@@ -506,6 +525,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         // Add all inserts
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
+            if(!links) continue;
+
             if (links.scheduledOperation == ScheduledOperation.Insert) {
                 var result = links.persister.addInsert(batch, links.object);
                 if(result.error) {
@@ -520,6 +541,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         // Add all deletes
         for (var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
+            if(!links) continue;
+
             if (links.scheduledOperation == ScheduledOperation.Delete) {
                 links.persister.addRemove(batch, links.object);
             }
@@ -531,6 +554,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
             for (var i = 0, l = list.length; i < l; i++) {
                 var links = list[i];
+                if(!links) continue;
+
                 if(links.state == ObjectState.Removed) {
                     // unlink any removed objects.
                     this._unlinkObject(links);
@@ -582,41 +607,20 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     }
 
     /**
-     * Returns all linked objected as an array.
-     */
-    private _getAllObjectLinks(): ObjectLinks[] {
-
-        var ret: ObjectLinks[] = [];
-
-        var objectLinks = this._objectLinks;
-        for (var id in objectLinks) {
-            if (objectLinks.hasOwnProperty(id)) {
-                var links = objectLinks[id];
-                if(links) {
-                    ret.push(objectLinks[id]);
-                }
-            }
-        }
-
-        return ret;
-    }
-
-    /**
      * Detaches all managed objects.
      * @param callback Callback to execute after operation completes.
      */
     private _clear(callback: Callback): void {
 
         var objectLinks = this._objectLinks;
-        for (var id in objectLinks) {
-            if (objectLinks.hasOwnProperty(id)) {
-                var links = objectLinks[id];
-                if(links) {
-                    this._unlinkObject(links);
-                }
-            }
+        for(var i = 0; i < objectLinks.length; i++) {
+            var links = objectLinks[i];
+            if(!links) continue;
+
+            this._unlinkObject(links);
         }
-        this._objectLinks = {};
+        this._objectLinksById = {};
+        this._objectLinks = [];
         process.nextTick(callback);
     }
 
@@ -624,7 +628,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
         var id = obj["_id"];
         if (id) {
-            var links = this._objectLinks[id.toString()];
+            var links = this._objectLinksById[id.toString()];
             if (!links || links.object !== obj) {
                 // If we have an id but no links then the object must be detached since we assume that we manage
                 // the assignment of the identifier.
@@ -636,28 +640,31 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }
     }
 
-    private _linkObject(obj: any, persister: Persister, operation = ScheduledOperation.None): ObjectLinks {
+    private _linkObject(obj: any, persister: Persister): ObjectLinks {
 
         var id = obj["_id"].toString();
-        if(this._objectLinks[id]) {
+        if(this._objectLinksById[id]) {
             throw new Error("Session already contains an entity with identifier '" + id + "'.");
         }
 
         var links = {
             state: ObjectState.Managed,
-            scheduledOperation: operation,
             object: obj,
-            persister: persister
+            persister: persister,
+            index: this._objectLinks.length
         }
 
-        return this._objectLinks[id] = links;
+        this._objectLinksById[id] = links;
+        this._objectLinks.push(links);
+        return links;
     }
 
     private _unlinkObject(links: ObjectLinks): void {
 
         this._detachReferences(links.object);
 
-        this._objectLinks[links.object["_id"].toString()] = undefined;
+        this._objectLinksById[links.object["_id"].toString()] = undefined;
+        this._objectLinks[links.index] = undefined;
 
         // if the object was never persisted, then clear it's identifier as well
         if (links.scheduledOperation == ScheduledOperation.Insert) {
