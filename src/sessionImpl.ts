@@ -24,6 +24,9 @@ import Query = require("./query/query");
 import FindOneQuery = require("./query/findOneQuery");
 import QueryDescriptor = require("./query/queryDefinition");
 
+/**
+ * The state of an object.
+ */
 const enum ObjectState {
 
     /**
@@ -84,15 +87,21 @@ interface ObjectLinks {
 
     state: ObjectState;
     flags: ObjectFlags;
-    scheduledOperation?: ScheduledOperation;
     object?: any;
     originalDocument?: any;
     persister?: Persister;
-    index?: number;
+    scheduledOperation?: ScheduledOperation;
+    next?: ObjectLinks;
+    prev?: ObjectLinks;
+
     cancelObserve?(): void;
 }
 
-var detachedLinks = {
+/**
+ * Static ObjectLinks returned from getObjectLinks for detached objects. There is no need to create a new ObjectLinks
+ * object for each detached object.
+ */
+var cachedDetachedLinks: ObjectLinks = {
     state: ObjectState.Detached,
     flags: ObjectFlags.None
 }
@@ -100,10 +109,34 @@ var detachedLinks = {
 // TODO: raise events on UnitOfWork
 class SessionImpl extends events.EventEmitter implements InternalSession {
 
+    /**
+     * Cached Persisters by Mapping
+     */
     private _persisterByMapping: Table<Persister> = [];
+
+    /**
+     * Cached Query Builders by Mapping
+     */
     private _queryByMapping: Table<Query<any>> = [];
+
+    /**
+     * Hash table containing all objects by id associated with the session.
+     */
     private _objectLinksById: Map<ObjectLinks> = {};
-    private _scheduledObjects: ObjectLinks[] = [];
+
+    /**
+     * Scheduled operations linked list head.
+     */
+    private _scheduleHead: ObjectLinks;
+
+    /**
+     * Scheduled operations linked list tail.
+     */
+    private _scheduleTail: ObjectLinks;
+
+    /**
+     * Task queue coordinates asynchronous actions.
+     */
     private _queue: TaskQueue;
 
     constructor(public factory: InternalSessionFactory) {
@@ -534,17 +567,14 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     // TODO: perhaps break up flush with process.nextTick if executing a large number of operations
     private _flush(callback: Callback): void {
 
-        var list = this._scheduledObjects;
+        var head = this._scheduleHead;
 
         // clear list of scheduled objects
-        this._scheduledObjects = [];
+        this._scheduleHead = this._scheduleTail = null;
 
-        var batch = new Batch();
-
-        for(var i = 0, l = list.length; i < l; i++) {
-            var links = list[i];
-            if(!links) continue;
-
+        var batch = new Batch(),
+            links = head;
+        while(links) {
             if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
                 var result = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
                 if(result.error) {
@@ -566,19 +596,23 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             else if (links.scheduledOperation == ScheduledOperation.Delete) {
                 links.persister.addRemove(batch, links.object);
             }
+
+            links = links.next;
         }
 
         // TODO: what to do if we get an error during execute? Should we make the session invalid? yes.
         batch.execute(err => {
             if(err) return callback(err);
 
-            for (var i = 0, l = list.length; i < l; i++) {
-                var links = list[i];
-                if(!links) continue;
+            links = head;
+            while(links) {
+                var next = links.next;
 
                 links.scheduledOperation = ScheduledOperation.None;
-                links.index = undefined;
                 links.flags = ObjectFlags.None;
+                // Remove links from list. No need to fix up links of prev/next because all items will be removed from
+                // the list.
+                links.prev = links.next = null;
 
                 switch(links.state) {
                     case ObjectState.Removed:
@@ -593,6 +627,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                     default:
                         return callback(new Error("Unexpected object state in flush."));
                 }
+
+                links = next;
             }
             callback();
         });
@@ -641,15 +677,13 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
      */
     private _clear(callback: Callback): void {
 
-        var objectLinks = this._scheduledObjects;
-        for(var i = 0; i < objectLinks.length; i++) {
-            var links = objectLinks[i];
-            if(!links) continue;
-
+        var links = this._scheduleHead;
+        while(links) {
             this._unlinkObject(links);
+            links = links.next;
         }
         this._objectLinksById = {};
-        this._scheduledObjects = [];
+        this._scheduleHead = this._scheduleTail = null
         process.nextTick(callback);
     }
 
@@ -663,7 +697,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                 // the assignment of the identifier.
                 // Also, we the id is linked but the object in the session is different than the object passed in
                 // then we also have a detached object.
-                return detachedLinks;
+                return cachedDetachedLinks;
             }
             return links;
         }
@@ -704,8 +738,16 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     private _scheduleOperation(links: ObjectLinks, operation: ScheduledOperation): void {
 
         if(!links.scheduledOperation) {
-            links.index = this._scheduledObjects.length;
-            this._scheduledObjects.push(links);
+            if(this._scheduleHead) {
+                // add operation to the end of the schedule
+                this._scheduleTail.next = links;
+                links.prev = this._scheduleTail;
+                this._scheduleTail = links;
+            }
+            else {
+                // this is the first scheduled operation so initialize the schedule
+                this._scheduleHead = this._scheduleTail = links;
+            }
         }
 
         links.scheduledOperation = operation;
@@ -717,8 +759,21 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             return;
         }
 
-        this._scheduledObjects[links.index] = undefined;
-        links.index = undefined;
+        // remove links from the schedule
+        if(links.prev) {
+            links.prev.next = links.next;
+        }
+        else {
+            this._scheduleHead = links.next;
+        }
+
+        if(links.next) {
+            links.next.prev = links.prev;
+        }
+        else {
+            this._scheduleTail = links.prev;
+        }
+
         links.scheduledOperation = ScheduledOperation.None;
     }
 
