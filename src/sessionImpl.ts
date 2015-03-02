@@ -52,8 +52,7 @@ const enum ObjectFlags {
     None        = 0,
     ReadOnly    = 0x00000001,
     Dirty       = 0x00000002,
-    Observing   = 0x00000004,
-    Scheduled   = 0x00000008
+    Observing   = 0x00000004
 }
 
 const enum ScheduledOperation {
@@ -93,6 +92,8 @@ interface ObjectLinks {
     originalDocument?: any;
     persister?: Persister;
     scheduledOperation?: ScheduledOperation;
+    next?: ObjectLinks;
+    prev?: ObjectLinks;
 
     cancelObserve?(): void;
 }
@@ -125,10 +126,14 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     private _objectLinksById: Map<ObjectLinks> = {};
 
     /**
-     * List of ObjectLinks that have a scheduled operation.
+     * Scheduled operations linked list head.
      */
-    private _scheduledObjects: ObjectLinks[] = [];
+    private _scheduleHead: ObjectLinks;
 
+    /**
+     * Scheduled operations linked list tail.
+     */
+    private _scheduleTail: ObjectLinks;
 
     /**
      * Task queue coordinates asynchronous actions.
@@ -573,15 +578,14 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     // TODO: perhaps break up flush with process.nextTick if executing a large number of operations
     private _flush(callback: Callback): void {
 
-        var batch = new Batch(),
-            scheduledObjects = this._scheduledObjects;
+        var head = this._scheduleHead;
 
         // clear list of scheduled objects
-        this._scheduledObjects = [];
+        this._scheduleHead = this._scheduleTail = null;
 
-        for(var i = 0, l = scheduledObjects.length; i < l; i++) {
-            var links = scheduledObjects[i];
-
+        var batch = new Batch(),
+            links = head;
+        while(links) {
             if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
                 var result = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
                 if(result.error) {
@@ -603,18 +607,23 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             else if (links.scheduledOperation == ScheduledOperation.Delete) {
                 links.persister.addRemove(batch, links.object);
             }
+
+            links = links.next;
         }
 
         // TODO: what to do if we get an error during execute? Should we make the session invalid? yes.
         batch.execute(err => {
             if(err) return callback(err);
 
-            for(var i = 0, l = scheduledObjects.length; i < l; i++) {
-                var links = scheduledObjects[i];
-                if(!links.scheduledOperation) continue;
+            links = head;
+            while(links) {
+                var next = links.next;
 
                 links.scheduledOperation = ScheduledOperation.None;
                 links.flags = ObjectFlags.None;
+                // Remove links from list. No need to fix up links of prev/next because all items will be removed from
+                // the list.
+                links.prev = links.next = null;
 
                 switch(links.state) {
                     case ObjectState.Removed:
@@ -629,6 +638,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                     default:
                         return callback(new Error("Unexpected object state in flush."));
                 }
+
+                links = next;
             }
             callback();
         });
@@ -688,12 +699,13 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
      */
     private _clear(callback: Callback): void {
 
-        var scheduledObjects = this._scheduledObjects;
-        for(var i = 0, l = scheduledObjects.length; i < l; i++) {
-            this._unlinkObject(scheduledObjects[i]);
+        var links = this._scheduleHead;
+        while(links) {
+            this._unlinkObject(links);
+            links = links.next;
         }
         this._objectLinksById = {};
-        this._scheduledObjects = [];
+        this._scheduleHead = this._scheduleTail = null
         process.nextTick(callback);
     }
 
@@ -749,10 +761,17 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
         // TODO: maintain a count of scheduled operations by Root Mapping so query operations know if a flush is needed before query
 
-        if(!(links.flags & ObjectFlags.Scheduled)) {
-            // Set flag to indicate if object is in the scheduled objects list.
-            links.flags |= ObjectFlags.Scheduled;
-            this._scheduledObjects.push(links);
+        if(!links.scheduledOperation) {
+            if(this._scheduleHead) {
+                // add operation to the end of the schedule
+                this._scheduleTail.next = links;
+                links.prev = this._scheduleTail;
+                this._scheduleTail = links;
+            }
+            else {
+                // this is the first scheduled operation so initialize the schedule
+                this._scheduleHead = this._scheduleTail = links;
+            }
         }
 
         links.scheduledOperation = operation;
@@ -760,7 +779,25 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _unscheduleOperation(links: ObjectLinks): void {
 
-        // We never actually remove objects from the scheduled objects list, we just set the operation to none.
+        if(!links.scheduledOperation) {
+            return;
+        }
+
+        // remove links from the schedule
+        if(links.prev) {
+            links.prev.next = links.next;
+        }
+        else {
+            this._scheduleHead = links.next;
+        }
+
+        if(links.next) {
+            links.next.prev = links.prev;
+        }
+        else {
+            this._scheduleTail = links.prev;
+        }
+
         links.scheduledOperation = ScheduledOperation.None;
     }
 
