@@ -77,9 +77,10 @@ const enum Action {
     FindQuery   = 0x00000100,
     ModifyQuery = 0x00000200,
     Wait        = 0x00000400,
+    Close       = 0x00000800,
 
     ReadOnly = Fetch | FindQuery,
-    All = Save | Remove | Detach | Flush | Clear | Refresh | Merge | Fetch | FindQuery | ModifyQuery | Wait
+    All = Save | Remove | Detach | Flush | Clear | Refresh | Merge | Fetch | FindQuery | ModifyQuery | Wait | Close
 }
 
 // TODO: option to use weak reference until object is removed or modified and attach event to unlink if garbage collected? https://github.com/TooTallNate/node-weak
@@ -203,6 +204,11 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         this._queue.add(Action.Fetch, Action.All & ~Action.ReadOnly, [obj, paths], callback);
     }
 
+    close(callback?: Callback): void {
+
+        this._queue.add(Action.Close, Action.All, undefined, callback);
+    }
+
     executeQuery(query: QueryDescriptor, callback: ResultCallback<any>): void {
 
         if(query.readOnly) {
@@ -313,6 +319,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             this._makeDirty(links);
         }
 
+        // TODO: This is not enough. We need to attach to embedded objects and arrays. Probably need to implement 'observe' method in mappings.
         Object.observe(links.object, objectChanged);
         links.cancelObserve = () => {
             Object.unobserve(links.object, objectChanged);
@@ -379,6 +386,9 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             case Action.FindQuery:
             case Action.ModifyQuery:
                 (<QueryDescriptor>arg).execute(callback);
+                break;
+            case Action.Close:
+                this._close(callback);
                 break;
         }
     }
@@ -534,6 +544,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                 this._unlinkObject(links);
                 this._unscheduleOperation(links);
             }
+            // TODO: double check how we want to handle Removed entities here.
         }
 
         callback();
@@ -630,6 +641,17 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
                 links = next;
             }
+            callback();
+        });
+    }
+
+    private _close(callback: Callback): void {
+
+        this._flush((err) => {
+            if(err) return callback(err);
+
+            // TODO: clear observe for all observed objects.
+
             callback();
         });
     }
@@ -736,6 +758,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     }
 
     private _scheduleOperation(links: ObjectLinks, operation: ScheduledOperation): void {
+
+        // TODO: maintain a count of scheduled operations by Root Mapping so query operations know if a flush is needed before query
 
         if(!links.scheduledOperation) {
             if(this._scheduleHead) {

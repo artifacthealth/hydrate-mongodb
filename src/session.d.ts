@@ -25,6 +25,7 @@ interface Session extends events.EventEmitter {
     fetch<T>(obj: T, paths: string[], callback?: ResultCallback<T>): void;
     query<T>(ctr: Constructor<T>): Query<T>;
     wait(callback?: Callback): void;
+    close(callback?: Callback): void;
 }
 
 export = Session;
