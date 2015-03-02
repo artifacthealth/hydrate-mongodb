@@ -1,8 +1,8 @@
 /**
  * @collection
- * @changeTracking "observe"
+ * @changeTracking "deferredExplicit"
  */
-class Cat {
+class Dog {
 
     name: string;
 
@@ -11,4 +11,4 @@ class Cat {
     }
 }
 
-export = Cat;
+export = Dog;

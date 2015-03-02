@@ -13,6 +13,7 @@ import Configuration = require("../src/config/configuration");
 import SessionFactory = require("../src/sessionFactory");
 import SessionFactoryImpl = require("../src/sessionFactoryImpl");
 import SessionImpl = require("../src/sessionImpl");
+import InternalSession = require("../src/internalSession");
 import EntityMapping = require("../src/mapping/entityMapping");
 import MockPersister = require("./mockPersister");
 import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
@@ -22,6 +23,8 @@ import QueryKind = require("../src/query/queryKind");
 
 // Fixtures
 import model = require("./fixtures/model");
+import Cat = require("./fixtures/cat");
+import Dog = require("./fixtures/dog");
 import cascade = require("./fixtures/cascade");
 
 describe('SessionImpl', () => {
@@ -94,43 +97,94 @@ describe('SessionImpl', () => {
 
         it('cancels pending removal for saved entity', (done) => {
 
-            helpers.createFactory("model", (err, factory) => {
+            cancelRemovalOfManagedObject("model", () => createEntity(), null, (err, persister) => {
+                if(err) return done(err);
+                // changeTracking is deferred implicit so all objects will be dirty checked
+                assert.equal(persister.dirtyCheckCalled, 1);
+                done();
+            });
+        });
+
+        it('does not schedule object for dirty check if removal of clean object is canceled and change tracking is observe', (done) => {
+
+            cancelRemovalOfManagedObject("cat", () => new Cat("Mittens"), null, (err, persister) => {
+                if(err) return done(err);
+                assert.equal(persister.dirtyCheckCalled, 0);
+                done();
+            });
+        });
+
+        it('schedules object for dirty check if removal of dirty object is canceled and change tracking is observe', (done) => {
+
+            cancelRemovalOfManagedObject("cat", () => new Cat("Mittens"), (session, entity) => entity.name = "Fluffy", (err, persister) => {
+                if(err) return done(err);
+                assert.equal(persister.dirtyCheckCalled, 1);
+                done();
+            });
+        });
+
+        it('does not schedule object for dirty check if removal of clean object is canceled and change tracking is deferred explicit', (done) => {
+
+            cancelRemovalOfManagedObject("dog", () => new Dog("Rocky"), null, (err, persister) => {
+                if(err) return done(err);
+                assert.equal(persister.dirtyCheckCalled, 0);
+                done();
+            });
+        });
+
+        it('schedules object for dirty check if removal of dirty object is canceled and change tracking is deferred explicit', (done) => {
+
+            cancelRemovalOfManagedObject("dog", () => new Dog("Rocky"), (session, entity) => session.save(entity), (err, persister) => {
+                if(err) return done(err);
+                assert.equal(persister.dirtyCheckCalled, 1);
+                done();
+            });
+        });
+
+        function cancelRemovalOfManagedObject(fixture: string, create: () => any, modify: (session: InternalSession, entity: any) => void, done: (err?: Error, persistier?: MockPersister) => void) {
+
+            helpers.createFactory(fixture, (err, factory) => {
                 if (err) return done(err);
 
-                var entity = createEntity();
+                var entity = create();
                 var session = factory.createSession();
 
                 session.save(entity);
                 // Flush after save because if we call remove after save without a flush, it cancels the save operations
                 // and never schedules a remove operation to begin with.
-                session.flush();
-                session.remove(entity, (err) => {
-                    if (err) return done(err);
+                session.flush(() => {
 
-                    var id = entity._id;
+                    // modify object to make it dirty (changeTracking is "observe")
+                    modify && modify(session, entity);
 
-                    // Confirm that entity has been removed. GetObject returns null (as opposed to undefined) if object
-                    // is managed but scheduled for removal.
-                    assert.isNull(session.getObject(id), "Object is not scheduled for remove");
-
-                    session.save(entity, (err) => {
+                    session.remove(entity, (err) => {
                         if (err) return done(err);
 
-                        assert.equal(session.getObject(id), entity, "Scheduled remove operation was not cancelled");
+                        var id = (<any>entity)._id;
 
-                        session.flush((err) => {
+                        // Confirm that entity has been removed. GetObject returns null (as opposed to undefined) if object
+                        // is managed but scheduled for removal.
+                        assert.isNull(session.getObject(id), "Object is not scheduled for remove");
+
+                        session.save(entity, (err) => {
                             if (err) return done(err);
 
-                            var persister = factory.getPersisterForObject(session, entity);
+                            assert.equal(session.getObject(id), entity, "Scheduled remove operation was not cancelled");
 
-                            assert.equal(persister.removeCalled, 0);
-                            assert.equal(persister.insertCalled, 1);
+                            session.flush((err) => {
+                                if (err) return done(err);
+
+                                var persister = factory.getPersisterForObject(session, entity);
+
+                                assert.equal(persister.removeCalled, 0);
+                                assert.equal(persister.insertCalled, 1);
+                                done(null, persister);
+                            });
                         });
-                        done();
                     });
                 });
             });
-        });
+        }
 
         it('cascades save operation to properties that have the cascade flag', (done) => {
 
@@ -458,33 +512,68 @@ describe('SessionImpl', () => {
 
     describe('flush', () => {
 
-        it('dirty checks all managed objects that are not scheduled for other operations', (done) => {
+        it('dirty checks all managed objects that are not scheduled for other operations and change tracking is deferred implicit', (done) => {
 
-            helpers.createFactory("model", (err, factory) => {
+            dirtyCheckCalled("model", () => [createEntity(), createEntity()], null, 1, done);
+        });
+
+        it('does not dirty check clean objects and change tracking is observe', (done) => {
+
+            dirtyCheckCalled("cat", () => [new Cat("Fluffy"), new Cat("Mittens")], null, 0, done);
+        });
+
+        it('dirty checks all dirty objects that are not scheduled for other operations and change tracking is observe', (done) => {
+
+            dirtyCheckCalled("cat", () => [new Cat("Fluffy"), new Cat("Mittens")], (session, entities) => {
+                entities[0].name = "Mittens";
+                entities[1].name = "Fluffy";
+            }, 1, done);
+        });
+
+        it('does not dirty check clean objects and change tracking is deferred explicit', (done) => {
+
+            dirtyCheckCalled("dog", () => [new Dog("Rocky"), new Dog("Levi")], null, 0, done);
+        });
+
+        it('dirty checks all dirty objects that are not scheduled for other operations and change tracking is deferred explicit', (done) => {
+
+            dirtyCheckCalled("dog", () => [new Dog("Rocky"), new Dog("Levi")], (session, entities) => {
+                // saving an object with deferred explicit change tracking marks it as dirty
+                session.save(entities[0]);
+                session.save(entities[1]);
+            }, 1, done);
+        });
+
+        function dirtyCheckCalled(fixture: string, create: () => [any, any], modify: (session: InternalSession, entities: [any, any]) => void, expectedDirtyCheckCalled: number, done: (err?: Error) => void) {
+
+            helpers.createFactory(fixture, (err, factory) => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                var entity1 = createEntity();
-                var entity2 = createEntity();
+                var entities = create();
+                var entity1 = entities[0];
+                var entity2 = entities[1];
+                var persister = factory.getPersisterForObject(session, entity1);
 
                 session.save(entity1);
-                session.save(entity2);
                 session.flush((err) => {
                     if(err) return done(err);
 
-                    entity1.name = "Bob";
+                    assert.equal(persister.insertCalled, 1);
+
+                    session.save(entity2); // schedule entity2 for something else. this entity should not be dirty checked.
+                    modify && modify(session, [entity1, entity2]);
 
                     session.flush((err) => {
                         if (err) return done(err);
 
-                        var persister = factory.getPersisterForObject(session, entity1);
                         assert.equal(persister.insertCalled, 2);
-                        assert.equal(persister.dirtyCheckCalled, 2);
+                        assert.equal(persister.dirtyCheckCalled, expectedDirtyCheckCalled);
                         done();
                     });
                 });
             });
-        });
+        }
     });
 
     describe('find', () => {
