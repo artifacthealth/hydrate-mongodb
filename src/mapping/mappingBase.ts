@@ -28,7 +28,7 @@ class MappingBase {
         throw new Error("Not implemented");
     }
 
-    walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
     }
 

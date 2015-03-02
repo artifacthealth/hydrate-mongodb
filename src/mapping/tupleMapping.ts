@@ -84,7 +84,7 @@ class TupleMapping extends MappingBase {
     }
 
 
-    walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (!Array.isArray(value)) {
             return;
@@ -92,7 +92,7 @@ class TupleMapping extends MappingBase {
 
         var mappings = this.elementMappings;
         for (var i = 0, l = Math.min(value.length, mappings.length); i < l; i++) {
-            mappings[i].walk(value[i], flags, entities, embedded, references);
+            mappings[i].walk(session, value[i], flags, entities, embedded, references);
         }
     }
 

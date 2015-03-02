@@ -86,7 +86,7 @@ class ArrayMapping extends MappingBase {
     }
 
 
-    walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (!Array.isArray(value)) {
             return;
@@ -94,7 +94,7 @@ class ArrayMapping extends MappingBase {
 
         var mapping = this.elementMapping;
         for (var i = 0, l = value.length; i < l; i++) {
-            mapping.walk(value[i], flags, entities, embedded, references);
+            mapping.walk(session, value[i], flags, entities, embedded, references);
         }
     }
 

@@ -728,7 +728,7 @@ class MappingBuilder {
     private _setLockField(mapping: EntityMapping, value: any): void {
 
         this._assertRootEntityMapping(mapping);
-        this._assertString(mapping);
+        this._assertString(value);
 
         mapping.lockField = value;
         mapping.lockable = true;
@@ -737,7 +737,7 @@ class MappingBuilder {
     private _setChangeTracking(mapping: EntityMapping, value: any): void {
 
         this._assertRootEntityMapping(mapping);
-        this._assertString(mapping);
+        this._assertString(value);
 
         switch(value.toLowerCase()) {
             case "deferredimplicit":

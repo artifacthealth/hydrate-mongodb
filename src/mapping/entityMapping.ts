@@ -158,13 +158,13 @@ class EntityMapping extends ClassMapping {
         return (<EntityMapping>this.inheritanceRoot).identity.areEqual(id1, id2)
     }
 
-    walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (!value || typeof value !== "object") return;
 
         if(Reference.isReference(value)) {
             // TODO: handle DBRef
-            var entity = (<Reference>value).getObject();
+            var entity = session.getObject((<Reference>value).id);
             if (entity) {
                 value = entity;
             }
@@ -183,7 +183,7 @@ class EntityMapping extends ClassMapping {
         // If this isn't the first entity, only continue if we have the WalkEntities flag
         if((this.flags & PropertyFlags.WalkEntities) == 0 && entities.length > 1) return;
 
-        super.walk(value, flags, entities, embedded, references);
+        super.walk(session, value, flags, entities, embedded, references);
     }
 
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
@@ -195,7 +195,7 @@ class EntityMapping extends ClassMapping {
             // We don't bother with the call to getObject here since fetch will call getObject. The reason we have the
             // separate call to getObject in 'walk' above is that walk only calls fetch if ProperFlags.Dereference is
             // passed in but should still include the object in the found entities if the object is managed.
-            (<Reference>value).fetch((err, entity) => {
+            (<Reference>value).fetch(session, (err, entity) => {
                 if(err) return callback(err);
                 super.fetch(session, entity, entity, path, depth, callback);
             });

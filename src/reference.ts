@@ -4,21 +4,14 @@ import ResultCallback = require("./core/resultCallback");
 
 class Reference {
 
-    private _session: InternalSession;
+    constructor(public mapping: EntityMapping, public id: any) {
 
-    constructor(session: InternalSession, public mapping: EntityMapping, public id: any) {
-
-        this._session = session;
     }
 
-    fetch(callback: ResultCallback<any>): void {
-
-        if(!this._session) {
-            return callback(new Error("Cannot fetch detached reference."));
-        }
+    fetch(session: InternalSession, callback: ResultCallback<any>): void {
 
         if(this.mapping) {
-            var persister = this._session.getPersister(this.mapping);
+            var persister = session.getPersister(this.mapping);
         }
 
         if (!persister) {
@@ -28,21 +21,6 @@ class Reference {
 
         // TODO: what is the impact of not queuing up this find in the taskqueue? Seems like a problem? Also should save, etc. wait on a find to finish? It does now but I'm not sure that it should
         persister.findOneById(this.id, callback);
-    }
-
-    getObject(): any {
-
-        return this._session && this._session.getObject(this.id);
-    }
-
-    detach(): void {
-
-        this._session = undefined;
-    }
-
-    attach(session: InternalSession): void {
-
-        this._session = session;
     }
 
     static isReference(obj: any): boolean {

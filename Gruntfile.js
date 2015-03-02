@@ -122,6 +122,7 @@ module.exports = function(grunt) {
         baseline: {
             tests: {
                 options: {
+                    baselinePath: "baseline.json",
                     useColors: true
                 },
                 src: [
@@ -133,7 +134,7 @@ module.exports = function(grunt) {
 
     // Default task(s).
     grunt.registerTask("default", [ "build", "lib", "tests" ]);
-    grunt.registerTask("build", [ "clean:build", "typescript:build"/*, "tsreflect:build", "tsreflect:typings", "copy:typings", "clean:typings"*/ ]);
+    grunt.registerTask("build", [ "clean:build", "typescript:build" ]);
     grunt.registerTask("lib", [ "clean:lib", "concat:lib" ]);
     grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests", "baseline:tests" ]);
 

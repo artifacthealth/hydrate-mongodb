@@ -86,23 +86,23 @@ interface ObjectLinks {
     originalDocument?: any;
     persister?: Persister;
     index?: number;
+    dirty?: boolean;
+    cancelObserve?(): void;
 }
 
 var detachedLinks = {
     state: ObjectState.Detached
 }
 
-// TODO: read-only query results. perhaps not needed if we can use Object.observe in Node v12 to be notified of which objects have changed.
+
 // TODO: raise events on UnitOfWork
 class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _persisterByMapping: Table<Persister> = [];
     private _queryByMapping: Table<Query<any>> = [];
     private _objectLinksById: Map<ObjectLinks> = {};
-    private _objectLinks: ObjectLinks[] = [];
+    private _scheduledObjects: ObjectLinks[] = [];
     private _queue: TaskQueue;
-
-    private _insertedEntities: ObjectLinks[] = [];
 
     constructor(public factory: InternalSessionFactory) {
         super();
@@ -227,7 +227,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     getReferenceInternal(mapping: EntityMapping, id: any): any {
 
         // TODO: should we cache references so all references with the same id share the same object?
-        return this.getObject(id) || new Reference(this, mapping, id);
+        return this.getObject(id) || new Reference(mapping, id);
     }
 
     /**
@@ -253,7 +253,39 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     registerManaged(persister: Persister, entity: any, document: any): void {
 
         // save the original document for dirty checking
-        this._linkObject(entity, persister).originalDocument = document;
+        var links = this._linkObject(entity, persister);
+        links.originalDocument = document;
+        this._trackChanges(links);
+    }
+
+    private _trackChanges(links: ObjectLinks): void {
+
+        if(links.dirty || links.persister.changeTracking == ChangeTracking.DeferredImplicit) {
+            this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
+            return;
+        }
+
+        if (links.persister.changeTracking != ChangeTracking.Observe) {
+            return;
+        }
+
+        if(links.cancelObserve) {
+            throw new Error("Object is already being observed.");
+        }
+
+        var objectChanged = (changes: ObjectChangeInfo[]) => {
+            links.cancelObserve();
+            links.dirty = true;
+            if(!links.scheduledOperation) {
+                this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
+            }
+        }
+
+        Object.observe(links.object, objectChanged);
+        links.cancelObserve = () => {
+            Object.unobserve(links.object, objectChanged);
+            links.cancelObserve = undefined;
+        }
     }
 
     getPersister(mapping: EntityMapping): Persister {
@@ -297,6 +329,9 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             case Action.Detach:
                 this._detach(arg, callback);
                 break;
+            case Action.Refresh:
+                this._refresh(arg, callback);
+                break;
             case Action.Clear:
                 this._clear(callback);
                 break;
@@ -338,13 +373,14 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
                 // we haven't seen this object before
                 obj["_id"] = persister.identity.generate();
-                this._linkObject(obj, persister).scheduledOperation = ScheduledOperation.Insert;
+                links = this._linkObject(obj, persister);
+                this._scheduleOperation(links, ScheduledOperation.Insert);
             }
             else {
                 switch (links.state) {
                     case ObjectState.Managed:
                         if (links.persister.changeTracking == ChangeTracking.DeferredExplicit && !links.scheduledOperation) {
-                            links.scheduledOperation = ScheduledOperation.DirtyCheck;
+                            this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
                         }
                         break;
                     case ObjectState.Detached:
@@ -353,13 +389,13 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                     case ObjectState.Removed:
                         if (links.scheduledOperation == ScheduledOperation.Delete) {
                             // if object is schedule for delete then cancel the pending delete operation.
-                            links.scheduledOperation = ScheduledOperation.None;
+                            this._unscheduleOperation(links);
+                            this._trackChanges(links);
                         }
                         else {
                             // otherwise, this means the entity has already been removed from the database so queue
                             // object for insert operation.
-                            links.scheduledOperation = ScheduledOperation.Insert;
-                            this._insertedEntities.push(links);
+                            this._scheduleOperation(links, ScheduledOperation.Insert);
                         }
 
                         links.state = ObjectState.Managed;
@@ -417,13 +453,17 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                     links.state = ObjectState.Removed;
 
                     if (links.scheduledOperation == ScheduledOperation.Insert) {
-                        // if the object has never been persisted then clear the insert operation
-                        links.scheduledOperation = ScheduledOperation.None;
+                        // if the object has never been persisted then clear the insert operation and unlink it
+                        this._unlinkObject(links);
+                        this._unscheduleOperation(links);
                     }
                     else {
                         // otherwise, queue object for delete operation
                         if(scheduleDelete) {
-                            links.scheduledOperation = ScheduledOperation.Delete;
+                            this._scheduleOperation(links, ScheduledOperation.Delete);
+                            if(links.cancelObserve) {
+                                links.cancelObserve();
+                            }
                         }
                     }
                     break;
@@ -449,6 +489,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             var links = this._getObjectLinks(entities[i]);
             if (links && links.state == ObjectState.Managed) {
                 this._unlinkObject(links);
+                this._unscheduleOperation(links);
             }
         }
 
@@ -478,40 +519,23 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }, callback);
     }
 
-    private _flush2(callback: Callback): void {
-
-
-
-        var batch = new Batch();
-        batch.execute(err => {
-            if(err) return callback(err);
-
-            callback();
-        });
-    }
-
     // TODO: if flush fails, mark session invalid and don't allow any further operations?
     // TODO: if operations fails (e.g. save, etc.) should session become invalid? Perhaps have two classes of errors, those that cause the session to become invalid and those that do not?
     // TODO: perhaps break up flush with process.nextTick if executing a large number of operations
     private _flush(callback: Callback): void {
 
-        // TODO: put requirement to order operations on the persister, not in the session
-        // Get all list of all object links. A for-in loop is slow so build a list from the map since we are going
-        // to have to iterate through the list several times.
-        var list = this._objectLinks;
+        var list = this._scheduledObjects;
+
+        // clear list of scheduled objects
+        this._scheduledObjects = [];
 
         var batch = new Batch();
 
-        // Add operations to batch group by operation type. MongoDB bulk operations need to be ordered by operation
-        // type or they are not executed as bulk operations.
-
-        // do a dirty check if the object is scheduled for dirty check or the change tracking is deferred implicit and the object is not scheduled for anything else
         for(var i = 0, l = list.length; i < l; i++) {
             var links = list[i];
             if(!links) continue;
 
-            // TODO: ignore read-only objects
-            if (links.scheduledOperation == ScheduledOperation.DirtyCheck || (links.persister.changeTracking == ChangeTracking.DeferredImplicit && !links.scheduledOperation)) {
+            if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
                 var result = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
                 if(result.error) {
                     return callback(result.error);
@@ -520,14 +544,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                     links.originalDocument = result.value;
                 }
             }
-        }
-
-        // Add all inserts
-        for (var i = 0, l = list.length; i < l; i++) {
-            var links = list[i];
-            if(!links) continue;
-
-            if (links.scheduledOperation == ScheduledOperation.Insert) {
+            else if (links.scheduledOperation == ScheduledOperation.Insert) {
                 var result = links.persister.addInsert(batch, links.object);
                 if(result.error) {
                     return callback(result.error);
@@ -536,14 +553,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                     links.originalDocument = result.value;
                 }
             }
-        }
-
-        // Add all deletes
-        for (var i = 0, l = list.length; i < l; i++) {
-            var links = list[i];
-            if(!links) continue;
-
-            if (links.scheduledOperation == ScheduledOperation.Delete) {
+            else if (links.scheduledOperation == ScheduledOperation.Delete) {
                 links.persister.addRemove(batch, links.object);
             }
         }
@@ -556,14 +566,23 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                 var links = list[i];
                 if(!links) continue;
 
-                if(links.state == ObjectState.Removed) {
-                    // unlink any removed objects.
-                    this._unlinkObject(links);
-                    // then remove it's identifier
-                    this._clearIdentifier(links);
-                }
-                // clear any scheduled operations
                 links.scheduledOperation = ScheduledOperation.None;
+                links.index = undefined;
+                links.dirty = false;
+
+                switch(links.state) {
+                    case ObjectState.Removed:
+                        // unlink any removed objects.
+                        this._unlinkObject(links);
+                        // then remove it's identifier
+                        this._clearIdentifier(links);
+                        break;
+                    case ObjectState.Managed:
+                        this._trackChanges(links);
+                        break;
+                    default:
+                        return callback(new Error("Unexpected object state in flush."));
+                }
             }
             callback();
         });
@@ -573,7 +592,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
         // TODO: when a reference is resolved do we update the referenced object? __proto__ issue.
         if(Reference.isReference(obj)) {
-            (<Reference>obj).fetch((err, entity) => {
+            (<Reference>obj).fetch(this, (err, entity) => {
                 if(err) return callback(err);
                 this._fetchPaths(entity, paths, callback);
             });
@@ -612,7 +631,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
      */
     private _clear(callback: Callback): void {
 
-        var objectLinks = this._objectLinks;
+        var objectLinks = this._scheduledObjects;
         for(var i = 0; i < objectLinks.length; i++) {
             var links = objectLinks[i];
             if(!links) continue;
@@ -620,7 +639,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             this._unlinkObject(links);
         }
         this._objectLinksById = {};
-        this._objectLinks = [];
+        this._scheduledObjects = [];
         process.nextTick(callback);
     }
 
@@ -650,21 +669,20 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         var links = {
             state: ObjectState.Managed,
             object: obj,
-            persister: persister,
-            index: this._objectLinks.length
+            persister: persister
         }
 
         this._objectLinksById[id] = links;
-        this._objectLinks.push(links);
         return links;
     }
 
     private _unlinkObject(links: ObjectLinks): void {
 
-        this._detachReferences(links.object);
+        if(links.cancelObserve) {
+            links.cancelObserve();
+        }
 
         this._objectLinksById[links.object["_id"].toString()] = undefined;
-        this._objectLinks[links.index] = undefined;
 
         // if the object was never persisted, then clear it's identifier as well
         if (links.scheduledOperation == ScheduledOperation.Insert) {
@@ -672,27 +690,30 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }
     }
 
-    private _clearIdentifier(links: ObjectLinks): void {
+    private _scheduleOperation(links: ObjectLinks, operation: ScheduledOperation): void {
 
-        delete links.object["_id"];
+        if(!links.scheduledOperation) {
+            links.index = this._scheduledObjects.length;
+            this._scheduledObjects.push(links);
+        }
+
+        links.scheduledOperation = operation;
     }
 
-    private _detachReferences(obj: any): void {
+    private _unscheduleOperation(links: ObjectLinks): void {
 
-        // TODO: get mapping from persisiter?
-        var mapping = this.factory.getMappingForObject(obj);
-        if (!mapping) {
+        if(!links.scheduledOperation) {
             return;
         }
 
-        // Find all reference in the entity and in arrays and embedded objects contained within the entity. Do not walk
-        // into other entities referenced by this one.
-        var references: Reference[] = [];
-        mapping.walk(obj, PropertyFlags.Dereference, [], [], references);
+        this._scheduledObjects[links.index] = undefined;
+        links.index = undefined;
+        links.scheduledOperation = ScheduledOperation.None;
+    }
 
-        for(var i = 0, l = references.length; i < l; i++) {
-            references[i].detach();
-        }
+    private _clearIdentifier(links: ObjectLinks): void {
+
+        delete links.object["_id"];
     }
 
     private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
@@ -715,11 +736,11 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     private _walk(mapping: EntityMapping, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
 
         var references: Reference[] = [];
-        mapping.walk(entity, flags | PropertyFlags.WalkEntities, entities, embedded, references);
+        mapping.walk(this, entity, flags | PropertyFlags.WalkEntities, entities, embedded, references);
 
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
 
-            reference.fetch((err: Error, entity: any) => {
+            reference.fetch(this, (err: Error, entity: any) => {
                 if (err) return done(err);
                 this._walk(reference.mapping, entity, flags, entities, embedded, done);
             });

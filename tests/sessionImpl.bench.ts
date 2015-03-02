@@ -19,6 +19,7 @@ import EntityMapping = require("../src/mapping/entityMapping");
 import QueryDefinition = require("../src/query/queryDefinition");
 import InternalSession = require("../src/internalSession");
 
+
 suite("SessionImpl", () => {
 
     var session: Session;
@@ -27,24 +28,25 @@ suite("SessionImpl", () => {
     var i = 0;
 
     before((done) => {
-        /*
-        var provider = new AnnotationMappingProvider(new Configuration());
-        provider.addFile("build/tests/fixtures/cat.d.json");
-        provider.getMapping((err, registry) => {
-            if (err) return done(err);
 
-            var factory = new DummySessionFactory(registry);
-            session = factory.createSession();
-            done();
-        });
-        */
+        //var provider = new AnnotationMappingProvider(new Configuration());
+        //provider.addFile("build/tests/fixtures/cat.d.json");
+        //provider.getMapping((err, registry) => {
+        //    if (err) return done(err);
+        //
+        //    var factory = new DummySessionFactory(registry);
+        //    session = factory.createSession();
+        //    done();
+        //});
+
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/cat.d.json");
         config.createSessionFactory((err: Error, sessionFactory: SessionFactory) => {
             if (err) return done(err);
 
             session = sessionFactory.createSession();
-            done();
+
+            session.query(Cat).removeAll({}, done);
         });
     });
 
@@ -60,25 +62,24 @@ suite("SessionImpl", () => {
         cats.push(new Cat("cat" + count++));
     });
 
-    test("save", (done) => {
-        session.save(cats[i++], done);
-        if(i % 1001 == 0) {
-            session.flush();
+    test("save x 1000", (done) => {
+        for(var j = 0; j < 1000; j++) {
+            session.save(cats[i++]);
         }
+        session.flush(done);
     });
 
     test("find", (done) => {
         session.query(Cat).findOne({ name: 'cat' + (i++)}, done);
     });
 
-    test("edit", (done) => {
-        cats[i].name = 'kitty' + (i++);
-        if(i % 1001 == 0) {
-            session.flush(done);
+    test("edit x 1000", (done) => {
+
+        for(var j = 0; j < 1000; j++) {
+            if(!cats[i]) throw new Error("ran out of cats at " + i);
+            cats[i].name = 'kitty' + (i++);
         }
-        else {
-            process.nextTick(done);
-        }
+        session.flush(done);
     });
 });
 

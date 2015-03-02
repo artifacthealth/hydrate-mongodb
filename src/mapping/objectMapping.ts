@@ -205,7 +205,7 @@ class ObjectMapping extends MappingBase {
         return true;
     }
 
-    walk(value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (!value || typeof value !== "object") return;
 
@@ -219,7 +219,7 @@ class ObjectMapping extends MappingBase {
             var property = properties[i];
             // if the property is not ignored and it has the specified flags, then walk the value of the property
             if (!(property.flags & PropertyFlags.Ignored) && ((property.flags & flags) || ((flags & PropertyFlags.All) == 0))) {
-                property.mapping.walk(property.getPropertyValue(value), flags, entities, embedded, references);
+                property.mapping.walk(session, property.getPropertyValue(value), flags, entities, embedded, references);
             }
         }
     }

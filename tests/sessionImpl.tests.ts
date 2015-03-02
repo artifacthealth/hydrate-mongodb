@@ -166,12 +166,10 @@ describe('SessionImpl', () => {
                 session.remove(entity, err => {
 
                     assert.isFalse(session.contains(entity), "Entity was not removed from the session");
-                    assert.isTrue(entity["_id"] !== undefined, "Remove operation should not remove identifier until after flush");
+                    assert.isUndefined(entity["_id"], "Identifier was not removed from the object");
 
                     session.flush(err => {
                         if (err) return done(err);
-
-                        assert.isUndefined(entity["_id"], "Identifier was not removed from the object after flush");
 
                         var persister = factory.getPersisterForObject(session, entity);
                         assert.equal(persister.removeCalled, 0, "Remove should not have been called because object was never persister");
