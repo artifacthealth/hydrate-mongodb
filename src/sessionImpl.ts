@@ -46,8 +46,10 @@ const enum ObjectState {
 
 const enum ObjectFlags {
 
-    None = 0,
-    ReadOnly = 0x00000001
+    None        = 0,
+    ReadOnly    = 0x00000001,
+    Dirty       = 0x00000002,
+    Observing   = 0x00000004
 }
 
 const enum ScheduledOperation {
@@ -81,19 +83,19 @@ const enum Action {
 interface ObjectLinks {
 
     state: ObjectState;
+    flags: ObjectFlags;
     scheduledOperation?: ScheduledOperation;
     object?: any;
     originalDocument?: any;
     persister?: Persister;
     index?: number;
-    dirty?: boolean;
     cancelObserve?(): void;
 }
 
 var detachedLinks = {
-    state: ObjectState.Detached
+    state: ObjectState.Detached,
+    flags: ObjectFlags.None
 }
-
 
 // TODO: raise events on UnitOfWork
 class SessionImpl extends events.EventEmitter implements InternalSession {
@@ -260,7 +262,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _trackChanges(links: ObjectLinks): void {
 
-        if(links.dirty || links.persister.changeTracking == ChangeTracking.DeferredImplicit) {
+        if((links.flags & ObjectFlags.Dirty) || links.persister.changeTracking == ChangeTracking.DeferredImplicit) {
             this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
             return;
         }
@@ -275,10 +277,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
         var objectChanged = (changes: ObjectChangeInfo[]) => {
             links.cancelObserve();
-            links.dirty = true;
-            if(!links.scheduledOperation) {
-                this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
-            }
+            this._makeDirty(links);
         }
 
         Object.observe(links.object, objectChanged);
@@ -379,8 +378,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             else {
                 switch (links.state) {
                     case ObjectState.Managed:
-                        if (links.persister.changeTracking == ChangeTracking.DeferredExplicit && !links.scheduledOperation) {
-                            this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
+                        if (links.persister.changeTracking == ChangeTracking.DeferredExplicit) {
+                            this._makeDirty(links);
                         }
                         break;
                     case ObjectState.Detached:
@@ -405,6 +404,17 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }
 
         callback();
+    }
+
+    private _makeDirty(links: ObjectLinks): void {
+
+        // still flag the object as dirty even if we aren't going to schedule a dirty check because
+        // the current operation could be canceled (e.g. save called after remove before flush),
+        // and we'll want to queue the object for dirty check at that point.
+        links.flags |= ObjectFlags.Dirty;
+        if(!links.scheduledOperation) {
+            this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
+        }
     }
 
     /**
@@ -568,7 +578,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
                 links.scheduledOperation = ScheduledOperation.None;
                 links.index = undefined;
-                links.dirty = false;
+                links.flags = ObjectFlags.None;
 
                 switch(links.state) {
                     case ObjectState.Removed:
@@ -668,6 +678,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
         var links = {
             state: ObjectState.Managed,
+            flags: ObjectFlags.None,
             object: obj,
             persister: persister
         }
