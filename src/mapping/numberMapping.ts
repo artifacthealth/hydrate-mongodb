@@ -3,6 +3,7 @@ import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import InternalSession = require("../internalSession");
+import ReadContext = require("./readContext");
 
 class NumberMapping extends MappingBase {
 
@@ -10,10 +11,10 @@ class NumberMapping extends MappingBase {
         super(MappingFlags.Number);
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
         if(typeof value !== "number") {
-            errors.push({ message: "Expected number.", path: path, value: value });
+            context.addError("Expected number.");
             return;
         }
         return value;

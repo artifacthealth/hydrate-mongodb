@@ -7,12 +7,13 @@ import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
+import ReadContext = require("./readContext");
 
 interface Mapping {
 
     id: number;
     flags: MappingFlags;
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any;
+    read(context: ReadContext, value: any): any;
     write(value: any, path: string, errors: MappingError[], visited: any[]): any;
     areEqual(documentValue1: any, documentValue2: any): boolean;
     resolve(path: string): ResolveContext;

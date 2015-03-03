@@ -11,6 +11,7 @@ import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
 import ClassMapping = require("./classMapping");
+import ReadContext = require("./readContext");
 
 class ObjectMapping extends MappingBase {
 
@@ -67,23 +68,23 @@ class ObjectMapping extends MappingBase {
         return ret;
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
-        return this.readObject(session, {}, value, path, errors, /*checkRemoved*/ false);
+        return this.readObject(context, {}, value, /*checkRemoved*/ false);
     }
 
-    protected readObject(session: InternalSession, obj: any, value: any, path: string, errors: MappingError[], checkRemoved: boolean): any {
+    protected readObject(context: ReadContext, obj: any, value: any, checkRemoved: boolean): any {
 
         if(value === null || value === undefined) {
             return null;
         }
 
         if(typeof value !== "object") {
-            errors.push({message: "Expected value to be an object.", path: path, value: value});
+            context.addError("Expected value to be an object.");
             return;
         }
 
-        var base = path ? path + "." : "",
+        var base = context.path ? context.path + "." : "",
             properties = this.properties;
 
         for (var i = 0, l = properties.length; i < l; i++) {
@@ -105,7 +106,10 @@ class ObjectMapping extends MappingBase {
                     }
                 }
                 else {
-                    propertyValue = property.mapping.read(session, fieldValue, base + property.name, errors);
+                    var savedPath = context.path;
+                    context.path = base + property.name;
+                    propertyValue = property.mapping.read(context, fieldValue);
+                    context.path = savedPath;
                 }
             }
 
@@ -123,6 +127,11 @@ class ObjectMapping extends MappingBase {
                     property.setPropertyValue(obj, undefined);
                 }
             }
+        }
+
+        // if there is an observer in the context, then watch this object for changes.
+        if(context.observer) {
+            context.observer.watch(obj);
         }
 
         return obj;

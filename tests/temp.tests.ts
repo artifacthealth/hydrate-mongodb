@@ -20,7 +20,7 @@ import AnnotationMappingProvider = require("../src/mapping/providers/annotationM
 import Configuration = require("../src/config/configuration");
 import helpers = require("./helpers");
 import ObjectIdGenerator = require("../src/id/objectIdGenerator");
-
+import ReadContext = require("../src/mapping/readContext");
 
 describe('Temp', () => {
 
@@ -222,12 +222,12 @@ describe('Temp', () => {
                 person.addAttribute("eye color", "hazel");
                 person.addAttribute("hair color", "brown");
                 person.addAttribute("temperament", "angry");
-
+/*
                 for (var i = 0; i < 100; i++) {
                     var parent1 = new model.Person(new model.PersonName("Jones", "Mary"));
                     (<any>parent1)._id = identity.generate();
                     person.addParent(parent1);
-                }
+                }*/
             }
 
             // divide by a million to get nano to milli
@@ -237,17 +237,18 @@ describe('Temp', () => {
             var errors: any[] = [];
             var visited: any[] = [];
             var document = mapping.write(person, "", errors, visited);
-            var obj = mapping.read(session, document, "", errors);
+            var context = new ReadContext(session);
+            var obj = mapping.read(context, document);
             // obj.parents = obj.parents.reverse();
             //obj.gender = model.Gender.Male;
 
             var start = process.hrtime();
 
             for(var i = 0; i < 10000; i++) {
-                var errors: any[] = [];
+                var context = new ReadContext(session);
                 //                var visited: any[] = [];
                 //                var document = mapping.write(person, "", errors, visited);
-                var obj = mapping.read(session, document, null, errors);
+                var obj = mapping.read(context, document);
                 //                var changes: any = {};
                 //                mapping.compare(obj, document, changes, "");
             }

@@ -30,6 +30,7 @@ import QueryDocument = require("./query/queryDocument");
 import CriteriaBuilder = require("./query/criteriaBuilder");
 import UpdateDocumentBuilder = require("./query/updateDocumentBuilder");
 import ResolveContext = require("./mapping/resolveContext");
+import ReadContext = require("./mapping/readContext");
 
 interface FindOneQuery {
 
@@ -147,10 +148,10 @@ class PersisterImpl implements Persister {
 
     private _refreshFromDocument(entity: Object, document: Object, callback: ResultCallback<Object>): void {
 
-        var errors: MappingError[] = [];
-        this._mapping.refresh(this._session, entity, document, errors);
-        if(errors.length > 0) {
-            return callback(new Error("Error deserializing document:\n" + MappingError.createErrorMessage(errors)));
+        var context = new ReadContext(this._session);
+        this._mapping.refresh(context, entity, document);
+        if(context.hasErrors) {
+            return callback(new Error("Error deserializing document:\n" + context.getErrorMessage()));
         }
 
         callback(null, document);
@@ -247,7 +248,8 @@ class PersisterImpl implements Persister {
 
         // map query criteria if it's defined
         if(query.criteria) {
-            query.criteria = (this._criteriaBuilder || (this._criteriaBuilder = new CriteriaBuilder(this._mapping))).build(query.criteria);
+            query.criteria = (this._criteriaBuilder || (this._criteriaBuilder = new CriteriaBuilder(this._mapping)))
+                                .build(query.criteria);
 
             // check if we got any error during build
             if(this._criteriaBuilder.error) {
@@ -257,7 +259,8 @@ class PersisterImpl implements Persister {
 
         // map update document if it's defined
         if(query.updateDocument) {
-            query.updateDocument = (this._updateDocumentBuilder || (this._updateDocumentBuilder = new UpdateDocumentBuilder(this._mapping))).build(query.updateDocument);
+            query.updateDocument = (this._updateDocumentBuilder || (this._updateDocumentBuilder = new UpdateDocumentBuilder(this._mapping)))
+                                        .build(query.updateDocument);
 
             // check if we got any error during build
             if(this._updateDocumentBuilder.error) {
@@ -545,12 +548,13 @@ class PersisterImpl implements Persister {
             if(err) return callback(err);
 
             // read results based on property mapping
-            var errors: MappingError[] = [];
+            var readContext = new ReadContext(this._session);
 
             for(var i = 0, l = results.length; i < l; i++) {
-                results[i] = context.resolvedMapping.read(this._session, results[i], context.resolvedPath, errors);
-                if (errors.length > 0) {
-                    return callback(new Error("Error deserializing distinct values for: " + MappingError.createErrorMessage(errors)));
+                readContext.path = context.resolvedPath;
+                results[i] = context.resolvedMapping.read(readContext, results[i]);
+                if (readContext.hasErrors) {
+                    return callback(new Error("Error deserializing distinct values for: " + readContext.getErrorMessage()));
                 }
             }
 
@@ -652,10 +656,10 @@ class PersisterImpl implements Persister {
             entity = this._session.getObject(document["_id"]);
             if (entity === undefined) {
 
-                var errors: MappingError[] = [];
-                entity = this._mapping.read(this._session, document, "", errors);
-                if (errors.length > 0) {
-                    return new Result(new Error("Error deserializing document:\n" + MappingError.createErrorMessage(errors)));
+                var context = new ReadContext(this._session);
+                entity = this._mapping.read(context, document);
+                if (context.hasErrors) {
+                    return new Result(new Error("Error deserializing document:\n" + context.getErrorMessage()));
                 }
 
                 this._session.registerManaged(this, entity, document);

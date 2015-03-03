@@ -29,15 +29,17 @@ suite("SessionImpl", () => {
 
     before((done) => {
 
-        //var provider = new AnnotationMappingProvider(new Configuration());
-        //provider.addFile("build/tests/fixtures/cat.d.json");
-        //provider.getMapping((err, registry) => {
-        //    if (err) return done(err);
-        //
-        //    var factory = new DummySessionFactory(registry);
-        //    session = factory.createSession();
-        //    done();
-        //});
+        /*
+        var provider = new AnnotationMappingProvider(new Configuration());
+        provider.addFile("build/tests/fixtures/cat.d.json");
+        provider.getMapping((err, registry) => {
+            if (err) return done(err);
+
+            var factory = new DummySessionFactory(registry);
+            session = factory.createSession();
+            done();
+        });
+        */
 
         var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
         config.addDeclarationFile("build/tests/fixtures/cat.d.json");

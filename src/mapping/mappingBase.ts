@@ -7,6 +7,7 @@ import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
 import Map = require("../core/map");
+import ReadContext = require("./readContext");
 
 var nextMappingId = 1;
 
@@ -20,7 +21,7 @@ class MappingBase {
         this.id = nextMappingId++;
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
         throw new Error("Not implemented");
     }
 

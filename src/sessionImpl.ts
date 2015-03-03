@@ -1,6 +1,6 @@
+/// <reference path="./core/observe.d.ts" />
 /// <reference path="../typings/async.d.ts" />
 /// <reference path="../typings/node.d.ts" />
-/// <reference path="./core/observe.d.ts" />
 import events = require("events");
 
 import async = require("async");
@@ -143,7 +143,6 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     constructor(public factory: InternalSessionFactory) {
         super();
 
-        // Using a delegate is faster than bind http://jsperf.com/bind-vs-function-delegate
         this._queue = new TaskQueue((action, args, callback) => this._execute(action, args, callback));
     }
 

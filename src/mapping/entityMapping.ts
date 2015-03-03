@@ -16,6 +16,7 @@ import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
+import ReadContext = require("./readContext");
 
 class EntityMapping extends ClassMapping {
 
@@ -54,26 +55,25 @@ class EntityMapping extends ClassMapping {
         this.indexes.push(index);
     }
 
-    refresh(session: InternalSession, entity: any, document: any, errors: MappingError[]): any {
+    refresh(context: ReadContext, entity: any, document: any): any {
 
-        var path = "";
-        var mapping = this.inheritanceRoot.getMapping(document, path, errors);
+        var mapping = this.inheritanceRoot.getMapping(context, document);
         if (mapping) {
             if(mapping != this) {
                 // http://jsperf.com/change-proto-on-class
-                errors.push({ message: "Refresh does not support changing instantiated class of entity.", path: path, value: document });
+                context.addError("Refresh does not support changing instantiated class of entity.");
                 return;
             }
-            return this.readObject(session, entity, document, path, errors, /* checkRemoved */ true);
+            return this.readObject(context, entity, document, /* checkRemoved */ true);
         }
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
         var id: any;
 
         // if this is not the top level, the value should be the id
-        if(path) {
+        if(context.path) {
             // TODO: handle DBRef
             id = value;
         }
@@ -81,24 +81,24 @@ class EntityMapping extends ClassMapping {
             // otherwise, get the value from the document
             id = value["_id"];
             if (!id) {
-                errors.push({message: "Missing identifier.", path: "_id", value: value});
+                context.addError("Missing identifier.", "_id");
                 return;
             }
         }
 
         // TODO: handle DBRef
         if(!(<EntityMapping>this.inheritanceRoot).identity.validate(id)) {
-            errors.push({ message: "'" + id.toString() + "' is not a valid identifier.", path: (path ? path + "." : "") + "_id", value: id });
+            context.addError("'" + id.toString() + "' is not a valid identifier.", (context.path ? context.path + "." : "") + "_id");
             return;
         }
 
         // if this is not the top level
-        if(path) {
+        if(context.path) {
             // TODO: confirm how we want to handle ObjectState.Removed.
-            return session.getReferenceInternal(this, id);
+            return context.session.getReferenceInternal(this, id);
         }
 
-        var obj = super.read(session, value, path, errors);
+        var obj = super.read(context, value);
         obj["_id"] = id;
         return obj;
     }

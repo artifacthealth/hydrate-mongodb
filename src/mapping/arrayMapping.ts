@@ -11,6 +11,7 @@ import ResultCallback = require("../core/resultCallback");
 import EntityMapping = require("./entityMapping");
 import ResolveContext = require("./resolveContext");
 import TupleMapping = require("./tupleMapping");
+import ReadContext = require("./readContext");
 
 class ArrayMapping extends MappingBase {
 
@@ -18,15 +19,14 @@ class ArrayMapping extends MappingBase {
         super(MappingFlags.Array);
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
         if (!Array.isArray(value)) {
-            errors.push({message: "Expected array.", path: path, value: value});
+            context.addError("Expected array.");
             return;
         }
 
         // TODO: remove items scheduled for delete from array
-
         var result = new Array(value.length),
             mapping = this.elementMapping;
 
@@ -37,7 +37,12 @@ class ArrayMapping extends MappingBase {
             if (item === undefined) {
                 item = null;
             }
-            result[i] = mapping.read(session, item, path, errors);
+            result[i] = mapping.read(context, item);
+        }
+
+        // if there is an observer in the context, then watch this array for changes.
+        if(context.observer) {
+            context.observer.watch(result);
         }
 
         return result;

@@ -6,6 +6,7 @@ import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
 import InternalSession = require("../internalSession");
+import ReadContext = require("./readContext");
 
 class EnumMapping extends MappingBase {
 
@@ -25,7 +26,7 @@ class EnumMapping extends MappingBase {
         }
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
         if(typeof value === "number") {
             return value;
@@ -49,12 +50,12 @@ class EnumMapping extends MappingBase {
             }
 
             if (result === undefined) {
-                errors.push({message: "'" + value + "' is not a valid enum value.", path: path, value: value});
+                context.addError("'" + value + "' is not a valid enum value.");
             }
             return result;
         }
 
-        errors.push({ message: "Enum value must be a string or number.", path: path, value: value });
+        context.addError("Enum value must be a string or number.");
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {

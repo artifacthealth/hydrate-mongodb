@@ -1,7 +1,7 @@
 interface MappingError {
 
     message: string;
-    value: any;
+    value?: any;
     path: string;
 }
 

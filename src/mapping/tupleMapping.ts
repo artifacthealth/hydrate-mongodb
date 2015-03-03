@@ -8,6 +8,7 @@ import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
+import ReadContext = require("./readContext");
 
 class TupleMapping extends MappingBase {
 
@@ -15,22 +16,30 @@ class TupleMapping extends MappingBase {
         super(MappingFlags.Tuple);
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
         if(!Array.isArray(value)) {
-            errors.push({ message: "Expected tuple.", path: path, value: value });
+            context.addError("Expected tuple.");
             return;
         }
 
         var mappings = this.elementMappings;
         if(value.length != mappings.length) {
-            errors.push({ message: "Expected " + mappings.length + " elements in tuple but source had " + value.length + ".", path: path, value: value });
+            context.addError("Expected " + mappings.length + " elements in tuple but source had " + value.length + ".");
             return;
         }
 
         var result = new Array(value.length);
         for (var i = 0, l = mappings.length; i < l; i++) {
-            result[i] = mappings[i].read(session, value[i], path + "." + i, errors);
+            var savedPath = context.path;
+            context.path += "." + i;
+            result[i] = mappings[i].read(context, value[i]);
+            context.path = savedPath;
+        }
+
+        // if there is an observer in the context, then watch this tuple for changes.
+        if(context.observer) {
+            context.observer.watch(result);
         }
 
         return result;

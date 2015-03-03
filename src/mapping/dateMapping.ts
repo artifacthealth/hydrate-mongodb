@@ -4,6 +4,7 @@ import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
 import InternalSession = require("../internalSession");
+import ReadContext = require("./readContext");
 
 class DateMapping extends MappingBase {
 
@@ -11,10 +12,10 @@ class DateMapping extends MappingBase {
         super(MappingFlags.Date);
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
         if(!(value instanceof Date)) {
-            errors.push({ message: "Expected Date.", path: path, value: value });
+            context.addError("Expected Date.");
             return;
         }
         return new Date(value.getTime());

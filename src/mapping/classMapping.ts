@@ -8,6 +8,7 @@ import Reference = require("../reference");
 import PropertyFlags = require("./propertyFlags");
 import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
+import ReadContext = require("./readContext");
 
 class ClassMapping extends ObjectMapping {
 
@@ -117,11 +118,11 @@ class ClassMapping extends ObjectMapping {
         return this._registry;
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
-        var mapping = this.inheritanceRoot.getMapping(value, path, errors);
+        var mapping = this.inheritanceRoot.getMapping(context, value);
         if (mapping) {
-            return mapping.readClass(session, value, path, errors);
+            return mapping.readClass(context, value);
         }
     }
 
@@ -131,11 +132,11 @@ class ClassMapping extends ObjectMapping {
      * @param path The current path. Used for error reporting.
      * @param errors An array of reported errors.
      */
-    getMapping(document: any, path: string, errors: MappingError[]): ClassMapping {
+    getMapping(context: ReadContext, document: any): ClassMapping {
 
         var mapping = this._getMappingForDocument(document);
         if(mapping === undefined) {
-            errors.push({ message: "Unknown discriminator value '" + this._getDiscriminatorValueForDocument(document) + "'.", path: path, value: document });
+            context.addError("Unknown discriminator value '" + this._getDiscriminatorValueForDocument(document) + "'.");
             return;
         }
 
@@ -152,9 +153,9 @@ class ClassMapping extends ObjectMapping {
         return document[this.inheritanceRoot.discriminatorField];
     }
 
-    protected readClass(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    protected readClass(context: ReadContext, value: any): any {
 
-        return this.readObject(session, Object.create(this.classConstructor.prototype), value, path, errors, /*checkRemoved*/ false);
+        return this.readObject(context, Object.create(this.classConstructor.prototype), value, /*checkRemoved*/ false);
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {

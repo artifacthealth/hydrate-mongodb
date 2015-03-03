@@ -4,6 +4,7 @@ import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
 import InternalSession = require("../internalSession");
+import ReadContext = require("./readContext");
 
 class BooleanMapping extends MappingBase {
 
@@ -11,10 +12,10 @@ class BooleanMapping extends MappingBase {
         super(MappingFlags.Boolean);
     }
 
-    read(session: InternalSession, value: any, path: string, errors: MappingError[]): any {
+    read(context: ReadContext, value: any): any {
 
         if(typeof value !== "boolean") {
-            errors.push({ message: "Expected boolean.", path: path, value: value });
+            context.addError("Expected boolean.");
             return;
         }
         return value;
