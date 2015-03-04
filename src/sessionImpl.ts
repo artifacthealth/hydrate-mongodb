@@ -603,7 +603,6 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }, callback);
     }
 
-    // TODO: perhaps break up flush with process.nextTick if executing a large number of operations
     private _flush(callback: Callback): void {
 
         var head = this._scheduleHead;
@@ -611,9 +610,31 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         // clear list of scheduled objects
         this._scheduleHead = this._scheduleTail = null;
 
-        var batch = new Batch(),
-            links = head;
-        while(links) {
+        var batch = new Batch();
+        this._buildBatch(batch, head, (err) => {
+            if(err) return callback(err);
+
+            batch.execute((err) => {
+                if (err) return callback(err);
+
+                this._batchCompleted(head, callback);
+            });
+        });
+    }
+
+    /**
+     * Populates the batch with the current scheduled operations. Since building the batch could take a long time if
+     * there are many scheduled operations, break it up into chucks so we are not blocking the Node event queue.
+     * @param batch The batch to build
+     * @param links The current link in the list of scheduled operations
+     * @param callback Called when the batch has been built
+     */
+    private _buildBatch(batch: Batch, links: ObjectLinks, callback: Callback): void {
+
+        var count = 0;
+
+        while(links && count < 1000) {
+
             if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
                 var result = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
                 if(result.error) {
@@ -637,39 +658,53 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             }
 
             links = links.next;
+            count++;
         }
 
-        batch.execute(err => {
-            if(err) return callback(err);
-
-            links = head;
-            while(links) {
-                var next = links.next;
-
-                links.scheduledOperation = ScheduledOperation.None;
-                links.flags = ObjectFlags.None;
-                // Remove links from list. No need to fix up links of prev/next because all items will be removed from
-                // the list.
-                links.prev = links.next = null;
-
-                switch(links.state) {
-                    case ObjectState.Removed:
-                        // unlink any removed objects.
-                        this._unlinkObject(links);
-                        // then remove it's identifier
-                        this._clearIdentifier(links);
-                        break;
-                    case ObjectState.Managed:
-                        this._trackChanges(links);
-                        break;
-                    default:
-                        return callback(new Error("Unexpected object state in flush."));
-                }
-
-                links = next;
-            }
+        // If there are more links in the queue, continue building the batch on the next tick.
+        if(links) {
+            process.nextTick(() => this._buildBatch(batch, links, callback));
+        }
+        else {
             callback();
-        });
+        }
+    }
+
+    /**
+     * Called after a batch is successfully executed. *
+     * @param head The head of the scheduled operation list.
+     * @param callback Called when processing is completed.
+     */
+    private _batchCompleted(head: ObjectLinks, callback: Callback): void {
+
+        var links = head;
+        while(links) {
+            var next = links.next;
+
+            links.scheduledOperation = ScheduledOperation.None;
+            links.flags = ObjectFlags.None;
+            // Remove links from list. No need to fix up links of prev/next because all items will be removed from
+            // the list.
+            links.prev = links.next = null;
+
+            switch(links.state) {
+                case ObjectState.Removed:
+                    // unlink any removed objects.
+                    this._unlinkObject(links);
+                    // then remove it's identifier
+                    this._clearIdentifier(links);
+                    break;
+                case ObjectState.Managed:
+                    this._trackChanges(links);
+                    break;
+                default:
+                    return callback(new Error("Unexpected object state in flush."));
+            }
+
+            links = next;
+        }
+
+        callback();
     }
 
     private _close(callback: Callback): void {
