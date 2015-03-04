@@ -671,7 +671,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     }
 
     /**
-     * Called after a batch is successfully executed. *
+     * Called after a batch is successfully executed.
      * @param head The head of the scheduled operation list.
      * @param callback Called when processing is completed.
      */
