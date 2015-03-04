@@ -17,6 +17,7 @@ import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
 import ReadContext = require("./readContext");
+import Observer = require("../observer");
 
 class EntityMapping extends ClassMapping {
 
@@ -61,6 +62,7 @@ class EntityMapping extends ClassMapping {
         if (mapping) {
             if(mapping != this) {
                 // http://jsperf.com/change-proto-on-class
+                // http://stackoverflow.com/questions/23807805/why-is-mutating-the-prototype-of-an-object-bad-for-performance
                 context.addError("Refresh does not support changing instantiated class of entity.");
                 return;
             }
@@ -139,6 +141,16 @@ class EntityMapping extends ClassMapping {
             document["_id"] = id;
         }
         return document;
+    }
+
+    watchEntity(entity: any, observer: Observer): void {
+
+        super.watch(entity, observer, []);
+    }
+
+    watch(value: any, observer: Observer, visited: any[]): void {
+
+        // Do nothing. Watch does not propagate to other entities.
     }
 
     areDocumentsEqual(document1: any, document2: any): boolean {

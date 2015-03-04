@@ -1,20 +1,19 @@
 /// <reference path="./core/observe.d.ts" />
-import Callback = require("./core/callback");
+
+import Reference = require("../reference");
 
 class Observer {
 
     private _watching: any[] = [];
     private _onChange: () => void;
-    private _callback: Callback;
 
     /**
      * Creates an Observer object.
      * @param callback Called the first time any of the watched objects change.
      */
-    constructor(callback: Callback) {
+    constructor(callback: () => void) {
         // create an event function bound to the 'this' context.
-        this._onChange = this._createOnChangeEvent();
-        this._callback = callback;
+        this._onChange = this._createOnChangeEvent(callback);
     }
 
     watch(obj: any): void {
@@ -33,10 +32,25 @@ class Observer {
         this._watching = undefined;
     }
 
-    private _createOnChangeEvent(): () => void {
+    private _createOnChangeEvent(callback: () => void): () => void {
 
-        return () => {
-            this._callback();
+        return (changes: ObjectChangeInfo[]) => {
+
+            var changed = false;
+
+            // Check to see if there were any changes besides resolving a reference. We don't consider resolving a
+            // referene as a change.
+            for(var i = 0; i < changes.length; i++) {
+                var change = changes[i];
+                if(change.type != 'update' || !(<Reference>change.oldValue).fetched || !Reference.isReference(change.oldValue)) {
+                    changed = true;
+                    break;
+                }
+            }
+
+            if(!changed) return;
+
+            callback();
             this.destroy();
         }
     }

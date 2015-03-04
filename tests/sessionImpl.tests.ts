@@ -20,6 +20,7 @@ import AnnotationMappingProvider = require("../src/mapping/providers/annotationM
 import MappingRegistry = require("../src/mapping/mappingRegistry");
 import ObjectIdGenerator = require("../src/id/objectIdGenerator");
 import QueryKind = require("../src/query/queryKind");
+import Callback = require("../src/core/callback");
 
 // Fixtures
 import model = require("./fixtures/model");
@@ -384,6 +385,103 @@ describe('SessionImpl', () => {
 
     describe('refresh', () => {
 
+        it('returns an error if object is not managed', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var entity = createEntity();
+                var session = factory.createSession();
+
+                session.refresh(entity, (err) => {
+                    // TODO: Check error code
+                    assert.instanceOf(err, Error);
+                    done();
+                });
+            });
+        });
+
+        it('refreshes managed entity with the state from the database', (done) => {
+
+            refresh(null, (err, entity, session, persister) => {
+                if(err) return done(err);
+
+                assert.equal(entity.name, "Tails");
+                done();
+            });
+        });
+
+        it('discards modifications to entity so entity is considered clean after refresh', (done) => {
+
+            refresh((entity, done) => {
+                // modify object before refresh to make sure that after refresh the object is no longer considered dirty
+                entity.name = "Mittens";
+                process.nextTick(done);
+            }, (err, entity, session, persister) => {
+                if(err) return done(err);
+
+                session.flush((err) => {
+                    if(err) return done(err);
+
+                    assert.equal(persister.dirtyCheckCalled, 0, "Object still considered dirty after refresh");
+                    done();
+                });
+            });
+        });
+
+        it('should not cause object to become dirty when change tracking is observe', (done) => {
+
+            refresh(null, (err, entity, session, persister) => {
+                if(err) return done(err);
+
+                session.flush((err) => {
+                    if(err) return done(err);
+
+                    assert.equal(persister.dirtyCheckCalled, 0, "Refresh caused object to become dirty");
+                    session.close(done);
+                });
+            });
+        });
+
+        function refresh(beforeRefresh: (entity: any, callback: Callback) => void, callback: (err: Error, entity?: any, session?: InternalSession, persister?: MockPersister) => void) {
+
+            helpers.createFactory("cat", (err, factory) => {
+                if (err) return callback(err);
+
+                var entity = new Cat("Fluffy");
+                var session = factory.createSession();
+                var persister = factory.getPersisterForObject(session, entity);
+
+                var called = 0;
+                persister.onRefresh = (entity, callback) => {
+                    entity.name = "Tails"
+                    called++;
+                    process.nextTick(callback);
+                }
+
+                session.save(entity);
+                session.flush((err) => {
+                    if(err) return callback(err);
+                    if(beforeRefresh) {
+                        beforeRefresh(entity, () => {
+                            if(err) return callback(err);
+                            doRefresh();
+                        });
+                    }
+                    else {
+                        doRefresh();
+                    }
+                });
+
+                function doRefresh() {
+                    session.refresh(entity, (err) => {
+                        if (err) return callback(err);
+                        assert.equal(called, 1, "refresh on Persister was not called");
+                        callback(null, entity, session, persister);
+                    });
+                }
+            });
+        }
     });
 
     describe('detach', () => {
@@ -702,6 +800,44 @@ describe('SessionImpl', () => {
 
             assert.notEqual(persisterA1, persisterB1, "Persisters for different mappings should be different");
         });
+    });
+
+    describe('close', () => {
+
+        it('marks sessions as closed such that any future actions will result in error', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                session.close(() => {
+                    session.clear((err) => {
+                        // TODO: check error code
+                        assert.instanceOf(err, Error);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('flushes the session', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var entity = createEntity();
+                session.save(entity);
+                session.close(() => {
+                    // confirm session was flushed by checking if entity was inserted
+                    var persister = factory.getPersisterForObject(session, entity);
+                    assert.equal(persister.insertCalled, 1);
+                    assert.isTrue(persister.wasInserted(entity));
+                    done();
+                });
+            });
+        });
+
     });
 
 });

@@ -1,4 +1,3 @@
-/// <reference path="./core/observe.d.ts" />
 /// <reference path="../typings/async.d.ts" />
 /// <reference path="../typings/node.d.ts" />
 import events = require("events");
@@ -23,6 +22,7 @@ import EntityMapping = require("./mapping/entityMapping");
 import Query = require("./query/query");
 import FindOneQuery = require("./query/findOneQuery");
 import QueryDescriptor = require("./query/queryDefinition");
+import Observer = require("./observer");
 
 /**
  * The state of an object.
@@ -94,8 +94,8 @@ interface ObjectLinks {
     scheduledOperation?: ScheduledOperation;
     next?: ObjectLinks;
     prev?: ObjectLinks;
-
-    cancelObserve?(): void;
+    index?: number;
+    observer?: Observer;
 }
 
 /**
@@ -126,6 +126,11 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     private _objectLinksById: Map<ObjectLinks> = {};
 
     /**
+     * List of all ObjectLinks associated with the session.
+     */
+    private _objectLinks: ObjectLinks[] = [];
+
+    /**
      * Scheduled operations linked list head.
      */
     private _scheduleHead: ObjectLinks;
@@ -139,6 +144,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
      * Task queue coordinates asynchronous actions.
      */
     private _queue: TaskQueue;
+
 
     constructor(public factory: InternalSessionFactory) {
         super();
@@ -301,7 +307,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     private _trackChanges(links: ObjectLinks): void {
 
         if((links.flags & ObjectFlags.Dirty) || links.persister.changeTracking == ChangeTracking.DeferredImplicit) {
-            this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
+            this._makeDirty(links);
             return;
         }
 
@@ -309,20 +315,23 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             return;
         }
 
-        if(links.cancelObserve) {
-            throw new Error("Object is already being observed.");
+        if(links.observer) {
+            // object is already being watched
+            return;
         }
 
-        var objectChanged = (changes: ObjectChangeInfo[]) => {
-            links.cancelObserve();
-            this._makeDirty(links);
-        }
+        links.observer = new Observer(() => {
+            this._makeDirty(links)
+            links.observer = undefined;
+        });
+        links.persister.watch(links.object, links.observer);
+    }
 
-        // TODO: This is not enough. We need to attach to embedded objects and arrays. Probably need to implement 'observe' method in mappings.
-        Object.observe(links.object, objectChanged);
-        links.cancelObserve = () => {
-            Object.unobserve(links.object, objectChanged);
-            links.cancelObserve = undefined;
+    private _stopWatching(links: ObjectLinks): void {
+
+        if(links.observer) {
+            links.observer.destroy();
+            links.observer = undefined;
         }
     }
 
@@ -430,7 +439,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                     case ObjectState.Removed:
                         if (links.scheduledOperation == ScheduledOperation.Delete) {
                             // if object is schedule for delete then cancel the pending delete operation.
-                            this._unscheduleOperation(links);
+                            this._clearScheduledOperation(links);
                             this._trackChanges(links);
                         }
                         else {
@@ -456,6 +465,16 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         links.flags |= ObjectFlags.Dirty;
         if(!links.scheduledOperation) {
             this._scheduleOperation(links, ScheduledOperation.DirtyCheck);
+        }
+    }
+
+    private _clearDirty(links: ObjectLinks): void {
+
+        // clear dirty flag
+        links.flags &= ~ObjectFlags.Dirty;
+        // clear scheduled operation if object is scheduled for dirty check
+        if(links.scheduledOperation == ScheduledOperation.DirtyCheck) {
+            this._clearScheduledOperation(links);
         }
     }
 
@@ -507,15 +526,12 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                     if (links.scheduledOperation == ScheduledOperation.Insert) {
                         // if the object has never been persisted then clear the insert operation and unlink it
                         this._unlinkObject(links);
-                        this._unscheduleOperation(links);
+                        this._clearScheduledOperation(links);
                     }
                     else {
                         // otherwise, queue object for delete operation
                         if(scheduleDelete) {
                             this._scheduleOperation(links, ScheduledOperation.Delete);
-                            if(links.cancelObserve) {
-                                links.cancelObserve();
-                            }
                         }
                     }
                     break;
@@ -541,7 +557,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             var links = this._getObjectLinks(entities[i]);
             if (links && links.state == ObjectState.Managed) {
                 this._unlinkObject(links);
-                this._unscheduleOperation(links);
+                this._clearScheduledOperation(links);
             }
             // TODO: double check how we want to handle Removed entities here.
         }
@@ -564,9 +580,18 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             if (!links || links.state != ObjectState.Managed) {
                 return done(new Error("Object is not managed."));
             }
+
+            // Refreshing an entity should not cause it to become dirty, so if we have an observer, destroy it before
+            // refreshing the object.
+            this._stopWatching(links);
+
             links.persister.refresh(links.object, (err, document) => {
                 if(err) return done(err);
                 links.originalDocument = document;
+
+                // clear dirty because object may have been dirty before refresh
+                this._clearDirty(links);
+                this._trackChanges(links);
                 done();
             });
         }, callback);
@@ -646,10 +671,16 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _close(callback: Callback): void {
 
+        this._queue.close();
         this._flush((err) => {
             if(err) return callback(err);
 
-            // TODO: clear observe for all observed objects.
+            for(var i = 0; i < this._objectLinks.length; i++) {
+                var links = this._objectLinks[i];
+                if(links && links.observer) {
+                    links.observer.destroy();
+                }
+            }
 
             callback();
         });
@@ -657,6 +688,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     fetchInternal(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
+        // TODO: Important! Modification made by fetch should not make the object dirty.
         // TODO: when a reference is resolved do we update the referenced object? __proto__ issue.
         if(Reference.isReference(obj)) {
             (<Reference>obj).fetch(this, (err, entity) => {
@@ -671,7 +703,6 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _fetchPaths(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
-        // TODO: Is it necessary to restrict fetch to managed objects?
         var links = this._getObjectLinks(obj);
         if (!links || links.state == ObjectState.Detached) {
             return callback(new Error("Object is not associated with the session."));
@@ -698,13 +729,21 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
      */
     private _clear(callback: Callback): void {
 
-        var links = this._scheduleHead;
-        while(links) {
-            this._unlinkObject(links);
-            links = links.next;
+        for(var i = 0; i < this._objectLinks.length; i++) {
+            var links = this._objectLinks[i];
+            if(links) {
+                // We call _cleanupUnlinkedObject instead of _unlinkObject because we clear the entire _objectLinks
+                // list and _objectLinksById map so there is no need to remove the links individually.
+                this._cleanupUnlinkedObject(links);
+            }
         }
+
+        // clear all object links
         this._objectLinksById = {};
+        this._objectLinks = [];
+        // clear scheduled operations
         this._scheduleHead = this._scheduleTail = null
+
         process.nextTick(callback);
     }
 
@@ -735,21 +774,26 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             state: ObjectState.Managed,
             flags: ObjectFlags.None,
             object: obj,
-            persister: persister
+            persister: persister,
+            index: this._objectLinks.length
         }
 
         this._objectLinksById[id] = links;
+        this._objectLinks.push(links);
         return links;
     }
 
     private _unlinkObject(links: ObjectLinks): void {
 
-        if(links.cancelObserve) {
-            links.cancelObserve();
-        }
-
         this._objectLinksById[links.object["_id"].toString()] = undefined;
+        this._objectLinks[links.index] = undefined;
 
+        this._cleanupUnlinkedObject(links);
+    }
+
+    private _cleanupUnlinkedObject(links: ObjectLinks): void {
+
+        this._stopWatching(links);
         // if the object was never persisted, then clear it's identifier as well
         if (links.scheduledOperation == ScheduledOperation.Insert) {
             this._clearIdentifier(links);
@@ -776,7 +820,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         links.scheduledOperation = operation;
     }
 
-    private _unscheduleOperation(links: ObjectLinks): void {
+    private _clearScheduledOperation(links: ObjectLinks): void {
 
         if(!links.scheduledOperation) {
             return;

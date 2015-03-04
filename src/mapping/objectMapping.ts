@@ -12,6 +12,7 @@ import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
 import ClassMapping = require("./classMapping");
 import ReadContext = require("./readContext");
+import Observer = require("../observer");
 
 class ObjectMapping extends MappingBase {
 
@@ -149,11 +150,13 @@ class ObjectMapping extends MappingBase {
             properties = this.properties,
             fieldValue: any;
 
-        if (visited.indexOf(value) !== -1) {
-            errors.push({message: "Recursive reference of embedded object is not allowed.", path: path, value: value});
-            return;
+        if(this.flags & MappingFlags.Embeddable) {
+            if (visited.indexOf(value) !== -1) {
+                errors.push({message: "Recursive reference of embedded object is not allowed.", path: path, value: value});
+                return;
+            }
+            visited.push(value);
         }
-        visited.push(value);
 
         for (var i = 0, l = properties.length; i < l; i++) {
             var property = properties[i],
@@ -185,6 +188,27 @@ class ObjectMapping extends MappingBase {
         visited.pop();
 
         return document;
+    }
+
+    watch(value: any, observer: Observer, visited: any[]): void {
+
+        if(!value || typeof value != "object") return;
+
+        if(this.flags & MappingFlags.Embeddable) {
+            if (visited.indexOf(value) !== -1) return;
+            visited.push(value);
+        }
+
+        observer.watch(value);
+
+        for (var i = 0, l = this.properties.length; i < l; i++) {
+
+            var property = this.properties[i];
+            // if the property is not ignored and it has the specified flags, then walk the value of the property
+            if (!(property.flags & PropertyFlags.Ignored)) {
+                property.mapping.watch(property.getPropertyValue(value), observer, visited);
+            }
+        }
     }
 
     areEqual(documentValue1: any, documentValue2: any): boolean {

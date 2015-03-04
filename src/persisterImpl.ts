@@ -31,6 +31,7 @@ import CriteriaBuilder = require("./query/criteriaBuilder");
 import UpdateDocumentBuilder = require("./query/updateDocumentBuilder");
 import ResolveContext = require("./mapping/resolveContext");
 import ReadContext = require("./mapping/readContext");
+import Observer = require("./observer");
 
 interface FindOneQuery {
 
@@ -144,6 +145,10 @@ class PersisterImpl implements Persister {
             if (err) return callback(err);
             this._refreshFromDocument(entity, document, callback);
         });
+    }
+
+    watch(value: any, observer: Observer): void {
+        this._mapping.watchEntity(value, observer);
     }
 
     private _refreshFromDocument(entity: Object, document: Object, callback: ResultCallback<Object>): void {

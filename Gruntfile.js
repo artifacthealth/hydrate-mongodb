@@ -136,6 +136,6 @@ module.exports = function(grunt) {
     grunt.registerTask("default", [ "build", "lib", "tests" ]);
     grunt.registerTask("build", [ "clean:build", "typescript:build" ]);
     grunt.registerTask("lib", [ "clean:lib", "concat:lib" ]);
-    grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests", "baseline:tests" ]);
+    grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests" ]);
 
 };

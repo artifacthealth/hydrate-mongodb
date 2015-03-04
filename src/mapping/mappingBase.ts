@@ -8,6 +8,7 @@ import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
 import Map = require("../core/map");
 import ReadContext = require("./readContext");
+import Observer = require("../observer");
 
 var nextMappingId = 1;
 
@@ -27,6 +28,10 @@ class MappingBase {
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
         throw new Error("Not implemented");
+    }
+
+    watch(value: any, observer: Observer, visited: any[]): void {
+
     }
 
     walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {

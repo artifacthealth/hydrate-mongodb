@@ -12,6 +12,7 @@ import EntityMapping = require("./entityMapping");
 import ResolveContext = require("./resolveContext");
 import TupleMapping = require("./tupleMapping");
 import ReadContext = require("./readContext");
+import Observer = require("../observer");
 
 class ArrayMapping extends MappingBase {
 
@@ -68,6 +69,17 @@ class ArrayMapping extends MappingBase {
         }
 
         return result;
+    }
+
+    watch(value: any, observer: Observer, visited: any[]): void {
+
+        if(!value || !Array.isArray(value)) return;
+
+        observer.watch(value);
+
+        for (var i = 0, l = value.length; i < l; i++) {
+            this.elementMapping.watch(value[i], observer, visited);
+        }
     }
 
     areEqual(documentValue1: any, documentValue2: any): boolean {

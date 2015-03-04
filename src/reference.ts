@@ -4,6 +4,11 @@ import ResultCallback = require("./core/resultCallback");
 
 class Reference {
 
+    /**
+     * True if the Reference has been fetched; otherwise, false.
+     */
+    fetched: boolean;
+
     constructor(public mapping: EntityMapping, public id: any) {
 
     }
@@ -19,7 +24,7 @@ class Reference {
             return;
         }
 
-        // TODO: what is the impact of not queuing up this find in the taskqueue? Seems like a problem? Also should save, etc. wait on a find to finish? It does now but I'm not sure that it should
+        this.fetched = true;
         persister.findOneById(this.id, callback);
     }
 

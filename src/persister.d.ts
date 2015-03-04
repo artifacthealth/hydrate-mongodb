@@ -11,6 +11,7 @@ import EntityMapping = require("./mapping/entityMapping");
 import Result = require("./core/result");
 import Callback = require("./core/callback");
 import QueryDefinition = require("./query/queryDefinition");
+import Observer = require("./observer");
 
 interface Persister {
 
@@ -23,6 +24,7 @@ interface Persister {
 
     fetch(entity: Object, path: string, callback: Callback): void;
     refresh(entity: Object, callback: ResultCallback<Object>): void;
+    watch(value: any, observer: Observer): void;
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void;
 
     findOneById(id: any, callback: ResultCallback<any>): void;

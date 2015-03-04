@@ -19,6 +19,7 @@ class TaskQueue {
     private _head: Task;
     private _tail: Task;
     private _error: Error;
+    private _closed: boolean;
 
     constructor(execute: (operation: number, arg: any, callback: ResultCallback<any>) => void) {
 
@@ -26,6 +27,10 @@ class TaskQueue {
     }
 
     add(operation: number, wait: number, arg: any, callback?: ResultCallback<any>): void {
+
+        if(this._closed) {
+            return callback(new Error("Session is closed."));
+        }
 
         var task: Task = {
             operation: operation,
@@ -49,6 +54,10 @@ class TaskQueue {
             this._head = this._tail = task;
             process.nextTick(() => this._process());
         }
+    }
+
+    close(): void {
+        this._closed = true;
     }
 
     // TODO: if an error occurs should we stop processing of the queue altogether and set the session as invalid? Yes.

@@ -13,6 +13,7 @@ import model = require("./fixtures/model");
 import Result = require("../src/core/result");
 import Callback = require("../src/core/callback");
 import QueryDefinition = require("../src/query/queryDefinition");
+import Observer = require("../src/observer");
 
 class MockPersister implements Persister {
 
@@ -75,6 +76,16 @@ class MockPersister implements Persister {
     }
 
     refresh(entity: any, callback: ResultCallback<any>): void {
+        if(this.onRefresh) {
+            process.nextTick(() => this.onRefresh(entity, callback));
+        }
+    }
+
+    onRefresh: (entity: any, callback: Callback) => void;
+
+    watch(value: any, observer: Observer): void {
+
+        this._mapping.watchEntity(value, observer);
     }
 
     fetch(entity: any, path: string, callback: Callback): void {

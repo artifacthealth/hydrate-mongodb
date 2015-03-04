@@ -18,7 +18,7 @@ import ResultCallback = require("../src/core/resultCallback");
 import EntityMapping = require("../src/mapping/entityMapping");
 import QueryDefinition = require("../src/query/queryDefinition");
 import InternalSession = require("../src/internalSession");
-
+import Observer = require("../src/observer");
 
 suite("SessionImpl", () => {
 
@@ -119,6 +119,9 @@ class DummyPersister implements Persister {
     }
 
     refresh(entity: any, callback: ResultCallback<any>): void {
+    }
+
+    watch(value: any, observer: Observer): void {
     }
 
     fetch(entity: any, path: string, callback: Callback): void {

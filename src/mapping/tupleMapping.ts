@@ -9,6 +9,7 @@ import InternalSession = require("../internalSession");
 import ResultCallback = require("../core/resultCallback");
 import ResolveContext = require("./resolveContext");
 import ReadContext = require("./readContext");
+import Observer = require("../observer");
 
 class TupleMapping extends MappingBase {
 
@@ -66,6 +67,17 @@ class TupleMapping extends MappingBase {
         }
 
         return result;
+    }
+
+    watch(value: any, observer: Observer, visited: any[]): void {
+
+        if(!value || !Array.isArray(value)) return;
+
+        observer.watch(value);
+
+        for (var i = 0, l = Math.min(value.length, this.elementMappings.length); i < l; i++) {
+            this.elementMappings[i].watch(value[i], observer, visited);
+        }
     }
 
     areEqual(documentValue1: any, documentValue2: any): boolean {
