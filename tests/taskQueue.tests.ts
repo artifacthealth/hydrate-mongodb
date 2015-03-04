@@ -79,18 +79,61 @@ describe('TaskQueue', () => {
         queue.add(Action.Save, Action.Flush, 0);
     });
 
-    it('passes error to next task with a callback if error occurs when executing task that does not have a callback', (done) => {
+    it('passes error to next task with a callback if an error occurs when a executing task that does not have a callback', (done) => {
 
         var count = 0;
         var queue = new TaskQueue((action, arg, callback) => {
             process.nextTick(() => callback(new Error((++count).toString())));
         });
 
+        // this task will return an error
         queue.add(Action.Save, Action.Flush, 0);
+        // this task will be skipped
+        queue.add(Action.Save, Action.Save, 0);
+        // this task will be passed the error
         queue.add(Action.Flush, Action.Save, 0, (err) => {
             assert.ok(err);
             assert.equal(err.message, "1");
             done();
+        });
+    });
+
+    it('emits the error if an error occurs when a executing task that does not have a callback and no other tasks in the queue have a callback', (done) => {
+
+        var count = 0;
+        var queue = new TaskQueue((action, arg, callback) => {
+            process.nextTick(() => callback(new Error((++count).toString())));
+        });
+
+        // this task will return an error
+        queue.add(Action.Save, Action.Flush, 0);
+        // this task will be skipped
+        queue.add(Action.Save, Action.Save, 0);
+
+        queue.on('error', (err: Error) => {
+            assert.ok(err);
+            assert.equal(err.message, "1");
+            done();
+        });
+    });
+
+    it('does not allow any tasks to be added to the queue after an error occurs', (done) => {
+
+        var count = 0;
+        var queue = new TaskQueue((action, arg, callback) => {
+            process.nextTick(() => callback(new Error((++count).toString())));
+        });
+
+        queue.add(Action.Save, 0, null, (err: Error) => {
+            assert.ok(err);
+            assert.equal(err.message, "1");
+
+            queue.add(Action.Save, 0, null, (err: Error) => {
+                // TODO: check error code
+                assert.instanceOf(err, Error);
+                assert.equal(err.message, "Session is invalid. An error occurred during a previous action.");
+                done();
+            });
         });
     });
 });

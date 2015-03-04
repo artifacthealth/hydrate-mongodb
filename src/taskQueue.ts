@@ -1,3 +1,6 @@
+/// <reference path="../typings/node.d.ts" />
+
+import events = require("events");
 import ResultCallback = require("./core/resultCallback");
 import Table = require("./core/table");
 
@@ -11,18 +14,18 @@ interface Task {
     next?: Task;
 }
 
-class TaskQueue {
+class TaskQueue extends events.EventEmitter {
 
     private _execute: (operation: number, arg: any, callback: ResultCallback<any>) => void;
     private _activeCounts: Table<number> = {};
     private _active: number = 0;
     private _head: Task;
     private _tail: Task;
-    private _error: Error;
     private _closed: boolean;
+    private _invalid: boolean;
 
     constructor(execute: (operation: number, arg: any, callback: ResultCallback<any>) => void) {
-
+        super();
         this._execute = execute;
     }
 
@@ -30,6 +33,10 @@ class TaskQueue {
 
         if(this._closed) {
             return callback(new Error("Session is closed."));
+        }
+
+        if(this._invalid) {
+            return callback(new Error("Session is invalid. An error occurred during a previous action."));
         }
 
         var task: Task = {
@@ -56,13 +63,15 @@ class TaskQueue {
         }
     }
 
+    /**
+     * Clears the current queue and prevents any new actions from being added to the queue. Note that any currently
+     * executing tasks may still return and call their callback.
+     */
     close(): void {
         this._closed = true;
+        this._clear();
     }
 
-    // TODO: if an error occurs should we stop processing of the queue altogether and set the session as invalid? Yes.
-    // TODO: if an error occurs that is not handled by a callback, should we skip all other scheduled tasks until we get one that has a callback to pass the error to? The reason for this is that we don't want to continue processing the queue.
-    // TODO: if we can't find any queued tasks that have a callback then just raise the error or emit as an even on the session
     private _process(): void {
 
         // check to see if this task needs to wait on any of the active tasks
@@ -70,15 +79,6 @@ class TaskQueue {
         while(task && !(task.wait & this._active)) {
             // we are not waiting on anything so deque the task
             this._head = this._head.next;
-
-            // If we have a queued error and the task has a callback, pass the error to the callback and don't
-            // execute the task.
-            if(this._error && task.callback) {
-                var error = this._error;
-                this._error = undefined;
-                process.nextTick(() => task.callback(error));
-                return;
-            }
 
             if(!this._activeCounts[task.operation]++) {
                 this._active |= task.operation;
@@ -94,7 +94,7 @@ class TaskQueue {
         return (err, result) => {
 
             if(task.finished) {
-                throw new Error("Task has already finished.");
+                throw new Error("Callback for task can only be called once.");
             }
             task.finished = true;
 
@@ -102,14 +102,25 @@ class TaskQueue {
                 this._active &= ~task.operation;
             }
 
+            // if we got an error during execution of the task, flag the queue as invalid before the callback is
+            // executed in case the callback tries to queue up additional tasks.
+            if(err) {
+                this._invalid = true;
+            }
+
             if(task.callback) {
                 task.callback(err, result);
             }
-            else if(err && !this._error) {
-                // If there is not a callback and an error occurred, save error to pass to callback when next task
-                // is processed. Note that only the first error is saved. If more errors occur before next operation is
-                // processed, those errors are lost.
-                this._error = err;
+
+            if(err) {
+                // if the task did not have a callback, handle the error
+                if(!task.callback) {
+                    this._unhandledError(err);
+                }
+
+                // stop execution of any queued tasks
+                this._clear();
+                return;
             }
 
             if(this._head) {
@@ -117,6 +128,28 @@ class TaskQueue {
             }
 
         }
+    }
+
+    private _unhandledError(err: Error): void {
+
+        // find the next task that has a callback
+        var task = this._head;
+        while(task && !task.callback) {
+            task = task.next;
+        }
+
+        // if we found a task with a callback, pass the error to that task.
+        if(task && task.callback) {
+            process.nextTick(() => task.callback(err));
+        }
+        else {
+            this.emit('error', err);
+        }
+    }
+
+    private _clear(): void {
+        this._head = this._tail = null;
+
     }
 }
 

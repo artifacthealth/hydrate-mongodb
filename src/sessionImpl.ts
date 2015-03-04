@@ -150,6 +150,11 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         super();
 
         this._queue = new TaskQueue((action, args, callback) => this._execute(action, args, callback));
+
+        // if we get an error on the queue, raise it on the session
+        this._queue.on('error', (err: Error) => {
+           this.emit('error', err);
+        });
     }
 
     save(obj: any, callback?: Callback): void {
@@ -598,8 +603,6 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }, callback);
     }
 
-    // TODO: if flush fails, mark session invalid and don't allow any further operations?
-    // TODO: if operations fails (e.g. save, etc.) should session become invalid? Perhaps have two classes of errors, those that cause the session to become invalid and those that do not?
     // TODO: perhaps break up flush with process.nextTick if executing a large number of operations
     private _flush(callback: Callback): void {
 
@@ -636,7 +639,6 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             links = links.next;
         }
 
-        // TODO: what to do if we get an error during execute? Should we make the session invalid? yes.
         batch.execute(err => {
             if(err) return callback(err);
 
