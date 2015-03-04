@@ -5,6 +5,7 @@
 class Cat {
 
     name: string;
+    parent: Cat;
 
     constructor(name: string) {
         this.name = name;

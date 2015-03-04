@@ -1,5 +1,6 @@
 /// <reference path="../typings/async.d.ts" />
 /// <reference path="../typings/node.d.ts" />
+
 import events = require("events");
 
 import async = require("async");
@@ -321,6 +322,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }
 
         links.observer = new Observer(() => {
+            // value has changed
             this._makeDirty(links)
             links.observer = undefined;
         });
@@ -672,23 +674,16 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     private _close(callback: Callback): void {
 
         this._queue.close();
+
+        // flush and then clear the session
         this._flush((err) => {
             if(err) return callback(err);
-
-            for(var i = 0; i < this._objectLinks.length; i++) {
-                var links = this._objectLinks[i];
-                if(links && links.observer) {
-                    links.observer.destroy();
-                }
-            }
-
-            callback();
+            this._clear(callback);
         });
     }
 
     fetchInternal(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
-        // TODO: Important! Modification made by fetch should not make the object dirty.
         // TODO: when a reference is resolved do we update the referenced object? __proto__ issue.
         if(Reference.isReference(obj)) {
             (<Reference>obj).fetch(this, (err, entity) => {

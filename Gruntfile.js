@@ -55,6 +55,18 @@ module.exports = function(grunt) {
                     'tests/**/*.ts'
                 ],
                 dest: 'build/'
+            },
+            benchmarks: {
+                options: {
+                    target: "es5",
+                    module: "commonjs",
+                    sourceMap: true,
+                    noImplicitAny: true
+                },
+                src: [
+                    'benchmarks/**/*.ts'
+                ],
+                dest: 'build/'
             }
         },
 
@@ -120,13 +132,13 @@ module.exports = function(grunt) {
         },
 
         baseline: {
-            tests: {
+            benchmarks: {
                 options: {
                     baselinePath: "baseline.json",
                     useColors: true
                 },
                 src: [
-                    "build/tests/**/*.bench.js"
+                    "build/benchmarks/**/*.bench.js"
                 ]
             }
         }
@@ -137,5 +149,6 @@ module.exports = function(grunt) {
     grunt.registerTask("build", [ "clean:build", "typescript:build" ]);
     grunt.registerTask("lib", [ "clean:lib", "concat:lib" ]);
     grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests" ]);
+    grunt.registerTask("benchmarks", [ "typescript:benchmarks", "baseline:benchmarks" ]);
 
 };

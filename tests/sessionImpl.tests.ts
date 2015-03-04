@@ -21,6 +21,7 @@ import MappingRegistry = require("../src/mapping/mappingRegistry");
 import ObjectIdGenerator = require("../src/id/objectIdGenerator");
 import QueryKind = require("../src/query/queryKind");
 import Callback = require("../src/core/callback");
+import Reference = require("../src/reference");
 
 // Fixtures
 import model = require("./fixtures/model");
@@ -838,6 +839,42 @@ describe('SessionImpl', () => {
             });
         });
 
+    });
+
+    describe('fetch', () => {
+
+        it('should not cause object to become dirty when change tracking is observe', (done) => {
+
+            helpers.createFactory("cat", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var entity = new Cat("Mittens");
+                entity.parent = session.getReference(Cat, new ObjectIdGenerator().generate());
+
+                // setup persister to handle fetch call
+                var persister = factory.getPersisterForObject(session, entity);
+                persister.onFetch = (entity, path, callback) => {
+                    assert.equal(path, "parent");
+                    var parent = new Cat("Tails");
+                    (<any>parent)._id = (<Reference>entity.parent).id;
+                    entity.parent = parent;
+                    process.nextTick(callback);
+                }
+
+                // save and flush entity so we start tracking changes
+                session.save(entity);
+                session.flush();
+                // make sure fetching does not cause object to become dirty
+                session.fetch(entity, "parent");
+                session.flush((err) => {
+                    if(err) return done(err);
+
+                    assert.equal(persister.dirtyCheckCalled, 0, "Fetch caused object to become dirty");
+                    done();
+                });
+            });
+        });
     });
 
 });
