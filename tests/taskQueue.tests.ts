@@ -72,7 +72,7 @@ describe('TaskQueue', () => {
 
         var queue = new TaskQueue((action, arg, callback) => {
             callback(null);
-            assert.throw(() => callback(null), "Task has already finished.");
+            assert.throw(() => callback(null), "Callback for task can only be called once.");
             done();
         });
 

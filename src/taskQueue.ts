@@ -140,7 +140,7 @@ class TaskQueue extends events.EventEmitter {
 
         // if we found a task with a callback, pass the error to that task.
         if(task && task.callback) {
-            process.nextTick(() => task.callback(err));
+            task.callback(err);
         }
         else {
             this.emit('error', err);
