@@ -84,7 +84,6 @@ const enum Action {
     All = Save | Remove | Detach | Flush | Clear | Refresh | Merge | Fetch | FindQuery | ModifyQuery | Wait | Close
 }
 
-// TODO: option to use weak reference until object is removed or modified and attach event to unlink if garbage collected? https://github.com/TooTallNate/node-weak
 interface ObjectLinks {
 
     state: ObjectState;

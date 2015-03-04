@@ -84,39 +84,38 @@ class TaskQueue {
                 this._active |= task.operation;
             }
 
-            this._execute(task.operation, task.arg, this._createCallback(task));
+            this._execute(task.operation, task.arg, this._finished(task));
             task = this._head;
         }
     }
 
-    private _createCallback(task: Task): ResultCallback<any> {
+    private _finished(task: Task): ResultCallback<any> {
 
-        return (err, result) => this._finished(task, err, result);
-    }
+        return (err, result) => {
 
-    private _finished(task: Task, err: Error, result: any): void {
+            if(task.finished) {
+                throw new Error("Task has already finished.");
+            }
+            task.finished = true;
 
-        if(task.finished) {
-            throw new Error("Task has already finished.");
-        }
-        task.finished = true;
+            if(!(--this._activeCounts[task.operation])) {
+                this._active &= ~task.operation;
+            }
 
-        if(!(--this._activeCounts[task.operation])) {
-            this._active &= ~task.operation;
-        }
+            if(task.callback) {
+                task.callback(err, result);
+            }
+            else if(err && !this._error) {
+                // If there is not a callback and an error occurred, save error to pass to callback when next task
+                // is processed. Note that only the first error is saved. If more errors occur before next operation is
+                // processed, those errors are lost.
+                this._error = err;
+            }
 
-        if(task.callback) {
-            task.callback(err, result);
-        }
-        else if(err && !this._error) {
-            // If there is not a callback and an error occurred, save error to pass to callback when next task
-            // is processed. Note that only the first error is saved. If more errors occur before next operation is
-            // processed, those errors are lost.
-            this._error = err;
-        }
+            if(this._head) {
+                this._process();
+            }
 
-        if(this._head) {
-            this._process();
         }
     }
 }
