@@ -288,6 +288,10 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
      */
     getObject(id: any): any {
 
+        if(id == null) {
+            throw new Error("Missing required argument 'id'.");
+        }
+
         var links = this._objectLinksById[id.toString()];
         if (links) {
             switch(links.state) {
@@ -796,7 +800,12 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _linkObject(obj: any, persister: Persister): ObjectLinks {
 
-        var id = obj["_id"].toString();
+        var _id = obj["_id"];
+        if(_id === undefined) {
+            throw new Error("Object is missing identifier.");
+        }
+
+        var id = _id.toString();
         if(this._objectLinksById[id]) {
             throw new Error("Session already contains an entity with identifier '" + id + "'.");
         }
