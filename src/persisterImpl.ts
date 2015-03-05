@@ -108,7 +108,17 @@ class PersisterImpl implements Persister {
         }
 
         if(!this._mapping.areDocumentsEqual(originalDocument, document)) {
-            this._getCommand(batch).addReplace(document);
+
+            // update version field if versioned
+            if((<EntityMapping>this._mapping.inheritanceRoot).versioned) {
+                // get the current version
+                var version = this._mapping.getDocumentVersion(originalDocument);
+
+                // increment the version if defined; otherwise, start at 1.
+                this._mapping.setDocumentVersion(document, (version || 0) + 1);
+            }
+
+            this._getCommand(batch).addReplace(document, version);
         }
 
         return new Result(null, document);
@@ -120,6 +130,11 @@ class PersisterImpl implements Persister {
         var document = this._mapping.write(entity, "", errors, []);
         if(errors.length > 0) {
             return new Result(new Error("Error serializing document:\n" + MappingError.createErrorMessage(errors)));
+        }
+
+        // add version field if versioned
+        if((<EntityMapping>this._mapping.inheritanceRoot).versioned) {
+            this._mapping.setDocumentVersion(document, 1);
         }
 
         this._getCommand(batch).addInsert(document);
@@ -278,7 +293,7 @@ class PersisterImpl implements Persister {
                 if(!fields) {
                     fields = query.updateDocument["$inc"] = {};
                 }
-                fields[(<EntityMapping>this._mapping.inheritanceRoot).versionField] = 1;
+                this._mapping.setDocumentVersion(fields, 1);
             }
         }
 
@@ -454,10 +469,6 @@ class PersisterImpl implements Persister {
         var options: FindAndModifyOptions = {
             remove: query.kind == QueryKind.FindOneAndRemove,
             new: query.wantsUpdated
-        }
-
-        if(query.updateDocument) {
-            // TODO: prepare update document. This should include incrementing the version.
         }
 
         this._collection.findAndModify(query.criteria, query.sortValue, query.updateDocument, options, (err, response) => {
@@ -678,7 +689,7 @@ class PersisterImpl implements Persister {
         var id = this._mapping.inheritanceRoot.id;
         var command = <BulkOperationCommand>batch.getCommand(id);
         if(!command) {
-            command = new BulkOperationCommand(this._collection);
+            command = new BulkOperationCommand(this._collection, this._mapping);
             batch.addCommand(id, command);
         }
         return command;
@@ -694,8 +705,11 @@ class BulkOperationCommand implements Command {
     updated: number;
     removed: number;
 
-    constructor(collection: Collection) {
+    private _mapping: EntityMapping;
 
+    constructor(collection: Collection, mapping: EntityMapping) {
+
+        this._mapping = mapping;
         this.collectionName = collection.collectionName,
         this.operation = collection.initializeUnorderedBulkOp(),
         this.inserted = this.updated = this.removed = 0;
@@ -707,10 +721,15 @@ class BulkOperationCommand implements Command {
         this.operation.insert(document);
     }
 
-    addReplace(document: any): void {
+    addReplace(document: any, version: number): void {
 
         var query: any = {
             _id: document["_id"]
+        }
+
+        if(version != null) {
+            // TODO: adding the version to the query makes the query much slower. Couldn't figure out any way around it. Look into this.
+            this._mapping.setDocumentVersion(query, version);
         }
 
         this.updated++;

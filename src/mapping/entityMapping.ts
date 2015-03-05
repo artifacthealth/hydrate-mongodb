@@ -30,10 +30,10 @@ class EntityMapping extends ClassMapping {
 
     changeTracking: ChangeTracking;
 
-    versioned: boolean = true;
+    versioned: boolean;
     versionField: string;
 
-    lockable: boolean = false;
+    lockable: boolean;
     lockField: string;
 
     constructor(baseClass?: EntityMapping) {
@@ -41,6 +41,20 @@ class EntityMapping extends ClassMapping {
 
         this.flags &= ~MappingFlags.Embeddable;
         this.flags |= MappingFlags.Entity;
+    }
+
+    setDocumentVersion(obj: any, version: number): void {
+
+        // TODO: escape versionField
+        this.setDocumentVersion = <any>(new Function("o", "v", "o['" + (<EntityMapping>this.inheritanceRoot).versionField + "'] = v"));
+        obj[(<EntityMapping>this.inheritanceRoot).versionField] = version;
+    }
+
+    getDocumentVersion(obj: any): number {
+
+        // TODO: escape versionField
+        this.getDocumentVersion = <any>(new Function("o", "return o['" + (<EntityMapping>this.inheritanceRoot).versionField + "']"));
+        return obj[(<EntityMapping>this.inheritanceRoot).versionField]
     }
 
     addIndex(index: Index): void {

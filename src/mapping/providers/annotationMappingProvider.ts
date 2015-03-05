@@ -249,8 +249,6 @@ class MappingBuilder {
         }
     }
 
-    // Ryan x104
-
     private _subclassMarkedAsRootType(type: reflect.Type): boolean {
 
         var links = this._typeTable[this._key.ensureValue(type)];
@@ -383,24 +381,32 @@ class MappingBuilder {
 
         // add default values
         if (mapping.flags & MappingFlags.InheritanceRoot) {
-            if (!mapping.lockField) {
+
+            if(mapping.lockable == null) {
+                mapping.lockable = this.config.lockable;
+            }
+
+            if (mapping.lockField == null) {
                 mapping.lockField = this.config.lockField;
             }
 
-            if (!mapping.versionField && mapping.versioned) {
+            if(mapping.versioned == null) {
+                mapping.versioned = this.config.versioned;
+            }
+
+            if (mapping.versionField == null) {
                 mapping.versionField = this.config.versionField;
-                mapping.versioned = true;
             }
 
             if (mapping.changeTracking == null) {
                 mapping.changeTracking = this.config.changeTracking;
             }
 
-            if (!mapping.collectionName) {
+            if (mapping.collectionName == null) {
                 mapping.collectionName = this.config.collectionNamingStrategy(mapping.name);
             }
 
-            if(!mapping.identity) {
+            if(mapping.identity == null) {
                 mapping.identity = this.config.identityGenerator;
             }
         }

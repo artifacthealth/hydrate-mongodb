@@ -66,12 +66,16 @@ class ClassMapping extends ObjectMapping {
             return;
         }
 
-        // See comment in Property.getPropertyValue. Verified performance improvement for setting a value as well, but for
-        // setting we got almost a 10x performance improvement.
-
         // TODO: escape discriminatorField and discriminatorValue
         this.setDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = \"" + this.discriminatorValue + "\""));
         obj[this.inheritanceRoot.discriminatorField] = this.discriminatorValue;
+    }
+
+    getDocumentDiscriminator(obj: any): string {
+
+        // TODO: escape discriminatorField
+        this.getDocumentDiscriminator = <any>(new Function("o", "return o['" + this.inheritanceRoot.discriminatorField + "']"));
+        return obj[this.inheritanceRoot.discriminatorField]
     }
 
     get hasSubClasses(): boolean {
@@ -136,7 +140,7 @@ class ClassMapping extends ObjectMapping {
 
         var mapping = this._getMappingForDocument(document);
         if(mapping === undefined) {
-            context.addError("Unknown discriminator value '" + this._getDiscriminatorValueForDocument(document) + "'.");
+            context.addError("Unknown discriminator value '" + this.getDocumentDiscriminator(document) + "'.");
             return;
         }
 
@@ -145,12 +149,8 @@ class ClassMapping extends ObjectMapping {
 
     private _getMappingForDocument(document: any): ClassMapping {
 
-        var discriminatorValue = this._getDiscriminatorValueForDocument(document);
+        var discriminatorValue = this.getDocumentDiscriminator(document);
         return discriminatorValue === undefined ? this : this.inheritanceRoot._discriminatorMap[discriminatorValue]
-    }
-
-    private _getDiscriminatorValueForDocument(document: any): string {
-        return document[this.inheritanceRoot.discriminatorField];
     }
 
     protected readClass(context: ReadContext, value: any): any {
