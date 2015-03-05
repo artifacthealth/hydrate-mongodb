@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "async": "^0.9.0",
+    "change-case": "^2.2.0",
     "mongodb": "^2.0.19",
     "tsreflect": "^0.1.0"
   },

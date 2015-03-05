@@ -47,6 +47,20 @@ class MappingRegistry {
             return this._mappingByConstructor[this._key.getValue(ctr)];
         }
     }
+
+    /**
+     * Merges the specified registry into this registry.
+     * @param registry The registry to merge.
+     */
+    merge(registry: MappingRegistry): void {
+
+        for(var i = 0; i < registry._mappingByConstructor.length; i++) {
+            var mapping = registry._mappingByConstructor[i];
+            if(mapping) {
+                this.addMapping(mapping);
+            }
+        }
+    }
 }
 
 export = MappingRegistry;

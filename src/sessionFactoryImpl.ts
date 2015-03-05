@@ -1,6 +1,5 @@
 import Table = require("./core/table");
 import Collection = require("./driver/collection");
-import Connection = require("./driver/connection");
 import MappingRegistry = require("./mapping/mappingRegistry");
 import Session = require("./session");
 import SessionImpl = require("./sessionImpl");

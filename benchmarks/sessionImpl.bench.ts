@@ -1,4 +1,7 @@
 /// <reference path="../typings/baseline.d.ts" />
+/// <reference path="../typings/mongodb.d.ts" />
+
+import mongodb = require("mongodb");
 
 import Session = require("../src/session");
 import Configuration = require("../src/config/configuration");
@@ -41,14 +44,20 @@ suite("SessionImpl", () => {
         });
         */
 
-        var config = new Configuration({ uri: "mongodb://localhost:27017/artifact" });
-        config.addDeclarationFile("build/tests/fixtures/cat.d.json");
-        config.createSessionFactory((err: Error, sessionFactory: SessionFactory) => {
-            if (err) return done(err);
+        var mapping = new AnnotationMappingProvider();
+        mapping.addFile("build/tests/fixtures/cat.d.json");
 
-            session = sessionFactory.createSession();
+        var config = new Configuration();
+        config.addMapping(mapping);
 
-            session.query(Cat).removeAll({}, done);
+        mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
+
+            config.createSessionFactory(connection, (err: Error, sessionFactory: SessionFactory) => {
+                if (err) return done(err);
+
+                session = sessionFactory.createSession();
+                session.query(Cat).removeAll({}, done);
+            });
         });
     });
 

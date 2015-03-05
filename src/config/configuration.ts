@@ -1,108 +1,111 @@
 /// <reference path="../../typings/async.d.ts" />
 
 import async = require("async");
-import util = require("util");
-
-import Callback = require("../core/callback");
+import Db = require("../driver/db");
 import ResultCallback = require("../core/resultCallback");
-
-import Map = require("../core/map");
+import MappingProvider = require("../mapping/providers/mappingProvider");
+import MappingRegistry = require("../mapping/mappingRegistry");
+import ChangeTracking = require("../mapping/changeTracking")
+import Table = require("../core/table");
+import MappingFlags = require("../mapping/mappingFlags");
+import Collection = require("../driver/collection");
 import SessionFactory = require("../sessionFactory");
 import SessionFactoryImpl = require("../sessionFactoryImpl");
-import DatabaseDriver = require("../driver/databaseDriver");
-import MongoDriver = require("../driver/mongoDriver");
-import Connection = require("../driver/connection");
-import Collection = require("../driver/collection");
-import Table = require("../core/table");
-import Mapping = require("../mapping/mapping");
-import MappingFlags = require("../mapping/mappingFlags");
-import MappingRegistry = require("../mapping/mappingRegistry");
-import MappingProvider = require("../mapping/providers/mappingProvider");
-import AnnotationMappingProvider = require("../mapping/providers/annotationMappingProvider");
-import ConfigurationOptions = require("./configurationOptions");
 import IdentityGenerator = require("../id/identityGenerator");
+import Map = require("../core/map");
 import EntityMapping = require("../mapping/entityMapping");
+import NamingStrategy = require("./namingStrategy");
+import ObjectIdGenerator = require("../id/objectIdGenerator");
 
 class Configuration {
 
-    private _mappingProvider: AnnotationMappingProvider;
-    private _options: ConfigurationOptions;
-    private _optionsProcessed: boolean;
-    private _driver: DatabaseDriver;
+    /**
+     * Default identity generator to use.
+     */
+    identityGenerator: IdentityGenerator = new ObjectIdGenerator();
 
-    identityGenerator: IdentityGenerator;
+    /**
+     * Default field name to use for pessimistic locking.
+     */
+    lockField = "__l";
 
-    constructor(options?: ConfigurationOptions) {
+    /**
+     * Default field name to use for optimistic locking.
+     */
+    versionField = "__v";
 
-        this._options = options;
-        this._driver = new MongoDriver();
-        this._mappingProvider = new AnnotationMappingProvider(this);
-        this.identityGenerator = this._driver.defaultIdentityGenerator();
+    /**
+     * Default field name to use for the class discriminator.
+     */
+    discriminatorField = "__t";
+
+    /**
+     * Default change tracking strategy to use.
+     */
+    changeTracking = ChangeTracking.Observe;
+
+    /**
+     * Naming strategy to use for collection names.
+     */
+    collectionNamingStrategy = NamingStrategy.CamelCase;
+
+    /**
+     * Naming strategy to use for field names.
+     */
+    fieldNamingStrategy = NamingStrategy.CamelCase;
+
+    /**
+     * Naming strategy to use for the discriminator value of a class.
+     */
+    discriminatorNamingStrategy = NamingStrategy.CamelCase;
+
+
+    private _mappings: MappingProvider[] = [];
+
+    /**
+     * Adds a mapping provider to the configuration.
+     * @param mapping The mapping provider to use.
+     */
+    addMapping(mapping: MappingProvider): void {
+
+        this._mappings.push(mapping);
     }
 
-    addDeclarationFile(path: string): void {
+    /**
+     * Creates a session factory.
+     * @param connection The MongoDB connection to use.
+     * @param callback Called once the session factory is created.
+     */
+    createSessionFactory(connection: Db, callback: ResultCallback<SessionFactory>): void {
 
-        this._mappingProvider.addFile(path);
-    }
+        var registry = new MappingRegistry();
 
-    createSessionFactory(callback: ResultCallback<SessionFactory>): void;
-    createSessionFactory(connection: Connection, callback: ResultCallback<SessionFactory>): void;
-    createSessionFactory(connectionOrCallback: any, callback?: ResultCallback<SessionFactory>): void {
+        if(!this._mappings || this._mappings.length == 0) {
+            return callback(new Error("No mappings were added to the configuration."));
+        }
 
-        if(typeof connectionOrCallback === "function") {
-            callback = connectionOrCallback;
+        // Get the mappings from the mapping providers
+        async.each(this._mappings, (provider, done) => {
 
-            if(!this._options.uri) {
-                var error = new Error("A database connection must be passed to createSessionFactory or a connection URI should be specified in the configuration options.");
-            }
-            if(typeof this._options.uri !== "string") {
-                var error = new Error("Connection URI expected to be of type string.");
-            }
-            if(error) return callback(error, null);
+            provider.getMapping(this, (err, r) => {
+                if(err) return done(err, null);
 
-            // TODO: tell mongodb not to generate objectid. all ids should come from us.
-
-            this._driver.connect(this._options.uri, this._options.connectionOptions || {}, (err, connection) => {
-                if(err) return callback(err);
-                this._createFactory(connection, callback);
+                // Merge all registries. Duplicates will cause an error.
+                registry.merge(r);
+                done(null, null);
             });
-        }
-        else {
-            this._createFactory(connectionOrCallback, callback);
-        }
-    }
-
-    private _createFactory(connection: Connection, callback: ResultCallback<SessionFactory>): void {
-
-        // wait to until now to process options so any errors can be passed to callback instead of raised in constructor
-        if(!this._optionsProcessed) {
-            this._optionsProcessed = true;
-
-            var files = this._options && this._options.declarationFiles;
-            if(files) {
-                if(!Array.isArray(files)) {
-                    return callback(new Error("Expected declarationFiles to be of type array."));
-                }
-
-                for (var i = 0, l = files.length; i < l; i++) {
-                    this.addDeclarationFile(files[i]);
-                }
-            }
-        }
-
-        this._mappingProvider.getMapping((err, registry) => {
+        }, (err) => {
             if(err) return callback(err);
 
             this._buildCollections(connection, registry, (err, collections) => {
                 if(err) return callback(err);
 
-                var sessionFactoryImpl = new SessionFactoryImpl(collections, registry);
-                callback(null, sessionFactoryImpl);
+                callback(null, new SessionFactoryImpl(collections, registry));
             });
         });
     }
 
-    private _buildCollections(connection: Connection, registry: MappingRegistry, callback: ResultCallback<Table<Collection>>): void {
+    private _buildCollections(connection: Db, registry: MappingRegistry, callback: ResultCallback<Table<Collection>>): void {
 
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
@@ -119,24 +122,23 @@ class Configuration {
             }
 
             // make sure db/collection is not mapped to some other type.
-            var key = [(mapping.databaseName || connection.db.databaseName), "/", mapping.collectionName].join("");
+            var key = [(mapping.databaseName || connection.databaseName), "/", mapping.collectionName].join("");
             if (Map.hasProperty(names, key)) {
                 return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
             }
             names[key] = true;
 
             // change current database if a databaseName was specified in the mapping
-            var db = connection.db;
-            if(mapping.databaseName && mapping.databaseName !== connection.db.databaseName) {
-                db = db.db(mapping.databaseName);
+            if(mapping.databaseName && mapping.databaseName !== connection.databaseName) {
+                connection = connection.db(mapping.databaseName);
             }
 
-            db.listCollections({ name: mapping.collectionName }).toArray((err: Error, names: string[]): void => {
+            connection.listCollections({ name: mapping.collectionName }).toArray((err: Error, names: string[]): void => {
                 if(err) return done(err);
 
                 if(names.length == 0) {
                     // collection does not exist, create it
-                    db.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
+                    connection.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
                         // TODO: create indexes for newly created collection
@@ -145,7 +147,7 @@ class Configuration {
                 }
                 else {
                     // collection exists, get it
-                    db.collection(mapping.collectionName, { strict: true }, (err: Error, collection: Collection) => {
+                    connection.collection(mapping.collectionName, { strict: true }, (err: Error, collection: Collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
                         done();

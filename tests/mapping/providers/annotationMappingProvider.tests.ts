@@ -183,9 +183,9 @@ function findMapping(mappings: EntityMapping[], name: string): EntityMapping {
 
 function processFixture(file: string, done: (err?: Error) => void, callback?: (results: EntityMapping[]) => void): void {
 
-    var provider = new AnnotationMappingProvider(new Configuration());
+    var provider = new AnnotationMappingProvider();
     provider.addFile("build/tests/fixtures/annotations/" + file + ".d.json");
-    provider.getMapping((err, registry) => {
+    provider.getMapping(new Configuration(), (err, registry) => {
         if(err) return done(err);
 
         if(callback) {

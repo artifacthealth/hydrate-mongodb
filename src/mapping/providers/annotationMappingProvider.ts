@@ -14,7 +14,6 @@ import Property = require("../property");
 import PropertyFlags = require("../propertyFlags");
 import ChangeTracking = require("../changeTracking");
 import Map = require("../../core/map");
-import MappingProviderOptions = require("../../config/mappingProviderOptions");
 
 import ArrayMapping = require("../arrayMapping");
 import BooleanMapping = require("../booleanMapping");
@@ -28,12 +27,13 @@ import RegExpMapping = require("../regExpMapping");
 import StringMapping = require("../stringMapping");
 import TupleMapping = require("../tupleMapping");
 import MappingFlags = require("../mappingFlags");
+import Configuration = require("../../config/configuration");
 
 class AnnotationMappingProvider implements MappingProvider {
 
     private _filePaths: string[] = [];
 
-    constructor(public config: MappingProviderOptions) {
+    constructor() {
 
     }
 
@@ -55,12 +55,12 @@ class AnnotationMappingProvider implements MappingProvider {
 
     // TODO: have a plan for supporting all these data types: http://docs.mongodb.org/manual/reference/bson-types/
 
-     getMapping(callback: ResultCallback<MappingRegistry>): void {
+     getMapping(config: Configuration, callback: ResultCallback<MappingRegistry>): void {
 
         reflect.load(this._filePaths, (err, symbols) => {
             if(err) return callback(err);
 
-            var builder = new MappingBuilder(this.config);
+            var builder = new MappingBuilder(config);
             var registry = builder.build(symbols);
 
             if(builder.hasErrors) {
@@ -97,7 +97,7 @@ class MappingBuilder {
     private _errors: string[] = [];
     private _registry = new MappingRegistry();
 
-    constructor(public config: MappingProviderOptions) {
+    constructor(public config: Configuration) {
 
     }
 
@@ -383,27 +383,23 @@ class MappingBuilder {
 
         // add default values
         if (mapping.flags & MappingFlags.InheritanceRoot) {
-            // TODO: global configuration for defaults
-
             if (!mapping.lockField) {
-                mapping.lockField = "__l";
+                mapping.lockField = this.config.lockField;
             }
 
             if (!mapping.versionField && mapping.versioned) {
-                mapping.versionField = "__v";
+                mapping.versionField = this.config.versionField;
                 mapping.versioned = true;
             }
 
             if (!mapping.changeTracking) {
-                mapping.changeTracking = ChangeTracking.DeferredImplicit;
+                mapping.changeTracking = this.config.changeTracking;
             }
 
             if (!mapping.collectionName) {
-                // TODO: configurable naming strategy for when name is not specified?
-                mapping.collectionName = mapping.name;
+                mapping.collectionName = this.config.collectionNamingStrategy(mapping.name);
             }
 
-            // TODO: option to pass in default identity generator
             if(!mapping.identity) {
                 mapping.identity = this.config.identityGenerator;
             }
@@ -439,17 +435,14 @@ class MappingBuilder {
 
         // add default values
         if (mapping.flags & MappingFlags.InheritanceRoot) {
-            // TODO: global configuration for defaults
-
             if (!mapping.discriminatorField) {
-                mapping.discriminatorField = "__t";
+                mapping.discriminatorField = this.config.discriminatorField;
             }
         }
 
         // if we are a document type and the the discriminatorValue is not set, default to the class name
         if (!mapping.discriminatorValue  && (mapping.hasBaseClass || mapping.hasSubClasses)) {
-            // TODO: configurable naming strategy for when discriminator field is not specified?
-            mapping.setDiscriminatorValue(mapping.name);
+            mapping.setDiscriminatorValue(this.config.discriminatorNamingStrategy(mapping.name));
         }
 
         this._registry.addMapping(mapping);
@@ -524,8 +517,7 @@ class MappingBuilder {
 
         // add default values
         if(!property.field && !(property.flags & PropertyFlags.Ignored)) {
-            // TODO: configurable naming strategy for when name is not specified?
-            property.field = property.name;
+            property.field = this.config.fieldNamingStrategy(property.name);
         }
 
         // after all annotations are processed and default mappings are set, add any property indexes

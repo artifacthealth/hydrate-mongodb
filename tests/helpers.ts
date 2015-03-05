@@ -32,9 +32,9 @@ export function createFactory(file: string, callback: (err: Error, result?: Mock
         return callback(null, new MockSessionFactory(registry));
     }
 
-    var provider = new AnnotationMappingProvider(new Configuration());
+    var provider = new AnnotationMappingProvider();
     provider.addFile("build/tests/fixtures/" + file + ".d.json");
-    provider.getMapping((err, registry) => {
+    provider.getMapping(new Configuration(), (err, registry) => {
         if(err) return callback(err);
 
         registryCache[file] = registry; // cache result

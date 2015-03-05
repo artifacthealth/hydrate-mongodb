@@ -16,9 +16,6 @@ interface Session extends events.EventEmitter {
     refresh(obj: Object, callback: Callback): void;
     flush(callback?: Callback): void;
     clear(callback?: Callback): void;
-    contains(obj: Object): boolean;
-    getId(obj: Object): any;
-    getReference<T>(ctr: Constructor<T>, id: any): T;
     find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T>;
     fetch<T>(obj: T, callback?: ResultCallback<T>): void;
     fetch<T>(obj: T, path: string, callback?: ResultCallback<T>): void;
@@ -26,6 +23,9 @@ interface Session extends events.EventEmitter {
     query<T>(ctr: Constructor<T>): Query<T>;
     wait(callback?: Callback): void;
     close(callback?: Callback): void;
+    contains(obj: Object): boolean;
+    getId(obj: Object): any;
+    getReference<T>(ctr: Constructor<T>, id: any): T;
 }
 
 export = Session;
