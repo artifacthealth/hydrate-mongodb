@@ -113,7 +113,7 @@ describe('AnnotationMappingProvider', () => {
 
                 processFixture("collectionHierarchy", done, (results) => {
 
-                    assert.equal(findMapping(results, "C").discriminatorValue, "c");
+                    assert.equal(findMapping(results, "C").discriminatorValue, "C");
                 });
             });
 

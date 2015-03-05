@@ -57,7 +57,7 @@ class Configuration {
     /**
      * Naming strategy to use for the discriminator value of a class.
      */
-    discriminatorNamingStrategy = NamingStrategy.CamelCase;
+    discriminatorNamingStrategy = NamingStrategy.None;
 
 
     private _mappings: MappingProvider[] = [];

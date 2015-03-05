@@ -107,7 +107,7 @@ describe('UpdateDocumentBuilder', () => {
     it('correctly prepares document with $push operator', (done) => {
 
         var phone = new model.WorkPhone("555-1212", "x15");
-        assertDocument(done, { $push: { phones: phone }}, { $push: { phones: { "__t": "workPhone", "extension": "x15", "number": "555-1212", "type": "Work" }}});
+        assertDocument(done, { $push: { phones: phone }}, { $push: { phones: { "__t": "WorkPhone", "extension": "x15", "number": "555-1212", "type": "Work" }}});
     });
 
     it('correctly prepares document with modifiers on $push operator', (done) => {
@@ -120,7 +120,7 @@ describe('UpdateDocumentBuilder', () => {
 
         var phone = new model.Phone("555-1212", model.PhoneType.Home);
         assertDocument(done, { $push: { phones: { $each: [ phone ], $sort: { type: model.PhoneType.Work} }}},
-            { $push: { phones: { $each: [ { "__t": "phone", "number": "555-1212", "type": "Home"} ], $sort: { type: "Work"} }}});
+            { $push: { phones: { $each: [ { "__t": "Phone", "number": "555-1212", "type": "Home"} ], $sort: { type: "Work"} }}});
     });
 
     it('correctly prepares document with $max operator', (done) => {
@@ -169,7 +169,7 @@ describe('UpdateDocumentBuilder', () => {
 
     it('correctly prepares document with $pull operator for array of embedded documents', (done) => {
 
-        assertDocument(done, { $pull: { phones: { type: model.PhoneType.Work }}}, { $pull: { phones: { "__t": "phone", type: "Work" }}});
+        assertDocument(done, { $pull: { phones: { type: model.PhoneType.Work }}}, { $pull: { phones: { "__t": "Phone", type: "Work" }}});
     });
 
     it('returns error if a document replacement is attempted', (done) => {
@@ -180,7 +180,7 @@ describe('UpdateDocumentBuilder', () => {
             // TODO: check error code
             assert.instanceOf(err, Error);
             done();
-        }, person, {"__t": "person", "_id": id, "name": "Jones, Bob", "personName": { "first": "Bob", "last": "Jones"  }});
+        }, person, {"__t": "Person", "_id": id, "name": "Jones, Bob", "personName": { "first": "Bob", "last": "Jones"  }});
     });
 });
 

@@ -233,7 +233,7 @@ describe('PersisterImpl', () => {
                 var collection = new MockCollection();
                 collection.onUpdate = (selector, document, options, callback) => {
 
-                    assert.deepEqual(document, { $inc: { "__v": 1 }, $addToSet: { phones: { "__t": "workPhone", "extension": "x15", "number": "555-1212", "type": "Work" }}});
+                    assert.deepEqual(document, { $inc: { "__v": 1 }, $addToSet: { phones: { "__t": "WorkPhone", "extension": "x15", "number": "555-1212", "type": "Work" }}});
                     done();
                 }
 

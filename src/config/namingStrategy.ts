@@ -9,6 +9,10 @@ interface NamingStrategy {
 
 module NamingStrategy {
 
+    /**
+     * The name is passed through as-is.
+     * @param name The name.
+     */
     export function None(name: string): string {
 
         return name;
