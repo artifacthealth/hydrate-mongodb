@@ -358,13 +358,7 @@ class MappingBuilder {
                     case "versionField":
                         this._setVersionField(mapping, annotation.value);
                         break;
-                    case "lockField":
-                        this._setLockField(mapping, annotation.value);
-                        break;
                     case "versioned":
-                        this._setVersioned(mapping, annotation.value);
-                        break;
-                    case "lockable":
                         this._setVersioned(mapping, annotation.value);
                         break;
                     case "changeTracking":
@@ -381,14 +375,6 @@ class MappingBuilder {
 
         // add default values
         if (mapping.flags & MappingFlags.InheritanceRoot) {
-
-            if(mapping.lockable == null) {
-                mapping.lockable = this.config.lockable;
-            }
-
-            if (mapping.lockField == null) {
-                mapping.lockField = this.config.lockField;
-            }
 
             if(mapping.versioned == null) {
                 mapping.versioned = this.config.versioned;
@@ -701,19 +687,6 @@ class MappingBuilder {
         }
     }
 
-    private _setLockable(mapping: EntityMapping, value: any): void {
-
-        this._assertRootEntityMapping(mapping);
-
-        if(value === undefined) {
-            mapping.lockable = true;
-        }
-        else {
-            this._assertBoolean(value);
-            mapping.lockable = value;
-        }
-    }
-
     private _setVersionField(mapping: EntityMapping, value: any): void {
 
         this._assertRootEntityMapping(mapping);
@@ -721,15 +694,6 @@ class MappingBuilder {
 
         mapping.versionField = value;
         mapping.versioned = true;
-    }
-
-    private _setLockField(mapping: EntityMapping, value: any): void {
-
-        this._assertRootEntityMapping(mapping);
-        this._assertString(value);
-
-        mapping.lockField = value;
-        mapping.lockable = true;
     }
 
     private _setChangeTracking(mapping: EntityMapping, value: any): void {

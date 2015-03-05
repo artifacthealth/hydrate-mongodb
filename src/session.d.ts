@@ -4,7 +4,6 @@ import events = require("events");
 import Callback = require("./core/callback");
 import ResultCallback = require("./core/resultCallback");
 import Constructor = require("./core/constructor");
-import LockMode = require("./lockMode");
 import Query = require("./query/query");
 import FindOneQuery = require("./query/findOneQuery")
 

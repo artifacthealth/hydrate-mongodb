@@ -25,16 +25,6 @@ class Configuration {
     identityGenerator: IdentityGenerator = new ObjectIdGenerator();
 
     /**
-     * True if entities are lockable by default; otherwise, false.
-     */
-    lockable = false;
-
-    /**
-     * Default field name to use for pessimistic locking.
-     */
-    lockField = "__l";
-
-    /**
      * True if entities are versioned by default; otherwise, false.
      */
     versioned = true;

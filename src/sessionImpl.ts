@@ -7,7 +7,6 @@ import async = require("async");
 import Callback = require("./core/callback");
 import ChangeTracking = require("./mapping/changeTracking");
 import Constructor = require("./core/constructor");
-import LockMode = require("./lockMode");
 import IteratorCallback = require("./core/iteratorCallback");
 import Map = require("./core/map");
 import PropertyFlags = require("./mapping/propertyFlags");
