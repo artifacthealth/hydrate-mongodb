@@ -82,6 +82,7 @@ class PersisterImpl implements Persister {
     changeTracking: ChangeTracking;
     identity: IdentityGenerator;
 
+    private _versioned: boolean;
     private _findQueue: FindQueue;
     private _mapping: EntityMapping;
     private _collection: Collection;
@@ -95,8 +96,10 @@ class PersisterImpl implements Persister {
         this._mapping = mapping;
         this._collection = collection;
 
-        this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
-        this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
+        var inheritanceRoot = (<EntityMapping>mapping.inheritanceRoot);
+        this.changeTracking = inheritanceRoot.changeTracking;
+        this.identity = inheritanceRoot.identity;
+        this._versioned = inheritanceRoot.versioned;
     }
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object> {
@@ -110,10 +113,9 @@ class PersisterImpl implements Persister {
         if(!this._mapping.areDocumentsEqual(originalDocument, document)) {
 
             // update version field if versioned
-            if((<EntityMapping>this._mapping.inheritanceRoot).versioned) {
+            if(this._versioned) {
                 // get the current version
                 var version = this._mapping.getDocumentVersion(originalDocument);
-
                 // increment the version if defined; otherwise, start at 1.
                 this._mapping.setDocumentVersion(document, (version || 0) + 1);
             }
@@ -133,7 +135,7 @@ class PersisterImpl implements Persister {
         }
 
         // add version field if versioned
-        if((<EntityMapping>this._mapping.inheritanceRoot).versioned) {
+        if(this._versioned) {
             this._mapping.setDocumentVersion(document, 1);
         }
 
@@ -288,7 +290,7 @@ class PersisterImpl implements Persister {
             }
 
             // increment version field if versioned
-            if((<EntityMapping>this._mapping.inheritanceRoot).versioned) {
+            if(this._versioned) {
                 var fields = query.updateDocument["$inc"];
                 if(!fields) {
                     fields = query.updateDocument["$inc"] = {};

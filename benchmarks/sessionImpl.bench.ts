@@ -65,10 +65,6 @@ suite("SessionImpl", () => {
         i = 0;
     });
 
-    afterEach(() => {
-       // session.flush();
-    });
-
     test("new", () => {
         cats.push(new Cat("cat" + count++));
     });
