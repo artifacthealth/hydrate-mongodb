@@ -26,7 +26,7 @@ describe('AnnotationMappingProvider', () => {
                     assert.lengthOf(results, 4);
                     assert.equal(findMapping(results, "B").collectionName, "someCollection");
                     var mappingC = findMapping(results, "C");
-                    assert.equal(mappingC.collectionName, "C");
+                    assert.equal(mappingC.collectionName, "c");
                     assert.equal(mappingC.databaseName, "someDatabase");
                     var mappingD = findMapping(results, "D");
                     assert.equal(mappingD.collectionName, "someCollection");
@@ -56,7 +56,7 @@ describe('AnnotationMappingProvider', () => {
 
                 processFixture("collection", done, (results) => {
 
-                    assert.equal(findMapping(results, "A").collectionName, "A");
+                    assert.equal(findMapping(results, "A").collectionName, "a");
                 });
             });
         });
@@ -113,7 +113,7 @@ describe('AnnotationMappingProvider', () => {
 
                 processFixture("collectionHierarchy", done, (results) => {
 
-                    assert.equal(findMapping(results, "C").discriminatorValue, "C");
+                    assert.equal(findMapping(results, "C").discriminatorValue, "c");
                 });
             });
 

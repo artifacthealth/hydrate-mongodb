@@ -1,5 +1,6 @@
 /**
  * @collection
+ * @changeTracking "deferredImplicit"
  */
 export class Party {
 

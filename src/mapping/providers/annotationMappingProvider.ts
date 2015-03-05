@@ -392,7 +392,7 @@ class MappingBuilder {
                 mapping.versioned = true;
             }
 
-            if (!mapping.changeTracking) {
+            if (mapping.changeTracking == null) {
                 mapping.changeTracking = this.config.changeTracking;
             }
 
