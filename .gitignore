@@ -1,5 +1,5 @@
-.idea
-hydrate.iml
-build
-node_modules
-
+/.idea
+/hydrate.iml
+/build
+/node_modules
+/lib/**/*.js

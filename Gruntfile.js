@@ -22,12 +22,7 @@ module.exports = function(grunt) {
             },
             lib: {
                 src: [
-                    "lib/hydrate.js"
-                ]
-            },
-            typings: {
-                src: [
-                    "typings/*.d.json"
+                    "lib/**/*.js",
                 ]
             }
         },
@@ -94,29 +89,19 @@ module.exports = function(grunt) {
                     "tests/fixtures/**/*.ts"
                 ],
                 dest: "build/tests/fixtures/"
-            },
-            typings: {
-                options: {
-                    noLib: false,
-                    removePrivates: true
-                },
-                src: [
-                    "typings/mongodb.d.ts",
-                    "typings/node.d.ts"
-                ]
             }
         },
 
         copy: {
-            typings: {
+            lib: {
                 files: [
                     {
                         expand: true,
-                        cwd: 'typings/',
+                        cwd: 'build/src/',
                         src: [
-                            "*.d.json"
+                            '**/*.js'
                         ],
-                        dest: 'build/src/'
+                        dest: 'lib/'
                     }
                 ]
             }
@@ -147,7 +132,7 @@ module.exports = function(grunt) {
     // Default task(s).
     grunt.registerTask("default", [ "build", "lib", "tests" ]);
     grunt.registerTask("build", [ "clean:build", "typescript:build" ]);
-    grunt.registerTask("lib", [ "clean:lib", "concat:lib" ]);
+    grunt.registerTask("lib", [ "clean:lib",  "copy:lib" ]);
     grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests" ]);
     grunt.registerTask("benchmarks", [ "typescript:benchmarks", "baseline:benchmarks" ]);
 

@@ -7,7 +7,6 @@ import ResultCallback = require("../../core/resultCallback");
 import Mapping = require("../mapping");
 import MappingRegistry = require("../mappingRegistry");
 import MappingProvider = require("./mappingProvider");
-import ReflectHelper = require("../../core/ReflectHelper");
 import Index = require("../index");
 import IndexOptions = require("../indexOptions");
 import Property = require("../property");
@@ -57,10 +56,11 @@ class AnnotationMappingProvider implements MappingProvider {
 
      getMapping(config: Configuration, callback: ResultCallback<MappingRegistry>): void {
 
-        reflect.load(this._filePaths, (err, symbols) => {
+         var context = reflect.createContext();
+         context.load(this._filePaths, (err, symbols) => {
             if(err) return callback(err);
 
-            var builder = new MappingBuilder(config);
+            var builder = new MappingBuilder(config, context);
             var registry = builder.build(symbols);
 
             if(builder.hasErrors) {
@@ -96,9 +96,11 @@ class MappingBuilder {
     private _key = new TableKey();
     private _errors: string[] = [];
     private _registry = new MappingRegistry();
+    private _context: reflect.ReflectContext
 
-    constructor(public config: Configuration) {
 
+    constructor(public config: Configuration, context: reflect.ReflectContext) {
+        this._context = context;
     }
 
     private _globalStringMapping = new StringMapping();
@@ -149,7 +151,7 @@ class MappingBuilder {
 
     private _addGlobalMapping(name: string, mapping: Mapping): void {
 
-        var type = reflect.resolve(name).getDeclaredType();
+        var type = this._context.resolve(name).getDeclaredType();
         this._typeTable[this._key.ensureValue(type)] = {
             type: type,
             mapping: mapping,
@@ -200,7 +202,7 @@ class MappingBuilder {
 
     private _findEmbeddedTypes(type: reflect.Type): void {
 
-        if(!type.isObjectType() || ReflectHelper.isNativeType(type)) return;
+        if(!type.isObjectType() || this._isNativeType(type)) return;
 
         if(type.isClass() && !this._typeTable[this._key.ensureValue(type)]) {
             this._addError("Invalid type '"+ type.getFullName() +"'. All referenced classes must belong to an inheritance hierarchy annotated with 'collection' or 'embeddable'.");
@@ -838,6 +840,32 @@ class MappingBuilder {
 
         this._errors.push(message);
     }
+
+    private _globalDateType: reflect.Type;
+    private _globalRegExpType: reflect.Type;
+
+    private _isDate(type: reflect.Type): boolean {
+
+    if(this._globalDateType === undefined) {
+        this._globalDateType = this._context.resolve("Date").getDeclaredType();
+    }
+
+    return this._globalDateType === type;
+}
+
+    private _isRegExp(type: reflect.Type): boolean {
+
+    if(this._globalRegExpType === undefined) {
+        this._globalRegExpType = this._context.resolve("RegExp").getDeclaredType();
+    }
+
+    return this._globalRegExpType === type;
+}
+
+    private _isNativeType(type: reflect.Type): boolean {
+
+    return this._isDate(type) || this._isRegExp(type);
+}
 }
 
 export = AnnotationMappingProvider;

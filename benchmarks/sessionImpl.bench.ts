@@ -65,6 +65,10 @@ suite("SessionImpl", () => {
         i = 0;
     });
 
+    afterEach((done) => {
+        setTimeout(done, 2000);
+    });
+
     test("new", () => {
         cats.push(new Cat("cat" + count++));
     });
