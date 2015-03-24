@@ -1,0 +1,12 @@
+/.idea
+/benchmarks
+/build
+/docs
+/node_modules
+/src
+/tests
+/typings
+/Gruntfile.js
+/baseline.json
+/.gitignore
+/hydrate.iml
