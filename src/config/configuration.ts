@@ -1,14 +1,15 @@
 /// <reference path="../../typings/async.d.ts" />
+/// <reference path="../../typings/mongodb.d.ts" />
 
 import async = require("async");
-import Db = require("../driver/db");
+import mongodb = require("mongodb");
+
 import ResultCallback = require("../core/resultCallback");
 import MappingProvider = require("../mapping/providers/mappingProvider");
 import MappingRegistry = require("../mapping/mappingRegistry");
 import ChangeTracking = require("../mapping/changeTracking")
 import Table = require("../core/table");
 import MappingFlags = require("../mapping/mappingFlags");
-import Collection = require("../driver/collection");
 import SessionFactory = require("../sessionFactory");
 import SessionFactoryImpl = require("../sessionFactoryImpl");
 import IdentityGenerator = require("../id/identityGenerator");
@@ -76,7 +77,7 @@ class Configuration {
      * @param connection The MongoDB connection to use.
      * @param callback Called once the session factory is created.
      */
-    createSessionFactory(connection: Db, callback: ResultCallback<SessionFactory>): void {
+    createSessionFactory(connection: mongodb.Db, callback: ResultCallback<SessionFactory>): void {
 
         var registry = new MappingRegistry();
 
@@ -105,11 +106,11 @@ class Configuration {
         });
     }
 
-    private _buildCollections(connection: Db, registry: MappingRegistry, callback: ResultCallback<Table<Collection>>): void {
+    private _buildCollections(connection: mongodb.Db, registry: MappingRegistry, callback: ResultCallback<Table<mongodb.Collection>>): void {
 
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
-        var collections: Table<Collection> = [];
+        var collections: Table<mongodb.Collection> = [];
         var names: Map<boolean> = {};
 
         async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
@@ -147,7 +148,7 @@ class Configuration {
                 }
                 else {
                     // collection exists, get it
-                    connection.collection(mapping.collectionName, { strict: true }, (err: Error, collection: Collection) => {
+                    connection.collection(mapping.collectionName, { strict: true }, (err: Error, collection: mongodb.Collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
                         done();

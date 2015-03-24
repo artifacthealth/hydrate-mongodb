@@ -1,9 +1,10 @@
+/// <reference path="../../typings/mongodb.d.ts" />
 /// <reference path="../../typings/async.d.ts" />
 
+import mongodb = require("mongodb");
 import async = require("async");
-import Cursor = require("../../src/driver/cursor");
 
-class MockCursor implements Cursor {
+class MockCursor implements mongodb.Cursor {
 
     private _closed = false;
 
@@ -11,17 +12,21 @@ class MockCursor implements Cursor {
 
     }
 
-    filter(filter: any): Cursor {
+    stream(): mongodb.CursorStream {
+        throw new Error("Not implemented");
+    }
+
+    filter(filter: any): mongodb.Cursor {
 
         return this;
     }
 
-    project(value: any): Cursor {
+    project(value: any): mongodb.Cursor {
 
         return this;
     }
 
-    rewind() : Cursor {
+    rewind() : mongodb.Cursor {
 
         return this;
     }
@@ -45,27 +50,27 @@ class MockCursor implements Cursor {
 
     }
 
-    sort(keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void): Cursor {
+    sort(keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void): mongodb.Cursor {
 
         return this;
     }
 
-    limit(limit: number, callback?: (err: Error, result: any) => void): Cursor {
+    limit(limit: number, callback?: (err: Error, result: any) => void): mongodb.Cursor {
 
         return this;
     }
 
-    setReadPreference(preference: string, callback?: Function): Cursor {
+    setReadPreference(preference: string, callback?: Function): mongodb.Cursor {
 
         return this;
     }
 
-    skip(skip: number, callback?: (err: Error, result: any) => void): Cursor {
+    skip(skip: number, callback?: (err: Error, result: any) => void): mongodb.Cursor {
 
         return this;
     }
 
-    batchSize(batchSize: number, callback?: (err: Error, result: any) => void): Cursor {
+    batchSize(batchSize: number, callback?: (err: Error, result: any) => void): mongodb.Cursor {
 
         return this;
     }

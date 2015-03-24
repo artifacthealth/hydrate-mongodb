@@ -28,14 +28,17 @@ declare module "mongodb" {
   export class Db {
     constructor (databaseName: string, serverConfig: Server, dbOptions?: DbCreateOptions);
 
+    databaseName: string;
+
     public db(dbName: string): Db;
 
     public open(callback: (err : Error, db : Db) => void ): void;
     public close(forceClose?: boolean, callback?: (err: Error, result: any) => void ): void;
     public admin(callback: (err: Error, result: any) => void ): any;
     public collectionsInfo(collectionName: string, callback?: (err: Error, result: any) => void ): void;
-    public listCollections(collectionName: string): Cursor;
+    public collectionNames(collectionName: string, options: any, callback?: (err: Error, result: any) => void ): void;
 
+    listCollections(filter: Object): Cursor;
     public collection(collectionName: string): Collection;
     public collection(collectionName: string, callback: (err: Error, collection: Collection) => void ): Collection;
     public collection(collectionName: string, options: MongoCollectionOptions, callback: (err: Error, collection: Collection) => void ): Collection;
@@ -253,9 +256,50 @@ declare module "mongodb" {
     pkFactory?: PKFactory;
   }
 
+  // Documentation: http://docs.mongodb.org/manual/reference/command/collStats/
+  export interface CollStats {
+    // Namespace.
+    ns: string;
+
+    // Number of documents.
+    count: number;
+
+    // Collection size in bytes.
+    size: number;
+
+    // Average object size in bytes.
+    avgObjSize: number;
+
+    // (Pre)allocated space for the collection in bytes.
+    storageSize: number;
+
+    // Number of extents (contiguously allocated chunks of datafile space).
+    numExtents: number;
+
+    // Number of indexes.
+    nindexes: number;
+
+    // Size of the most recently created extent in bytes.
+    lastExtentSize: number;
+
+    // Padding can speed up updates if documents grow.
+    paddingFactor: number;
+    flags: number;
+
+     // Total index size in bytes.
+    totalIndexSize: number;
+
+    // Size of specific indexes in bytes.
+    indexSizes: {
+            _id_: number;
+            username: number;
+    };
+  }
+
   // Documentation : http://mongodb.github.io/node-mongodb-native/api-generated/collection.html
   export interface Collection {
-    new (db: Db, collectionName: string, pkFactory?: Object, options?: CollectionCreateOptions): Collection; // is this right?
+
+    collectionName: string;
 
     insert(query: any, callback: (err: Error, result: any) => void): void;
     insert(query: any, options: { safe?: any; continueOnError?: boolean; keepGoing?: boolean; serializeFunctions?: boolean; }, callback: (err: Error, result: any) => void): void;
@@ -276,7 +320,7 @@ declare module "mongodb" {
 
     count(callback: (err: Error, result: any) => void): void;
     count(query: Object, callback: (err: Error, result: any) => void): void;
-    count(query: Object, options: { readPreference?: string; limit?: number; skip?: number}, callback: (err: Error, result: any) => void): void;
+    count(query: Object, options: { readPreference?: string; }, callback: (err: Error, result: any) => void): void;
 
     drop(callback?: (err: Error, result: any) => void): void;
 
@@ -326,8 +370,10 @@ declare module "mongodb" {
     indexes(callback: Function): void;
     aggregate(pipeline: any[], callback: (err: Error, results: any) => void): void;
     aggregate(pipeline: any[], options: {readPreference: string}, callback: (err: Error, results: any) => void): void;
-    stats(options: {readPreference: string; scale: number}, callback: Function): void;
-    stats(callback: (err: Error, results: any) => void): void;
+    stats(options: {readPreference: string; scale: number}, callback: (err: Error, results: CollStats) => void): void;
+    stats(callback: (err: Error, results: CollStats) => void): void;
+
+    initializeUnorderedBulkOp(): UnorderedBulkOperation;
 
     hint: any;
   }
@@ -368,40 +414,12 @@ declare module "mongodb" {
     // constructor (db: Db, collection: Collection, selector, fields, skip, limit, sort, hint, explain, snapshot, timeout, tailable, batchSize, slaveOk, raw, read, returnKey, maxScan, min, max, showDiskLoc, comment, awaitdata, numberOfRetries, dbName, tailableRetryInterval, exhaust, partial);
     // constructor(db: Db, collection: Collection, selector, fields, options);
 
-    /**
-     * Set the cursor query
-     * @method
-     * @param {object} filter The filter object used for the cursor.
-     * @return {Cursor}
-     */
-    filter(filter: any): Cursor;
-
-    /**
-     * Sets a field projection for the query.
-     * @method
-     * @param {object} value The field projection object.
-     * @throws {MongoError}
-     * @return {Cursor}
-     */
-    project(value: any): Cursor;
-
     rewind() : Cursor;
     toArray(callback: (err: Error, results: any[]) => any) : void;
-    each(callback: (err: Error, item: any) => boolean) : void;
-
-    /**
-     * Iterates over all the documents for this cursor using the iterator, callback pattern.
-     * @method
-     * @param {Cursor~iteratorCallback} iterator The iteration callback.
-     * @param {Cursor~endCallback} callback The end callback.
-     * @throws {MongoError}
-     * @return {null}
-     */
-    forEach(iterator: (value: any) => void, callback: (err: Error) => void): void;
-
+    each(callback: (err: Error, item: any) => void) : void;
     count(applySkipLimit: boolean, callback: (err: Error, count: number) => void) : void;
 
-    sort(keyOrList: any, direction?: number): Cursor;
+    sort(keyOrList: any, callback? : (err: Error, result: any) => void): Cursor;
 
     // this determines how the results are sorted. "asc", "ascending" or 1 for asceding order while "desc", "desceding or -1 for descending order. Note that the strings are case insensitive.
     sort(keyOrList: String, direction : string, callback : (err: Error, result: any) => void): Cursor;
@@ -468,4 +486,176 @@ declare module "mongodb" {
     pkFactory?: any;
     readPreference?: string;
   }
+
+  export interface UnorderedBulkOperation {
+
+    /**
+     * Add a single update document to the bulk operation
+     * @param {object} doc update operations
+     */
+    update(updateDocument: any): UnorderedBulkOperation;
+
+    /**
+     * Add a single update one document to the bulk operation
+     * @param {object} doc update operations
+     */
+    updateOne(updateDocument: any): UnorderedBulkOperation;
+
+    /**
+     * Add a replace one operation to the bulk operation
+     * @param {object} doc the new document to replace the existing one with
+     */
+    replaceOne(updateDocument: any): UnorderedBulkOperation;
+
+    /**
+     * Upsert modifier for update bulk operation
+     */
+    upsert(): UnorderedBulkOperation;
+
+    /**
+     * Add a remove one operation to the bulk operation
+     */
+    removeOne(): UnorderedBulkOperation;
+
+    /**
+     * Add a remove operation to the bulk operation
+     */
+    remove(): UnorderedBulkOperation;
+
+    /**
+     * Add a single insert document to the bulk operation
+     * @param {object} doc the document to insert
+     */
+    insert(document: any): UnorderedBulkOperation;
+
+    /**
+     * Initiate a find operation for an update/updateOne/remove/removeOne/replaceOne
+     * @param {object} selector The selector for the bulk operation.
+     */
+    find(selector: any): UnorderedBulkOperation;
+
+    /**
+     * Execute the ordered bulk operation
+     *
+     * @method
+     * @param {object} [options=null] Optional settings.
+     * @param {(number|string)} [options.w=null] The write concern.
+     * @param {number} [options.wtimeout=null] The write concern timeout.
+     * @param {boolean} [options.j=false] Specify a journal write concern.
+     * @param {boolean} [options.fsync=false] Specify a file sync write concern.
+     * @param {UnorderedBulkOperation~resultCallback} callback The result callback
+     */
+    execute(callback: (err: Error, result: BulkWriteResult) => void): void;
+    execute(options: any, callback: (err: Error, result: BulkWriteResult) => void): void;
+  }
+
+  interface BulkWriteResult {
+
+    /**
+     * Did bulk operation correctly execute
+     */
+    ok: boolean;
+
+    /**
+     * Number of inserted documents
+     */
+    nInserted: number;
+
+    /**
+     * Number of upserted documents
+     */
+    nUpserted: number;
+
+    /**
+     * Number of matched documents
+     */
+    nMatched: number;
+
+    /**
+     * Number of modified documents
+     */
+    nModified: number;
+
+    /**
+     * Number of removed documents
+     */
+    nRemoved: number;
+
+    /**
+     * Return an array of inserted ids
+     *
+     * @return {object[]}
+     */
+    getInsertedIds(): any[];
+
+    /**
+     * Return an array of upserted ids
+     *
+     * @return {object[]}
+     */
+    getUpsertedIds(): any[];
+
+    /**
+     * Return the upserted id at position x
+     *
+     * @param {number} index the number of the upserted id to return, returns undefined if no result for passed in index
+     * @return {object}
+     */
+    getUpsertedIdAtn(index: number): any;
+
+
+    /**
+     * Return raw internal result
+     *
+     * @return {object}
+     */
+    getRawResponse(): any;
+
+    /**
+     * Returns true if the bulk operation contains a write error
+     *
+     * @return {boolean}
+     */
+    hasWriteErrors(): boolean;
+
+    /**
+     * Returns the number of write errors off the bulk operation
+     *
+     * @return {number}
+     */
+    getWriteErrorCount(): number;
+
+    /**
+     * Returns a specific write error object
+     *
+     * @return {WriteError}
+     */
+    getWriteErrorAt(index: number): any;
+
+    /**
+     * Retrieve all write errors
+     */
+    getWriteErrors(): any[];
+
+    /**
+     * Retrieve lastOp if available
+     *
+     * @return {object}
+     */
+    getLastOp(): any;
+
+    /**
+     * Retrieve the write concern error if any
+     *
+     * @return {WriteConcernError}
+     */
+    getWriteConcernError(): any;
+
+    toJSON(): any;
+
+    toString(): string;
+
+    isOk(): boolean;
+  }
+
 }

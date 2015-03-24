@@ -6,7 +6,6 @@ import Batch = require("../src/batch");
 import ChangeTracking = require("../src/mapping/changeTracking");
 import IdentityGenerator = require("../src/id/identityGenerator");
 import EntityMapping = require("../src/mapping/entityMapping");
-import Collection = require("../src/driver/collection");
 import MockIdentityGenerator = require("./id/mockIdentityGenerator");
 import MappingRegistry = require("../src/mapping/mappingRegistry");
 import model = require("./fixtures/model");

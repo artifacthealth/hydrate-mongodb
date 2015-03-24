@@ -1,5 +1,7 @@
+/// <reference path="../typings/mongodb.d.ts" />
+import mongodb = require("mongodb");
+
 import Table = require("./core/table");
-import Collection = require("./driver/collection");
 import MappingRegistry = require("./mapping/mappingRegistry");
 import Session = require("./session");
 import SessionImpl = require("./sessionImpl");
@@ -14,10 +16,10 @@ import EntityMapping = require("./mapping/entityMapping");
 
 class SessionFactoryImpl implements InternalSessionFactory {
 
-    private _collections: Table<Collection>;
+    private _collections: Table<mongodb.Collection>;
     private _mappingRegistry: MappingRegistry;
 
-    constructor(collections: Table<Collection>, mappingRegistry: MappingRegistry) {
+    constructor(collections: Table<mongodb.Collection>, mappingRegistry: MappingRegistry) {
 
         this._collections = collections;
         // TODO: get rid of mapping registry and handle directly in session factory

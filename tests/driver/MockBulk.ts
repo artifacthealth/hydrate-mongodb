@@ -1,29 +1,31 @@
-import Bulk = require("../../src/driver/bulk");
+/// <reference path="../../typings/mongodb.d.ts" />
 
-class MockBulk implements Bulk {
+import mongodb = require("mongodb");
 
-    update(updateDocument: any): Bulk {
+class MockBulk implements mongodb.UnorderedBulkOperation {
+
+    update(updateDocument: any): mongodb.UnorderedBulkOperation {
         return this;
     }
-    updateOne(updateDocument: any): Bulk {
+    updateOne(updateDocument: any): mongodb.UnorderedBulkOperation {
         return this;
     }
-    replaceOne(updateDocument: any): Bulk {
+    replaceOne(updateDocument: any): mongodb.UnorderedBulkOperation {
         return this;
     }
-    upsert(): Bulk {
+    upsert(): mongodb.UnorderedBulkOperation {
         return this;
     }
-    removeOne(): Bulk {
+    removeOne(): mongodb.UnorderedBulkOperation {
         return this;
     }
-    remove(): Bulk {
+    remove(): mongodb.UnorderedBulkOperation {
         return this;
     }
-    insert(document: any): Bulk {
+    insert(document: any): mongodb.UnorderedBulkOperation {
         return this;
     }
-    find(selector: any): Bulk {
+    find(selector: any): mongodb.UnorderedBulkOperation {
         return this;
     }
 

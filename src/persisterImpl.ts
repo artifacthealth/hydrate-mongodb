@@ -1,11 +1,12 @@
 /// <reference path="../typings/async.d.ts" />
 /// <reference path="../typings/node.d.ts" />
+/// <reference path="../typings/mongodb.d.ts" />
 
+import mongodb = require("mongodb");
 import stream = require("stream");
 
 import async = require("async");
 import EntityMapping = require("./mapping/entityMapping");
-import Collection = require("./driver/collection");
 import ResultCallback = require("./core/resultCallback");
 import InternalSession = require("./internalSession");
 import ChangeTracking = require("./mapping/changeTracking");
@@ -18,20 +19,18 @@ import PropertyFlags = require("./mapping/propertyFlags");
 import Result = require("./core/result");
 import Persister = require("./persister");
 import Command = require("./core/command");
-import Bulk = require("./driver/bulk");
-import BulkWriteResult = require("./driver/bulkWriteResult");
 import Changes = require("./mapping/changes");
 import Map = require("./core/map");
 import QueryDefinition = require("./query/queryDefinition");
 import QueryKind = require("./query/queryKind");
 import IteratorCallback = require("./core/iteratorCallback");
-import Cursor = require("./driver/cursor");
 import QueryDocument = require("./query/queryDocument");
 import CriteriaBuilder = require("./query/criteriaBuilder");
 import UpdateDocumentBuilder = require("./query/updateDocumentBuilder");
 import ResolveContext = require("./mapping/resolveContext");
 import ReadContext = require("./mapping/readContext");
 import Observer = require("./observer");
+import CallbackUtil = require("./core/callbackUtil");
 
 interface FindOneQuery {
 
@@ -85,12 +84,12 @@ class PersisterImpl implements Persister {
     private _versioned: boolean;
     private _findQueue: FindQueue;
     private _mapping: EntityMapping;
-    private _collection: Collection;
+    private _collection: mongodb.Collection;
     private _session: InternalSession;
     private _criteriaBuilder: CriteriaBuilder;
     private _updateDocumentBuilder: UpdateDocumentBuilder;
 
-    constructor(session: InternalSession, mapping: EntityMapping, collection: Collection) {
+    constructor(session: InternalSession, mapping: EntityMapping, collection: mongodb.Collection) {
 
         this._session = session;
         this._mapping = mapping;
@@ -374,7 +373,7 @@ class PersisterImpl implements Persister {
                 // otherwise, process the item returned then process the rest of the items in the buffer
                 process(err, item);
 
-                while(cursor.bufferedCount() > 0) {
+                while((<any>cursor).bufferedCount() > 0) {
                     cursor.nextObject(process);
                 }
             });
@@ -392,7 +391,7 @@ class PersisterImpl implements Persister {
             }
 
             // pass the entity to the iterator, and wait for done to be called
-            iterator(result.value, Callback.onlyOnce(done));
+            iterator(result.value, CallbackUtil.onlyOnce(done));
         }
 
         function done(err: Error) {
@@ -401,7 +400,7 @@ class PersisterImpl implements Persister {
             completed++;
             // if all buffered items have been processed, check if the cursor is finished. if it's finished then
             // we are done; otherwise, replenish the buffer.
-            if(cursor.bufferedCount() == 0 && completed >= started) {
+            if((<any>cursor).bufferedCount() == 0 && completed >= started) {
 
                 if(finished) return callback();
                 replenish();
@@ -409,7 +408,7 @@ class PersisterImpl implements Persister {
         }
 
         function error(err: Error) {
-            cursor.close(); // close the cursor since it may not be exhausted
+            cursor.close(null); // close the cursor since it may not be exhausted
             callback(err);
             callback = function () {}; // if called for error, make sure it can't be called again
         }
@@ -442,13 +441,13 @@ class PersisterImpl implements Persister {
         })();
 
         function error(err: Error) {
-            cursor.close(); // close the cursor since it may not be exhausted
+            cursor.close(null); // close the cursor since it may not be exhausted
             callback(err);
             callback = function () {}; // if called for error, make sure it can't be called again
         }
     }
 
-    private _prepareFind(query: FindAllQuery): Cursor {
+    private _prepareFind(query: FindAllQuery): mongodb.Cursor {
 
         var cursor = this._collection.find(query.criteria);
 
@@ -707,14 +706,14 @@ class PersisterImpl implements Persister {
 class BulkOperationCommand implements Command {
 
     collectionName: string;
-    operation: Bulk;
+    operation: mongodb.UnorderedBulkOperation;
     inserted: number;
     updated: number;
     removed: number;
 
     private _mapping: EntityMapping;
 
-    constructor(collection: Collection, mapping: EntityMapping) {
+    constructor(collection: mongodb.Collection, mapping: EntityMapping) {
 
         this._mapping = mapping;
         this.collectionName = collection.collectionName,
@@ -765,7 +764,7 @@ class BulkOperationCommand implements Command {
 
     execute(callback: Callback): void {
 
-        this.operation.execute((err: Error, result: BulkWriteResult) => {
+        this.operation.execute((err: Error, result: mongodb.BulkWriteResult) => {
             if(err) return callback(err);
 
             // TODO: provide more detailed error information
@@ -812,7 +811,7 @@ class FindQueue {
         }
         else {
             // this id is already in the queue so chain the callbacks
-            this._callbacks[key] = ResultCallback.chain(callback, existingCallback);
+            this._callbacks[key] = CallbackUtil.chain(callback, existingCallback);
         }
     }
 
