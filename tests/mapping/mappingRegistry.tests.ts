@@ -7,7 +7,6 @@ import helpers = require("../helpers");
 import model = require("../fixtures/model");
 
 import MappingRegistry = require("../../src/mapping/MappingRegistry");
-import Mapping = require("../../src/mapping/mapping");
 import EntityMapping = require("../../src/mapping/entityMapping");
 import ClassMapping = require("../../src/mapping/classMapping");
 

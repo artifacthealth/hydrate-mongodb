@@ -10,6 +10,8 @@ import PersisterImpl = require("../src/persisterImpl");
 import MockCollection = require("./driver/mockCollection");
 import MockSessionFactory = require("./mockSessionFactory");
 import model = require("./fixtures/model");
+import Mapping = require("../src/mapping/mapping");
+import ClassMapping = require("../src/mapping/classMapping");
 
 var fixtureDir = "tests/fixtures/";
 
@@ -34,8 +36,11 @@ export function createFactory(file: string, callback: (err: Error, result?: Mock
 
     var provider = new AnnotationMappingProvider();
     provider.addFile("build/tests/fixtures/" + file + ".d.json");
-    provider.getMapping(new Configuration(), (err, registry) => {
+    provider.getMapping(new Configuration(), (err, mappings) => {
         if(err) return callback(err);
+
+        var registry = new MappingRegistry();
+        registry.addMappings(<ClassMapping[]>mappings);
 
         registryCache[file] = registry; // cache result
 

@@ -1,4 +1,3 @@
-import Mapping = require("./mapping");
 import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import RegExpUtil = require("../core/regExpUtil");

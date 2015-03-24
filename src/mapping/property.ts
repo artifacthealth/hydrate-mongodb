@@ -1,7 +1,12 @@
-import Mapping = require("./mapping");
+import InternalMapping = require("./internalMapping");
 import PropertyFlags = require("./propertyFlags");
 
 class Property {
+
+    /**
+     * The name of the property.
+     */
+    name: string;
 
     /**
      * The property flags.
@@ -21,10 +26,17 @@ class Property {
     /**
      * The mapping of the property.
      */
-    mapping: Mapping;
+    mapping: InternalMapping;
 
-    constructor(public name: string) {
-
+    constructor(name: string, mapping: InternalMapping) {
+        if(!name) {
+            throw new Error("Missing required argument 'name'.");
+        }
+        if(!mapping) {
+            throw new Error("Missing required argument 'mapping'.");
+        }
+        this.name = name;
+        this.mapping = mapping;
     }
 
     setFlags(flags: PropertyFlags): void {
@@ -65,7 +77,6 @@ class Property {
         this.setFieldValue = <any>(new Function("o,v", "o['" + this.field + "'] = v"));
         document[this.field] = value;
     }
-
 }
 
 export = Property;

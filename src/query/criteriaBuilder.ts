@@ -2,7 +2,7 @@ import QueryDocument = require("./queryDocument");
 import ResolveContext = require("../mapping/resolveContext");
 import MappingFlags = require("../mapping/mappingFlags");
 import ArrayMapping = require("../mapping/arrayMapping");
-import Mapping = require("../mapping/mapping");
+import InternalMapping = require("../mapping/internalMapping");
 import MappingError = require("../mapping/mappingError");
 import RegExpUtil = require("../core/regExpUtil");
 import EntityMapping = require("../mapping/entityMapping");
@@ -38,7 +38,7 @@ class CriteriaBuilder {
         return preparedCriteria;
     }
 
-    protected prepareQueryDocument(query: QueryDocument, mapping?: Mapping, withinField?: boolean): QueryDocument {
+    protected prepareQueryDocument(query: QueryDocument, mapping?: InternalMapping, withinField?: boolean): QueryDocument {
 
         if(!query) return {};
 
@@ -141,7 +141,7 @@ class CriteriaBuilder {
         return result;
     }
 
-    private _prepareQueryExpression(operator: string, query: QueryDocument, mapping: Mapping): QueryDocument {
+    private _prepareQueryExpression(operator: string, query: QueryDocument, mapping: InternalMapping): QueryDocument {
 
         if(!query) {
             this.error = new Error("Missing value for operator '" + operator + "'.");
@@ -207,7 +207,7 @@ class CriteriaBuilder {
         return result;
     }
 
-    protected prepareArrayOfValues(operator: string, value: any[], mapping: Mapping): any[] {
+    protected prepareArrayOfValues(operator: string, value: any[], mapping: InternalMapping): any[] {
 
         if(!Array.isArray(value)) {
             this.error = new Error("Expected array for '" + operator +"' operator.");
@@ -222,7 +222,7 @@ class CriteriaBuilder {
         return result;
     }
 
-    protected prepareQueryValue(path: string, value: any, mapping: Mapping): any {
+    protected prepareQueryValue(path: string, value: any, mapping: InternalMapping): any {
 
         // Regular expressions are allowed in place of strings
         if((mapping.flags & MappingFlags.String) && (value instanceof RegExp)) {

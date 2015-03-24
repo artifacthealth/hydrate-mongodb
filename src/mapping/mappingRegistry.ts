@@ -3,7 +3,6 @@ import EntityMapping = require("./entityMapping");
 import Constructor = require("../core/constructor");
 import Table = require("../core/table");
 import TableKey = require("../core/tableKey");
-import Mapping = require("./mapping");
 import MappingFlags = require("./mappingFlags");
 
 class MappingRegistry {
@@ -11,6 +10,11 @@ class MappingRegistry {
     private _mappingByConstructor: ClassMapping[] = [];
 
     private _key = new TableKey();
+
+    addMappings(mappings: ClassMapping[]): void {
+
+        mappings.forEach(x => this.addMapping(x));
+    }
 
     addMapping(mapping: ClassMapping): void {
 
@@ -45,20 +49,6 @@ class MappingRegistry {
 
         if(ctr) {
             return this._mappingByConstructor[this._key.getValue(ctr)];
-        }
-    }
-
-    /**
-     * Merges the specified registry into this registry.
-     * @param registry The registry to merge.
-     */
-    merge(registry: MappingRegistry): void {
-
-        for(var i = 0; i < registry._mappingByConstructor.length; i++) {
-            var mapping = registry._mappingByConstructor[i];
-            if(mapping) {
-                this.addMapping(mapping);
-            }
         }
     }
 }

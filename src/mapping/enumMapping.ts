@@ -1,6 +1,5 @@
 import Table = require("../core/table");
 import Map = require("../core/map");
-import Mapping = require("./mapping");
 import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");

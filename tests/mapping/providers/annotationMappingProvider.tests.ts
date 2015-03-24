@@ -8,8 +8,8 @@ import reflect = require("tsreflect");
 import AnnotationMappingProvider = require("../../../src/mapping/providers/annotationMappingProvider");
 import Configuration = require("../../../src/config/Configuration");
 import MappingRegistry = require("../../../src/mapping/mappingRegistry");
+import MappingsFlags = require("../../../src/mapping/mappingFlags");
 
-import Mapping = require("../../../src/mapping/mapping");
 import ClassMapping = require("../../../src/mapping/classMapping");
 import EntityMapping = require("../../../src/mapping/entityMapping");
 
@@ -185,11 +185,11 @@ function processFixture(file: string, done: (err?: Error) => void, callback?: (r
 
     var provider = new AnnotationMappingProvider();
     provider.addFile("build/tests/fixtures/annotations/" + file + ".d.json");
-    provider.getMapping(new Configuration(), (err, registry) => {
+    provider.getMapping(new Configuration(), (err, mappings) => {
         if(err) return done(err);
 
         if(callback) {
-            callback(<EntityMapping[]>registry.getMappings());
+            callback(<EntityMapping[]>mappings.filter((x) => (x.flags & MappingsFlags.Entity) !== 0));
         }
         done();
     });

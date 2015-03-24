@@ -1,9 +1,9 @@
-import Mapping = require("./mapping");
+import InternalMapping = require("./internalMapping");
 
 class ResolveContext {
 
     resolvedPath: string;
-    resolvedMapping: Mapping;
+    resolvedMapping: InternalMapping;
     error: Error;
 
     private _path: string[];
@@ -42,7 +42,7 @@ class ResolveContext {
         this._finished();
     }
 
-    resolveProperty(mapping: Mapping, resolvedProperty: string): boolean {
+    resolveProperty(mapping: InternalMapping, resolvedProperty: string): boolean {
 
         this._resolvePath[this._depth] = resolvedProperty;
 

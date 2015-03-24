@@ -1,5 +1,5 @@
 import Async = require("../core/async");
-import Mapping = require("./mapping");
+import InternalMapping = require("./internalMapping");
 import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
@@ -16,7 +16,7 @@ import Observer = require("../observer");
 
 class ArrayMapping extends MappingBase {
 
-    constructor(public elementMapping: Mapping) {
+    constructor(public elementMapping: InternalMapping) {
         super(MappingFlags.Array);
     }
 
@@ -181,7 +181,7 @@ class ArrayMapping extends MappingBase {
         return this._nestedDepth;
     }
 
-    private _findNestedDepth(depth: number, mapping: Mapping): number {
+    private _findNestedDepth(depth: number, mapping: InternalMapping): number {
 
         if(mapping.flags & MappingFlags.Array) {
             return this._findNestedDepth(depth + 1, (<ArrayMapping>mapping).elementMapping);

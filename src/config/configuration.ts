@@ -16,7 +16,9 @@ import IdentityGenerator = require("../id/identityGenerator");
 import Map = require("../core/map");
 import EntityMapping = require("../mapping/entityMapping");
 import NamingStrategy = require("./namingStrategy");
+import NamingStrategies = require("./NamingStrategies");
 import ObjectIdGenerator = require("../id/objectIdGenerator");
+import ClassMapping = require("../mapping/classMapping");
 
 class Configuration {
 
@@ -48,17 +50,17 @@ class Configuration {
     /**
      * Naming strategy to use for collection names.
      */
-    collectionNamingStrategy = NamingStrategy.CamelCase;
+    collectionNamingStrategy: NamingStrategy = NamingStrategies.CamelCase;
 
     /**
      * Naming strategy to use for field names.
      */
-    fieldNamingStrategy = NamingStrategy.CamelCase;
+    fieldNamingStrategy: NamingStrategy = NamingStrategies.CamelCase;
 
     /**
      * Naming strategy to use for the discriminator value of a class.
      */
-    discriminatorNamingStrategy = NamingStrategy.None;
+    discriminatorNamingStrategy: NamingStrategy = NamingStrategies.None;
 
 
     private _mappings: MappingProvider[] = [];
@@ -92,7 +94,7 @@ class Configuration {
                 if(err) return done(err, null);
 
                 // Merge all registries. Duplicates will cause an error.
-                registry.merge(r);
+                registry.addMappings(<ClassMapping[]>r);
                 done(null, null);
             });
         }, (err) => {

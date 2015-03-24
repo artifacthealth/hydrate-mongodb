@@ -1,4 +1,3 @@
-import Mapping = require("./mapping");
 import MappingError = require("./mappingError");
 import MappingBase = require("./mappingBase");
 import MappingFlags = require("./mappingFlags");

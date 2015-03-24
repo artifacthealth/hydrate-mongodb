@@ -1,4 +1,4 @@
-import Mapping = require("./mapping");
+import InternalMapping = require("./internalMapping");
 import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import MappingFlags = require("./mappingFlags");
@@ -13,7 +13,7 @@ import Observer = require("../observer");
 
 class TupleMapping extends MappingBase {
 
-    constructor(public elementMappings: Mapping[]) {
+    constructor(public elementMappings: InternalMapping[]) {
         super(MappingFlags.Tuple);
     }
 

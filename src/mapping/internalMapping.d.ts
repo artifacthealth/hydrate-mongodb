@@ -10,7 +10,7 @@ import ResolveContext = require("./resolveContext");
 import ReadContext = require("./readContext");
 import Observer = require("../observer");
 
-interface Mapping {
+interface InternalMapping {
 
     id: number;
     flags: MappingFlags;
@@ -25,4 +25,4 @@ interface Mapping {
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
 }
 
-export = Mapping;
+export = InternalMapping;

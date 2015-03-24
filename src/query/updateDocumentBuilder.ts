@@ -2,7 +2,7 @@ import QueryDocument = require("./queryDocument");
 import ResolveContext = require("../mapping/resolveContext");
 import MappingFlags = require("../mapping/mappingFlags");
 import ArrayMapping = require("../mapping/arrayMapping");
-import Mapping = require("../mapping/mapping");
+import InternalMapping = require("../mapping/internalMapping");
 import MappingError = require("../mapping/mappingError");
 import RegExpUtil = require("../core/regExpUtil");
 import CriteriaBuilder = require("./criteriaBuilder");
@@ -105,7 +105,7 @@ class UpdateDocumentBuilder extends CriteriaBuilder {
         return result;
     }
 
-    private _isArray(operator: string, mapping: Mapping): boolean {
+    private _isArray(operator: string, mapping: InternalMapping): boolean {
         if(!(mapping.flags & MappingFlags.Array)) {
             this.error = new Error("Operator '" + operator + "' only applies to properties that have an array type.");
             return false;
@@ -113,7 +113,7 @@ class UpdateDocumentBuilder extends CriteriaBuilder {
         return true;
     }
 
-    private _prepareQueryModifier(operator: string, query: QueryDocument, mapping: Mapping): QueryDocument {
+    private _prepareQueryModifier(operator: string, query: QueryDocument, mapping: InternalMapping): QueryDocument {
 
         if(!query) {
             this.error = new Error("Missing value for operator '" + operator + "'.");
@@ -155,7 +155,7 @@ class UpdateDocumentBuilder extends CriteriaBuilder {
         return result;
     }
 
-    private _prepareSortSpecification(sortSpecification: any, mapping: Mapping): any {
+    private _prepareSortSpecification(sortSpecification: any, mapping: InternalMapping): any {
 
         if(mapping.flags & MappingFlags.Embeddable) {
             if(typeof sortSpecification !== "object") {

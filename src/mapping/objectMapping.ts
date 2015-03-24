@@ -1,5 +1,4 @@
 import Map = require("../core/map");
-import Mapping = require("./mapping");
 import MappingBase = require("./mappingBase");
 import MappingError = require("./mappingError");
 import PropertyFlags = require("./propertyFlags");
@@ -13,6 +12,7 @@ import ResolveContext = require("./resolveContext");
 import ClassMapping = require("./classMapping");
 import ReadContext = require("./readContext");
 import Observer = require("../observer");
+import InternalMapping = require("./internalMapping");
 
 class ObjectMapping extends MappingBase {
 
@@ -24,23 +24,40 @@ class ObjectMapping extends MappingBase {
         super(MappingFlags.Object | MappingFlags.Embeddable);
     }
 
-    addProperty(property: Property): void {
+    addProperty(property: Property): Property {
 
-        var name = property.name;
-        if (Map.hasProperty(this._propertiesByName, name)) {
-            throw new Error("There is already a mapped property with the name '" + name + "'.");
+        if(!property) {
+            throw new Error("Missing required argument 'property'.");
         }
-        this._propertiesByName[name] = property;
+
+        if(!property.name) {
+            throw new Error("Property is missing 'name'.");
+        }
+
+        if(!property.field) {
+            throw new Error("Property is missing 'field'.");
+        }
+
+        if (Map.hasProperty(this._propertiesByName, property.name)) {
+            throw new Error("There is already a mapped property with the name '" + property.name + "'.");
+        }
 
         if (Map.hasProperty(this._propertiesByField, property.field)) {
             throw new Error("There is already a mapped property for field '" + property.field + "'.");
         }
+
+        this._propertiesByName[property.name] = property;
         this._propertiesByField[property.field] = property;
 
         this.properties.push(property);
+        return property;
     }
 
     getProperty(name: string): Property {
+
+        if(!name) {
+            throw new Error("Missing required argument 'name'.");
+        }
 
         return Map.getProperty(this._propertiesByName, name);
     }

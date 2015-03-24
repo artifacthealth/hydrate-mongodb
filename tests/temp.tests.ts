@@ -23,6 +23,7 @@ import Configuration = require("../src/config/configuration");
 import helpers = require("./helpers");
 import ObjectIdGenerator = require("../src/id/objectIdGenerator");
 import ReadContext = require("../src/mapping/readContext");
+import ClassMapping = require("../src/mapping/classMapping");
 
 describe('Temp', () => {
 
@@ -31,7 +32,7 @@ describe('Temp', () => {
         mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
 
             var mapping = new AnnotationMappingProvider();
-            mapping.addFile("build/tests/fixtures/model.d.json")
+            mapping.addFile("build/tests/fixtures/model.d.json");
 
             var config = new Configuration();
             config.addMapping(mapping);
@@ -218,10 +219,12 @@ describe('Temp', () => {
 
         var mappingProvider = new AnnotationMappingProvider();
         mappingProvider.addFile("build/tests/fixtures/model.d.json");
-        mappingProvider.getMapping(new Configuration(), (err, registry) => {
+        mappingProvider.getMapping(new Configuration(), (err, mappings) => {
             if (err) return done(err);
 
             var fixture = helpers.requireFixture("model");
+            var registry = new MappingRegistry();
+            registry.addMappings(<ClassMapping[]>mappings);
             var factory = new SessionFactoryImpl({}, registry);
             var session = <InternalSession>factory.createSession();
             var identity = (<EntityMapping>registry.getMappingForConstructor(model.Person).inheritanceRoot).identity;

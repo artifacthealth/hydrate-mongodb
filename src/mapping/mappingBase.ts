@@ -9,10 +9,11 @@ import ResolveContext = require("./resolveContext");
 import Map = require("../core/map");
 import ReadContext = require("./readContext");
 import Observer = require("../observer");
+import InternalMapping = require("./internalMapping");
 
 var nextMappingId = 1;
 
-class MappingBase {
+class MappingBase implements InternalMapping {
 
     id: number;
 
