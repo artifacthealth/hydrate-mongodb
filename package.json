@@ -1,12 +1,14 @@
 {
-  "name": "hydrate",
+  "name": "@artifacthealth/hydrate",
   "description": "Library for mapping TypeScript classes to a MongoDB database.",
   "version": "0.1.0",
   "author": {
     "name": "Artifact Health, LLC",
     "url": "http://www.artifacthealth.com"
   },
-  "private": true,
+  "publishConfig": {
+    "registry": "http://localhost:4873/"
+  },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@bitbucket.org/mgottlieb/hydrate.git"
