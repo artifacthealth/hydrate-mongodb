@@ -1,3 +1,5 @@
+/// <reference path="../typings/node.d.ts" />
+
 declare module "hydrate" {
     import events = require("events");
 
@@ -47,10 +49,12 @@ declare module "hydrate" {
         createSessionFactory(connection: Db, callback: ResultCallback<SessionFactory>): void;
     }
 
-    export class AnnotationMappingProvider implements MappingProvider {
+    export class ObjectIdGenerator implements IdentityGenerator {
         constructor();
-        addFile(path: string): void;
-        getMapping(config: Configuration, callback: ResultCallback<MappingRegistry>): void;
+        generate(): any;
+        validate(value: any): boolean;
+        fromString(text: string): any;
+        areEqual(first: any, second: any): boolean;
     }
 
     export interface NamingStrategy {
@@ -79,12 +83,10 @@ declare module "hydrate" {
         function SnakeCase(name: string): string;
     }
 
-    export class ObjectIdGenerator implements IdentityGenerator {
+    export class AnnotationMappingProvider implements MappingProvider {
         constructor();
-        generate(): any;
-        validate(value: any): boolean;
-        fromString(text: string): any;
-        areEqual(first: any, second: any): boolean;
+        addFile(path: string): void;
+        getMapping(config: Configuration, callback: ResultCallback<MappingRegistry>): void;
     }
 
     interface Db {
@@ -109,18 +111,18 @@ declare module "hydrate" {
         function chain<T>(callback: ResultCallback<T>, next: ResultCallback<T>): ResultCallback<T>;
     }
 
-    enum ChangeTracking {
-        DeferredImplicit = 0,
-        DeferredExplicit = 1,
-        Observe = 2,
+    interface MappingProvider {
+        getMapping(config: Configuration, callback: ResultCallback<MappingRegistry>): void;
     }
 
     interface SessionFactory {
         createSession(): Session;
     }
 
-    interface MappingProvider {
-        getMapping(config: Configuration, callback: ResultCallback<MappingRegistry>): void;
+    enum ChangeTracking {
+        DeferredImplicit = 0,
+        DeferredExplicit = 1,
+        Observe = 2,
     }
 
     interface IdentityGenerator {
@@ -145,16 +147,39 @@ declare module "hydrate" {
         merge(registry: MappingRegistry): void;
     }
 
-    interface Collection {
-        collectionName?: string;
-        find(selector: Object, callback?: (err: Error, result: Cursor) => void): Cursor;
-        findOne(selector: Object, callback?: (err: Error, result: any) => void): Cursor;
-        findAndModify(query: Object, sort: any[], doc: Object, options: { safe?: any; remove?: boolean; upsert?: boolean; new?: boolean; }, callback: (err: Error, result: any) => void): void;
-        remove(selector: Object, options: { safe?: any; single?: boolean; }, callback?: (err: Error, result: any) => void): void;
-        update(selector: Object, document: any, options: { safe?: boolean; upsert?: any; multi?: boolean; serializeFunctions?: boolean; }, callback: (err: Error, result: any) => void): void;
-        count(query: Object, options: { readPreference?: string; limit?: number; skip?: number}, callback: (err: Error, result: any) => void): void;
-        distinct(key: string, query: Object, options: { readPreference: string; }, callback: (err: Error, result: any) => void): void;
-        initializeUnorderedBulkOp?(): Bulk;
+    interface CollectionOptions {
+        /**
+         * The write concern.
+         */
+        w?: string;
+        /**
+         * The write concern timeout.
+         */
+        wtimeout?: number;
+        /**
+         * Specify a journal write concern.
+         */
+        j?: boolean;
+        /**
+         * Create a capped collection.
+         */
+        capped?: boolean;
+        /**
+         * The size of the capped collection in bytes.
+         */
+        size?: number;
+        /**
+         * The maximum number of document in the capped collection.
+         */
+        max?: number;
+        /**
+         * The preferred read preference
+         */
+        readPreference?: string;
+        /**
+         * Strict mode
+         */
+        strict?: boolean;
     }
 
     interface IndexOptions {
@@ -194,39 +219,16 @@ declare module "hydrate" {
         bufferedCount?(): number;
     }
 
-    interface CollectionOptions {
-        /**
-         * The write concern.
-         */
-        w?: string;
-        /**
-         * The write concern timeout.
-         */
-        wtimeout?: number;
-        /**
-         * Specify a journal write concern.
-         */
-        j?: boolean;
-        /**
-         * Create a capped collection.
-         */
-        capped?: boolean;
-        /**
-         * The size of the capped collection in bytes.
-         */
-        size?: number;
-        /**
-         * The maximum number of document in the capped collection.
-         */
-        max?: number;
-        /**
-         * The preferred read preference
-         */
-        readPreference?: string;
-        /**
-         * Strict mode
-         */
-        strict?: boolean;
+    interface Collection {
+        collectionName?: string;
+        find(selector: Object, callback?: (err: Error, result: Cursor) => void): Cursor;
+        findOne(selector: Object, callback?: (err: Error, result: any) => void): Cursor;
+        findAndModify(query: Object, sort: any[], doc: Object, options: { safe?: any; remove?: boolean; upsert?: boolean; new?: boolean; }, callback: (err: Error, result: any) => void): void;
+        remove(selector: Object, options: { safe?: any; single?: boolean; }, callback?: (err: Error, result: any) => void): void;
+        update(selector: Object, document: any, options: { safe?: boolean; upsert?: any; multi?: boolean; serializeFunctions?: boolean; }, callback: (err: Error, result: any) => void): void;
+        count(query: Object, options: { readPreference?: string; limit?: number; skip?: number}, callback: (err: Error, result: any) => void): void;
+        distinct(key: string, query: Object, options: { readPreference: string; }, callback: (err: Error, result: any) => void): void;
+        initializeUnorderedBulkOp?(): Bulk;
     }
 
     interface Session extends events.EventEmitter {
@@ -246,6 +248,34 @@ declare module "hydrate" {
         contains(obj: Object): boolean;
         getId(obj: Object): any;
         getReference<T>(ctr: Constructor<T>, id: any): T;
+    }
+
+    class EntityMapping extends ClassMapping {
+        collectionName: string;
+        databaseName: string;
+        indexes: Index[];
+        collectionOptions: CollectionOptions;
+        identity: IdentityGenerator;
+        changeTracking: ChangeTracking;
+        versioned: boolean;
+        versionField: string;
+        lockable: boolean;
+        lockField: string;
+        constructor(baseClass?: EntityMapping);
+        setDocumentVersion(obj: any, version: number): void;
+        getDocumentVersion(obj: any): number;
+        addIndex(index: Index): void;
+        refresh(context: ReadContext, entity: any, document: any): any;
+        read(context: ReadContext, value: any): any;
+        write(value: any, path: string, errors: MappingError[], visited: any[]): any;
+        watchEntity(entity: any, observer: Observer): void;
+        watch(value: any, observer: Observer, visited: any[]): void;
+        areDocumentsEqual(document1: any, document2: any): boolean;
+        areEqual(documentValue1: any, documentValue2: any): boolean;
+        walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
+        fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
+        fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
+        _resolveCore(context: ResolveContext): void;
     }
 
     class ClassMapping extends ObjectMapping {
@@ -279,34 +309,6 @@ declare module "hydrate" {
         areEqual(documentValue1: any, documentValue2: any): boolean;
         walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
         fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
-    }
-
-    class EntityMapping extends ClassMapping {
-        collectionName: string;
-        databaseName: string;
-        indexes: Index[];
-        collectionOptions: CollectionOptions;
-        identity: IdentityGenerator;
-        changeTracking: ChangeTracking;
-        versioned: boolean;
-        versionField: string;
-        lockable: boolean;
-        lockField: string;
-        constructor(baseClass?: EntityMapping);
-        setDocumentVersion(obj: any, version: number): void;
-        getDocumentVersion(obj: any): number;
-        addIndex(index: Index): void;
-        refresh(context: ReadContext, entity: any, document: any): any;
-        read(context: ReadContext, value: any): any;
-        write(value: any, path: string, errors: MappingError[], visited: any[]): any;
-        watchEntity(entity: any, observer: Observer): void;
-        watch(value: any, observer: Observer, visited: any[]): void;
-        areDocumentsEqual(document1: any, document2: any): boolean;
-        areEqual(documentValue1: any, documentValue2: any): boolean;
-        walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
-        fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
-        fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
-        _resolveCore(context: ResolveContext): void;
     }
 
     interface Constructor<T> {
@@ -416,22 +418,9 @@ declare module "hydrate" {
         function createErrorMessage(errors: MappingError[]): string;
     }
 
-    class ObjectMapping extends MappingBase {
-        properties: Property[];
-        constructor();
-        addProperty(property: Property): void;
-        getProperty(name: string): Property;
-        getPropertyForField(field: string): Property;
-        getProperties(flags?: PropertyFlags): Property[];
-        read(context: ReadContext, value: any): any;
-        protected readObject(context: ReadContext, obj: any, value: any, checkRemoved: boolean): any;
-        write(value: any, path: string, errors: MappingError[], visited: any[]): any;
-        protected writeObject(document: any, value: any, path: string, errors: MappingError[], visited: any[]): any;
-        watch(value: any, observer: Observer, visited: any[]): void;
-        areEqual(documentValue1: any, documentValue2: any): boolean;
-        walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
-        fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
-        _resolveCore(context: ResolveContext): void;
+    interface Index {
+        keys: [string, number][];
+        options?: IndexOptions;
     }
 
     class Reference {
@@ -472,6 +461,19 @@ declare module "hydrate" {
         All = 511,
         WalkEntities = 512,
         Dereference = 1024,
+    }
+
+    class ResolveContext {
+        path: string;
+        resolvedPath: string;
+        resolvedMapping: Mapping;
+        error: Error;
+        constructor(path: string);
+        currentProperty: string;
+        isEop: boolean;
+        isFirst: boolean;
+        setError(message: string): void;
+        resolveProperty(mapping: Mapping, resolvedProperty: string): boolean;
     }
 
     interface InternalSession extends Session {
@@ -516,24 +518,6 @@ declare module "hydrate" {
         getErrorMessage(): string;
     }
 
-    interface Index {
-        keys: [string, number][];
-        options?: IndexOptions;
-    }
-
-    class ResolveContext {
-        path: string;
-        resolvedPath: string;
-        resolvedMapping: Mapping;
-        error: Error;
-        constructor(path: string);
-        currentProperty: string;
-        isEop: boolean;
-        isFirst: boolean;
-        setError(message: string): void;
-        resolveProperty(mapping: Mapping, resolvedProperty: string): boolean;
-    }
-
     class Observer {
         /**
          * Creates an Observer object.
@@ -544,11 +528,22 @@ declare module "hydrate" {
         destroy(): void;
     }
 
-    interface FindOneAndRemoveQuery<T> {
-        sort(field: string, direction: number, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
-        sort(fields: [string, number][], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
-        fetch(path: string, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
-        fetch(paths: string[], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    class ObjectMapping extends MappingBase {
+        properties: Property[];
+        constructor();
+        addProperty(property: Property): void;
+        getProperty(name: string): Property;
+        getPropertyForField(field: string): Property;
+        getProperties(flags?: PropertyFlags): Property[];
+        read(context: ReadContext, value: any): any;
+        protected readObject(context: ReadContext, obj: any, value: any, checkRemoved: boolean): any;
+        write(value: any, path: string, errors: MappingError[], visited: any[]): any;
+        protected writeObject(document: any, value: any, path: string, errors: MappingError[], visited: any[]): any;
+        watch(value: any, observer: Observer, visited: any[]): void;
+        areEqual(documentValue1: any, documentValue2: any): boolean;
+        walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
+        fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
+        _resolveCore(context: ResolveContext): void;
     }
 
     interface BulkWriteResult {
@@ -640,6 +635,13 @@ declare module "hydrate" {
         isOk(): boolean;
     }
 
+    interface FindOneAndRemoveQuery<T> {
+        sort(field: string, direction: number, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+        sort(fields: [string, number][], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+        fetch(path: string, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+        fetch(paths: string[], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    }
+
     interface FindOneAndUpdateQuery<T> {
         sort(field: string, direction: number, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
         sort(fields: [string, number][], callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
@@ -660,54 +662,27 @@ declare module "hydrate" {
         eachSeries(iterator: IteratorCallback<T>, callback: Callback): void;
     }
 
-    interface QueryDocument {
-        [name: string]: any;
-    }
-
     interface CountQuery {
         limit(value: number, callback?: ResultCallback<number>): CountQuery;
         skip(value: number, callback?: ResultCallback<number>): CountQuery;
     }
 
-    class MappingBase {
-        flags: MappingFlags;
-        id: number;
-        constructor(flags: MappingFlags);
-        read(context: ReadContext, value: any): any;
-        write(value: any, path: string, errors: MappingError[], visited: any[]): any;
-        watch(value: any, observer: Observer, visited: any[]): void;
-        walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
-        areEqual(documentValue1: any, documentValue2: any): boolean;
-        fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
-        fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
-        resolve(pathOrContext: any): any;
-        protected _resolveCore(context: ResolveContext): void;
+    interface QueryDocument {
+        [name: string]: any;
     }
 
-    class Property {
-        name: string;
-        /**
-         * The property flags.
-         */
-        flags: PropertyFlags;
-        /**
-         * The name of the database document field.
-         */
-        field: string;
-        /**
-         * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
-         */
-        inverseOf: string;
-        /**
-         * The mapping of the property.
-         */
-        mapping: Mapping;
-        constructor(name: string);
-        setFlags(flags: PropertyFlags): void;
-        getPropertyValue(obj: any): any;
-        setPropertyValue(obj: any, value: any): void;
-        getFieldValue(document: any): any;
-        setFieldValue(document: any, value: any): void;
+    interface Mapping {
+        id: number;
+        flags: MappingFlags;
+        read(context: ReadContext, value: any): any;
+        write(value: any, path: string, errors: MappingError[], visited: any[]): any;
+        areEqual(documentValue1: any, documentValue2: any): boolean;
+        resolve(path: string): ResolveContext;
+        resolve(context: ResolveContext): void;
+        watch(value: any, observer: Observer, visited: any[]): void;
+        walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
+        fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
+        fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
     }
 
     interface Persister {
@@ -747,20 +722,6 @@ declare module "hydrate" {
         batchSizeValue: number;
         // TODO: add read preference. Use string or enumeration or static class with core values?
         execute(callback: ResultCallback<any>): void;
-    }
-
-    interface Mapping {
-        id: number;
-        flags: MappingFlags;
-        read(context: ReadContext, value: any): any;
-        write(value: any, path: string, errors: MappingError[], visited: any[]): any;
-        areEqual(documentValue1: any, documentValue2: any): boolean;
-        resolve(path: string): ResolveContext;
-        resolve(context: ResolveContext): void;
-        watch(value: any, observer: Observer, visited: any[]): void;
-        walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
-        fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
-        fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
     }
 
     interface Object {
@@ -835,6 +796,47 @@ declare module "hydrate" {
         addedCount?: number;
     }
 
+    class MappingBase {
+        flags: MappingFlags;
+        id: number;
+        constructor(flags: MappingFlags);
+        read(context: ReadContext, value: any): any;
+        write(value: any, path: string, errors: MappingError[], visited: any[]): any;
+        watch(value: any, observer: Observer, visited: any[]): void;
+        walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
+        areEqual(documentValue1: any, documentValue2: any): boolean;
+        fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
+        fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
+        resolve(pathOrContext: any): any;
+        protected _resolveCore(context: ResolveContext): void;
+    }
+
+    class Property {
+        name: string;
+        /**
+         * The property flags.
+         */
+        flags: PropertyFlags;
+        /**
+         * The name of the database document field.
+         */
+        field: string;
+        /**
+         * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
+         */
+        inverseOf: string;
+        /**
+         * The mapping of the property.
+         */
+        mapping: Mapping;
+        constructor(name: string);
+        setFlags(flags: PropertyFlags): void;
+        getPropertyValue(obj: any): any;
+        setPropertyValue(obj: any, value: any): void;
+        getFieldValue(document: any): any;
+        setFieldValue(document: any, value: any): void;
+    }
+
     interface IteratorCallback<T> {
         (item: T, callback: Callback): any;
     }
@@ -854,6 +856,11 @@ declare module "hydrate" {
         Embeddable = 2048,
         InheritanceRoot = 4096,
         ArrayLike = 513,
+    }
+
+    interface Changes {
+        $set?: Map<any>;
+        $unset?: Map<any>;
     }
 
     interface Table<T> {
@@ -907,15 +914,6 @@ declare module "hydrate" {
         ReadOnly = 6171,
     }
 
-    interface Changes {
-        $set?: Map<any>;
-        $unset?: Map<any>;
-    }
-
-    interface Command {
-        execute(callback: Callback): void;
-    }
-
     interface Map<T> {
         [index: string]: T;
     }
@@ -945,5 +943,9 @@ declare module "hydrate" {
          * @param obj The object for which the hash code should be returned.
          */
         function getHashCode(obj: any): string;
+    }
+
+    interface Command {
+        execute(callback: Callback): void;
     }
 }
