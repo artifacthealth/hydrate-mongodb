@@ -4,7 +4,7 @@ import events = require("events");
 import Callback = require("./core/callback");
 import ResultCallback = require("./core/resultCallback");
 import Constructor = require("./core/constructor");
-import Query = require("./query/query");
+import QueryBuilder = require("./query/queryBuilder");
 import FindOneQuery = require("./query/findOneQuery")
 
 interface Session extends events.EventEmitter {
@@ -19,7 +19,7 @@ interface Session extends events.EventEmitter {
     fetch<T>(obj: T, callback?: ResultCallback<T>): void;
     fetch<T>(obj: T, path: string, callback?: ResultCallback<T>): void;
     fetch<T>(obj: T, paths: string[], callback?: ResultCallback<T>): void;
-    query<T>(ctr: Constructor<T>): Query<T>;
+    query<T>(ctr: Constructor<T>): QueryBuilder<T>;
     wait(callback?: Callback): void;
     close(callback?: Callback): void;
     contains(obj: Object): boolean;

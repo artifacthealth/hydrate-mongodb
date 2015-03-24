@@ -192,7 +192,7 @@ class PersisterImpl implements Persister {
 
         var query = this._prepareInverseQuery(entity, path, callback);
         if(query) {
-            this.findAll({criteria: query}, callback);
+            this._findAll({criteria: query}, callback);
         }
     }
 
@@ -254,7 +254,12 @@ class PersisterImpl implements Persister {
         });
     }
 
-    findAll(query: FindAllQuery, callback: ResultCallback<any[]>): void {
+    findAll(criteria: QueryDocument, callback: ResultCallback<any[]>): void {
+
+        this._fetchAll({ criteria: criteria }, callback);
+    }
+
+    private _findAll(query: FindAllQuery, callback: ResultCallback<any[]>): void {
 
         this._prepareFind(query).toArray((err, documents) => {
             if(err) return callback(err);
@@ -307,7 +312,7 @@ class PersisterImpl implements Persister {
                 this.findOneById(query.id, this._fetchOne(query, callback));
                 break;
             case QueryKind.FindAll:
-                this.findAll(query, this._fetchAll(query, callback));
+                this._findAll(query, this._fetchAll(query, callback));
                 break;
             case QueryKind.FindEach:
                 this._findEach(query, callback);
@@ -836,7 +841,7 @@ class FindQueue {
             return;
         }
 
-        this._persister.findAll({ criteria: { _id: { $in: ids }}}, (err, entities) => {
+        this._persister.findAll({ _id: { $in: ids }}, (err, entities) => {
             if(!err) {
                 for (var i = 0, l = entities.length; i < l; i++) {
                     var entity = entities[i];

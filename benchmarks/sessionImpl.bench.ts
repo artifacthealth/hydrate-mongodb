@@ -59,22 +59,20 @@ suite("SessionImpl", () => {
                 session.query(Cat).removeAll({}, done);
             });
         });
+
+        // setup test data
+        for(var i = 0; i < 1000000; i++) {
+            cats.push(new Cat("cat" + count++));
+        }
     });
 
     beforeEach(() => {
         i = 0;
     });
 
-    afterEach((done) => {
-        setTimeout(done, 2000);
-    });
-
-    test("new", () => {
-        cats.push(new Cat("cat" + count++));
-    });
-
     test("save x 1000", (done) => {
         for(var j = 0; j < 1000; j++) {
+            if(!cats[i]) return done(new Error("ran out of cats at " + i));
             session.save(cats[i++]);
         }
         session.flush(done);
@@ -87,7 +85,7 @@ suite("SessionImpl", () => {
     test("edit x 1000", (done) => {
 
         for(var j = 0; j < 1000; j++) {
-            if(!cats[i]) throw new Error("ran out of cats at " + i);
+            if(!cats[i]) return done(new Error("ran out of cats at " + i));
             cats[i].name = 'kitty' + (i++);
         }
         session.flush(done);

@@ -7,6 +7,7 @@ import Persister = require("../persister");
 import QueryDefinition = require("./queryDefinition");
 import QueryKind = require("./queryKind");
 
+import QueryBuilder = require("./queryBuilder");
 import FindOneAndRemoveQuery = require("./findOneAndRemoveQuery");
 import FindOneAndUpdateQuery = require("./findOneAndUpdateQuery");
 import FindOneQuery = require("./findOneQuery");
@@ -14,7 +15,7 @@ import FindQuery = require("./findQuery");
 import CountQuery = require("./countQuery");
 import QueryDocument = require("./queryDocument");
 
-class Query<T> {
+class QueryBuilderImpl implements QueryBuilder<Object> {
 
     private _session: InternalSession;
     private _persister: Persister;
@@ -25,9 +26,9 @@ class Query<T> {
         this._persister = persister;
     }
 
-    findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
-    findAll(criteria: QueryDocument, callback?: ResultCallback<T[]>): FindQuery<T>;
-    findAll(criteriaOrCallback?: any, callback?: ResultCallback<T[]>): FindQuery<T> {
+    findAll(callback?: ResultCallback<Object[]>): FindQuery<Object>;
+    findAll(criteria: QueryDocument, callback?: ResultCallback<Object[]>): FindQuery<Object>;
+    findAll(criteriaOrCallback?: any, callback?: ResultCallback<Object[]>): FindQuery<Object> {
 
         var query = this._createQuery(QueryKind.FindAll);
 
@@ -42,9 +43,9 @@ class Query<T> {
         return query.handleCallback(callback);
     }
 
-    findOne(callback?: ResultCallback<T>): FindOneQuery<T>;
-    findOne(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneQuery<T>;
-    findOne(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneQuery<T> {
+    findOne(callback?: ResultCallback<Object>): FindOneQuery<Object>;
+    findOne(criteria: QueryDocument, callback?: ResultCallback<Object>): FindOneQuery<Object>;
+    findOne(criteriaOrCallback?: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
 
         var query = this._createQuery(QueryKind.FindOne);
 
@@ -59,7 +60,7 @@ class Query<T> {
         return query.handleCallback(callback);
     }
 
-    findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<T> {
+    findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
 
         if(typeof id === "string") {
             id = this._persister.identity.fromString(id);
@@ -70,9 +71,9 @@ class Query<T> {
         return query.handleCallback(callback);
     }
 
-    findOneAndRemove(callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
-    findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
-    findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T> {
+    findOneAndRemove(callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object>;
+    findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object>;
+    findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object> {
 
         var query = this._createQuery(QueryKind.FindOneAndRemove);
 
@@ -87,9 +88,9 @@ class Query<T> {
         return query.handleCallback(callback);
     }
 
-    findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
-    findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
-    findOneAndUpdate(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>  {
+    findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
+    findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
+    findOneAndUpdate(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object>  {
 
         var query = this._createQuery(QueryKind.FindOneAndUpdate);
 
@@ -365,6 +366,6 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     }
 }
 
-export = Query;
+export = QueryBuilderImpl;
 
 

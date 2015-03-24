@@ -8,7 +8,7 @@ import assert = chai.assert;
 import helpers = require("../helpers");
 import QueryDefinition = require("../../src/query/queryDefinition");
 import QueryKind = require("../../src/query/queryKind");
-import Query = require("../../src/query/query");
+import QueryBuilderImpl = require("../../src/query/queryBuilderImpl");
 import ResultCallback = require("../../src/core/resultCallback");
 import Callback = require("../../src/core/callback");
 import QueryDocument = require("../../src/query/queryDocument");
@@ -17,7 +17,7 @@ import QueryDocument = require("../../src/query/queryDocument");
 import model = require("../fixtures/model");
 
 
-describe('Query', () => {
+describe('QueryBuilderImpl', () => {
 
     var queryCriteria: QueryDocument = { _name: 'Bob' };
     var preparedCriteria: QueryDocument = { _name: 'Bob' };

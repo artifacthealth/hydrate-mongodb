@@ -9,6 +9,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-mocha-test");
     grunt.loadNpmTasks("grunt-tsreflect");
     grunt.loadNpmTasks("grunt-shell");
+    grunt.loadNpmTasks('grunt-ts-clean');
+    grunt.loadNpmTasks('grunt-dts-concat');
 
     // Project configuration.
     grunt.initConfig({
@@ -33,7 +35,7 @@ module.exports = function(grunt) {
                     target: "es5",
                     module: "commonjs",
                     sourceMap: true,
-                    declaration: false,
+                    declaration: true,
                     noImplicitAny: true
                 },
                 src: ['src/**/*.ts'],
@@ -93,6 +95,24 @@ module.exports = function(grunt) {
         },
 
         copy: {
+            build: {
+                files: [
+                    {
+                        expand: true,
+                        src: [
+                            "src/**/*.d.ts"
+                        ],
+                        dest: "build/"
+                    },
+                    {
+                        expand: true,
+                        src: [
+                            "typings/**/*.d.ts"
+                        ],
+                        dest: "build"
+                    }
+                ]
+            },
             lib: {
                 files: [
                     {
@@ -126,13 +146,33 @@ module.exports = function(grunt) {
                     "build/benchmarks/**/*.bench.js"
                 ]
             }
+        },
+
+        dts_concat: {
+            lib: {
+                options: {
+                    name: 'hydrate',
+                    main: 'build/src/hydrate.d.ts',
+                    outDir: 'lib/'
+                }
+            }
+        },
+
+        ts_clean: {
+            lib: {
+                options: {
+                    verbose: false
+                },
+                src: ['lib/**/*'],
+                dot: false
+            }
         }
     });
 
     // Default task(s).
     grunt.registerTask("default", [ "build", "lib", "tests" ]);
-    grunt.registerTask("build", [ "clean:build", "typescript:build" ]);
-    grunt.registerTask("lib", [ "clean:lib",  "copy:lib" ]);
+    grunt.registerTask("build", [ "clean:build", "copy:build", "typescript:build" ]);
+    grunt.registerTask("lib", [ "clean:lib",  "copy:lib", "ts_clean:lib", "dts_concat:lib" ]);
     grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests" ]);
     grunt.registerTask("benchmarks", [ "typescript:benchmarks", "baseline:benchmarks" ]);
 

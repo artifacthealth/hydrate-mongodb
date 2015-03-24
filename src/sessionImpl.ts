@@ -19,7 +19,8 @@ import Batch = require("./batch");
 import Reference = require("./reference");
 import Table = require("./core/table");
 import EntityMapping = require("./mapping/entityMapping");
-import Query = require("./query/query");
+import QueryBuilder = require("./query/queryBuilder");
+import QueryBuilderImpl = require("./query/queryBuilderImpl");
 import FindOneQuery = require("./query/findOneQuery");
 import QueryDescriptor = require("./query/queryDefinition");
 import Observer = require("./observer");
@@ -106,6 +107,8 @@ var cachedDetachedLinks: ObjectLinks = {
     flags: ObjectFlags.None
 }
 
+// TODO: review all errors and decide if they are operational or programmer errors. For example, what about mapping errors?
+// TODO: decide where it makes sense to use WeakMap, Promise, Set, WeakSet which is now a native part of Node 12
 // TODO: raise events on UnitOfWork
 class SessionImpl extends events.EventEmitter implements InternalSession {
 
@@ -117,7 +120,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     /**
      * Cached Query Builders by Mapping
      */
-    private _queryByMapping: Table<Query<any>> = [];
+    private _queryByMapping: Table<QueryBuilder<any>> = [];
 
     /**
      * Hash table containing all objects by id associated with the session.
@@ -350,7 +353,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             || (this._persisterByMapping[mapping.id] = this.factory.createPersister(this, mapping));
     }
 
-    query<T>(ctr: Constructor<T>): Query<T> {
+    query<T>(ctr: Constructor<T>): QueryBuilder<T> {
 
         var mapping = this.factory.getMappingForConstructor(ctr);
         if(!mapping) {
@@ -360,7 +363,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
         var query = this._queryByMapping[mapping.id];
         if(!query) {
-            query = new Query<any>(this, this.getPersister(mapping));
+            query = new QueryBuilderImpl(this, this.getPersister(mapping));
             this._queryByMapping[mapping.id] = query;
         }
 
