@@ -1,5 +1,5 @@
 /**
- * @collection
+ * @entity
  * @changeTracking "deferredImplicit"
  */
 export class Party {
@@ -178,7 +178,7 @@ export class WorkPhone extends Phone {
 }
 
 /**
- * @collection
+ * @entity
  * @versioned false
  */
 export class User {

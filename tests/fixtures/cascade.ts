@@ -1,4 +1,4 @@
-/** @collection */
+/** @entity */
 export class SaveTest {
 
     /** @cascade "save" */
@@ -26,7 +26,7 @@ export class SaveTest {
     }
 }
 
-/** @collection */
+/** @entity */
 export class DetachTest {
 
     /** @cascade "save, detach" */
@@ -54,7 +54,7 @@ export class DetachTest {
     }
 }
 
-/** @collection */
+/** @entity */
 export class RemoveTest {
 
     /** @cascade "save, remove" */
@@ -82,7 +82,7 @@ export class RemoveTest {
     }
 }
 
-/** @collection */
+/** @entity */
 export class RemoveReferenceTest {
 
     /** @cascade "save, remove" */

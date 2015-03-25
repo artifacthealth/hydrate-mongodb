@@ -1,4 +1,4 @@
-/** @collection */
+/** @entity */
 export class A {
 
     a: string;

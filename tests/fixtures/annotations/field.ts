@@ -1,4 +1,4 @@
-/** @collection */
+/** @entity */
 export class A {
 
     /** @field "a" */

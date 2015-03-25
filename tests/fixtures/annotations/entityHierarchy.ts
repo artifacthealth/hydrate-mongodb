@@ -1,7 +1,7 @@
 export module a {
 
     /**
-     * @collection
+     * @entity
      */
     export class A {
 

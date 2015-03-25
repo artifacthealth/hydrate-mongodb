@@ -1,5 +1,5 @@
 /**
- * @collection
+ * @entity
  * @index keys: [ 'a', 1 ]
  * @index keys: [ ['a', 1], ['b', -1] ]
  */
@@ -17,7 +17,7 @@ export class B extends A {
     c: string;
 }
 
-/** @collection */
+/** @entity */
 export class D {
 
     /** @index */

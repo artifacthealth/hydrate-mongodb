@@ -1,5 +1,5 @@
 /**
- * @collection
+ * @entity
  * @discriminatorField "type"
  */
 export class Animal {

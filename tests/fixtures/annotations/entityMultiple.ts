@@ -1,9 +1,9 @@
-/** @collection */
+/** @entity */
 export class A {
 
 }
 
-/** @collection */
+/** @entity */
 export class B extends A {
 
 }

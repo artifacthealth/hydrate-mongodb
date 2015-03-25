@@ -17,6 +17,28 @@ describe('AnnotationMappingProvider', () => {
 
     describe('when processing annotation', () => {
 
+        describe('@entity', () => {
+
+            it("maps all subclasses of class annotated with 'entity' as document type", (done) => {
+
+                processFixture("entityHierarchy", done, (results) => {
+
+                    assert.lengthOf(results, 3);
+                    results.forEach(x => assert.instanceOf(x, EntityMapping));
+                });
+            });
+
+            it("throws error if there is more than one 'entity' annotation in a class hierarchy", (done) => {
+
+                processFixture("entityMultiple", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Only one class per inheritance hierarchy can have the 'entity' or 'embeddable' annotation");
+                    done();
+                });
+            });
+
+        });
+
         describe('@collection', () => {
 
             it('correctly load arguments', (done) => {
@@ -31,24 +53,6 @@ describe('AnnotationMappingProvider', () => {
                     var mappingD = findMapping(results, "D");
                     assert.equal(mappingD.collectionName, "someCollection");
                     assert.equal(mappingD.databaseName, "someDatabase");
-                });
-            });
-
-            it("maps all subclasses of class annotated with 'collection' as document type", (done) => {
-
-                processFixture("collectionHierarchy", done, (results) => {
-
-                    assert.lengthOf(results, 3);
-                    results.forEach(x => assert.instanceOf(x, EntityMapping));
-                });
-            });
-
-            it("throws error if there is more than one 'collection' annotation in a class hierarchy", (done) => {
-
-                processFixture("collectionMultiple", (err) => {
-                    assert.ok(err);
-                    assert.include(err.message, "Only one class per inheritance hierarchy can have the 'collection' or 'embeddable' annotation");
-                    done();
                 });
             });
 
@@ -111,7 +115,7 @@ describe('AnnotationMappingProvider', () => {
 
             it('sets the discriminatorValue to the class name if the discriminatorValue is not set for a document subclass', (done) => {
 
-                processFixture("collectionHierarchy", done, (results) => {
+                processFixture("entityHierarchy", done, (results) => {
 
                     assert.equal(findMapping(results, "C").discriminatorValue, "C");
                 });

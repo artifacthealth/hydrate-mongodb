@@ -1,5 +1,5 @@
 /**
- * @collection
+ * @entity
  */
 export class Animal {
 

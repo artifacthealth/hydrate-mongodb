@@ -1,19 +1,30 @@
-/** @collection */
+/**
+ * @entity
+ */
 export class A {
 
 }
 
-/** @collection "someCollection" */
+/**
+ * @entity
+ * @collection "someCollection"
+ */
 export class B {
 
 }
 
-/** @collection db: "someDatabase" */
+/**
+ * @entity
+ * @collection db: "someDatabase"
+ */
 export class C {
 
 }
 
-/** @collection name: "someCollection", db: "someDatabase" */
+/**
+ * @entity
+ * @collection name: "someCollection", db: "someDatabase"
+ */
 export class D {
 
 }

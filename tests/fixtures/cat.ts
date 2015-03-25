@@ -1,5 +1,5 @@
 /**
- * @collection
+ * @entity
  * @changeTracking "observe"
  */
 class Cat {

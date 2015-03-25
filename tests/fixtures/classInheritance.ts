@@ -1,5 +1,5 @@
 /**
- * @collection
+ * @entity
  * @discriminatorField "__test"
  */
 export class Animal {

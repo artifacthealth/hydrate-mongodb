@@ -29,8 +29,8 @@ class AnnotationMappingProvider implements MappingProvider {
         this._filePaths.push(path);
     }
 
-    // 1. Find all the classes that are annotated with "collection" or are a subclass of a class
-    //    that is annotated with "collection"
+    // 1. Find all the classes that are annotated with "entity" or are a subclass of a class
+    //    that is annotated with "entity"
     // 2. Recursively search types found in #1 to find all other object types. Make sure to only search
     //    declared fields so we are not duplicating searches from the parent type.
     // 3. Build type mapping. Mark properties as having an intrinsic type, embedded, or reference. It's a reference
@@ -111,7 +111,7 @@ class MappingBuilder {
             this._findClasses(symbols[i]);
         }
 
-        this._ensureOneCollectionPerHierarchy();
+        this._ensureOneRootPerHierarchy();
 
         // TODO: identity supertypes as embeddable or entity. error on conflicts.
         // TODO: perhaps named types should be required to have @entity or @embeddable. how to handle multiple inheritance?
@@ -159,8 +159,8 @@ class MappingBuilder {
 
         if(symbol.isClass()) {
             var type = symbol.getDeclaredType();
-            if(type.hasAnnotation("collection", true)) {
-                this._addType(type, type.hasAnnotation("collection") ? MappingKind.RootEntity : MappingKind.Entity);
+            if(type.hasAnnotation("entity", true)) {
+                this._addType(type, type.hasAnnotation("entity") ? MappingKind.RootEntity : MappingKind.Entity);
             }
             else if(type.hasAnnotation("embeddable", true)) {
                 this._addType(type, type.hasAnnotation("embeddable") ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
@@ -193,7 +193,7 @@ class MappingBuilder {
         if(!type.isObjectType() || this._isNativeType(type)) return;
 
         if(type.isClass() && !this._typeTable[this._key.ensureValue(type)]) {
-            this._addError("Invalid type '"+ type.getFullName() +"'. All referenced classes must belong to an inheritance hierarchy annotated with 'collection' or 'embeddable'.");
+            this._addError("Invalid type '"+ type.getFullName() +"'. All referenced classes must belong to an inheritance hierarchy annotated with 'entity' or 'embeddable'.");
         }
 
         if(this._typeTable[this._key.ensureValue(type)]) {
@@ -228,13 +228,13 @@ class MappingBuilder {
         }
     }
 
-    private _ensureOneCollectionPerHierarchy(): void {
+    private _ensureOneRootPerHierarchy(): void {
 
         var types = this._objectTypes;
         for(var i = 0, l = types.length; i < l; i++) {
             var type = types[i];
             if(this._subclassMarkedAsRootType(type)) {
-                this._addAnnotationError(type, type.getAnnotations("collection")[0], "Only one class per inheritance hierarchy can have the 'collection' or 'embeddable' annotation.");
+                this._addAnnotationError(type, type.getAnnotations("entity")[0], "Only one class per inheritance hierarchy can have the 'entity' or 'embeddable' annotation.");
             }
         }
     }
@@ -563,6 +563,8 @@ class MappingBuilder {
     }
 
     private _setCollection(mapping: Mapping.EntityMapping, value: any): void {
+
+        this._assertRootEntityMapping(mapping);
 
         if(typeof value === "string") {
             mapping.collectionName = value;

@@ -1,5 +1,5 @@
 /**
- * @collection
+ * @entity
  * @changeTracking "deferredExplicit"
  */
 class Dog {
