@@ -20,8 +20,16 @@ class AnnotationMappingProvider implements MappingProvider {
 
     private _filePaths: string[] = [];
 
-    constructor() {
+    constructor(paths?: string | string[]) {
 
+        if(paths) {
+            if(typeof paths === "string") {
+                this.addFile(paths);
+            }
+            else {
+                paths.forEach(path => this.addFile(path));
+            }
+        }
     }
 
     addFile(path: string): void {
