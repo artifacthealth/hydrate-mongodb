@@ -31,12 +31,19 @@ class TaskQueue extends events.EventEmitter {
 
     add(operation: number, wait: number, arg: any, callback?: ResultCallback<any>): void {
 
+        var err: Error;
+
         if(this._closed) {
-            return callback(new Error("Session is closed."));
+            err = new Error("Session is closed.");
         }
 
         if(this._invalid) {
-            return callback(new Error("Session is invalid. An error occurred during a previous action."));
+            err = new Error("Session is invalid. An error occurred during a previous action.");
+        }
+
+        if(err) {
+            callback ? callback(err) : this._unhandledError(err);
+            return;
         }
 
         var task: Task = {

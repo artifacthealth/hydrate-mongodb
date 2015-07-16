@@ -117,6 +117,33 @@ describe('TaskQueue', () => {
         });
     });
 
+    it('emits error when queue is closed and add does not have a callback', (done) => {
+
+        var count = 0;
+        var queue = new TaskQueue((action, arg, callback) => {
+            process.nextTick(() => callback(new Error((++count).toString())));
+        });
+
+        // this task will return an error
+        queue.add(Action.Save, Action.Flush, 0);
+
+        var first = true;
+
+        queue.on('error', (err: Error) => {
+            assert.ok(err);
+
+            if(first) {
+                first = false;
+                // this will cause an invalid session error to be emitted
+                queue.add(Action.Save, Action.Flush, 0);
+            }
+            else {
+                assert.equal(err.message, "Session is invalid. An error occurred during a previous action.");
+                done();
+            }
+        });
+    });
+
     it('does not allow any tasks to be added to the queue after an error occurs', (done) => {
 
         var count = 0;
