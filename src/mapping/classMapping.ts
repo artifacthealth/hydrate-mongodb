@@ -99,9 +99,13 @@ class ClassMapping extends ObjectMapping {
             discriminators.push(this.discriminatorValue);
         }
 
-        if (this._subclasses) {
-            for (var i = 0; i < this._subclasses.length; i++) {
-                this._subclasses[i]._getDescendantDiscriminators(discriminators);
+        var subclasses = this._subclasses;
+        if (subclasses) {
+            for (var i = 0; i < subclasses.length; i++) {
+                var discriminatorValue = subclasses[i].discriminatorValue;
+                if(discriminatorValue) {
+                    discriminators.push(discriminatorValue);
+                }
             }
         }
     }
