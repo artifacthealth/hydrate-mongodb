@@ -61,14 +61,29 @@ class ClassMapping extends ObjectMapping {
 
     setDocumentDiscriminator(obj: any): void {
 
-        if(this.discriminatorValue === undefined) {
+        var discriminators: string[] = [];
+        this._getDescendantDiscriminators(discriminators);
+
+        if(discriminators.length == 0) {
             this.setDocumentDiscriminator = <any>(function() { /*noop*/ });
             return;
         }
 
-        // TODO: escape discriminatorField and discriminatorValue
-        this.setDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = \"" + this.discriminatorValue + "\""));
-        obj[this.inheritanceRoot.discriminatorField] = this.discriminatorValue;
+        var discriminator: any;
+
+        if(discriminators.length == 1) {
+            discriminator = discriminators[0];
+        }
+        else {
+            discriminator = {
+                '$in': discriminators
+            }
+        }
+
+        obj[this.inheritanceRoot.discriminatorField] = discriminator;
+
+        // TODO: escape discriminatorField
+        this.setDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = " + JSON.stringify(discriminator)));
     }
 
     getDocumentDiscriminator(obj: any): string {
@@ -76,6 +91,19 @@ class ClassMapping extends ObjectMapping {
         // TODO: escape discriminatorField
         this.getDocumentDiscriminator = <any>(new Function("o", "return o['" + this.inheritanceRoot.discriminatorField + "']"));
         return obj[this.inheritanceRoot.discriminatorField]
+    }
+
+    private _getDescendantDiscriminators(discriminators: string[]): void {
+
+        if (this.discriminatorValue) {
+            discriminators.push(this.discriminatorValue);
+        }
+
+        if (this._subclasses) {
+            for (var i = 0; i < this._subclasses.length; i++) {
+                this._subclasses[i]._getDescendantDiscriminators(discriminators);
+            }
+        }
     }
 
     get hasSubClasses(): boolean {

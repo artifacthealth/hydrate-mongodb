@@ -120,7 +120,7 @@ describe('UpdateDocumentBuilder', () => {
 
         var phone = new model.Phone("555-1212", model.PhoneType.Home);
         assertDocument(done, { $push: { phones: { $each: [ phone ], $sort: { type: model.PhoneType.Work} }}},
-            { $push: { phones: { $each: [ { "__t": "Phone", "number": "555-1212", "type": "Home"} ], $sort: { type: "Work"} }}});
+            { $push: { phones: { $each: [ { "__t": { "$in": ["Phone", "WorkPhone"] }, "number": "555-1212", "type": "Home"} ], $sort: { type: "Work"} }}});
     });
 
     it('correctly prepares document with $max operator', (done) => {
@@ -169,7 +169,7 @@ describe('UpdateDocumentBuilder', () => {
 
     it('correctly prepares document with $pull operator for array of embedded documents', (done) => {
 
-        assertDocument(done, { $pull: { phones: { type: model.PhoneType.Work }}}, { $pull: { phones: { "__t": "Phone", type: "Work" }}});
+        assertDocument(done, { $pull: { phones: { type: model.PhoneType.Work }}}, { $pull: { phones: { "__t": { "$in": ["Phone", "WorkPhone"] }, type: "Work" }}});
     });
 
     it('returns error if a document replacement is attempted', (done) => {
