@@ -26,6 +26,7 @@ import Reference = require("../src/reference");
 // Fixtures
 import model = require("./fixtures/model");
 import Cat = require("./fixtures/cat");
+import Kitten = require("./fixtures/kitten");
 import Dog = require("./fixtures/dog");
 import cascade = require("./fixtures/cascade");
 
@@ -841,6 +842,23 @@ describe('SessionImpl', () => {
 
     });
 
+    describe('getReference', () => {
+
+        it.only('should convert id from string to correct type for derived entity class', (done) => {
+
+            helpers.createFactory(["cat","kitten"], (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var ref = session.getReference(Kitten, new ObjectIdGenerator().generate().toString());
+                var id = session.getId(ref);
+
+                assert.instanceOf(id, mongodb.ObjectID);
+                done();
+            });
+        });
+    });
+
     describe('fetch', () => {
 
         it('should not cause object to become dirty when change tracking is observe', (done) => {
@@ -857,7 +875,7 @@ describe('SessionImpl', () => {
                 persister.onFetch = (entity, path, callback) => {
                     assert.equal(path, "parent");
                     var parent = new Cat("Tails");
-                    (<any>parent)._id = (<Reference>entity.parent).id;
+                    (<any>parent)._id = (<Reference>entity.parent).getId();
                     entity.parent = parent;
                     process.nextTick(callback);
                 }

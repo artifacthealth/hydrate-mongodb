@@ -127,16 +127,12 @@ class EntityMapping extends ClassMapping {
         // the mapping for the current object in Class.write.
         // TODO: validate mapping that all classes inherit from inheritanceRoot or this ^ may not work
         // if the value is not an instance of the entity's constructor then it should be an identifier or DBRef
-        if(Reference.isReference(value)) {
-            // TODO: handle DBRef
-            id = (<Reference>value).id;
-        }
-        else {
-            // otherwise, retrieve the id from the object
-            if(!(id = value["_id"])) {
-                errors.push({ message: "Missing identifier.", path: (path ? path + "." : "") + "_id", value: value });
-                return;
-            }
+
+        // TODO: Use session.getId?
+        // retrieve the id from the object
+        if(!(id = value["_id"])) {
+            errors.push({ message: "Missing identifier.", path: (path ? path + "." : "") + "_id", value: value });
+            return;
         }
 
         if(!(<EntityMapping>this.inheritanceRoot).identity.validate(id)) {
@@ -190,7 +186,7 @@ class EntityMapping extends ClassMapping {
 
         if(Reference.isReference(value)) {
             // TODO: handle DBRef
-            var entity = session.getObject((<Reference>value).id);
+            var entity = session.getObject((<Reference>value).getId());
             if (entity) {
                 value = entity;
             }

@@ -7,7 +7,7 @@ class Reference {
     /**
      * True if the Reference has been fetched; otherwise, false.
      */
-    constructor(public mapping: EntityMapping, public id: any) {
+    constructor(public mapping: EntityMapping, private _id: any) {
 
     }
 
@@ -22,7 +22,11 @@ class Reference {
             return;
         }
 
-        persister.findOneById(this.id, callback);
+        persister.findOneById(this._id, callback);
+    }
+
+    getId(): any {
+        return this._id;
     }
 
     /**
@@ -33,10 +37,10 @@ class Reference {
 
         if (other == null) return false;
 
-        var id = other instanceof Reference ? (<Reference>other).id : other._id;
+        var id = other instanceof Reference ? (<Reference>other)._id : other._id;
         if (id == null) return false;
 
-        return (<EntityMapping>this.mapping.inheritanceRoot).identity.areEqual(this.id, id)
+        return (<EntityMapping>this.mapping.inheritanceRoot).identity.areEqual(this._id, id)
     }
 
     /**
@@ -52,7 +56,7 @@ class Reference {
 
         if(value1 instanceof Reference) {
             var mapping1 = (<Reference>value1).mapping;
-            var id1 = (<Reference>value1).id;
+            var id1 = (<Reference>value1)._id;
         }
         else {
             // if value is not a Reference, we assume it's an Entity
@@ -61,7 +65,7 @@ class Reference {
 
         if(value2 instanceof Reference) {
             var mapping2 = (<Reference>value2).mapping;
-            var id2 = (<Reference>value2).id;
+            var id2 = (<Reference>value2)._id;
         }
         else {
             // if value is not a Reference, we assume it's an Entity

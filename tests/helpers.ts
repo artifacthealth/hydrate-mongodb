@@ -27,22 +27,34 @@ export function requireFixture(filename: string): reflect.Symbol {
 
 var registryCache: Map<MappingRegistry> = {};
 
-export function createFactory(file: string, callback: (err: Error, result?: MockSessionFactory) => void): void {
+export function createFactory(files: string, callback: (err: Error, result?: MockSessionFactory) => void): void;
+export function createFactory(files: string[], callback: (err: Error, result?: MockSessionFactory) => void): void;
+export function createFactory(files: any, callback: (err: Error, result?: MockSessionFactory) => void): void {
 
-    var registry = registryCache[file];
+    var key: string;
+
+    if(!Array.isArray((files))) {
+        files = [files];
+    }
+
+    key = files.join(",");
+
+    var registry = registryCache[key];
     if(registry) {
         return callback(null, new MockSessionFactory(registry));
     }
 
     var provider = new AnnotationMappingProvider();
-    provider.addFile("build/tests/fixtures/" + file + ".d.json");
+
+    files.forEach((file: string) => provider.addFile("build/tests/fixtures/" + file + ".d.json"));
+
     provider.getMapping(new Configuration(), (err, mappings) => {
         if(err) return callback(err);
 
         var registry = new MappingRegistry();
         registry.addMappings(<ClassMapping[]>mappings);
 
-        registryCache[file] = registry; // cache result
+        registryCache[key] = registry; // cache result
 
         callback(null, new MockSessionFactory(registry));
     });
