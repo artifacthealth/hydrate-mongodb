@@ -268,7 +268,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         // If mapping is not found, the reference is still created and an error is returned when the client tries
         // to resolve the reference.
         var mapping = this.factory.getMappingForConstructor(ctr);
-        if (mapping) {
+        if (mapping && mapping.identity) {
             if(typeof id === "string") {
                 id = mapping.identity.fromString(id);
             }
