@@ -8,7 +8,9 @@ class MockCursor implements mongodb.Cursor {
 
     private _closed = false;
 
-    constructor(public contents: any[]) {
+    private _sorting: any[];
+
+    constructor(public contents: any[] = []) {
 
     }
 
@@ -52,8 +54,14 @@ class MockCursor implements mongodb.Cursor {
 
     sort(keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void): mongodb.Cursor {
 
+        if(this.onSort) {
+            return this.onSort(keyOrList, directionOrCallback, callback);
+        }
+
         return this;
     }
+
+    onSort: (keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void) => mongodb.Cursor;
 
     limit(limit: number, callback?: (err: Error, result: any) => void): mongodb.Cursor {
 

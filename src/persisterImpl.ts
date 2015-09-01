@@ -31,6 +31,7 @@ import ResolveContext = require("./mapping/resolveContext");
 import ReadContext = require("./mapping/readContext");
 import Observer = require("./observer");
 import CallbackUtil = require("./core/callbackUtil");
+import OrderDocument = require("./query/orderDocument");
 
 interface FindOneQuery {
 
@@ -40,7 +41,7 @@ interface FindOneQuery {
 
 interface FindAllQuery extends FindOneQuery {
 
-    sortValue?: [string, number][];
+    orderDocument?: OrderDocument[];
     limitCount?: number;
     skipCount?: number;
     batchSizeValue?: number;
@@ -303,6 +304,17 @@ class PersisterImpl implements Persister {
             }
         }
 
+        // map sorting
+        if(query.sortValue) {
+            var preparedOrder = this._prepareOrderDocument(query.sortValue);
+            if(preparedOrder.error) {
+                return callback(preparedOrder.error);
+            }
+            else {
+                query.orderDocument = preparedOrder.value;
+            }
+        }
+
         switch(query.kind) {
             case QueryKind.FindOne:
                 this.findOne(query.criteria, this._fetchOne(query, callback));
@@ -338,6 +350,28 @@ class PersisterImpl implements Persister {
                 this._count(query, callback);
                 break;
         }
+    }
+
+    private _prepareOrderDocument(sorting: [string, number][]): Result<OrderDocument[]> {
+
+        var order: OrderDocument[] = [];
+
+        for(var i = 0; i < sorting.length; i++) {
+
+            var sortTuple = sorting[i];
+
+            // resolve field path
+            var context = this._mapping.resolve(sortTuple[0]);
+            if(context.error) {
+                return new Result<OrderDocument[]>(context.error);
+            }
+
+            var sortDocument: OrderDocument = {};
+            sortDocument[context.resolvedPath] = sortTuple[1];
+            order.push(sortDocument);
+        }
+
+        return new Result(null, order);
     }
 
     // TODO: optimize this function by using underlying cursor from core directly
@@ -451,8 +485,8 @@ class PersisterImpl implements Persister {
 
         var cursor = this._collection.find(query.criteria);
 
-        if(query.sortValue !== undefined) {
-            cursor.sort(query.sortValue);
+        if(query.orderDocument !== undefined) {
+            cursor.sort(query.orderDocument);
         }
 
         if(query.skipCount !== undefined) {
@@ -477,7 +511,7 @@ class PersisterImpl implements Persister {
             new: query.wantsUpdated
         }
 
-        this._collection.findAndModify(query.criteria, query.sortValue, query.updateDocument, options, (err, response) => {
+        this._collection.findAndModify(query.criteria, query.orderDocument, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
 
             var document = response.value;

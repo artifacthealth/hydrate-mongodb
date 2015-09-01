@@ -1,16 +1,20 @@
 /// <reference path="../typings/mocha.d.ts"/>
 /// <reference path="../typings/chai.d.ts"/>
 /// <reference path="../typings/async.d.ts" />
+/// <reference path="../typings/mongodb.d.ts" />
 
 import util = require("util");
 
 import async = require("async");
 import chai = require("chai");
+import mongodb = require("mongodb");
+
 import assert = chai.assert;
 
 import model = require("./fixtures/model");
 import helpers = require("./helpers");
 
+import MockCursor = require("./driver/mockCursor");
 import MockCollection = require("./driver/mockCollection");
 import MockSessionFactory = require("./mockSessionFactory");
 import QueryDefinitionStub = require("./query/queryDefinitionStub");
@@ -134,6 +138,41 @@ describe('PersisterImpl', () => {
     });
 
     describe('executeQuery', () => {
+
+        describe('findAll', () => {
+
+            it('translates property names to field names in sort specification', (done) => {
+
+                var collection = new MockCollection();
+
+                helpers.createPersister(collection, (err, persister) => {
+                    if (err) return done(err);
+
+                    collection.onFind = (criteria) => {
+
+                        var cursor = new MockCursor();
+
+                        cursor.onSort = (keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void): mongodb.Cursor => {
+
+                            assert.deepEqual(keyOrList, [ { 'name': 1 }]);
+                            done();
+
+                            return cursor;
+                        }
+
+                        return cursor;
+                    }
+
+                    var query = new QueryDefinitionStub(QueryKind.FindAll);
+                    query.criteria = {};
+                    query.sortValue = [ [ '_name', 1 ] ];
+
+                    persister.executeQuery(query, (err, results) => {
+                        if(err) return done(err);
+                    });
+                });
+            });
+        });
 
         describe('distinct', () => {
 

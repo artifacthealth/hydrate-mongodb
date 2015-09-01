@@ -844,7 +844,7 @@ describe('SessionImpl', () => {
 
     describe('getReference', () => {
 
-        it.only('should convert id from string to correct type for derived entity class', (done) => {
+        it('should convert id from string to correct type for derived entity class', (done) => {
 
             helpers.createFactory(["cat","kitten"], (err, factory) => {
                 if (err) return done(err);
