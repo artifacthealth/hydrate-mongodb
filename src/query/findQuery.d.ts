@@ -1,8 +1,9 @@
 import ResultCallback = require("../core/resultCallback");
 import Callback = require("../core/callback");
 import IteratorCallback = require("../core/iteratorCallback");
+import Query = require("./query");
 
-interface FindQuery<T> {
+interface FindQuery<T> extends Query<T[]> {
 
     sort(field: string, direction: number, callback?: ResultCallback<T[]>): FindQuery<T>;
     sort(fields: [string, number][], callback?: ResultCallback<T[]>): FindQuery<T>;

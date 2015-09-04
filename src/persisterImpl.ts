@@ -256,7 +256,7 @@ class PersisterImpl implements Persister {
 
     findAll(criteria: QueryDocument, callback: ResultCallback<any[]>): void {
 
-        this._fetchAll({ criteria: criteria }, callback);
+        this._findAll({ criteria: criteria }, callback);
     }
 
     private _findAll(query: FindAllQuery, callback: ResultCallback<any[]>): void {

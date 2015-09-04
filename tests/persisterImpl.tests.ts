@@ -135,6 +135,23 @@ describe('PersisterImpl', () => {
 
     describe('findAll', () => {
 
+        it('executes query with criteria exactly as specified', (done) => {
+
+            var collection = new MockCollection();
+            collection.onFind = (criteria) => {
+                assert.deepEqual(criteria, { 'name': 'Bob' });
+                done();
+                return collection.createCursor();
+            }
+
+            helpers.createPersister(collection, (err, persister) => {
+                if (err) return done(err);
+
+                persister.findAll({ 'name': 'Bob' }, (err, results) => {
+                    if(err) return done(err);
+                });
+            });
+        });
     });
 
     describe('executeQuery', () => {

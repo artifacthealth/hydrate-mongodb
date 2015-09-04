@@ -1,6 +1,7 @@
 import ResultCallback = require("../core/resultCallback");
+import Query = require("./query");
 
-interface FindOneAndRemoveQuery<T> {
+interface FindOneAndRemoveQuery<T> extends Query<T> {
 
     sort(field: string, direction: number, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
     sort(fields: [string, number][], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;

@@ -210,7 +210,9 @@ class EntityMapping extends ClassMapping {
 
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
-        if (!value || typeof value !== "object") return;
+        if (!value || typeof value !== "object") {
+            return callback(null, value);
+        }
 
         if(Reference.isReference(value)) {
             // TODO: handle DBRef
