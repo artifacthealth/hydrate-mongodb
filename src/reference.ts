@@ -44,8 +44,7 @@ class Reference {
     }
 
     /**
-     * Returns true if values are equivalent. Either value can be a Reference or an Entity. However, if neither
-     * value is a Reference then the function returns false.
+     * Returns true if values are equivalent. Either value can be a Reference or an Entity.
      * @param value1 The first reference or entity to compare.
      * @param value2 The second reference or entity to compare.
      */

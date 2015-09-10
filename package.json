@@ -1,7 +1,7 @@
 {
   "name": "@artifacthealth/hydrate",
   "description": "Library for mapping TypeScript classes to a MongoDB database.",
-  "version": "0.1.12",
+  "version": "0.1.18",
   "author": {
     "name": "Artifact Health, LLC",
     "url": "http://www.artifacthealth.com"
@@ -22,7 +22,7 @@
   "dependencies": {
     "async": "^0.9.0",
     "change-case": "^2.2.0",
-    "mongodb": "^2.0.19",
+    "mongodb": "^2.0.42",
     "tsreflect": "^0.1.10"
   },
   "devDependencies": {

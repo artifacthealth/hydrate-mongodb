@@ -19,6 +19,7 @@ import MockCollection = require("./driver/mockCollection");
 import MockSessionFactory = require("./mockSessionFactory");
 import QueryDefinitionStub = require("./query/queryDefinitionStub");
 import QueryKind = require("../src/query/queryKind");
+import Batch = require("../src/batch");
 
 describe('PersisterImpl', () => {
 
@@ -26,6 +27,24 @@ describe('PersisterImpl', () => {
     });
 
     describe('addInsert', () => {
+
+        it('correctly adds type specifier for classes that have derived classes', (done) => {
+
+            var party = new model.Party("Bob");
+            (<any>party)["_id"] = helpers.generateId();
+            var collection = new MockCollection();
+            var batch = new Batch();
+
+            helpers.createPersister(collection, model.Party, (err, persister) => {
+                if (err) return done(err);
+
+                var result = persister.addInsert(batch, party);
+                if(result.error) return done(result.error);
+
+                assert.deepEqual((<any>result.value).__t, "Party");
+                done();
+            });
+        });
     });
 
     describe('addRemove', () => {
@@ -50,6 +69,8 @@ describe('PersisterImpl', () => {
                 done();
                 return collection.createCursor();
             }
+
+            var batch =
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);

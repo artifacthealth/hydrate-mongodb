@@ -59,13 +59,13 @@ class ClassMapping extends ObjectMapping {
         this.inheritanceRoot._addDiscriminatorMapping(value, this);
     }
 
-    setDocumentDiscriminator(obj: any): void {
+    setQueryDocumentDiscriminator(obj: any): void {
 
         var discriminators: string[] = [];
         this._getDescendantDiscriminators(discriminators);
 
         if(discriminators.length == 0) {
-            this.setDocumentDiscriminator = <any>(function() { /*noop*/ });
+            this.setQueryDocumentDiscriminator = <any>(function() { /*noop*/ });
             return;
         }
 
@@ -83,7 +83,19 @@ class ClassMapping extends ObjectMapping {
         obj[this.inheritanceRoot.discriminatorField] = discriminator;
 
         // TODO: escape discriminatorField
-        this.setDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = " + JSON.stringify(discriminator)));
+        this.setQueryDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = " + JSON.stringify(discriminator)));
+    }
+
+    setDocumentDiscriminator(obj: any): void {
+
+        if(this.discriminatorValue === undefined) {
+            this.setDocumentDiscriminator = <any>(function() { /*noop*/ });
+            return;
+        }
+
+        // TODO: escape discriminatorField and discriminatorValue
+        this.setDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = \"" + this.discriminatorValue + "\""));
+        obj[this.inheritanceRoot.discriminatorField] = this.discriminatorValue;
     }
 
     getDocumentDiscriminator(obj: any): string {
@@ -143,6 +155,8 @@ class ClassMapping extends ObjectMapping {
 
         if(!this._registry) {
             this._registry = new MappingRegistry();
+            // add this mapping to the registry then add subclasses
+            this._registry.addMapping(this);
             if(this._subclasses) {
                 var subclasses = this._subclasses;
                 for (var i = 0, l = subclasses.length; i < l; i++) {
@@ -194,13 +208,22 @@ class ClassMapping extends ObjectMapping {
 
         // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
         // does not exist, default to current mapping.
-        return (this._ensureRegistry().getMappingForObject(value) || this).writeClass(value, path, errors, visited);
+        var mapping = this._ensureRegistry().getMappingForObject(value);
+        return (mapping || this).writeClass(value, path, errors, visited, !!mapping);
     }
 
-    protected writeClass(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    protected writeClass(value: any, path: string, errors: MappingError[], visited: any[], mappedConstructor: boolean): any {
 
         var document: any = {};
-        this.setDocumentDiscriminator(document);
+
+        // If the constructor is not mapped then we should be writing a query document
+        if(mappedConstructor) {
+            this.setDocumentDiscriminator(document);
+        }
+        else {
+            this.setQueryDocumentDiscriminator(document);
+        }
+
         return this.writeObject(document, value, path, errors, visited);
     }
 

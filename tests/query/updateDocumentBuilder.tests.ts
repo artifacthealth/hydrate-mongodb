@@ -120,7 +120,7 @@ describe('UpdateDocumentBuilder', () => {
 
         var phone = new model.Phone("555-1212", model.PhoneType.Home);
         assertDocument(done, { $push: { phones: { $each: [ phone ], $sort: { type: model.PhoneType.Work} }}},
-            { $push: { phones: { $each: [ { "__t": { "$in": ["Phone", "WorkPhone"] }, "number": "555-1212", "type": "Home"} ], $sort: { type: "Work"} }}});
+            { $push: { phones: { $each: [ { "__t": "Phone", "number": "555-1212", "type": "Home"} ], $sort: { type: "Work"} }}});
     });
 
     it('correctly prepares document with $max operator', (done) => {

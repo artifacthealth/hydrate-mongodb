@@ -26,6 +26,11 @@ describe('CriteriaBuilder', () => {
         assertCriteria(done, {}, { "__t": "Person" });
     });
 
+    it('includes list of discriminator values if mapping has subclasses', (done) => {
+
+        assertCriteria(done, {}, { "__t": { "$in": ["Party", "Person", "Organization"] } }, model.Party);
+    });
+
     it('translates property names on entities to field names', (done) => {
 
         assertCriteria(done, { _name: "Bob" }, { "__t": "Person", name: "Bob" });

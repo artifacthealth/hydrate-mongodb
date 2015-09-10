@@ -34,7 +34,7 @@ class CriteriaBuilder {
         if(!preparedCriteria) {
             return null;
         }
-        this.mapping.setDocumentDiscriminator(preparedCriteria);
+        this.mapping.setQueryDocumentDiscriminator(preparedCriteria);
         return preparedCriteria;
     }
 
