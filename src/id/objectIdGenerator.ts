@@ -16,7 +16,12 @@ class ObjectIdGenerator implements IdentityGenerator {
     }
 
     validate(value: any): boolean {
-        return value instanceof ObjectID;
+
+        if(value == null) return false;
+
+        if(value._bsontype && value._bsontype == 'ObjectID') return true;
+
+        return false;
     }
 
     fromString(text: string): any {
