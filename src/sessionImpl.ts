@@ -2,8 +2,9 @@
 /// <reference path="../typings/node.d.ts" />
 
 import events = require("events");
-
 import async = require("async");
+
+import Async = require("./core/Async");
 import Callback = require("./core/callback");
 import ChangeTracking = require("./mapping/changeTracking");
 import Constructor = require("./core/constructor");
@@ -729,6 +730,25 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     fetchInternal(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
+        if(Array.isArray(obj)) {
+            // TODO: warn in documentation that if array is modified before this callback returns then results are unpredictable
+            Async.forEach(obj, (item, index, done) => {
+                // note, depth is not incremented for array
+                this.fetchInternal(item, paths, (err, result) => {
+                    if(err) return done(err);
+                    if(item !== result) {
+                        obj[index] = result;
+                    }
+                    done();
+                });
+            }, (err) => {
+                if(err) return callback(err);
+                callback(null, obj);
+            });
+            //async.map(obj, (entity, done) => this.fetchInternal(entity, paths, done), callback);
+            return;
+        }
+
         // TODO: when a reference is resolved do we update the referenced object? __proto__ issue.
         if(Reference.isReference(obj)) {
             (<Reference>obj).fetch(this, (err, entity) => {
@@ -751,16 +771,17 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         if(!paths || paths.length === 0) {
             process.nextTick(() => callback(null, obj));
         }
+        else {
+            var persister = links.persister;
 
-        var persister = links.persister;
-
-        async.each(paths, (path: string, done: (err?: Error) => void) => {
-            persister.fetch(obj, path, done);
-        },
-        (err) => {
-            if(err) return callback(err);
-            callback(null, obj);
-        });
+            async.each(paths, (path: string, done: (err?: Error) => void) => {
+                    persister.fetch(obj, path, done);
+                },
+                (err) => {
+                    if (err) return callback(err);
+                    callback(null, obj);
+                });
+        }
     }
 
     /**
