@@ -615,19 +615,22 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _flush(callback: Callback): void {
 
-        var head = this._scheduleHead;
+        // Call setImmediate to ensure that all Object.observe callbacks are handled before a flush
+        setImmediate(() => {
+            var head = this._scheduleHead;
 
-        // clear list of scheduled objects
-        this._scheduleHead = this._scheduleTail = null;
+            // clear list of scheduled objects
+            this._scheduleHead = this._scheduleTail = null;
 
-        var batch = new Batch();
-        this._buildBatch(batch, head, (err) => {
-            if(err) return callback(err);
-
-            batch.execute((err) => {
+            var batch = new Batch();
+            this._buildBatch(batch, head, (err) => {
                 if (err) return callback(err);
 
-                this._batchCompleted(head, callback);
+                batch.execute((err) => {
+                    if (err) return callback(err);
+
+                    this._batchCompleted(head, callback);
+                });
             });
         });
     }
