@@ -1,7 +1,7 @@
 {
   "name": "@artifacthealth/hydrate",
   "description": "Library for mapping TypeScript classes to a MongoDB database.",
-  "version": "0.1.18",
+  "version": "0.1.20",
   "author": {
     "name": "Artifact Health, LLC",
     "url": "http://www.artifacthealth.com"

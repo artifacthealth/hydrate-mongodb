@@ -170,10 +170,13 @@ class EntityMapping extends ClassMapping {
 
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
+        if(documentValue1 === documentValue2) return true;
+        if(documentValue1 == null || documentValue2 == null) return false;
+
         var id1 = documentValue1["_id"] || documentValue1,
             id2 = documentValue2["_id"] || documentValue2;
 
-        if(id1 === null || id1 === undefined || id2 === null || id2 === undefined) {
+        if(id1 == null || id2 == null) {
             return false;
         }
 
