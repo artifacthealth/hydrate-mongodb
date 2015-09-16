@@ -419,6 +419,10 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _save(obj: any, callback: Callback): void {
 
+        if(Reference.isReference(obj)) {
+            return callback(new Error("Reference passed to save"));
+        }
+
         this._findReferencedEntities(obj, PropertyFlags.CascadeSave, (err, entities) => {
             if(err) return callback(err);
             this._saveEntities(entities, callback);
@@ -509,9 +513,14 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _remove(obj: any, callback: Callback): void {
 
-        this._findReferencedEntities(obj, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
+        // Remove will accept references
+        Reference.fetch(this, obj, (err, entity) => {
             if(err) return callback(err);
-            this._removeEntities(entities, callback);
+
+            this._findReferencedEntities(entity, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
+                if (err) return callback(err);
+                this._removeEntities(entities, callback);
+            });
         });
     }
 
@@ -561,6 +570,10 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _detach(obj: any, callback: Callback): void {
 
+        if(Reference.isReference(obj)) {
+            return callback(new Error("Reference passed to detach"));
+        }
+
         this._findReferencedEntities(obj, PropertyFlags.CascadeDetach, (err, entities) => {
             if(err) return callback(err);
             this._detachEntities(entities, callback);
@@ -582,6 +595,10 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     }
 
     private _refresh(obj: any, callback: Callback): void {
+
+        if(Reference.isReference(obj)) {
+            return callback(new Error("Reference passed to refresh"));
+        }
 
         this._findReferencedEntities(obj, PropertyFlags.CascadeRefresh, (err, entities) => {
             if(err) return callback(err);
@@ -753,15 +770,11 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }
 
         // TODO: when a reference is resolved do we update the referenced object? __proto__ issue.
-        if(Reference.isReference(obj)) {
-            (<Reference>obj).fetch(this, (err, entity) => {
-                if(err) return callback(err);
-                this._fetchPaths(entity, paths, callback);
-            });
-        }
-        else {
-            this._fetchPaths(obj, paths, callback);
-        }
+        Reference.fetch(this, obj, (err, entity) => {
+            if(err) return callback(err);
+
+            this._fetchPaths(entity, paths, callback);
+        });
     }
 
     private _fetchPaths(obj: any, paths: string[], callback: ResultCallback<any>): void {
@@ -930,7 +943,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             embedded: any[] = [];
 
         this._walk(mapping, obj, flags, entities, embedded, err => {
-            if(err) return process.nextTick(() => callback(err));
+            if (err) return process.nextTick(() => callback(err));
             return process.nextTick(() => callback(null, entities));
         });
     }

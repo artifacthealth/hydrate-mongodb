@@ -37,7 +37,7 @@ class Reference {
 
         if (other == null) return false;
 
-        var id = other instanceof Reference ? (<Reference>other)._id : other._id;
+        var id = Reference.isReference(other) ? (<Reference>other)._id : other._id;
         if (id == null) return false;
 
         return (<EntityMapping>this.mapping.inheritanceRoot).identity.areEqual(this._id, id)
@@ -53,7 +53,7 @@ class Reference {
         if(value1 == value2) return true;
         if(value1 == null || value2 == null) return false;
 
-        if(value1 instanceof Reference) {
+        if(Reference.isReference(value1)) {
             var mapping1 = (<Reference>value1).mapping;
             var id1 = (<Reference>value1)._id;
         }
@@ -62,7 +62,7 @@ class Reference {
             var id1 = value1._id;
         }
 
-        if(value2 instanceof Reference) {
+        if(Reference.isReference(value2)) {
             var mapping2 = (<Reference>value2).mapping;
             var id2 = (<Reference>value2)._id;
         }
@@ -86,6 +86,22 @@ class Reference {
     static isReference(obj: any): boolean {
 
         return obj instanceof Reference;
+    }
+
+    /**
+     * Fetches the Reference if the object is a Reference; otherwise, returns the passed object in the callback.
+     * @param session The current session.
+     * @param obj The object to fetch.
+     * @param callback Called with the fetched object.
+     */
+    static fetch(session: InternalSession, obj: any, callback: ResultCallback<any>): void {
+
+        if(Reference.isReference(obj)) {
+            (<Reference>obj).fetch(session, callback);
+        }
+        else {
+            callback(null, obj);
+        }
     }
 }
 

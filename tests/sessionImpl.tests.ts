@@ -211,6 +211,34 @@ describe('SessionImpl', () => {
 
     describe('remove', () => {
 
+        it('fetches object before remove if Reference is passed', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var entityId = 101;
+                var fetchCalled = 0;
+
+                // setup persister to handle onFindOneById call
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onFindOneById = (id, callback) => {
+                    process.nextTick(() => {
+                        assert.equal(id, entityId);
+                        fetchCalled++;
+                        callback(null, createEntity());
+                    });
+                }
+
+                session.remove(session.getReference(model.Person, entityId), err => {
+                    if (err) return done(err);
+
+                    assert.equal(fetchCalled, 1, "Entity was not fetched");
+                    done();
+                });
+            });
+        });
+
         it('cancels pending insert for newly manged objects', (done) => {
 
             helpers.createFactory("model", (err, factory) => {
