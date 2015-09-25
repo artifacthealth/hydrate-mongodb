@@ -9,9 +9,10 @@ import AnnotationMappingProvider = require("../../../src/mapping/providers/annot
 import Configuration = require("../../../src/config/Configuration");
 import MappingRegistry = require("../../../src/mapping/mappingRegistry");
 import MappingsFlags = require("../../../src/mapping/mappingFlags");
-
+import EnumMapping = require("../../../src/mapping/enumMapping");
 import ClassMapping = require("../../../src/mapping/classMapping");
 import EntityMapping = require("../../../src/mapping/entityMapping");
+import EnumType = require("../../../src/mapping/enumType");
 
 describe('AnnotationMappingProvider', () => {
 
@@ -37,6 +38,39 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
 
+        });
+
+        describe('@enumerated', () => {
+
+            it("sets enum type to String if value is 'string'", (done) => {
+
+                processFixture("enumerated", done, (results) => {
+
+                    var classMapping = findMapping(results, "A");
+                    var enumMapping = <EnumMapping>classMapping.getProperty("e1").mapping;
+                    assert.equal(enumMapping.type, EnumType.String);
+                });
+            });
+
+            it("sets enum type to Ordinal if value is 'ordinal'", (done) => {
+
+                processFixture("enumerated", done, (results) => {
+
+                    var classMapping = findMapping(results, "A");
+                    var enumMapping = <EnumMapping>classMapping.getProperty("e2").mapping;
+                    assert.equal(enumMapping.type, EnumType.Ordinal);
+                });
+            });
+
+            it("sets enum type to Ordinal if @enumerated annotation is not specified", (done) => {
+
+                processFixture("enumerated", done, (results) => {
+
+                    var classMapping = findMapping(results, "A");
+                    var enumMapping = <EnumMapping>classMapping.getProperty("e3").mapping;
+                    assert.equal(enumMapping.type, EnumType.Ordinal);
+                });
+            });
         });
 
         describe('@collection', () => {

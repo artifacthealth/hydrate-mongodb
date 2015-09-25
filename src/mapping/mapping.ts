@@ -133,7 +133,7 @@ module Mapping {
         return new EntityMappingImpl(<EntityMappingImpl>baseClass);
     }
 
-    export function createEnumMapping(members: EnumMembers): Mapping {
+    export function createEnumMapping(members: EnumMembers): EnumMapping {
         if(!members) {
             throw new Error("Missing required argument 'members'.");
         }

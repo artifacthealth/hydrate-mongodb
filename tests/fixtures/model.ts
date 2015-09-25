@@ -129,6 +129,7 @@ export class PersonName {
     }
 }
 
+/** @enumerated "string" */
 export enum Gender {
     Female,
     Male,
@@ -148,6 +149,7 @@ export class Address {
     zip: string;
 }
 
+/** @enumerated "string" */
 export enum PhoneType {
 
     Work,

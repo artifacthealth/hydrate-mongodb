@@ -19,6 +19,7 @@ import NamingStrategy = require("./namingStrategy");
 import NamingStrategies = require("./NamingStrategies");
 import ObjectIdGenerator = require("../id/objectIdGenerator");
 import ClassMapping = require("../mapping/classMapping");
+import EnumType = require("../mapping/enumType");
 
 class Configuration {
 
@@ -46,6 +47,11 @@ class Configuration {
      * Default change tracking strategy to use.
      */
     changeTracking = ChangeTracking.Observe;
+
+    /**
+     * Default enum storage strategy to use.
+     */
+    enumType = EnumType.Ordinal;
 
     /**
      * Naming strategy to use for collection names.

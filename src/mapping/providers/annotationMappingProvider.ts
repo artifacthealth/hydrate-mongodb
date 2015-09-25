@@ -11,6 +11,7 @@ import IndexOptions = require("../indexOptions");
 import PropertyFlags = require("../propertyFlags");
 import ChangeTracking = require("../changeTracking");
 import Map = require("../../core/map");
+import EnumType = require("../enumType");
 
 import Mapping = require("../mapping");
 import MappingFlags = require("../mappingFlags");
@@ -75,7 +76,8 @@ enum MappingKind {
     RootEntity,
     Embeddable,
     RootEmbeddable,
-    Global
+    Global,
+    Enumerated
 }
 
 interface TypeLinks {
@@ -168,10 +170,10 @@ class MappingBuilder {
         if(symbol.isClass()) {
             var type = symbol.getDeclaredType();
             if(type.hasAnnotation("entity", true)) {
-                this._addType(type, type.hasAnnotation("entity") ? MappingKind.RootEntity : MappingKind.Entity);
+                this._addObjectType(type, type.hasAnnotation("entity") ? MappingKind.RootEntity : MappingKind.Entity);
             }
             else if(type.hasAnnotation("embeddable", true)) {
-                this._addType(type, type.hasAnnotation("embeddable") ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
+                this._addObjectType(type, type.hasAnnotation("embeddable") ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
             }
         }
 
@@ -223,14 +225,19 @@ class MappingBuilder {
             return;
         }
 
-        this._addType(type, MappingKind.Embeddable);
+        this._addObjectType(type, MappingKind.Embeddable);
         this._scanPropertiesForEmbeddedTypes(type);
     }
 
-    private _addType(type: reflect.Type, kind: MappingKind): void {
+    private _addObjectType(type: reflect.Type, kind: MappingKind): void {
 
         this._objectTypes.push(type);
-        this._typeTable[this._key.ensureValue(type)] = {
+        this._addType(type, kind);
+    }
+
+    private _addType(type: reflect.Type, kind: MappingKind): TypeLinks {
+
+        return this._typeTable[this._key.ensureValue(type)] = {
             type: type,
             kind: kind
         }
@@ -557,17 +564,52 @@ class MappingBuilder {
         }
 
         if(type.isEnum()) {
-            var names = type.getEnumNames(),
-                members: Map<number> = {};
-            for(var i = 0, l = names.length; i < l; i++) {
-                var name = names[i];
-                members[name] = type.getEnumValue(name);
-            }
-            return Mapping.createEnumMapping(members);
+            return this._createEnumMapping(type);
         }
 
         // This should never happen
         throw new Error("Unable to create mapping for '" + type.getFullName() + "'.");
+    }
+
+    private _createEnumMapping(type: reflect.Type): Mapping {
+
+        var names = type.getEnumNames(),
+            members: Map<number> = {};
+
+        for(var i = 0, l = names.length; i < l; i++) {
+            var name = names[i];
+            members[name] = type.getEnumValue(name);
+        }
+
+        var enumMapping = Mapping.createEnumMapping(members);
+        enumMapping.type = this.config.enumType;
+
+        // get type level annotations
+        var annotations = type.getAnnotations();
+        for(var i = 0, l = annotations.length; i < l; i++) {
+            var annotation = annotations[i];
+
+            switch (annotation.name) {
+                case "enumerated":
+
+                    switch(annotation.value) {
+                        case "string":
+                            enumMapping.type = EnumType.String;
+                            break;
+                        case "ordinal":
+                            enumMapping.type = EnumType.Ordinal;
+                            break;
+                        default:
+                            this._addAnnotationError(type, annotation, "Unknown enumerated type '" + annotation.value + "'.");
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        this._addType(type, MappingKind.Enumerated).mapping = enumMapping;
+
+        return enumMapping;
     }
 
     private _setCollection(mapping: Mapping.EntityMapping, value: any): void {

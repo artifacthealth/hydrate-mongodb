@@ -6,10 +6,12 @@ import MappingFlags = require("./mappingFlags");
 import Changes = require("./changes");
 import InternalSession = require("../internalSession");
 import ReadContext = require("./readContext");
+import EnumType = require("./enumType");
 
 class EnumMapping extends MappingBase {
 
     ignoreCase = false;
+    type = EnumType.Ordinal;
 
     private _values: Table<string> = [];
 
@@ -64,15 +66,29 @@ class EnumMapping extends MappingBase {
             return;
         }
 
-        // TODO: default enum to number?
-        // TODO: option to allow values that are not contained in enum. needed for when used as bitmap.
-        // TODO: perhaps store enums as numbers by default?
-        var name = this._values[value];
-        if(!name) {
-            errors.push({ message: "Could not find enum member name for value '" + value + "'.", path: path, value: value });
-            return;
+        switch(this.type) {
+            case EnumType.Ordinal:
+                return value;
+            case EnumType.String:
+                var name = this._values[value];
+                if (!name) {
+                    errors.push({
+                        message: "Could not find enum member name for value '" + value + "'.",
+                        path: path,
+                        value: value
+                    });
+                    return;
+                }
+                return name;
+            default:
+                if(this.type == null) {
+                    errors.push({message: "Enum type not specified." + this.type, path: path, value: value});
+                }
+                else {
+                    errors.push({message: "Unknown enum type '" + this.type + "'.", path: path, value: value});
+                }
+                return;
         }
-        return name;
     }
 }
 
