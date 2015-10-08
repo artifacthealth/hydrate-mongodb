@@ -1,4 +1,4 @@
-enum ChangeTracking {
+declare const enum ChangeTracking {
 
     DeferredImplicit,
     DeferredExplicit,

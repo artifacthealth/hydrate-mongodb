@@ -48,7 +48,10 @@ export function createFactory(files: any, callback: (err: Error, result?: MockSe
 
     files.forEach((file: string) => provider.addFile("build/tests/fixtures/" + file + ".d.json"));
 
-    provider.getMapping(new Configuration(), (err, mappings) => {
+    var config = new Configuration();
+    config.propertyConverters["PhoneTypeConverter"] = new model.PhoneTypeConverter();
+
+    provider.getMapping(config, (err, mappings) => {
         if(err) return callback(err);
 
         var registry = new MappingRegistry();

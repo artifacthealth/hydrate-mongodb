@@ -13,6 +13,9 @@ import EnumMapping = require("../../../src/mapping/enumMapping");
 import ClassMapping = require("../../../src/mapping/classMapping");
 import EntityMapping = require("../../../src/mapping/entityMapping");
 import EnumType = require("../../../src/mapping/enumType");
+import PropertyConverter = require("../../../src/mapping/propertyConverter");
+import ConverterFixture = require("../../fixtures/annotations/converter");
+import ConverterOnClassFixture = require("../../fixtures/annotations/converterOnClass");
 
 describe('AnnotationMappingProvider', () => {
 
@@ -206,6 +209,45 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
         });
+
+        describe('@converter', () => {
+            it("sets the mapping for the property to a ConvertMapping with the correct converter", (done) => {
+
+                var config = new Configuration();
+
+                var converter = new MyEnumConverter();
+                config.propertyConverters["MyEnumConverter"] = converter;
+
+                processFixtureWithConfiguration("converter", config, done, (results) => {
+
+                    var mapping = findMapping(results, "B");
+                    assert.equal((<any>mapping.getProperty("a").mapping).converter, converter);
+                });
+            });
+
+            it("causes types of property to be ignored when building type mappings", (done) => {
+
+                var config = new Configuration();
+
+                var converter = new PointConverter();
+                config.propertyConverters["PointConverter"] = converter;
+
+                processFixtureWithConfiguration("converterOnClass", config, done, (results) => {
+
+                    var mapping = findMapping(results, "B");
+                    assert.equal((<any>mapping.getProperty("a").mapping).converter, converter);
+                });
+            });
+
+            it("throws error if the converter is not known", (done) => {
+
+                processFixture("unknownConverter", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Unknown converter 'Blah'");
+                    done();
+                });
+            });
+        });
     });
 });
 
@@ -221,9 +263,14 @@ function findMapping(mappings: EntityMapping[], name: string): EntityMapping {
 
 function processFixture(file: string, done: (err?: Error) => void, callback?: (results: EntityMapping[]) => void): void {
 
+    processFixtureWithConfiguration(file, new Configuration(), done, callback);
+}
+
+function processFixtureWithConfiguration(file: string, config: Configuration, done: (err?: Error) => void, callback?: (results: EntityMapping[]) => void): void {
+
     var provider = new AnnotationMappingProvider();
     provider.addFile("build/tests/fixtures/annotations/" + file + ".d.json");
-    provider.getMapping(new Configuration(), (err, mappings) => {
+    provider.getMapping(config, (err, mappings) => {
         if(err) return done(err);
 
         if(callback) {
@@ -231,4 +278,37 @@ function processFixture(file: string, done: (err?: Error) => void, callback?: (r
         }
         done();
     });
+}
+
+class MyEnumConverter implements PropertyConverter {
+
+    convertToDocumentField(property: any): any {
+
+        switch(property) {
+            case ConverterFixture.B:
+                return "B";
+        }
+    }
+
+    convertToObjectProperty(field: any): any {
+
+        switch(field) {
+            case "B":
+                return ConverterFixture.B;
+        }
+    }
+}
+
+class PointConverter implements PropertyConverter {
+
+    convertToDocumentField(property: any): any {
+
+        return property.x + "," + property.y;
+    }
+
+    convertToObjectProperty(field: any): any {
+
+        var parts = field.split('.');
+        return new ConverterOnClassFixture.Point(parts[0], parts[1]);
+    }
 }

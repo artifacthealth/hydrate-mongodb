@@ -192,7 +192,7 @@ class MappingBuilder {
         for(var i = 0, l = properties.length; i < l; i++) {
             var property = properties[i];
 
-            if(property.isProperty()) {
+            if(property.isProperty() && !property.hasAnnotation("converter")) {
                 this._findEmbeddedTypes(property.getType());
             }
         }
@@ -204,6 +204,7 @@ class MappingBuilder {
 
         if(type.isClass() && !this._typeTable[this._key.ensureValue(type)]) {
             this._addError("Invalid type '"+ type.getFullName() +"'. All referenced classes must belong to an inheritance hierarchy annotated with 'entity' or 'embeddable'.");
+            return;
         }
 
         if(this._typeTable[this._key.ensureValue(type)]) {
@@ -310,6 +311,9 @@ class MappingBuilder {
         var baseClass = type.getBaseClass();
         if(baseClass) {
             var links = this._typeTable[this._key.ensureValue(baseClass)];
+            if(!links) {
+
+            }
             var mapping = links.mapping
             if(!mapping) {
                 // If the mapping for the parent class does not exist, creat it
@@ -456,8 +460,10 @@ class MappingBuilder {
             if(!symbol.isProperty()) continue;
             try {
                 var property = this._createProperty(mapping, type, symbol);
-                // add to mapping after property has been fully initialized
-                mapping.addProperty(property);
+                if(property) {
+                    // add to mapping after property has been fully initialized
+                    mapping.addProperty(property);
+                }
             }
             catch(e) {
                 this._addError("Invalid property '" + property.name + "' on type '" + type.getFullName() + "': " + e.message);
@@ -473,10 +479,16 @@ class MappingBuilder {
 
         var name = symbol.getName();
         try {
-            var propertyMapping = this._createPropertyMapping(symbol.getType());
+            if(symbol.hasAnnotation("converter")) {
+                var propertyMapping =  this._createConverterMapping(symbol);
+            }
+            else {
+                var propertyMapping = this._createPropertyMapping(symbol.getType());
+            }
         }
         catch(e) {
             this._addError("Error creating property '" + name + "' of type '" + parentType.getFullName() + "': " + e.message);
+            return null;
         }
         var property = Mapping.createProperty(name, propertyMapping);
 
@@ -569,6 +581,22 @@ class MappingBuilder {
 
         // This should never happen
         throw new Error("Unable to create mapping for '" + type.getFullName() + "'.");
+    }
+
+    private _createConverterMapping(symbol: reflect.Symbol): Mapping {
+
+        var value = symbol.getAnnotations("converter")[0].value;
+
+        if(typeof value !== "string") {
+            throw new Error("Invalid annotation 'converter'. Value must be of type string.")
+        }
+
+        var converter = this.config.propertyConverters && this.config.propertyConverters[value];
+        if(!converter) {
+            throw new Error("Invalid annotation 'converter'. Unknown converter '" + value + "'. Make sure to add your converter to propertyConverters in the configuration.");
+        }
+
+        return Mapping.createConverterMapping(converter);
     }
 
     private _createEnumMapping(type: reflect.Type): Mapping {

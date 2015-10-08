@@ -33,6 +33,9 @@ export class Person extends Party {
     phones: Phone[];
     email: string;
 
+    /** @converter "PhoneTypeConverter" */
+    preferredPhone: PhoneType;
+
     workPhone: WorkPhone;
 
     /** @cascade "save, remove" */
@@ -154,6 +157,29 @@ export enum PhoneType {
 
     Work,
     Home
+}
+
+export class PhoneTypeConverter {
+
+    convertToDocumentField(property: any): any {
+
+        switch(property) {
+            case PhoneType.Work:
+                return "W";
+            case PhoneType.Home:
+                return "H";
+        }
+    }
+
+    convertToObjectProperty(field: any): any {
+
+        switch(field) {
+            case "W":
+                return PhoneType.Work;
+            case "H":
+                return PhoneType.Home;
+        }
+    }
 }
 
 /** @embeddable */

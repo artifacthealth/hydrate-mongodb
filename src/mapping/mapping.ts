@@ -3,7 +3,7 @@ import BooleanMapping = require("./booleanMapping");
 import ClassMappingImpl = require("./classMapping");
 import DateMapping = require("./dateMapping");
 import EntityMappingImpl = require("./entityMapping");
-import EnumMapping = require("./enumMapping");
+import EnumMappingImpl = require("./enumMapping");
 import NumberMapping = require("./numberMapping");
 import ObjectMappingImpl = require("./objectMapping");
 import RegExpMapping = require("./regExpMapping");
@@ -18,6 +18,9 @@ import IndexOptions = require("./indexOptions");
 import CollectionOptions = require("./collectionOptions");
 import ChangeTracking = require("./changeTracking");
 import IdentityGenerator = require("../id/identityGenerator");
+import EnumType = require("./enumType");
+import PropertyConverter = require("./propertyConverter");
+import ConverterMapping = require("./converterMapping");
 
 interface Mapping {
     id: number;
@@ -58,6 +61,9 @@ module Mapping {
          */
         mapping: Mapping;
 
+        /**
+         * Sets the property flags.
+         */
         setFlags(flags: PropertyFlags): void;
     }
 
@@ -78,6 +84,12 @@ module Mapping {
         hasBaseClass: boolean;
 
         setDiscriminatorValue(value: string): void;
+    }
+
+    export interface EnumMapping extends Mapping {
+
+        ignoreCase: boolean;
+        type: EnumType;
     }
 
     export interface EntityMapping extends ClassMapping {
@@ -137,7 +149,7 @@ module Mapping {
         if(!members) {
             throw new Error("Missing required argument 'members'.");
         }
-        return new EnumMapping(members);
+        return new EnumMappingImpl(members);
     }
 
     export function createNumberMapping(): Mapping {
@@ -154,6 +166,10 @@ module Mapping {
 
     export function createStringMapping(): Mapping {
         return new StringMapping();
+    }
+
+    export function createConverterMapping(converter: PropertyConverter): Mapping {
+        return new ConverterMapping(converter);
     }
 
     export function createTupleMapping(elementMappings: Mapping[]): Mapping {

@@ -60,6 +60,11 @@ describe('CriteriaBuilder', () => {
         assertCriteria(done, { "gender": model.Gender.Female }, { "__t": "Person", "gender": "Female" });
     });
 
+    it('uses property converter for property value in field equality condition', (done) => {
+
+        assertCriteria(done, { "preferredPhone": model.PhoneType.Work }, { "__t": "Person", "preferredPhone": "W" });
+    });
+
     it("correctly creates criteria for an exact match on an array of embedded objects", (done) => {
 
         var phone = new model.WorkPhone("555-1212", "x15");

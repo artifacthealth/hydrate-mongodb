@@ -14,7 +14,6 @@ describe('ObjectMapping', () => {
 
         it('null', () => {
 
-            var mapping = new ObjectMapping();
 
         });
     });

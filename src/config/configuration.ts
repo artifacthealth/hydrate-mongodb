@@ -20,6 +20,7 @@ import NamingStrategies = require("./NamingStrategies");
 import ObjectIdGenerator = require("../id/objectIdGenerator");
 import ClassMapping = require("../mapping/classMapping");
 import EnumType = require("../mapping/enumType");
+import PropertyConverter = require("../mapping/propertyConverter");
 
 class Configuration {
 
@@ -67,6 +68,11 @@ class Configuration {
      * Naming strategy to use for the discriminator value of a class.
      */
     discriminatorNamingStrategy: NamingStrategy = NamingStrategies.None;
+
+    /**
+     * Named property converters.
+     */
+    propertyConverters: { [name: string]: PropertyConverter } = {};
 
 
     private _mappings: MappingProvider[] = [];
