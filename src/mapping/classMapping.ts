@@ -229,7 +229,8 @@ class ClassMapping extends ObjectMapping {
 
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
-        var root = this.inheritanceRoot;
+        if(documentValue1 === documentValue2) return true;
+        if(documentValue1 == null || documentValue2 == null) return false;
 
         var mapping1 = this._getMappingForDocument(documentValue1);
         var mapping2 = this._getMappingForDocument(documentValue2);

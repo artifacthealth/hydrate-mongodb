@@ -230,6 +230,9 @@ class ObjectMapping extends MappingBase {
 
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
+        if(documentValue1 === documentValue2) return true;
+        if(documentValue1 == null || documentValue2 == null) return false;
+
         if (typeof documentValue1 !== "object" || typeof documentValue2 !== "object") {
             return false;
         }
