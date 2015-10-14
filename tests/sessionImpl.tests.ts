@@ -889,6 +889,33 @@ describe('SessionImpl', () => {
 
     describe('fetch', () => {
 
+        it('should return null if passed a null value for the entity', (done) => {
+
+            helpers.createFactory("cat", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                session.fetch(null, (err, entity) => {
+                    assert.isNull(entity);
+                    done();
+                });
+            });
+        });
+
+        it('should return undefined if passed a undefined value for the entity', (done) => {
+
+            helpers.createFactory("cat", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                session.fetch(undefined, (err, entity) => {
+                    assert.isUndefined(entity);
+                    done();
+                });
+            });
+        });
         it('should not cause object to become dirty when change tracking is observe', (done) => {
 
             helpers.createFactory("cat", (err, factory) => {

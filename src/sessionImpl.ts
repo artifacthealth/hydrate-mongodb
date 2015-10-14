@@ -750,6 +750,10 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     fetchInternal(obj: any, paths: string[], callback: ResultCallback<any>): void {
 
+        if(obj == null) {
+            return callback(null, obj);
+        }
+
         if(Array.isArray(obj)) {
             // TODO: warn in documentation that if array is modified before this callback returns then results are unpredictable
             Async.forEach(obj, (item, index, done) => {
