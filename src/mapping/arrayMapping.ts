@@ -38,7 +38,12 @@ class ArrayMapping extends MappingBase {
             if (item === undefined) {
                 item = null;
             }
-            result[i] = mapping.read(context, item);
+            if (item === null) {
+                result[i] = null;
+            }
+            else {
+                result[i] = mapping.read(context, item);
+            }
         }
 
         // if there is an observer in the context, then watch this array for changes.
@@ -65,7 +70,12 @@ class ArrayMapping extends MappingBase {
             if (item === undefined) {
                 item = null;
             }
-            result[i] = mapping.write(item, path, errors, visited);
+            if (item === null) {
+                item = null;
+            }
+            else {
+                result[i] = mapping.write(item, path, errors, visited);
+            }
         }
 
         return result;

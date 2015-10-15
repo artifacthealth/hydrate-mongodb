@@ -16,7 +16,6 @@ import helpers = require("./helpers");
 
 import MockCursor = require("./driver/mockCursor");
 import MockCollection = require("./driver/mockCollection");
-import MockSessionFactory = require("./mockSessionFactory");
 import QueryDefinitionStub = require("./query/queryDefinitionStub");
 import QueryKind = require("../src/query/queryKind");
 import Batch = require("../src/batch");
