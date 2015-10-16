@@ -238,7 +238,9 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
      */
     getId(obj: any): any {
 
-        return obj["_id"];
+        if(obj) {
+            return obj["_id"];
+        }
     }
 
     /**

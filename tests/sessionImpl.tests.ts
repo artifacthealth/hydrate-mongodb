@@ -792,6 +792,30 @@ describe('SessionImpl', () => {
                 done();
             });
         });
+
+        it('returns undefined if the object passed in is null', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                assert.isUndefined(session.getId(null));
+                done();
+            });
+        });
+
+        it('returns undefined if the object passed in is undefined', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                assert.isUndefined(session.getId(undefined));
+                done();
+            });
+        });
     });
 
     describe('contains', () => {
