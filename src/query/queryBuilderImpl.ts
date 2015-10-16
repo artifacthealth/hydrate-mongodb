@@ -62,15 +62,15 @@ class QueryBuilderImpl implements QueryBuilder<Object> {
 
     findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
 
+        var query = this._createQuery(QueryKind.FindOneById);
+
         if(typeof id === "string") {
             id = this._persister.identity.fromString(id);
         }
         if(id == null) {
-            callback(new Error("Missing or invalid identifier."));
-            return;
+            query.error = new Error("Missing or invalid identifier.");
         }
 
-        var query = this._createQuery(QueryKind.FindOneById);
         query.id = id;
         return query.handleCallback(callback);
     }
@@ -236,6 +236,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     skipCount: number;
     iterator: IteratorCallback<Object>;
     batchSizeValue: number;
+    error: Error;
 
     private _session: InternalSession;
     private _persister: Persister;
@@ -356,8 +357,14 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
                 callback(new Error("Query already executed. A callback can only be passed to one function in the chain."));
             }
             else {
-                this._session.executeQuery(this, callback);
                 this._executed = true;
+
+                if(this.error) {
+                    process.nextTick(() => callback(this.error))
+                }
+                else {
+                    this._session.executeQuery(this, callback);
+                }
             }
         }
 
