@@ -22,6 +22,11 @@ class Reference {
             return;
         }
 
+        if(this._id == null) {
+            process.nextTick(() => callback(new Error("References has missing or invalid identifier.")));
+            return;
+        }
+
         persister.findOneById(this._id, callback);
     }
 

@@ -65,6 +65,10 @@ class QueryBuilderImpl implements QueryBuilder<Object> {
         if(typeof id === "string") {
             id = this._persister.identity.fromString(id);
         }
+        if(id == null) {
+            callback(new Error("Missing or invalid identifier."));
+            return;
+        }
 
         var query = this._createQuery(QueryKind.FindOneById);
         query.id = id;

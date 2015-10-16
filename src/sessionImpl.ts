@@ -277,6 +277,8 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                 if (typeof id === "string") {
                     id = rootMapping.identity.fromString(id);
                 }
+                // If identifier is missing or invalid, the reference is still created and an error is returned when 
+                // the client tries to resolve the reference
             }
         }
 

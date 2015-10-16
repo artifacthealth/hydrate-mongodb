@@ -94,6 +94,10 @@ class CriteriaBuilder {
                         if(typeof value === "string") {
                             preparedValue = this.mapping.identity.fromString(value);
                         }
+                        if(value == null) {
+                            this.error = new Error("Missing or invalid identifier for '_id'.");
+                            return null;                            
+                        }
                     }
                     else {
                         // resolve field path

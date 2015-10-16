@@ -25,6 +25,12 @@ class ObjectIdGenerator implements IdentityGenerator {
     }
 
     fromString(text: string): any {
+
+        // Return null if text passed in cannot possibly be a valid ObjectID
+        if(text == null || text.length != 24) {
+            return null;
+        }
+
         return ObjectID.createFromHexString(text);
     }
 
