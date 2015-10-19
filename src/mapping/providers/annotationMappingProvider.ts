@@ -264,8 +264,8 @@ class MappingBuilder {
 
         var baseClass = type.getBaseClass();
         while(baseClass) {
-            var links = this._typeTable[this._key.ensureValue(type)];
-            if(links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable) {
+            var links = this._typeTable[this._key.ensureValue(baseClass)];
+            if(links && (links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable)) {
                 return true;
             }
             baseClass = baseClass.getBaseClass();
@@ -311,25 +311,24 @@ class MappingBuilder {
         var baseClass = type.getBaseClass();
         if(baseClass) {
             var links = this._typeTable[this._key.ensureValue(baseClass)];
-            if(!links) {
+            if(links) {
+                var mapping = links.mapping
+                if (!mapping) {
+                    // If the mapping for the parent class does not exist, creat it
+                    mapping = this._createMapping(links);
+                    if (!mapping) {
+                        this._addError("Error creating parent mapping for '" + type.getFullName() + "'.");
+                        return undefined;
+                    }
+                }
 
-            }
-            var mapping = links.mapping
-            if(!mapping) {
-                // If the mapping for the parent class does not exist, creat it
-                mapping = this._createMapping(links);
-                if(!mapping) {
-                    this._addError("Error creating parent mapping for '" + type.getFullName() + "'.");
+                if ((mapping.flags & MappingFlags.Class) == 0) {
+                    this._addError("Parent of mapping for '" + type.getFullName() + "' must be a class mapping.");
                     return undefined;
                 }
-            }
 
-            if((mapping.flags & MappingFlags.Class) == 0) {
-                this._addError("Parent of mapping for '" + type.getFullName() + "' must be a class mapping.");
-                return undefined;
+                return <Mapping.ClassMapping>links.mapping;
             }
-
-            return <Mapping.ClassMapping>links.mapping;
         }
     }
 

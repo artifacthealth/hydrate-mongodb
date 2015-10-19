@@ -41,6 +41,20 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
 
+            it("entity mappings can share a common base class", (done) => {
+
+                processFixture("sharedBaseClass", done, (results) => {
+
+                    assert.lengthOf(results, 2);
+                    results.forEach(x => assert.instanceOf(x, EntityMapping));
+
+                    // validate we still inherited base class properties
+                    assert.equal(findMapping(results, "B").getProperty("a").field, "a");
+                    assert.equal(findMapping(results, "B").getProperty("b").field, "b");
+                    assert.equal(findMapping(results, "C").getProperty("a").field, "a");
+                    assert.equal(findMapping(results, "C").getProperty("c").field, "c");
+                });
+            });
         });
 
         describe('@enumerated', () => {
