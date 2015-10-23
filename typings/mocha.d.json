@@ -1,0 +1,713 @@
+{
+	"declares": [
+		{
+			"kind": "interface",
+			"name": "Mocha",
+			"signatures": [
+				{
+					"kind": "method",
+					"name": "setup",
+					"parameters": [
+						{
+							"name": "options",
+							"type": "MochaSetupOptions"
+						}
+					],
+					"returns": "Mocha"
+				},
+				{
+					"kind": "method",
+					"name": "run",
+					"parameters": [
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "function",
+								"returns": "void"
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "reporter",
+					"parameters": [
+						{
+							"name": "reporter",
+							"type": {
+								"kind": "function",
+								"returns": "void"
+							}
+						}
+					],
+					"returns": "Mocha"
+				},
+				{
+					"kind": "method",
+					"name": "reporter",
+					"parameters": [
+						{
+							"name": "reporter",
+							"type": "string"
+						}
+					],
+					"returns": "Mocha"
+				},
+				{
+					"kind": "method",
+					"name": "growl",
+					"returns": "Mocha"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "MochaSetupOptions",
+			"signatures": [
+				{
+					"kind": "property",
+					"name": "slow",
+					"optional": true,
+					"type": "number"
+				},
+				{
+					"kind": "property",
+					"name": "timeout",
+					"optional": true,
+					"type": "number"
+				},
+				{
+					"kind": "property",
+					"name": "ui",
+					"optional": true,
+					"type": "string"
+				},
+				{
+					"kind": "property",
+					"name": "globals",
+					"optional": true,
+					"type": {
+						"kind": "array",
+						"type": "any"
+					}
+				},
+				{
+					"kind": "property",
+					"name": "reporter",
+					"optional": true,
+					"type": "any"
+				},
+				{
+					"kind": "property",
+					"name": "bail",
+					"optional": true,
+					"type": "Boolean"
+				},
+				{
+					"kind": "property",
+					"name": "ignoreLeaks",
+					"optional": true,
+					"type": "Boolean"
+				},
+				{
+					"kind": "property",
+					"name": "grep",
+					"optional": true,
+					"type": "any"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "MochaDone",
+			"signatures": [
+				{
+					"kind": "call",
+					"parameters": [
+						{
+							"name": "error",
+							"optional": true,
+							"type": "Error"
+						}
+					],
+					"returns": "void"
+				}
+			]
+		},
+		{
+			"kind": "variable",
+			"name": "mocha",
+			"type": "Mocha"
+		},
+		{
+			"kind": "variable",
+			"name": "describe",
+			"type": {
+				"kind": "object",
+				"signatures": [
+					{
+						"kind": "call",
+						"parameters": [
+							{
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"name": "spec",
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "only",
+						"parameters": [
+							{
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"name": "spec",
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "skip",
+						"parameters": [
+							{
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"name": "spec",
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "timeout",
+						"parameters": [
+							{
+								"name": "ms",
+								"type": "number"
+							}
+						],
+						"returns": "void"
+					}
+				]
+			}
+		},
+		{
+			"kind": "variable",
+			"name": "context",
+			"type": {
+				"kind": "object",
+				"signatures": [
+					{
+						"kind": "call",
+						"parameters": [
+							{
+								"name": "contextTitle",
+								"type": "string"
+							},
+							{
+								"name": "spec",
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "only",
+						"parameters": [
+							{
+								"name": "contextTitle",
+								"type": "string"
+							},
+							{
+								"name": "spec",
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "skip",
+						"parameters": [
+							{
+								"name": "contextTitle",
+								"type": "string"
+							},
+							{
+								"name": "spec",
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "timeout",
+						"parameters": [
+							{
+								"name": "ms",
+								"type": "number"
+							}
+						],
+						"returns": "void"
+					}
+				]
+			}
+		},
+		{
+			"kind": "variable",
+			"name": "it",
+			"type": {
+				"kind": "object",
+				"signatures": [
+					{
+						"kind": "call",
+						"parameters": [
+							{
+								"name": "expectation",
+								"type": "string"
+							},
+							{
+								"name": "assertion",
+								"optional": true,
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "call",
+						"parameters": [
+							{
+								"name": "expectation",
+								"type": "string"
+							},
+							{
+								"name": "assertion",
+								"optional": true,
+								"type": {
+									"kind": "function",
+									"parameters": [
+										{
+											"name": "done",
+											"type": "MochaDone"
+										}
+									],
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "only",
+						"parameters": [
+							{
+								"name": "expectation",
+								"type": "string"
+							},
+							{
+								"name": "assertion",
+								"optional": true,
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "only",
+						"parameters": [
+							{
+								"name": "expectation",
+								"type": "string"
+							},
+							{
+								"name": "assertion",
+								"optional": true,
+								"type": {
+									"kind": "function",
+									"parameters": [
+										{
+											"name": "done",
+											"type": "MochaDone"
+										}
+									],
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "skip",
+						"parameters": [
+							{
+								"name": "expectation",
+								"type": "string"
+							},
+							{
+								"name": "assertion",
+								"optional": true,
+								"type": {
+									"kind": "function",
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "skip",
+						"parameters": [
+							{
+								"name": "expectation",
+								"type": "string"
+							},
+							{
+								"name": "assertion",
+								"optional": true,
+								"type": {
+									"kind": "function",
+									"parameters": [
+										{
+											"name": "done",
+											"type": "MochaDone"
+										}
+									],
+									"returns": "void"
+								}
+							}
+						],
+						"returns": "void"
+					},
+					{
+						"kind": "method",
+						"name": "timeout",
+						"parameters": [
+							{
+								"name": "ms",
+								"type": "number"
+							}
+						],
+						"returns": "void"
+					}
+				]
+			}
+		},
+		{
+			"kind": "function",
+			"name": "before",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "before",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"parameters": [
+							{
+								"name": "done",
+								"type": "MochaDone"
+							}
+						],
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "setup",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "setup",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"parameters": [
+							{
+								"name": "done",
+								"type": "MochaDone"
+							}
+						],
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "after",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "after",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"parameters": [
+							{
+								"name": "done",
+								"type": "MochaDone"
+							}
+						],
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "teardown",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "teardown",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"parameters": [
+							{
+								"name": "done",
+								"type": "MochaDone"
+							}
+						],
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "beforeEach",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "beforeEach",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"parameters": [
+							{
+								"name": "done",
+								"type": "MochaDone"
+							}
+						],
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "suiteSetup",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "suiteSetup",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"parameters": [
+							{
+								"name": "done",
+								"type": "MochaDone"
+							}
+						],
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "afterEach",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "afterEach",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"parameters": [
+							{
+								"name": "done",
+								"type": "MochaDone"
+							}
+						],
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "suiteTeardown",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		},
+		{
+			"kind": "function",
+			"name": "suiteTeardown",
+			"parameters": [
+				{
+					"name": "action",
+					"type": {
+						"kind": "function",
+						"parameters": [
+							{
+								"name": "done",
+								"type": "MochaDone"
+							}
+						],
+						"returns": "void"
+					}
+				}
+			],
+			"returns": "void"
+		}
+	]
+}

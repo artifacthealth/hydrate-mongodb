@@ -1,0 +1,2392 @@
+{
+	"declares": [
+		{
+			"kind": "module",
+			"name": "chai",
+			"declares": [
+				{
+					"kind": "class",
+					"name": "AssertionError",
+					"members": [
+						{
+							"kind": "constructor",
+							"parameters": [
+								{
+									"name": "message",
+									"type": "string"
+								},
+								{
+									"name": "_props",
+									"optional": true,
+									"type": "any"
+								},
+								{
+									"name": "ssf",
+									"optional": true,
+									"type": "Function"
+								}
+							]
+						},
+						{
+							"kind": "field",
+							"name": "name",
+							"type": "string"
+						},
+						{
+							"kind": "field",
+							"name": "message",
+							"type": "string"
+						},
+						{
+							"kind": "field",
+							"name": "showDiff",
+							"type": "boolean"
+						},
+						{
+							"kind": "field",
+							"name": "stack",
+							"type": "string"
+						}
+					]
+				},
+				{
+					"kind": "function",
+					"name": "expect",
+					"parameters": [
+						{
+							"name": "target",
+							"type": "any"
+						},
+						{
+							"name": "message",
+							"optional": true,
+							"type": "string"
+						}
+					],
+					"returns": "Expect"
+				},
+				{
+					"kind": "variable",
+					"name": "assert",
+					"type": "Assert"
+				},
+				{
+					"kind": "variable",
+					"name": "config",
+					"type": "Config"
+				},
+				{
+					"kind": "interface",
+					"name": "Config",
+					"signatures": [
+						{
+							"kind": "property",
+							"name": "includeStack",
+							"type": "boolean"
+						}
+					]
+				},
+				{
+					"kind": "function",
+					"name": "use",
+					"parameters": [
+						{
+							"name": "fn",
+							"type": {
+								"kind": "function",
+								"parameters": [
+									{
+										"name": "chai",
+										"type": "any"
+									},
+									{
+										"name": "utils",
+										"type": "any"
+									}
+								],
+								"returns": "void"
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "interface",
+					"name": "ExpectStatic",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "target",
+									"type": "any"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Assertions",
+					"signatures": [
+						{
+							"kind": "method",
+							"name": "attr",
+							"parameters": [
+								{
+									"name": "name",
+									"type": "string"
+								},
+								{
+									"name": "value",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "css",
+							"parameters": [
+								{
+									"name": "name",
+									"type": "string"
+								},
+								{
+									"name": "value",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "data",
+							"parameters": [
+								{
+									"name": "name",
+									"type": "string"
+								},
+								{
+									"name": "value",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "class",
+							"parameters": [
+								{
+									"name": "className",
+									"type": "string"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "id",
+							"parameters": [
+								{
+									"name": "id",
+									"type": "string"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "html",
+							"parameters": [
+								{
+									"name": "html",
+									"type": "string"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "text",
+							"parameters": [
+								{
+									"name": "text",
+									"type": "string"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "value",
+							"parameters": [
+								{
+									"name": "value",
+									"type": "string"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "property",
+							"name": "visible",
+							"type": "any"
+						},
+						{
+							"kind": "property",
+							"name": "hidden",
+							"type": "any"
+						},
+						{
+							"kind": "property",
+							"name": "selected",
+							"type": "any"
+						},
+						{
+							"kind": "property",
+							"name": "checked",
+							"type": "any"
+						},
+						{
+							"kind": "property",
+							"name": "disabled",
+							"type": "any"
+						},
+						{
+							"kind": "property",
+							"name": "empty",
+							"type": "any"
+						},
+						{
+							"kind": "property",
+							"name": "exist",
+							"type": "any"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Expect",
+					"extends": [
+						"LanguageChains",
+						"NumericComparison",
+						"TypeComparison",
+						"Assertions"
+					],
+					"signatures": [
+						{
+							"kind": "property",
+							"name": "not",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "deep",
+							"type": "Deep"
+						},
+						{
+							"kind": "property",
+							"name": "a",
+							"type": "TypeComparison"
+						},
+						{
+							"kind": "property",
+							"name": "an",
+							"type": "TypeComparison"
+						},
+						{
+							"kind": "property",
+							"name": "include",
+							"type": "Include"
+						},
+						{
+							"kind": "property",
+							"name": "contain",
+							"type": "Include"
+						},
+						{
+							"kind": "property",
+							"name": "ok",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "true",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "false",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "null",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "undefined",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "exist",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "empty",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "arguments",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "Arguments",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "equal",
+							"type": "Equal"
+						},
+						{
+							"kind": "property",
+							"name": "equals",
+							"type": "Equal"
+						},
+						{
+							"kind": "property",
+							"name": "eq",
+							"type": "Equal"
+						},
+						{
+							"kind": "property",
+							"name": "eql",
+							"type": "Equal"
+						},
+						{
+							"kind": "property",
+							"name": "eqls",
+							"type": "Equal"
+						},
+						{
+							"kind": "property",
+							"name": "property",
+							"type": "Property"
+						},
+						{
+							"kind": "property",
+							"name": "ownProperty",
+							"type": "OwnProperty"
+						},
+						{
+							"kind": "property",
+							"name": "haveOwnProperty",
+							"type": "OwnProperty"
+						},
+						{
+							"kind": "property",
+							"name": "length",
+							"type": "Length"
+						},
+						{
+							"kind": "property",
+							"name": "lengthOf",
+							"type": "Length"
+						},
+						{
+							"kind": "method",
+							"name": "match",
+							"parameters": [
+								{
+									"name": "RegularExpression",
+									"type": "RegExp"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "method",
+							"name": "string",
+							"parameters": [
+								{
+									"name": "string",
+									"type": "string"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "keys",
+							"type": "Keys"
+						},
+						{
+							"kind": "method",
+							"name": "key",
+							"parameters": [
+								{
+									"name": "string",
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "throw",
+							"type": "Throw"
+						},
+						{
+							"kind": "property",
+							"name": "throws",
+							"type": "Throw"
+						},
+						{
+							"kind": "property",
+							"name": "Throw",
+							"type": "Throw"
+						},
+						{
+							"kind": "method",
+							"name": "respondTo",
+							"parameters": [
+								{
+									"name": "method",
+									"type": "string"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "itself",
+							"type": "Expect"
+						},
+						{
+							"kind": "method",
+							"name": "satisfy",
+							"parameters": [
+								{
+									"name": "matcher",
+									"type": "Function"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "method",
+							"name": "closeTo",
+							"parameters": [
+								{
+									"name": "expected",
+									"type": "number"
+								},
+								{
+									"name": "delta",
+									"type": "number"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "members",
+							"type": "Members"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "LanguageChains",
+					"signatures": [
+						{
+							"kind": "property",
+							"name": "to",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "be",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "been",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "is",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "that",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "and",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "have",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "has",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "with",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "at",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "of",
+							"type": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "same",
+							"type": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "NumericComparison",
+					"signatures": [
+						{
+							"kind": "property",
+							"name": "above",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "gt",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "greaterThan",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "least",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "gte",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "below",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "lt",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "lessThan",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "most",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "property",
+							"name": "lte",
+							"type": "NumberComparer"
+						},
+						{
+							"kind": "method",
+							"name": "within",
+							"parameters": [
+								{
+									"name": "start",
+									"type": "number"
+								},
+								{
+									"name": "finish",
+									"type": "number"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "NumberComparer",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "value",
+									"type": "number"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "TypeComparison",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "type",
+									"type": "string"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "instanceof",
+							"type": "InstanceOf"
+						},
+						{
+							"kind": "property",
+							"name": "instanceOf",
+							"type": "InstanceOf"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "InstanceOf",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "constructor",
+									"type": "Object"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Deep",
+					"signatures": [
+						{
+							"kind": "property",
+							"name": "equal",
+							"type": "Equal"
+						},
+						{
+							"kind": "property",
+							"name": "property",
+							"type": "Property"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Equal",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "value",
+									"type": "any"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Property",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "name",
+									"type": "string"
+								},
+								{
+									"name": "value",
+									"optional": true,
+									"type": "any"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "OwnProperty",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "name",
+									"type": "string"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Length",
+					"extends": [
+						"LanguageChains",
+						"NumericComparison"
+					],
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "length",
+									"type": "number"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Include",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "value",
+									"type": "Object"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "value",
+									"type": "string"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "value",
+									"type": "number"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "property",
+							"name": "keys",
+							"type": "Keys"
+						},
+						{
+							"kind": "property",
+							"name": "members",
+							"type": "Members"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Keys",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "keys",
+									"rest": true,
+									"type": {
+										"kind": "array",
+										"type": "string"
+									}
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "keys",
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Members",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "set",
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Throw",
+					"signatures": [
+						{
+							"kind": "call",
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "expected",
+									"type": "string"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "expected",
+									"type": "RegExp"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "constructor",
+									"type": "Error"
+								},
+								{
+									"name": "expected",
+									"optional": true,
+									"type": "string"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "constructor",
+									"type": "Error"
+								},
+								{
+									"name": "expected",
+									"optional": true,
+									"type": "RegExp"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "constructor",
+									"type": "Function"
+								},
+								{
+									"name": "expected",
+									"optional": true,
+									"type": "string"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						},
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "constructor",
+									"type": "Function"
+								},
+								{
+									"name": "expected",
+									"optional": true,
+									"type": "RegExp"
+								},
+								{
+									"name": "message",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "Expect"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Assert",
+					"signatures": [
+						{
+							"kind": "call",
+							"parameters": [
+								{
+									"name": "express",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "fail",
+							"parameters": [
+								{
+									"name": "actual",
+									"optional": true,
+									"type": "any"
+								},
+								{
+									"name": "expected",
+									"optional": true,
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								},
+								{
+									"name": "operator",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "ok",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notOk",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "equal",
+							"parameters": [
+								{
+									"name": "act",
+									"type": "any"
+								},
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notEqual",
+							"parameters": [
+								{
+									"name": "act",
+									"type": "any"
+								},
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "strictEqual",
+							"parameters": [
+								{
+									"name": "act",
+									"type": "any"
+								},
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notStrictEqual",
+							"parameters": [
+								{
+									"name": "act",
+									"type": "any"
+								},
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "deepEqual",
+							"parameters": [
+								{
+									"name": "act",
+									"type": "any"
+								},
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notDeepEqual",
+							"parameters": [
+								{
+									"name": "act",
+									"type": "any"
+								},
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isTrue",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isFalse",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNull",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNotNull",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isUndefined",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isDefined",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isFunction",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNotFunction",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isObject",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNotObject",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isArray",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNotArray",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isString",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNotString",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNumber",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNotNumber",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isBoolean",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isNotBoolean",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "typeOf",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "type",
+									"type": "string"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notTypeOf",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "type",
+									"type": "string"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "instanceOf",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "type",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notInstanceOf",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "type",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "include",
+							"parameters": [
+								{
+									"name": "exp",
+									"type": "string"
+								},
+								{
+									"name": "inc",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "include",
+							"parameters": [
+								{
+									"name": "exp",
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								},
+								{
+									"name": "inc",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notInclude",
+							"parameters": [
+								{
+									"name": "exp",
+									"type": "string"
+								},
+								{
+									"name": "inc",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notInclude",
+							"parameters": [
+								{
+									"name": "exp",
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								},
+								{
+									"name": "inc",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "match",
+							"parameters": [
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "re",
+									"type": "RegExp"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notMatch",
+							"parameters": [
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "re",
+									"type": "RegExp"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "property",
+							"parameters": [
+								{
+									"name": "obj",
+									"type": "Object"
+								},
+								{
+									"name": "prop",
+									"type": "string"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notProperty",
+							"parameters": [
+								{
+									"name": "obj",
+									"type": "Object"
+								},
+								{
+									"name": "prop",
+									"type": "string"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "deepProperty",
+							"parameters": [
+								{
+									"name": "obj",
+									"type": "Object"
+								},
+								{
+									"name": "prop",
+									"type": "string"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "notDeepProperty",
+							"parameters": [
+								{
+									"name": "obj",
+									"type": "Object"
+								},
+								{
+									"name": "prop",
+									"type": "string"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "propertyVal",
+							"parameters": [
+								{
+									"name": "obj",
+									"type": "Object"
+								},
+								{
+									"name": "prop",
+									"type": "string"
+								},
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "propertyNotVal",
+							"parameters": [
+								{
+									"name": "obj",
+									"type": "Object"
+								},
+								{
+									"name": "prop",
+									"type": "string"
+								},
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "deepPropertyVal",
+							"parameters": [
+								{
+									"name": "obj",
+									"type": "Object"
+								},
+								{
+									"name": "prop",
+									"type": "string"
+								},
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "deepPropertyNotVal",
+							"parameters": [
+								{
+									"name": "obj",
+									"type": "Object"
+								},
+								{
+									"name": "prop",
+									"type": "string"
+								},
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "lengthOf",
+							"parameters": [
+								{
+									"name": "exp",
+									"type": "any"
+								},
+								{
+									"name": "len",
+									"type": "number"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "throw",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "throw",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "regExp",
+									"type": "RegExp"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "throw",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "errType",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "throw",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "errType",
+									"type": "Function"
+								},
+								{
+									"name": "regExp",
+									"type": "RegExp"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "throws",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "throws",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "regExp",
+									"type": "RegExp"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "throws",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "errType",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "throws",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "errType",
+									"type": "Function"
+								},
+								{
+									"name": "regExp",
+									"type": "RegExp"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "Throw",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "Throw",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "regExp",
+									"type": "RegExp"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "Throw",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "errType",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "Throw",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "errType",
+									"type": "Function"
+								},
+								{
+									"name": "regExp",
+									"type": "RegExp"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "doesNotThrow",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "doesNotThrow",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "regExp",
+									"type": "RegExp"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "doesNotThrow",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "errType",
+									"type": "Function"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "doesNotThrow",
+							"parameters": [
+								{
+									"name": "fn",
+									"type": "Function"
+								},
+								{
+									"name": "errType",
+									"type": "Function"
+								},
+								{
+									"name": "regExp",
+									"type": "RegExp"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "operator",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "operator",
+									"type": "string"
+								},
+								{
+									"name": "val2",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "closeTo",
+							"parameters": [
+								{
+									"name": "act",
+									"type": "number"
+								},
+								{
+									"name": "exp",
+									"type": "number"
+								},
+								{
+									"name": "delta",
+									"type": "number"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "sameMembers",
+							"parameters": [
+								{
+									"name": "set1",
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								},
+								{
+									"name": "set2",
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "includeMembers",
+							"parameters": [
+								{
+									"name": "set1",
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								},
+								{
+									"name": "set2",
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "ifError",
+							"parameters": [
+								{
+									"name": "val",
+									"type": "any"
+								},
+								{
+									"name": "msg",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						}
+					]
+				}
+			]
+		},
+		{
+			"kind": "module",
+			"name": "chai",
+			"external": true,
+			"exportName": "chai"
+		}
+	]
+}

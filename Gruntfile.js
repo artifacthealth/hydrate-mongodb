@@ -91,6 +91,12 @@ module.exports = function(grunt) {
                     "tests/fixtures/**/*.ts"
                 ],
                 dest: "build/tests/fixtures/"
+            },
+            typings: {
+                src: [
+                    "typings/**/*.ts"
+                ],
+                dest: "typings/"
             }
         },
 
@@ -173,7 +179,7 @@ module.exports = function(grunt) {
     grunt.registerTask("default", [ "build", "lib", "tests" ]);
     grunt.registerTask("build", [ "clean:build", "copy:build", "typescript:build" ]);
     grunt.registerTask("lib", [ "clean:lib",  "copy:lib", "ts_clean:lib", "dts_concat:lib" ]);
-    grunt.registerTask("tests", [ "typescript:tests", "tsreflect:fixtures", "mochaTest:tests" ]);
+    grunt.registerTask("tests", [ "typescript:tests", "tsreflect:typings", "tsreflect:fixtures", "mochaTest:tests" ]);
     grunt.registerTask("benchmarks", [ "typescript:benchmarks", "baseline:benchmarks" ]);
 
 };

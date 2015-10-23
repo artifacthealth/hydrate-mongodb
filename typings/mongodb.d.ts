@@ -147,8 +147,8 @@ declare module "mongodb" {
     // Reads length bytes starting at position.
     read(position: number, length: number): Buffer;
 
-    // Returns the value of this binary as a string.
-    value(): string;
+    // Returns the value of this binary as a string or Buffer.
+    value(raw?: boolean): string;
 
     // The length of the binary.
     length(): number;

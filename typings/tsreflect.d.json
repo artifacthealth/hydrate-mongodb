@@ -1,0 +1,968 @@
+{
+	"declares": [
+		{
+			"kind": "module",
+			"name": "tsreflect",
+			"external": true,
+			"declares": [
+				{
+					"kind": "function",
+					"name": "require",
+					"description": "Load type information for an external module in the global context. Analogous to Node's require function.\n\nThis method assumes that the .d.json file is in the same directory as the .js file that it contains type\ninformation for. Just like Node's require function, if a relative path is specified, it is considered to be\nrelative to the source file that called require. Also like Node's require function, files are loaded\nsynchronously. If you would like to load type information asynchronously, see the load function.",
+					"parameters": [
+						{
+							"name": "moduleName",
+							"description": "The name of the module to load.",
+							"type": "string"
+						}
+					],
+					"returns": "Symbol"
+				},
+				{
+					"kind": "function",
+					"name": "reference",
+					"description": "Load type information for an internal module or global declarations in the global context. Analogous to\nTypeScript's reference tags.\n\nThis method assumes that the .d.json file is in the same directory as the .js file that it contains type\ninformation for. Just like TypeScript's /// <reference path=\"... tags, the path is considered to be relative to\nthe source file that called reference. Files are loaded synchronously. If you would like to load type information\nasynchronously, see the load function.",
+					"parameters": [
+						{
+							"name": "fileName",
+							"description": "The name of the file to load.",
+							"type": "string"
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "function",
+					"name": "load",
+					"description": "Asynchronously load type information for the given filename pattern(s) in the global context.\n\nThis method assumes that the .d.json files are in the same directory as the .js file that they contain type\ninformation for. The load method supports [glob](https://github.com/isaacs/node-glob) patterns for filename\nmatching. Relative paths are considered to be relative to the current working directory.\n\nOnce all declaration files have been loaded, the callback is called with the symbols for any external\nmodules and any top level global declarations in the processed files.",
+					"parameters": [
+						{
+							"name": "path",
+							"description": "The path(s) to load. Glob patterns are supported.",
+							"type": {
+								"kind": "union",
+								"types": [
+									"string",
+									{
+										"kind": "array",
+										"type": "string"
+									}
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"description": "Called when the load operation completes.",
+							"type": {
+								"kind": "function",
+								"parameters": [
+									{
+										"name": "err",
+										"type": "DiagnosticError"
+									},
+									{
+										"name": "symbols",
+										"type": {
+											"kind": "array",
+											"type": "Symbol"
+										}
+									}
+								],
+								"returns": "void"
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "function",
+					"name": "resolve",
+					"description": "Finds the symbol for the given entity name in the global context. If a global symbol with the given name cannot\nbe found, an exception is thrown.",
+					"parameters": [
+						{
+							"name": "entityName",
+							"description": "The global entity name to resolve.",
+							"type": "string"
+						}
+					],
+					"returns": "Symbol"
+				},
+				{
+					"kind": "function",
+					"name": "createContext",
+					"description": "Creates a reflection context.",
+					"returns": "ReflectContext"
+				},
+				{
+					"kind": "interface",
+					"name": "ReflectContext",
+					"description": "Reflection context.",
+					"signatures": [
+						{
+							"kind": "method",
+							"name": "require",
+							"description": "Load type information for an external module in the current context. Analogous to Node's require function.\n\nThis method assumes that the .d.json file is in the same directory as the .js file that it contains type\ninformation for. Just like Node's require function, if a relative path is specified, it is considered to be\nrelative to the source file that called require. Also like Node's require function, files are loaded\nsynchronously. If you would like to load type information asynchronously, see the load function.",
+							"parameters": [
+								{
+									"name": "moduleName",
+									"description": "The name of the module to load.",
+									"type": "string"
+								}
+							],
+							"returns": "Symbol"
+						},
+						{
+							"kind": "method",
+							"name": "reference",
+							"description": "Load type information for an internal module or global declarations in the current context. Analogous to\nTypeScript's reference tags.\n\nThis method assumes that the .d.json file is in the same directory as the .js file that it contains type\ninformation for. Just like TypeScript's /// <reference path=\"... tags, the path is considered to be relative to\nthe source file that called reference. Files are loaded synchronously. If you would like to load type information\nasynchronously, see the load function.",
+							"parameters": [
+								{
+									"name": "fileName",
+									"description": "The name of the file to load.",
+									"type": "string"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "load",
+							"description": "Asynchronously load type information for the given filename pattern(s) in the current context.\n\nThis method assumes that the .d.json files are in the same directory as the .js file that they contain type\ninformation for. The load method supports [glob](https://github.com/isaacs/node-glob) patterns for filename\nmatching. Relative paths are considered to be relative to the current working directory.\n\nOnce all declaration files have been loaded, the callback is called with the symbols for any external\nmodules and any top level global declarations in the processed files.",
+							"parameters": [
+								{
+									"name": "path",
+									"description": "The path(s) to load. Glob patterns are supported.",
+									"type": {
+										"kind": "union",
+										"types": [
+											"string",
+											{
+												"kind": "array",
+												"type": "string"
+											}
+										]
+									}
+								},
+								{
+									"name": "callback",
+									"description": "Called when the load operation completes.",
+									"type": {
+										"kind": "function",
+										"parameters": [
+											{
+												"name": "err",
+												"type": "DiagnosticError"
+											},
+											{
+												"name": "symbols",
+												"type": {
+													"kind": "array",
+													"type": "Symbol"
+												}
+											}
+										],
+										"returns": "void"
+									}
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "resolve",
+							"description": "Finds the symbol for the given entity name in the current context. If a global symbol with the given name cannot\nbe found, an exception is thrown.",
+							"parameters": [
+								{
+									"name": "entityName",
+									"description": "The global entity name to resolve.",
+									"type": "string"
+								}
+							],
+							"returns": "Symbol"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Symbol",
+					"description": "Represents a named identifier.",
+					"signatures": [
+						{
+							"kind": "method",
+							"name": "getName",
+							"description": "Gets the name of the symbol.",
+							"returns": "string"
+						},
+						{
+							"kind": "method",
+							"name": "getFullName",
+							"description": "Gets the qualified name of the symbol.",
+							"returns": "string"
+						},
+						{
+							"kind": "method",
+							"name": "getDescription",
+							"description": "Gets the description of the symbol.",
+							"returns": "string"
+						},
+						{
+							"kind": "method",
+							"name": "getAnnotations",
+							"description": "Finds annotations with the specified name. If no name is specified, then all annotations\nare returned.",
+							"parameters": [
+								{
+									"name": "name",
+									"description": "The name of the annotation to find.",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": {
+								"kind": "array",
+								"type": "Annotation"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "hasAnnotation",
+							"description": "Returns true if the symbols has an annotation with the specified name; Otherwise, returns false.",
+							"parameters": [
+								{
+									"name": "name",
+									"description": "The name of the annotation to find.",
+									"type": "string"
+								}
+							],
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "getType",
+							"description": "Gets the type of the symbol.",
+							"returns": "Type"
+						},
+						{
+							"kind": "method",
+							"name": "getDeclaredType",
+							"description": "Gets the type declared by the symbol. For a class getType() returns the static side of the class\nand getDeclaredType() returns the instance side of the class.",
+							"returns": "Type"
+						},
+						{
+							"kind": "method",
+							"name": "getExports",
+							"description": "Gets all symbols exported by this symbol. This is used to get the members of a module or the static\nmembers of a class.",
+							"returns": {
+								"kind": "array",
+								"type": "Symbol"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "resolve",
+							"description": "Finds the symbol for the given entity name relative to the current symbol. If a symbol with the given name\ncannot be found, an exception is thrown.",
+							"parameters": [
+								{
+									"name": "entityName",
+									"description": "The entity name to resolve.",
+									"type": "string"
+								}
+							],
+							"returns": "Symbol"
+						},
+						{
+							"kind": "method",
+							"name": "getValue",
+							"description": "Gets the value of the symbol on the given object. The symbol must be a property, variable, or accessor.",
+							"parameters": [
+								{
+									"name": "obj",
+									"description": "The object to get the value for.",
+									"type": "any"
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "setValue",
+							"description": "Sets the value of the symbol on the given object. The symbol must be a property, variable, or accessor.",
+							"parameters": [
+								{
+									"name": "obj",
+									"description": "The object to set the value on.",
+									"type": "any"
+								},
+								{
+									"name": "value",
+									"description": "The value to set.",
+									"type": "any"
+								}
+							],
+							"returns": "void"
+						},
+						{
+							"kind": "method",
+							"name": "isVariable",
+							"description": "Returns true if the symbol is a variable; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isFunction",
+							"description": "Returns true if the symbol is a function; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isClass",
+							"description": "Returns true if the symbol is a class; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isInterface",
+							"description": "Returns true if the symbol is an interface; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isEnum",
+							"description": "Returns true if the symbol is an enum; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isModule",
+							"description": "Returns true if the symbol is a module; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isImport",
+							"description": "Returns true if the symbol is an import; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isTypeParameter",
+							"description": "Returns true if the symbol is a type parameter; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isProperty",
+							"description": "Returns true if the symbol is a class or interface property; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isMethod",
+							"description": "Returns true if the symbol is a class or interface method; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isAccessor",
+							"description": "Returns true if the symbol is an accessor; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isGetAccessor",
+							"description": "Returns true if the symbol is a get accessor; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isSetAccessor",
+							"description": "Returns true if the symbol is a set accessor; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isEnumMember",
+							"description": "Returns true if the symbol is an enum member; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isTypeAlias",
+							"description": "Returns true if the symbol is a type alias; Otherwise, returns false.",
+							"returns": "boolean"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Annotation",
+					"description": "Represents a custom annotation.",
+					"signatures": [
+						{
+							"kind": "property",
+							"name": "name",
+							"type": "string",
+							"description": "The name of the annotation."
+						},
+						{
+							"kind": "property",
+							"name": "value",
+							"type": "any",
+							"description": "The value of the annotation."
+						},
+						{
+							"kind": "method",
+							"name": "getDeclarationFileName",
+							"description": "Returns the name of the file that the annotation was declared in.",
+							"returns": "string"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Type",
+					"description": "Represents a type.",
+					"signatures": [
+						{
+							"kind": "method",
+							"name": "getName",
+							"description": "Gets the name of the type, if any.",
+							"returns": "string"
+						},
+						{
+							"kind": "method",
+							"name": "getFullName",
+							"description": "Gets the qualified name of the type, if any.",
+							"returns": "string"
+						},
+						{
+							"kind": "method",
+							"name": "getDescription",
+							"description": "Gets the description of the type.",
+							"returns": "string"
+						},
+						{
+							"kind": "method",
+							"name": "getAnnotations",
+							"description": "Gets all annotations declared for the type.",
+							"parameters": [
+								{
+									"name": "inherit",
+									"description": "True if annotations should be inherited from base types.",
+									"type": "boolean"
+								}
+							],
+							"returns": {
+								"kind": "array",
+								"type": "Annotation"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "getAnnotations",
+							"description": "Finds annotations with the specified name. If no name is specified, then all annotations\nare returns.",
+							"parameters": [
+								{
+									"name": "name",
+									"description": "The name of the annotation to find.",
+									"optional": true,
+									"type": "string"
+								},
+								{
+									"name": "inherit",
+									"description": "True if annotations should be inherited from base types.",
+									"optional": true,
+									"type": "boolean"
+								}
+							],
+							"returns": {
+								"kind": "array",
+								"type": "Annotation"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "hasAnnotation",
+							"description": "Returns true if the type has an annotation with the specified name; Otherwise, returns false.",
+							"parameters": [
+								{
+									"name": "name",
+									"description": "The name of the annotation to find.",
+									"type": "string"
+								},
+								{
+									"name": "inherit",
+									"description": "True if base types should be checked for the annotation as well.",
+									"optional": true,
+									"type": "boolean"
+								}
+							],
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "getProperties",
+							"description": "Gets a list of all properties of the type. Note that properties include fields, accessors, and\nmethods.",
+							"returns": {
+								"kind": "array",
+								"type": "Symbol"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "getProperty",
+							"description": "Finds a property with the specified name. If no property is found, undefined is returned. Note that\nproperties include fields, accessors, and methods.",
+							"parameters": [
+								{
+									"name": "name",
+									"description": "The property name to find.",
+									"type": "string"
+								}
+							],
+							"returns": "Symbol"
+						},
+						{
+							"kind": "method",
+							"name": "getCallSignatures",
+							"description": "Gets all call signatures of the type.",
+							"returns": {
+								"kind": "array",
+								"type": "Signature"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "getConstructSignatures",
+							"description": "Gets all construct signatures of the type.",
+							"returns": {
+								"kind": "array",
+								"type": "Signature"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "getStringIndexType",
+							"description": "Gets the string index type of the type. For example, for { [key: string]: boolean }, getStringIndexType()\nwill return the intrinsic boolean type.",
+							"returns": "Type"
+						},
+						{
+							"kind": "method",
+							"name": "getNumberIndexType",
+							"description": "Gets the number index type of the type. For example, for { [key: number]: string }, getNumberIndexType()\nwill return the intrinsic string type.",
+							"returns": "Type"
+						},
+						{
+							"kind": "method",
+							"name": "isIdenticalTo",
+							"description": "Returns true if the target type is identical to the current type; Otherwise, returns false. If diagnostic\ninformation regarding the differences between the types is desired, any empty array should be passed to\nthe diagnostics parameter.",
+							"parameters": [
+								{
+									"name": "target",
+									"description": "The target type.",
+									"type": "Type"
+								},
+								{
+									"name": "diagnostics",
+									"description": "Array where diagnostic information regarding the differences between the types is placed.",
+									"optional": true,
+									"type": {
+										"kind": "array",
+										"type": "Diagnostic"
+									}
+								}
+							],
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isSubtypeOf",
+							"description": "Returns true if the target type is a subtype of the current type; Otherwise, returns false. If diagnostic\ninformation regarding the differences between the types is desired, any empty array should be passed to\nthe diagnostics parameter.",
+							"parameters": [
+								{
+									"name": "target",
+									"description": "The target type.",
+									"type": "Type"
+								},
+								{
+									"name": "diagnostics",
+									"description": "Array where diagnostic information regarding the differences between the types is placed.",
+									"optional": true,
+									"type": {
+										"kind": "array",
+										"type": "Diagnostic"
+									}
+								}
+							],
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isAssignableTo",
+							"description": "Returns true if the target type is assignable to the current type; Otherwise, returns false. If diagnostic\ninformation regarding the differences between the types is desired, any empty array should be passed to\nthe diagnostics parameter.",
+							"parameters": [
+								{
+									"name": "target",
+									"description": "The target type.",
+									"type": "Type"
+								},
+								{
+									"name": "diagnostics",
+									"description": "Array where diagnostic information regarding the differences between the types is placed.",
+									"optional": true,
+									"type": {
+										"kind": "array",
+										"type": "Diagnostic"
+									}
+								}
+							],
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isSubclassOf",
+							"description": "Returns true if the target type if a subclass of the current type; Otherwise, returns false.",
+							"parameters": [
+								{
+									"name": "target",
+									"description": "The target type.",
+									"type": "Type"
+								}
+							],
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "getBaseClass",
+							"description": "Gets the base class of a class type.",
+							"returns": "Type"
+						},
+						{
+							"kind": "method",
+							"name": "getBaseTypes",
+							"description": "Gets the base types of a class or interface type.",
+							"returns": {
+								"kind": "array",
+								"type": "Type"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "hasBaseType",
+							"description": "Returns true if the target type is a base type of the current type; Otherwise, returns false.",
+							"parameters": [
+								{
+									"name": "target",
+									"description": "The target type.",
+									"type": "Type"
+								}
+							],
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isClass",
+							"description": "Returns true if the type is a class; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isInterface",
+							"description": "Returns true if the type is an interface; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isTuple",
+							"description": "Returns true if the type is a tuple; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isUnion",
+							"description": "Returns true if the type is a union type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isArray",
+							"description": "Returns true if the type is an array; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isIndex",
+							"description": "Returns true if the type is an index type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isAnonymous",
+							"description": "Returns true if the type is anonymous; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isReference",
+							"description": "Returns true if the type is a generic reference; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isEnum",
+							"description": "Returns true if the type is an enum; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isStringLiteral",
+							"description": "Returns true if the type is a string literal; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isTypeParameter",
+							"description": "Returns true if the type is a type parameter; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isAny",
+							"description": "Returns true if the type is the intrinsic any type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isString",
+							"description": "Returns true if the type is the intrinsic string type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isNumber",
+							"description": "Returns true if the type is the intrinsic number type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isBoolean",
+							"description": "Returns true if the type is the intrinsic boolean type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isVoid",
+							"description": "Returns true if the type is the intrinsic void type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isIntrinsic",
+							"description": "Returns true if the type is an intrinsic type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "isObjectType",
+							"description": "Returns true if the type is an object type; Otherwise, returns false.",
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "getEnumValue",
+							"description": "Gets the numeric enum value for the given member name.",
+							"parameters": [
+								{
+									"name": "value",
+									"description": "The enum member name to get the value for.",
+									"type": "string"
+								},
+								{
+									"name": "ignoreCase",
+									"description": "True if case should be ignored when finding the member name.",
+									"optional": true,
+									"type": "boolean"
+								}
+							],
+							"returns": "number"
+						},
+						{
+							"kind": "method",
+							"name": "getEnumName",
+							"description": "Gets the enum member name for the given numeric enum value.",
+							"parameters": [
+								{
+									"name": "value",
+									"description": "The numeric value to get the name for.",
+									"type": "number"
+								}
+							],
+							"returns": "string"
+						},
+						{
+							"kind": "method",
+							"name": "getEnumNames",
+							"description": "Gets a list of enum member names.",
+							"returns": {
+								"kind": "array",
+								"type": "string"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "getElementType",
+							"description": "Gets the element type for an array type.",
+							"returns": "Type"
+						},
+						{
+							"kind": "method",
+							"name": "getElementTypes",
+							"description": "Gets the element types a union or tuple type.",
+							"returns": {
+								"kind": "array",
+								"type": "Type"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "createInstance",
+							"description": "Creates an instance of a class. If arguments are provided then the constructor is called; Otherwise,\nthe object is created without calling the constructor. To call a parameter-less constructor, pass an empty\narray to args.\n\nNote that This method assumes that the .d.json file is in the same directory as the .js file that it contains\ntype information for. For external modules, Node's require method is used to load the JavaScript module.",
+							"parameters": [
+								{
+									"name": "args",
+									"description": "The constructor arguments.",
+									"optional": true,
+									"type": {
+										"kind": "array",
+										"type": "any"
+									}
+								}
+							],
+							"returns": "any"
+						},
+						{
+							"kind": "method",
+							"name": "getConstructor",
+							"description": "Gets the JavaScript constructor for a class type.\n\nNote that This method assumes that the .d.json file is in the same directory as the .js file that it contains\ntype information for. For external modules, Node's require method is used to load the JavaScript module.",
+							"returns": "Function"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Signature",
+					"description": "Represents a call signature.",
+					"signatures": [
+						{
+							"kind": "method",
+							"name": "getDescription",
+							"description": "Gets a description of the signature.",
+							"returns": "string"
+						},
+						{
+							"kind": "method",
+							"name": "getAnnotations",
+							"description": "Finds annotations with the specified name. If no name is specified, then all annotations\nare returned.",
+							"parameters": [
+								{
+									"name": "name",
+									"description": "The name of the annotation to find.",
+									"optional": true,
+									"type": "string"
+								}
+							],
+							"returns": {
+								"kind": "array",
+								"type": "Annotation"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "hasAnnotation",
+							"description": "Returns true if the symbols has an annotation with the specified name; Otherwise, returns false.",
+							"parameters": [
+								{
+									"name": "name",
+									"description": "The name of the annotation to find.",
+									"type": "string"
+								}
+							],
+							"returns": "boolean"
+						},
+						{
+							"kind": "method",
+							"name": "getParameters",
+							"description": "Gets a list of all parameters for the call signature.",
+							"returns": {
+								"kind": "array",
+								"type": "Symbol"
+							}
+						},
+						{
+							"kind": "method",
+							"name": "getParameter",
+							"description": "Gets a parameter for the signature with the specified name. If no parameter matches the name then undefined\nis returned.",
+							"parameters": [
+								{
+									"name": "name",
+									"description": "The parameter name to find.",
+									"type": "string"
+								}
+							],
+							"returns": "Symbol"
+						},
+						{
+							"kind": "method",
+							"name": "getReturnType",
+							"description": "Gets the return type of the signature.",
+							"returns": "Type"
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "Diagnostic",
+					"description": "Diagnostic information.",
+					"signatures": [
+						{
+							"kind": "property",
+							"name": "filename",
+							"optional": true,
+							"type": "string",
+							"description": "The name of the .d.json file that contained the error"
+						},
+						{
+							"kind": "property",
+							"name": "messageText",
+							"type": "string",
+							"description": "Message explaining the error."
+						},
+						{
+							"kind": "property",
+							"name": "code",
+							"type": "number",
+							"description": "Error code."
+						}
+					]
+				},
+				{
+					"kind": "interface",
+					"name": "DiagnosticError",
+					"description": "Extension of standard Error that includes diagnostic information.",
+					"extends": [
+						"Error"
+					],
+					"signatures": [
+						{
+							"kind": "property",
+							"name": "diagnostics",
+							"type": {
+								"kind": "array",
+								"type": "Diagnostic"
+							},
+							"description": "Array of Diagnostics that provides details on the error that occurred."
+						}
+					]
+				}
+			]
+		}
+	]
+}

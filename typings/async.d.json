@@ -1,0 +1,2126 @@
+{
+	"declares": [
+		{
+			"kind": "interface",
+			"name": "AsyncMultipleResultsCallback",
+			"typeParameters": [
+				{
+					"name": "T"
+				}
+			],
+			"signatures": [
+				{
+					"kind": "call",
+					"parameters": [
+						{
+							"name": "err",
+							"type": "Error"
+						},
+						{
+							"name": "results",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						}
+					],
+					"returns": "any"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "AsyncSingleResultCallback",
+			"typeParameters": [
+				{
+					"name": "T"
+				}
+			],
+			"signatures": [
+				{
+					"kind": "call",
+					"parameters": [
+						{
+							"name": "err",
+							"type": "Error"
+						},
+						{
+							"name": "result",
+							"type": "T"
+						}
+					],
+					"returns": "void"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "AsyncTimesCallback",
+			"typeParameters": [
+				{
+					"name": "T"
+				}
+			],
+			"signatures": [
+				{
+					"kind": "call",
+					"parameters": [
+						{
+							"name": "n",
+							"type": "number"
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "AsyncIterator",
+			"typeParameters": [
+				{
+					"name": "T"
+				},
+				{
+					"name": "R"
+				}
+			],
+			"signatures": [
+				{
+					"kind": "call",
+					"parameters": [
+						{
+							"name": "item",
+							"type": "T"
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncSingleResultCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "AsyncMemoIterator",
+			"typeParameters": [
+				{
+					"name": "T"
+				},
+				{
+					"name": "R"
+				}
+			],
+			"signatures": [
+				{
+					"kind": "call",
+					"parameters": [
+						{
+							"name": "memo",
+							"type": "R"
+						},
+						{
+							"name": "item",
+							"type": "T"
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncSingleResultCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "AsyncWorker",
+			"typeParameters": [
+				{
+					"name": "T"
+				}
+			],
+			"signatures": [
+				{
+					"kind": "call",
+					"parameters": [
+						{
+							"name": "task",
+							"type": "T"
+						},
+						{
+							"name": "callback",
+							"type": "Function"
+						}
+					],
+					"returns": "void"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "AsyncQueue",
+			"typeParameters": [
+				{
+					"name": "T"
+				}
+			],
+			"signatures": [
+				{
+					"kind": "method",
+					"name": "length",
+					"returns": "number"
+				},
+				{
+					"kind": "property",
+					"name": "concurrency",
+					"type": "number"
+				},
+				{
+					"kind": "property",
+					"name": "started",
+					"type": "boolean"
+				},
+				{
+					"kind": "property",
+					"name": "paused",
+					"type": "boolean"
+				},
+				{
+					"kind": "method",
+					"name": "push",
+					"parameters": [
+						{
+							"name": "task",
+							"type": "T"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "push",
+					"parameters": [
+						{
+							"name": "task",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "unshift",
+					"parameters": [
+						{
+							"name": "task",
+							"type": "T"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "unshift",
+					"parameters": [
+						{
+							"name": "task",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "property",
+					"name": "saturated",
+					"type": {
+						"kind": "function",
+						"returns": "any"
+					}
+				},
+				{
+					"kind": "property",
+					"name": "empty",
+					"type": {
+						"kind": "function",
+						"returns": "any"
+					}
+				},
+				{
+					"kind": "property",
+					"name": "drain",
+					"type": {
+						"kind": "function",
+						"returns": "any"
+					}
+				},
+				{
+					"kind": "method",
+					"name": "running",
+					"returns": "number"
+				},
+				{
+					"kind": "method",
+					"name": "idle",
+					"returns": "boolean"
+				},
+				{
+					"kind": "method",
+					"name": "pause",
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "resume",
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "kill",
+					"returns": "void"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "AsyncPriorityQueue",
+			"typeParameters": [
+				{
+					"name": "T"
+				}
+			],
+			"signatures": [
+				{
+					"kind": "method",
+					"name": "length",
+					"returns": "number"
+				},
+				{
+					"kind": "property",
+					"name": "concurrency",
+					"type": "number"
+				},
+				{
+					"kind": "property",
+					"name": "started",
+					"type": "boolean"
+				},
+				{
+					"kind": "property",
+					"name": "paused",
+					"type": "boolean"
+				},
+				{
+					"kind": "method",
+					"name": "push",
+					"parameters": [
+						{
+							"name": "task",
+							"type": "T"
+						},
+						{
+							"name": "priority",
+							"type": "number"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "push",
+					"parameters": [
+						{
+							"name": "task",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "priority",
+							"type": "number"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "property",
+					"name": "saturated",
+					"type": {
+						"kind": "function",
+						"returns": "any"
+					}
+				},
+				{
+					"kind": "property",
+					"name": "empty",
+					"type": {
+						"kind": "function",
+						"returns": "any"
+					}
+				},
+				{
+					"kind": "property",
+					"name": "drain",
+					"type": {
+						"kind": "function",
+						"returns": "any"
+					}
+				},
+				{
+					"kind": "method",
+					"name": "running",
+					"returns": "number"
+				},
+				{
+					"kind": "method",
+					"name": "idle",
+					"returns": "boolean"
+				},
+				{
+					"kind": "method",
+					"name": "pause",
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "resume",
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "kill",
+					"returns": "void"
+				}
+			]
+		},
+		{
+			"kind": "interface",
+			"name": "Async",
+			"signatures": [
+				{
+					"kind": "method",
+					"name": "each",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "eachSeries",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "eachLimit",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "limit",
+							"type": "number"
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "map",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "mapSeries",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "filter",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "select",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "filterSeries",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "selectSeries",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "reject",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "rejectSeries",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "reduce",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "memo",
+							"type": "R"
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMemoIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncSingleResultCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "inject",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "memo",
+							"type": "R"
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMemoIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncSingleResultCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "foldl",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "memo",
+							"type": "R"
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMemoIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncSingleResultCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "reduceRight",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "memo",
+							"type": "R"
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMemoIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncSingleResultCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "foldr",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "memo",
+							"type": "R"
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMemoIterator",
+								"arguments": [
+									"T",
+									"R"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncSingleResultCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "detect",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "detectSeries",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "sortBy",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "V"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"V"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "some",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "any",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "every",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "function",
+								"parameters": [
+									{
+										"name": "result",
+										"type": "boolean"
+									}
+								],
+								"returns": "any"
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "all",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									"boolean"
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "function",
+								"parameters": [
+									{
+										"name": "result",
+										"type": "boolean"
+									}
+								],
+								"returns": "any"
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "concat",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									{
+										"kind": "array",
+										"type": "R"
+									}
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "concatSeries",
+					"typeParameters": [
+						{
+							"name": "T"
+						},
+						{
+							"name": "R"
+						}
+					],
+					"parameters": [
+						{
+							"name": "arr",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "iterator",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncIterator",
+								"arguments": [
+									"T",
+									{
+										"kind": "array",
+										"type": "R"
+									}
+								]
+							}
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"R"
+								]
+							}
+						}
+					],
+					"returns": "any"
+				},
+				{
+					"kind": "method",
+					"name": "series",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "series",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": "T"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "parallel",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "parallel",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": "T"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "parallelLimit",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "limit",
+							"type": "number"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "parallelLimit",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": "T"
+						},
+						{
+							"name": "limit",
+							"type": "number"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "whilst",
+					"parameters": [
+						{
+							"name": "test",
+							"type": "Function"
+						},
+						{
+							"name": "fn",
+							"type": "Function"
+						},
+						{
+							"name": "callback",
+							"type": "Function"
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "until",
+					"parameters": [
+						{
+							"name": "test",
+							"type": "Function"
+						},
+						{
+							"name": "fn",
+							"type": "Function"
+						},
+						{
+							"name": "callback",
+							"type": "Function"
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "waterfall",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": {
+								"kind": "array",
+								"type": "T"
+							}
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "waterfall",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": "T"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "queue",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "worker",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncWorker",
+								"arguments": [
+									"T"
+								]
+							}
+						},
+						{
+							"name": "concurrency",
+							"type": "number"
+						}
+					],
+					"returns": {
+						"kind": "reference",
+						"type": "AsyncQueue",
+						"arguments": [
+							"T"
+						]
+					}
+				},
+				{
+					"kind": "method",
+					"name": "priorityQueue",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "worker",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncWorker",
+								"arguments": [
+									"T"
+								]
+							}
+						},
+						{
+							"name": "concurrency",
+							"type": "number"
+						}
+					],
+					"returns": {
+						"kind": "reference",
+						"type": "AsyncPriorityQueue",
+						"arguments": [
+							"T"
+						]
+					}
+				},
+				{
+					"kind": "method",
+					"name": "auto",
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": "any"
+						},
+						{
+							"name": "callback",
+							"optional": true,
+							"type": {
+								"kind": "reference",
+								"type": "AsyncMultipleResultsCallback",
+								"arguments": [
+									"any"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "iterator",
+					"parameters": [
+						{
+							"name": "tasks",
+							"type": {
+								"kind": "array",
+								"type": "Function"
+							}
+						}
+					],
+					"returns": "Function"
+				},
+				{
+					"kind": "method",
+					"name": "apply",
+					"parameters": [
+						{
+							"name": "fn",
+							"type": "Function"
+						},
+						{
+							"name": "arguments",
+							"rest": true,
+							"type": {
+								"kind": "array",
+								"type": "any"
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "nextTick",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "callback",
+							"type": "Function"
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "times",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "n",
+							"type": "number"
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncTimesCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "timesSeries",
+					"typeParameters": [
+						{
+							"name": "T"
+						}
+					],
+					"parameters": [
+						{
+							"name": "n",
+							"type": "number"
+						},
+						{
+							"name": "callback",
+							"type": {
+								"kind": "reference",
+								"type": "AsyncTimesCallback",
+								"arguments": [
+									"T"
+								]
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "memoize",
+					"parameters": [
+						{
+							"name": "fn",
+							"type": "Function"
+						},
+						{
+							"name": "hasher",
+							"optional": true,
+							"type": "Function"
+						}
+					],
+					"returns": "Function"
+				},
+				{
+					"kind": "method",
+					"name": "unmemoize",
+					"parameters": [
+						{
+							"name": "fn",
+							"type": "Function"
+						}
+					],
+					"returns": "Function"
+				},
+				{
+					"kind": "method",
+					"name": "log",
+					"parameters": [
+						{
+							"name": "fn",
+							"type": "Function"
+						},
+						{
+							"name": "arguments",
+							"rest": true,
+							"type": {
+								"kind": "array",
+								"type": "any"
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "dir",
+					"parameters": [
+						{
+							"name": "fn",
+							"type": "Function"
+						},
+						{
+							"name": "arguments",
+							"rest": true,
+							"type": {
+								"kind": "array",
+								"type": "any"
+							}
+						}
+					],
+					"returns": "void"
+				},
+				{
+					"kind": "method",
+					"name": "noConflict",
+					"returns": "Async"
+				}
+			]
+		},
+		{
+			"kind": "variable",
+			"name": "async",
+			"type": "Async"
+		},
+		{
+			"kind": "module",
+			"name": "async",
+			"external": true,
+			"exportName": "async"
+		}
+	]
+}

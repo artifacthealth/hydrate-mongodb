@@ -19,6 +19,19 @@ import ConverterOnClassFixture = require("../../fixtures/annotations/converterOn
 
 describe('AnnotationMappingProvider', () => {
 
+    describe('getMapping', () => {
+
+        it.only('correctly creates BufferMapping for a Buffer', (done) => {
+
+            processFixture("classWithBuffer", done, (results) => {
+
+                assert.lengthOf(results, 1);
+                var mapping = findMapping(results, "ClassWithBuffer").getProperty("data").mapping;
+                assert.isTrue((mapping.flags & MappingsFlags.Buffer) === MappingsFlags.Buffer);
+            });
+        });
+    });
+
     describe('when processing annotation', () => {
 
         describe('@entity', () => {

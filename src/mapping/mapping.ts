@@ -21,6 +21,7 @@ import IdentityGenerator = require("../id/identityGenerator");
 import EnumType = require("./enumType");
 import PropertyConverter = require("./propertyConverter");
 import ConverterMapping = require("./converterMapping");
+import BufferMapping = require("./bufferMapping");
 
 interface Mapping {
     id: number;
@@ -170,6 +171,10 @@ module Mapping {
 
     export function createConverterMapping(converter: PropertyConverter): Mapping {
         return new ConverterMapping(converter);
+    }
+
+    export function createBufferMapping(): Mapping {
+        return new BufferMapping();
     }
 
     export function createTupleMapping(elementMappings: Mapping[]): Mapping {

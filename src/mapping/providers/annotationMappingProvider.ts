@@ -288,7 +288,13 @@ class MappingBuilder {
                     mapping = Mapping.createClassMapping(this._getParentMapping(type));
                 }
                 else {
-                    mapping = Mapping.createObjectMapping();
+                    // Check to see if type is the global NodeJS Buffer type. If it is, create mapping to handle Buffer.
+                    if(type.hasBaseType(this._context.resolve("Buffer").getDeclaredType())) {
+                        mapping = Mapping.createBufferMapping();
+                    }
+                    else {
+                        mapping = Mapping.createObjectMapping();
+                    }
                 }
                 break;
             case MappingKind.RootEntity:

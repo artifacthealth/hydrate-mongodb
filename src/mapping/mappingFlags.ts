@@ -14,6 +14,7 @@ const enum MappingFlags {
     Embeddable          = 0x00000800,
     InheritanceRoot     = 0x00001000,
     Converter           = 0x00002000,
+    Buffer              = 0x00004000,
 
     ArrayLike = Array | Tuple
 }
