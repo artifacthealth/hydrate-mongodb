@@ -106,6 +106,7 @@ class MappingBuilder {
     private _globalBooleanMapping = Mapping.createBooleanMapping();
     private _globalDateMapping = Mapping.createDateMapping();
     private _globalRegExpMapping = Mapping.createRegExpMapping();
+    private _globalBufferType: reflect.Type;
 
     build(symbols: reflect.Symbol[]): Mapping.ClassMapping[] {
 
@@ -115,6 +116,13 @@ class MappingBuilder {
         this._addGlobalMapping("Boolean", this._globalBooleanMapping);
         this._addGlobalMapping("Date", this._globalDateMapping);
         this._addGlobalMapping("RegExp", this._globalRegExpMapping);
+
+        try {
+            this._globalBufferType = this._context.resolve("Buffer").getDeclaredType();
+        }
+        catch(e) {
+            // squelch errors
+        }
 
         // find all entity types
         for(var i = 0, l = symbols.length; i < l; i++) {
@@ -289,7 +297,7 @@ class MappingBuilder {
                 }
                 else {
                     // Check to see if type is the global NodeJS Buffer type. If it is, create mapping to handle Buffer.
-                    if(type.hasBaseType(this._context.resolve("Buffer").getDeclaredType())) {
+                    if(this._isBuffer(type)) {
                         mapping = Mapping.createBufferMapping();
                     }
                     else {
@@ -310,6 +318,13 @@ class MappingBuilder {
         }
 
         return links.mapping = mapping;
+    }
+
+    private _isBuffer(type: reflect.Type): boolean {
+
+        if(!type || !this._globalBufferType) return false;
+
+        return type.hasBaseType(this._globalBufferType);
     }
 
     private _getParentMapping(type: reflect.Type): Mapping.ClassMapping {

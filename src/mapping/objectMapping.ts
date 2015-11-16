@@ -34,8 +34,8 @@ class ObjectMapping extends MappingBase {
             throw new Error("Property is missing 'name'.");
         }
 
-        if(!property.field) {
-            throw new Error("Property is missing 'field'.");
+        if(!property.field && !property.hasFlags(PropertyFlags.Ignored)) {
+            throw new Error("Property must define a 'field' mapping if the property is not ignored.");
         }
 
         if (Map.hasProperty(this._propertiesByName, property.name)) {
@@ -47,7 +47,10 @@ class ObjectMapping extends MappingBase {
         }
 
         this._propertiesByName[property.name] = property;
-        this._propertiesByField[property.field] = property;
+
+        if(property.field) {
+            this._propertiesByField[property.field] = property;
+        }
 
         this.properties.push(property);
         return property;
@@ -325,9 +328,14 @@ class ObjectMapping extends MappingBase {
             context.setError("Cannot resolve inverse side of relationship.");
         }
 
+        if((property.flags & PropertyFlags.Ignored)) {
+            context.setError("Cannot resolve ignored property.");
+        }
+
         if(context.resolveProperty(property.mapping, property.field)) {
             return; // reached end of path
         }
+
         property.mapping.resolve(context);
     }
 }

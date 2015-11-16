@@ -49,6 +49,11 @@ class Property {
         }
     }
 
+    hasFlags(flags: PropertyFlags): boolean {
+
+        return this.flags != undefined && ((this.flags & flags) === flags);
+    }
+
     getPropertyValue(obj: any): any {
 
         // Generate getters for VM optimization on first call to the getter. Verified that this improves performance

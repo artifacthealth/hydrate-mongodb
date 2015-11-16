@@ -21,7 +21,7 @@ describe('AnnotationMappingProvider', () => {
 
     describe('getMapping', () => {
 
-        it.only('correctly creates BufferMapping for a Buffer', (done) => {
+        it('correctly creates BufferMapping for a Buffer', (done) => {
 
             processFixture("classWithBuffer", done, (results) => {
 
