@@ -30,36 +30,24 @@ module.exports = function(grunt) {
         },
 
         typescript: {
+            options: {
+                target: "es5",
+                module: "commonjs",
+                sourceMap: true,
+                declaration: true,
+                noImplicitAny: true
+            },
             build: {
-                options: {
-                    target: "es5",
-                    module: "commonjs",
-                    sourceMap: true,
-                    declaration: true,
-                    noImplicitAny: true
-                },
                 src: ['src/**/*.ts'],
-                dest: 'build/'
+                dest: 'build/src/'
             },
             tests: {
-                options: {
-                    target: "es5",
-                    module: "commonjs",
-                    sourceMap: true,
-                    noImplicitAny: true
-                },
                 src: [
                     'tests/**/*.ts'
                 ],
                 dest: 'build/'
             },
             benchmarks: {
-                options: {
-                    target: "es5",
-                    module: "commonjs",
-                    sourceMap: true,
-                    noImplicitAny: true
-                },
                 src: [
                     'benchmarks/**/*.ts'
                 ],

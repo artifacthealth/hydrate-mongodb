@@ -446,13 +446,12 @@ describe('SessionImpl', () => {
             refresh((entity, done) => {
                 // modify object before refresh to make sure that after refresh the object is no longer considered dirty
                 entity.name = "Mittens";
-                process.nextTick(done);
+                setTimeout(done);
             }, (err, entity, session, persister) => {
                 if(err) return done(err);
 
                 session.flush((err) => {
                     if(err) return done(err);
-
                     assert.equal(persister.dirtyCheckCalled, 0, "Object still considered dirty after refresh");
                     done();
                 });
@@ -493,10 +492,12 @@ describe('SessionImpl', () => {
                 session.flush((err) => {
                     if(err) return callback(err);
                     if(beforeRefresh) {
-                        beforeRefresh(entity, () => {
-                            if(err) return callback(err);
-                            doRefresh();
-                        });
+                        process.nextTick(() => {
+                            beforeRefresh(entity, () => {
+                                if(err) return callback(err);
+                                doRefresh();
+                            });
+                        })
                     }
                     else {
                         doRefresh();
@@ -507,6 +508,7 @@ describe('SessionImpl', () => {
                     session.refresh(entity, (err) => {
                         if (err) return callback(err);
                         assert.equal(called, 1, "refresh on Persister was not called");
+
                         callback(null, entity, session, persister);
                     });
                 }

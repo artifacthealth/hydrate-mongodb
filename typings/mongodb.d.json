@@ -4444,6 +4444,12 @@
 						},
 						{
 							"kind": "property",
+							"name": "strict",
+							"optional": true,
+							"type": "boolean"
+						},
+						{
+							"kind": "property",
 							"name": "serializeFunctions",
 							"optional": true,
 							"type": "any"

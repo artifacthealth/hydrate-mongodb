@@ -38,9 +38,8 @@
     "grunt-shell": "^1.1.1",
     "grunt-ts-clean": "^0.2.0",
     "grunt-tsreflect": "^0.1.2",
-    "grunt-typescript": "0.6.1",
-    "mocha": "^2.0.1",
-    "typescript": "1.4.1"
+    "grunt-typescript": "0.8.0",
+    "mocha": "^2.0.1"
   },
   "keywords": [
     "odm",

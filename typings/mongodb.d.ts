@@ -483,6 +483,7 @@ declare module "mongodb" {
 
   export interface MongoCollectionOptions {
     safe?: any;
+    strict?: boolean;
     serializeFunctions?: any;
     raw?: boolean;
     pkFactory?: any;
