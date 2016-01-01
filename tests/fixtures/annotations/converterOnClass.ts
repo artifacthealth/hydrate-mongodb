@@ -1,3 +1,5 @@
+import { Entity, Converter, Field } from "../../../src/mapping/providers/decorators";
+
 export class Point {
 
     constructor(public x: number, public y: number) {
@@ -5,10 +7,10 @@ export class Point {
     }
 }
 
-/** @entity */
+@Entity()
 export class B {
 
-    /** @converter "PointConverter" */
+    @Converter("PointConverter")
     a: Point;
 }
 

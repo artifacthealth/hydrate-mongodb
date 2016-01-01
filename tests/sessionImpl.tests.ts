@@ -3,32 +3,30 @@
 /// <reference path="../typings/chai.d.ts"/>
 /// <reference path="../typings/async.d.ts" />
 
-import mongodb = require("mongodb");
-import async = require("async");
-import chai = require("chai");
-import assert = chai.assert;
-import helpers = require("./helpers");
-
-import Configuration = require("../src/config/configuration");
-import SessionFactory = require("../src/sessionFactory");
-import SessionFactoryImpl = require("../src/sessionFactoryImpl");
-import SessionImpl = require("../src/sessionImpl");
-import InternalSession = require("../src/internalSession");
-import EntityMapping = require("../src/mapping/entityMapping");
-import MockPersister = require("./mockPersister");
-import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
-import MappingRegistry = require("../src/mapping/mappingRegistry");
-import ObjectIdGenerator = require("../src/id/objectIdGenerator");
-import QueryKind = require("../src/query/queryKind");
-import Callback = require("../src/core/callback");
-import Reference = require("../src/reference");
+import {assert} from "chai";
+import {ObjectID} from "mongodb";
+import * as async from "async";
+import * as helpers from "./helpers";
+import * as model from "./fixtures/model";
+import {Configuration} from "../src/config/configuration";
+import {SessionFactory} from "../src/sessionFactory";
+import {SessionFactoryImpl} from "../src/sessionFactoryImpl";
+import {SessionImpl} from "../src/sessionImpl";
+import {InternalSession} from "../src/internalSession";
+import {EntityMapping} from "../src/mapping/entityMapping";
+import {MockPersister} from "./mockPersister";
+import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
+import {MappingRegistry} from "../src/mapping/mappingRegistry";
+import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
+import {QueryKind} from "../src/query/queryKind";
+import {Callback} from "../src/core/callback";
+import {Reference} from "../src/reference";
 
 // Fixtures
-import model = require("./fixtures/model");
-import Cat = require("./fixtures/cat");
-import Kitten = require("./fixtures/kitten");
-import Dog = require("./fixtures/dog");
-import cascade = require("./fixtures/cascade");
+import Cat from "./fixtures/cat";
+import Kitten from "./fixtures/kitten";
+import Dog from "./fixtures/dog";
+import * as cascade from "./fixtures/cascade";
 
 describe('SessionImpl', () => {
 
@@ -200,7 +198,6 @@ describe('SessionImpl', () => {
                 session.save(entity);
                 session.flush(err => {
                     if (err) return done(err);
-
                     var persister = factory.getPersisterForObject(session, entity);
                     assert.equal(persister.insertCalled, entity.cascadeArray.length + 2);
                     done();
@@ -907,7 +904,7 @@ describe('SessionImpl', () => {
                 var ref = session.getReference(Kitten, new ObjectIdGenerator().generate().toString());
                 var id = session.getId(ref);
 
-                assert.instanceOf(id, mongodb.ObjectID);
+                assert.instanceOf(id, ObjectID);
                 done();
             });
         });

@@ -3,13 +3,11 @@
 /// <reference path="../../typings/async.d.ts" />
 /// <reference path="../../typings/mongodb.d.ts" />
 
-import mongodb = require("mongodb");
-import async = require("async");
-import chai = require("chai");
-import assert = chai.assert;
-
-import BufferMapping = require("../../src/mapping/bufferMapping");
-import ReadContext = require("../../src/mapping/readContext");
+import {Binary} from "mongodb";
+import * as async from "async";
+import {assert} from "chai";
+import {BufferMapping} from "../../src/mapping/bufferMapping";
+import {ReadContext} from "../../src/mapping/readContext";
 
 describe('BufferMapping', () => {
 
@@ -20,7 +18,7 @@ describe('BufferMapping', () => {
             var mapping = new BufferMapping();
 
             var testValue = "test";
-            var result = mapping.read(new ReadContext(null), new mongodb.Binary(new Buffer(testValue))).toString("utf8");
+            var result = mapping.read(new ReadContext(null), new Binary(new Buffer(testValue))).toString("utf8");
 
             assert.equal(result, testValue);
         });

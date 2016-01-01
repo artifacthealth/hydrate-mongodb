@@ -1,34 +1,34 @@
-import ArrayMapping = require("./arrayMapping");
-import BooleanMapping = require("./booleanMapping");
-import ClassMappingImpl = require("./classMapping");
-import DateMapping = require("./dateMapping");
-import EntityMappingImpl = require("./entityMapping");
-import EnumMappingImpl = require("./enumMapping");
-import NumberMapping = require("./numberMapping");
-import ObjectMappingImpl = require("./objectMapping");
-import RegExpMapping = require("./regExpMapping");
-import StringMapping = require("./stringMapping");
-import TupleMapping = require("./tupleMapping");
-import MappingFlags = require("./mappingFlags");
-import InternalMapping = require("./internalMapping");
-import PropertyFlags = require("./propertyFlags");
-import PropertyImpl = require("./property");
-import Index = require("./index");
-import IndexOptions = require("./indexOptions");
-import CollectionOptions = require("./collectionOptions");
-import ChangeTracking = require("./changeTracking");
-import IdentityGenerator = require("../id/identityGenerator");
-import EnumType = require("./enumType");
-import PropertyConverter = require("./propertyConverter");
-import ConverterMapping = require("./converterMapping");
-import BufferMapping = require("./bufferMapping");
+import {ArrayMapping} from "./arrayMapping";
+import {BooleanMapping} from "./booleanMapping";
+import {ClassMapping as ClassMappingImpl} from "./classMapping";
+import {DateMapping} from "./dateMapping";
+import {EntityMapping as EntityMappingImpl} from "./entityMapping";
+import {EnumMapping as EnumMappingImpl} from "./enumMapping";
+import {NumberMapping} from "./numberMapping";
+import {ObjectMapping as ObjectMappingImpl} from "./objectMapping";
+import {RegExpMapping} from "./regExpMapping";
+import {StringMapping} from "./stringMapping";
+import {TupleMapping} from "./tupleMapping";
+import {MappingFlags} from "./mappingFlags";
+import {InternalMapping} from "./internalMapping";
+import {PropertyFlags} from "./propertyFlags";
+import {Property as PropertyImpl} from "./property";
+import {Index} from "./index";
+import {IndexOptions} from "./indexOptions";
+import {CollectionOptions} from "./collectionOptions";
+import {ChangeTrackingType} from "./changeTrackingType";
+import {IdentityGenerator} from "../id/identityGenerator";
+import {EnumType} from "./enumType";
+import {PropertyConverter} from "./propertyConverter";
+import {ConverterMapping} from "./converterMapping";
+import {BufferMapping} from "./bufferMapping";
 
-interface Mapping {
+export interface Mapping {
     id: number;
     flags: MappingFlags;
 }
 
-module Mapping {
+export namespace Mapping {
 
     export interface EnumMembers {
 
@@ -102,7 +102,7 @@ module Mapping {
 
         identity: IdentityGenerator;
 
-        changeTracking: ChangeTracking;
+        changeTracking: ChangeTrackingType;
 
         versioned: boolean;
         versionField: string;
@@ -184,5 +184,3 @@ module Mapping {
         return new TupleMapping(<InternalMapping[]>elementMappings);
     }
 }
-
-export = Mapping;

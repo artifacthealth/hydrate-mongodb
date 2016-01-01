@@ -1,4 +1,4 @@
-const enum PropertyFlags {
+export const enum PropertyFlags {
     None = 0,
     Ignored = 0x00000001,
     CascadeSave = 0x00000002,
@@ -16,6 +16,3 @@ const enum PropertyFlags {
     WalkEntities = 0x00000200,
     Dereference = 0x00000400
 }
-
-export = PropertyFlags;
-

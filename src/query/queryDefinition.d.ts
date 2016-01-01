@@ -1,10 +1,10 @@
-import ResultCallback = require("../core/resultCallback");
-import IteratorCallback = require("../core/iteratorCallback");
-import QueryKind = require("./queryKind");
-import QueryDocument = require("./queryDocument");
-import OrderDocument = require("./orderDocument");
+import {ResultCallback} from "../core/resultCallback";
+import {IteratorCallback} from "../core/iteratorCallback";
+import {QueryKind} from "./queryKind";
+import {QueryDocument} from "./queryDocument";
+import {OrderDocument} from "./orderDocument";
 
-interface QueryDefinition {
+export interface QueryDefinition {
 
     kind: QueryKind;
     readOnly: boolean;
@@ -26,5 +26,3 @@ interface QueryDefinition {
 
     execute(callback: ResultCallback<any>): void;
 }
-
-export = QueryDefinition;

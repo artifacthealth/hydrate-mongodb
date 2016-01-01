@@ -1,9 +1,9 @@
-import ResultCallback = require("../core/resultCallback");
-import Callback = require("../core/callback");
-import IteratorCallback = require("../core/iteratorCallback");
-import Query = require("./query");
+import {ResultCallback} from "../core/resultCallback";
+import {Callback} from "../core/callback";
+import {IteratorCallback} from "../core/iteratorCallback";
+import {Query} from "./query";
 
-interface FindQuery<T> extends Query<T[]> {
+export interface FindQuery<T> extends Query<T[]> {
 
     sort(field: string, direction: number, callback?: ResultCallback<T[]>): FindQuery<T>;
     sort(fields: [string, number][], callback?: ResultCallback<T[]>): FindQuery<T>;
@@ -15,5 +15,3 @@ interface FindQuery<T> extends Query<T[]> {
     each(iterator: IteratorCallback<T>, callback: Callback): void;
     eachSeries(iterator: IteratorCallback<T>, callback: Callback): void;
 }
-
-export = FindQuery;

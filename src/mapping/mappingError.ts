@@ -1,11 +1,11 @@
-interface MappingError {
+export interface MappingError {
 
     message: string;
     value?: any;
     path: string;
 }
 
-module MappingError {
+export module MappingError {
 
     export function createErrorMessage(errors: MappingError[]): string {
 
@@ -25,5 +25,3 @@ module MappingError {
         return message.join("");
     }
 }
-
-export = MappingError;

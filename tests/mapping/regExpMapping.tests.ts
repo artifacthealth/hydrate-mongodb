@@ -2,11 +2,10 @@
 /// <reference path="../../typings/chai.d.ts"/>
 /// <reference path="../../typings/async.d.ts" />
 
-import async = require("async");
-import chai = require("chai");
-import assert = chai.assert;
-
-import RegExpMapping = require("../../src/mapping/regExpMapping");
+import {assert} from "chai";
+import * as helpers from "../helpers";
+import * as model from "../fixtures/model";
+import {RegExpMapping} from "../../src/mapping/regExpMapping";
 
 describe('RegExpMapping', () => {
 

@@ -1,12 +1,12 @@
 // Under Chrome it's faster to allocate an object using new, probably because if it's hidden classes optimization.
 
 
-import ResultCallback = require("./resultCallback");
+import {ResultCallback} from "./resultCallback";
 
 /**
  * Class representing an error-first synchronous result analogous to Node's callback pattern.
  */
-class Result<T> {
+export class Result<T> {
 
     constructor(public error: Error, public value?: T) {
 
@@ -16,5 +16,3 @@ class Result<T> {
         process.nextTick(() => callback(this.error, this.value));
     }
 }
-
-export = Result;

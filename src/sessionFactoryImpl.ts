@@ -1,25 +1,24 @@
 /// <reference path="../typings/mongodb.d.ts" />
-import mongodb = require("mongodb");
+import {Collection} from "mongodb";
 
-import Table = require("./core/table");
-import MappingRegistry = require("./mapping/mappingRegistry");
-import Session = require("./session");
-import SessionImpl = require("./sessionImpl");
-import InternalSessionFactory = require("./internalSessionFactory");
-import InternalSession = require("./internalSession");
-import Constructor = require("./core/constructor");
-import Persister = require("./persister");
-import PersisterImpl = require("./persisterImpl");
-import MappingFlags = require("./mapping/mappingFlags");
-import EntityMapping = require("./mapping/entityMapping");
+import {Table} from "./core/table";
+import {MappingRegistry} from "./mapping/mappingRegistry";
+import {Session} from "./session";
+import {SessionImpl} from "./sessionImpl";
+import {InternalSessionFactory} from "./internalSessionFactory";
+import {InternalSession} from "./internalSession";
+import {Constructor} from "./core/constructor";
+import {Persister} from "./persister";
+import {PersisterImpl} from "./persisterImpl";
+import {MappingFlags} from "./mapping/mappingFlags";
+import {EntityMapping} from "./mapping/entityMapping";
 
+export class SessionFactoryImpl implements InternalSessionFactory {
 
-class SessionFactoryImpl implements InternalSessionFactory {
-
-    private _collections: Table<mongodb.Collection>;
+    private _collections: Table<Collection>;
     private _mappingRegistry: MappingRegistry;
 
-    constructor(collections: Table<mongodb.Collection>, mappingRegistry: MappingRegistry) {
+    constructor(collections: Table<Collection>, mappingRegistry: MappingRegistry) {
 
         this._collections = collections;
         // TODO: get rid of mapping registry and handle directly in session factory
@@ -52,5 +51,3 @@ class SessionFactoryImpl implements InternalSessionFactory {
         return new PersisterImpl(session, mapping, this._collections[mapping.inheritanceRoot.id]);
     }
 }
-
-export = SessionFactoryImpl;

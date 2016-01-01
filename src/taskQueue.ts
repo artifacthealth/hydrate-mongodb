@@ -1,8 +1,8 @@
 /// <reference path="../typings/node.d.ts" />
 
-import events = require("events");
-import ResultCallback = require("./core/resultCallback");
-import Table = require("./core/table");
+import {EventEmitter} from "events";
+import {ResultCallback} from "./core/resultCallback";
+import {Table} from "./core/table";
 
 interface Task {
 
@@ -14,7 +14,7 @@ interface Task {
     next?: Task;
 }
 
-class TaskQueue extends events.EventEmitter {
+export class TaskQueue extends EventEmitter {
 
     private _execute: (operation: number, arg: any, callback: ResultCallback<any>) => void;
     private _activeCounts: Table<number> = {};
@@ -159,5 +159,3 @@ class TaskQueue extends events.EventEmitter {
 
     }
 }
-
-export = TaskQueue;

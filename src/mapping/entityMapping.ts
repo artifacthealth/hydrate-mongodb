@@ -1,25 +1,25 @@
 /// <reference path="../../typings/async.d.ts" />
 
-import async = require("async");
+import * as async from "async";
 
-import IdentityGenerator = require("../id/identityGenerator");
-import MappingError = require("./mappingError");
-import ClassMapping = require("./classMapping");
-import ChangeTracking = require("./changeTracking");
-import Index = require("./index");
-import CollectionOptions = require("./collectionOptions");
-import MappingRegistry = require("./mappingRegistry");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import Reference = require("../reference");
-import PropertyFlags = require("./propertyFlags");
-import InternalSession = require("../internalSession");
-import ResultCallback = require("../core/resultCallback");
-import ResolveContext = require("./resolveContext");
-import ReadContext = require("./readContext");
-import Observer = require("../observer");
+import {IdentityGenerator} from "../id/identityGenerator";
+import {MappingError} from "./mappingError";
+import {ClassMapping} from "./classMapping";
+import {ChangeTrackingType} from "./changeTrackingType";
+import {Index} from "./index";
+import {CollectionOptions} from "./collectionOptions";
+import {MappingRegistry} from "./mappingRegistry";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {Reference} from "../reference";
+import {PropertyFlags} from "./propertyFlags";
+import {InternalSession} from "../internalSession";
+import {ResultCallback} from "../core/resultCallback";
+import {ResolveContext} from "./resolveContext";
+import {ReadContext} from "./readContext";
+import {Observer} from "../observer";
 
-class EntityMapping extends ClassMapping {
+export class EntityMapping extends ClassMapping {
 
     collectionName: string;
     databaseName: string;
@@ -28,7 +28,7 @@ class EntityMapping extends ClassMapping {
 
     identity: IdentityGenerator;
 
-    changeTracking: ChangeTracking;
+    changeTracking: ChangeTrackingType;
 
     versioned: boolean;
     versionField: string;
@@ -254,5 +254,3 @@ class EntityMapping extends ClassMapping {
         super._resolveCore(context);
     }
 }
-
-export = EntityMapping;

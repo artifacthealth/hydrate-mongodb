@@ -3,27 +3,25 @@
 /// <reference path="../typings/async.d.ts" />
 /// <reference path="../typings/mongodb.d.ts" />
 
-import mongodb = require("mongodb");
-import async = require("async");
-import chai = require("chai");
-import assert = chai.assert;
+import {assert} from "chai";
+import * as helpers from "./helpers";
+import * as model from "./fixtures/model";
+import * as mongodb from "mongodb";
 
-import PersisterImpl = require("../src/persisterImpl");
-import model = require("./fixtures/model");
-import SessionImpl = require("../src/sessionImpl");
-import MockSessionFactory = require("./mockSessionFactory");
-import MockCollection = require("./driver/mockCollection");
-import MappingRegistry = require("../src/mapping/mappingRegistry");
-import EntityMapping = require("../src/mapping/entityMapping");
-import InternalSession = require("../src/internalSession");
-import SessionFactoryImpl = require("../src/sessionFactoryImpl");
-import SessionFactory = require("../src/sessionFactory");
-import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
-import Configuration = require("../src/config/configuration");
-import helpers = require("./helpers");
-import ObjectIdGenerator = require("../src/id/objectIdGenerator");
-import ReadContext = require("../src/mapping/readContext");
-import ClassMapping = require("../src/mapping/classMapping");
+import {PersisterImpl} from "../src/persisterImpl";
+import {SessionImpl} from "../src/sessionImpl";
+import {MockSessionFactory} from "./mockSessionFactory";
+import {MockCollection} from "./driver/mockCollection";
+import {MappingRegistry} from "../src/mapping/mappingRegistry";
+import {EntityMapping} from "../src/mapping/entityMapping";
+import {InternalSession} from "../src/internalSession";
+import {SessionFactoryImpl} from "../src/sessionFactoryImpl";
+import {SessionFactory} from "../src/sessionFactory";
+import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
+import {Configuration} from "../src/config/configuration";
+import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
+import {ReadContext} from "../src/mapping/readContext";
+import {ClassMapping} from "../src/mapping/classMapping";
 
 describe('Temp', () => {
 
@@ -32,7 +30,7 @@ describe('Temp', () => {
         mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
 
             var mapping = new AnnotationMappingProvider();
-            mapping.addFile("build/tests/fixtures/model.d.json");
+            mapping.addFile("build/tests/fixtures/model.js");
 
             var config = new Configuration();
             config.addMapping(mapping);
@@ -170,7 +168,7 @@ describe('Temp', () => {
         mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
 
             var mapping = new AnnotationMappingProvider();
-            mapping.addFile("build/tests/fixtures/model.d.json")
+            mapping.addFile("build/tests/fixtures/model.js")
 
             var config = new Configuration();
             config.addMapping(mapping);
@@ -218,11 +216,10 @@ describe('Temp', () => {
     it.skip('performance test', (done) => {
 
         var mappingProvider = new AnnotationMappingProvider();
-        mappingProvider.addFile("build/tests/fixtures/model.d.json");
+        mappingProvider.addFile("build/tests/fixtures/model.js");
         mappingProvider.getMapping(new Configuration(), (err, mappings) => {
             if (err) return done(err);
 
-            var fixture = helpers.requireFixture("model");
             var registry = new MappingRegistry();
             registry.addMappings(<ClassMapping[]>mappings);
             var factory = new SessionFactoryImpl({}, registry);

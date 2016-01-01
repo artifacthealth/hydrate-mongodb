@@ -1,28 +1,28 @@
 /// <reference path="../../typings/async.d.ts" />
 /// <reference path="../../typings/mongodb.d.ts" />
 
-import async = require("async");
-import mongodb = require("mongodb");
+import * as async from "async";
+import * as mongodb from "mongodb";
 
-import ResultCallback = require("../core/resultCallback");
-import MappingProvider = require("../mapping/providers/mappingProvider");
-import MappingRegistry = require("../mapping/mappingRegistry");
-import ChangeTracking = require("../mapping/changeTracking")
-import Table = require("../core/table");
-import MappingFlags = require("../mapping/mappingFlags");
-import SessionFactory = require("../sessionFactory");
-import SessionFactoryImpl = require("../sessionFactoryImpl");
-import IdentityGenerator = require("../id/identityGenerator");
-import Map = require("../core/map");
-import EntityMapping = require("../mapping/entityMapping");
-import NamingStrategy = require("./namingStrategy");
-import NamingStrategies = require("./NamingStrategies");
-import ObjectIdGenerator = require("../id/objectIdGenerator");
-import ClassMapping = require("../mapping/classMapping");
-import EnumType = require("../mapping/enumType");
-import PropertyConverter = require("../mapping/propertyConverter");
+import * as NamingStrategies from "./NamingStrategies";
+import {ResultCallback} from "../core/resultCallback";
+import {MappingProvider} from "../mapping/providers/mappingProvider";
+import {MappingRegistry} from "../mapping/mappingRegistry";
+import {ChangeTrackingType} from "../mapping/changeTrackingType";
+import {Table} from "../core/table";
+import {MappingFlags} from "../mapping/mappingFlags";
+import {SessionFactory} from "../sessionFactory";
+import {SessionFactoryImpl} from "../sessionFactoryImpl";
+import {IdentityGenerator} from "../id/identityGenerator";
+import {Lookup} from "../core/lookup";
+import {EntityMapping} from "../mapping/entityMapping";
+import {NamingStrategy} from "./namingStrategy";
+import {ObjectIdGenerator} from "../id/objectIdGenerator";
+import {ClassMapping} from "../mapping/classMapping";
+import {EnumType} from "../mapping/enumType";
+import {PropertyConverter} from "../mapping/propertyConverter";
 
-class Configuration {
+export class Configuration {
 
     /**
      * Default identity generator to use.
@@ -47,7 +47,7 @@ class Configuration {
     /**
      * Default change tracking strategy to use.
      */
-    changeTracking = ChangeTracking.Observe;
+    changeTracking = ChangeTrackingType.Observe;
 
     /**
      * Default enum storage strategy to use.
@@ -125,7 +125,7 @@ class Configuration {
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
         var collections: Table<mongodb.Collection> = [];
-        var names: Map<boolean> = {};
+        var names: Lookup<boolean> = {};
 
         async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
 
@@ -138,7 +138,7 @@ class Configuration {
 
             // make sure db/collection is not mapped to some other type.
             var key = [(mapping.databaseName || connection.databaseName), "/", mapping.collectionName].join("");
-            if (Map.hasProperty(names, key)) {
+            if (Lookup.hasProperty(names, key)) {
                 return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
             }
             names[key] = true;
@@ -182,5 +182,3 @@ class Configuration {
         });
     }
 }
-
-export = Configuration;

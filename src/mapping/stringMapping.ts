@@ -1,10 +1,10 @@
-import MappingError = require("./mappingError");
-import MappingBase = require("./mappingBase");
-import MappingFlags = require("./mappingFlags");
-import InternalSession = require("../internalSession");
-import ReadContext = require("./readContext");
+import {MappingError} from "./mappingError";
+import {MappingBase} from "./mappingBase";
+import {MappingFlags} from "./mappingFlags";
+import {InternalSession} from "../internalSession";
+import {ReadContext} from "./readContext";
 
-class StringMapping extends MappingBase {
+export class StringMapping extends MappingBase {
 
     constructor() {
         super(MappingFlags.String);
@@ -28,5 +28,3 @@ class StringMapping extends MappingBase {
         return value;
     }
 }
-
-export = StringMapping;

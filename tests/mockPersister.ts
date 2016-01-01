@@ -1,24 +1,24 @@
-import Persister = require("../src/persister");
-import ResultCallback = require("../src/core/resultCallback");
-import InternalSession = require("../src/internalSession");
-import PropertyFlags = require("../src/mapping/propertyFlags");
-import Batch = require("../src/batch");
-import ChangeTracking = require("../src/mapping/changeTracking");
-import IdentityGenerator = require("../src/id/identityGenerator");
-import EntityMapping = require("../src/mapping/entityMapping");
-import MockIdentityGenerator = require("./id/mockIdentityGenerator");
-import MappingRegistry = require("../src/mapping/mappingRegistry");
-import model = require("./fixtures/model");
-import Result = require("../src/core/result");
-import Callback = require("../src/core/callback");
-import QueryDefinition = require("../src/query/queryDefinition");
-import Observer = require("../src/observer");
+import * as model from "./fixtures/model";
+import {Persister} from "../src/persister";
+import {ResultCallback} from "../src/core/resultCallback";
+import {InternalSession} from "../src/internalSession";
+import {PropertyFlags} from "../src/mapping/propertyFlags";
+import {Batch} from "../src/batch";
+import {ChangeTrackingType} from "../src/mapping/changeTrackingType";
+import {IdentityGenerator} from "../src/id/identityGenerator";
+import {EntityMapping} from "../src/mapping/entityMapping";
+import {MockIdentityGenerator} from "./id/mockIdentityGenerator";
+import {MappingRegistry} from "../src/mapping/mappingRegistry";
+import {Result} from "../src/core/result";
+import {Callback} from "../src/core/callback";
+import {QueryDefinition} from "../src/query/queryDefinition";
+import {Observer} from "../src/observer";
 
-class MockPersister implements Persister {
+export class MockPersister implements Persister {
 
     private _mapping: EntityMapping;
 
-    changeTracking: ChangeTracking;
+    changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
 
     insertCalled = 0;
@@ -137,5 +137,3 @@ class MockPersister implements Persister {
 
     onExecuteQuery: (query: QueryDefinition, callback: ResultCallback<any>) => void;
 }
-
-export = MockPersister;

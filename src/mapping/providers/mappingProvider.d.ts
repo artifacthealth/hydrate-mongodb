@@ -1,10 +1,8 @@
-import ResultCallback = require("../../core/resultCallback");
-import Configuration = require("../../config/configuration");
-import Mapping = require("../mapping");
+import {ResultCallback} from "../../core/resultCallback";
+import {Configuration} from "../../config/configuration";
+import {Mapping} from "../mapping";
 
-interface MappingProvider {
+export interface MappingProvider {
 
     getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void;
 }
-
-export = MappingProvider;

@@ -1,21 +1,21 @@
-import Callback = require("../core/callback");
-import ResultCallback = require("../core/resultCallback");
-import IteratorCallback = require("../core/iteratorCallback");
+import {Callback} from "../core/callback";
+import {ResultCallback} from "../core/resultCallback";
+import {IteratorCallback} from "../core/iteratorCallback";
 
-import InternalSession = require("../internalSession");
-import Persister = require("../persister");
-import QueryDefinition = require("./queryDefinition");
-import QueryKind = require("./queryKind");
+import {InternalSession} from "../internalSession";
+import {Persister} from "../persister";
+import {QueryDefinition} from "./queryDefinition";
+import {QueryKind} from "./queryKind";
 
-import QueryBuilder = require("./queryBuilder");
-import FindOneAndRemoveQuery = require("./findOneAndRemoveQuery");
-import FindOneAndUpdateQuery = require("./findOneAndUpdateQuery");
-import FindOneQuery = require("./findOneQuery");
-import FindQuery = require("./findQuery");
-import CountQuery = require("./countQuery");
-import QueryDocument = require("./queryDocument");
+import {QueryBuilder} from "./queryBuilder";
+import {FindOneAndRemoveQuery} from "./findOneAndRemoveQuery";
+import {FindOneAndUpdateQuery} from "./findOneAndUpdateQuery";
+import {FindOneQuery} from "./findOneQuery";
+import {FindQuery} from "./findQuery";
+import {CountQuery} from "./countQuery";
+import {QueryDocument} from "./queryDocument";
 
-class QueryBuilderImpl implements QueryBuilder<Object> {
+export class QueryBuilderImpl implements QueryBuilder<Object> {
 
     private _session: InternalSession;
     private _persister: Persister;
@@ -376,7 +376,3 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
         this._persister.executeQuery(this, callback);
     }
 }
-
-export = QueryBuilderImpl;
-
-

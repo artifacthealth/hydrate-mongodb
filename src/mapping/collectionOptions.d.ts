@@ -1,4 +1,4 @@
-interface CollectionOptions {
+export interface CollectionOptions {
 
     /**
      * The write concern.
@@ -40,5 +40,3 @@ interface CollectionOptions {
      */
     strict?: boolean;
 }
-
-export = CollectionOptions;

@@ -1,6 +1,4 @@
-interface OrderDocument {
+export interface OrderDocument {
 
     [field: string]: number;
 }
-
-export = OrderDocument;

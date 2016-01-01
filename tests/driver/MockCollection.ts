@@ -1,11 +1,11 @@
 /// <reference path="../../typings/mongodb.d.ts" />
 
-import mongodb = require("mongodb");
+import * as mongodb from "mongodb";
 
-import MockCursor = require("./mockCursor");
-import MockBulk = require("./mockBulk");
+import {MockCursor} from "./mockCursor";
+import {MockBulk} from "./mockBulk";
 
-class MockCollection implements mongodb.Collection {
+export class MockCollection implements mongodb.Collection {
 
     collectionName: string;
     hint: any;
@@ -89,7 +89,7 @@ class MockCollection implements mongodb.Collection {
 
     find(selector: Object, callback?: (err: Error, result: mongodb.Cursor) => void): mongodb.Cursor {
 
-        if(this.onFind) {
+        if (this.onFind) {
             return this.onFind(selector);
         }
 
@@ -104,13 +104,13 @@ class MockCollection implements mongodb.Collection {
 
     findOne(selector: Object, callback?: (err: Error, result: any) => void): any {
 
-        if(this.onFindOne) {
+        if (this.onFindOne) {
             process.nextTick(() => this.onFindOne(selector, callback));
             return;
         }
 
         process.nextTick(() => {
-           callback(null, this.contents[0]);
+            callback(null, this.contents[0]);
         });
     }
 
@@ -126,11 +126,12 @@ class MockCollection implements mongodb.Collection {
     }
 
     update(selector: Object, document: any, optionsOrCallback: any, callback?: (err: Error, result: any) => void): void {
-        if(this.onUpdate) {
+        if (this.onUpdate) {
             process.nextTick(() => this.onUpdate(selector, document, optionsOrCallback, callback));
             return;
         }
     }
+
     onUpdate: (selector: Object, document: any, options: { safe?: boolean; upsert?: any; multi?: boolean; serializeFunctions?: boolean; }, callback: (err: Error, result: any) => void) => void;
 
     count(queryOrCallback: any, optionsOrCallback?: any, callback?: (err: Error, result: any) => void): void {
@@ -138,11 +139,12 @@ class MockCollection implements mongodb.Collection {
     }
 
     distinct(key: string, query: Object, optionsOrCallback: any, callback?: (err: Error, result: any) => void): void {
-        if(this.onDistinct) {
+        if (this.onDistinct) {
             process.nextTick(() => this.onDistinct(key, query, optionsOrCallback, callback));
             return;
         }
     }
+
     onDistinct: (key: string, query: Object, options: { readPreference: string; }, callback: (err: Error, result: any) => void) => void;
 
     initializeUnorderedBulkOp(): mongodb.UnorderedBulkOperation {
@@ -150,5 +152,3 @@ class MockCollection implements mongodb.Collection {
         return new MockBulk();
     }
 }
-
-export = MockCollection;

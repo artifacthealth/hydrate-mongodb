@@ -1,3 +1,6 @@
+// enable source map support in node stack traces
+require("source-map-support").install();
+
 module.exports = function(grunt) {
 
     grunt.loadNpmTasks("grunt-contrib-clean");
@@ -7,7 +10,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-concat");
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-mocha-test");
-    grunt.loadNpmTasks("grunt-tsreflect");
     grunt.loadNpmTasks("grunt-shell");
     grunt.loadNpmTasks('grunt-ts-clean');
     grunt.loadNpmTasks('grunt-dts-concat');
@@ -35,7 +37,10 @@ module.exports = function(grunt) {
                 module: "commonjs",
                 sourceMap: true,
                 declaration: true,
-                noImplicitAny: true
+                noImplicitAny: true,
+                emitDecoratorMetadata: true,
+                experimentalDecorators: true
+
             },
             build: {
                 src: ['src/**/*.ts'],
@@ -64,27 +69,6 @@ module.exports = function(grunt) {
                     'build/hydrate.js'
                 ],
                 dest: 'lib/hydrate.js'
-            }
-        },
-
-        tsreflect: {
-            build: {
-                src: [
-                    "src/**/*.ts"
-                ],
-                dest: "build/src/"
-            },
-            fixtures: {
-                src: [
-                    "tests/fixtures/**/*.ts"
-                ],
-                dest: "build/tests/fixtures/"
-            },
-            typings: {
-                src: [
-                    "typings/**/*.ts"
-                ],
-                dest: "typings/"
             }
         },
 
@@ -167,7 +151,7 @@ module.exports = function(grunt) {
     grunt.registerTask("default", [ "build", "lib", "tests" ]);
     grunt.registerTask("build", [ "clean:build", "copy:build", "typescript:build" ]);
     grunt.registerTask("lib", [ "clean:lib",  "copy:lib", "ts_clean:lib", "dts_concat:lib" ]);
-    grunt.registerTask("tests", [ "typescript:tests", "tsreflect:typings", "tsreflect:fixtures", "mochaTest:tests" ]);
+    grunt.registerTask("tests", [ "typescript:tests", "mochaTest:tests" ]);
     grunt.registerTask("benchmarks", [ "typescript:benchmarks", "baseline:benchmarks" ]);
 
 };

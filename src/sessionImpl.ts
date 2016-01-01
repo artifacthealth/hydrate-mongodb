@@ -1,30 +1,29 @@
 /// <reference path="../typings/async.d.ts" />
 /// <reference path="../typings/node.d.ts" />
 
-import events = require("events");
-import async = require("async");
-
-import Async = require("./core/Async");
-import Callback = require("./core/callback");
-import ChangeTracking = require("./mapping/changeTracking");
-import Constructor = require("./core/constructor");
-import IteratorCallback = require("./core/iteratorCallback");
-import Map = require("./core/map");
-import PropertyFlags = require("./mapping/propertyFlags");
-import ResultCallback = require("./core/resultCallback");
-import InternalSession = require("./internalSession");
-import InternalSessionFactory = require("./internalSessionFactory");
-import TaskQueue = require("./taskQueue");
-import Persister = require("./persister");
-import Batch = require("./batch");
-import Reference = require("./reference");
-import Table = require("./core/table");
-import EntityMapping = require("./mapping/entityMapping");
-import QueryBuilder = require("./query/queryBuilder");
-import QueryBuilderImpl = require("./query/queryBuilderImpl");
-import FindOneQuery = require("./query/findOneQuery");
-import QueryDescriptor = require("./query/queryDefinition");
-import Observer = require("./observer");
+import * as async from "async";
+import {EventEmitter} from "events";
+import * as Async from "./core/Async";
+import {Callback} from "./core/callback";
+import {ChangeTrackingType} from "./mapping/changeTrackingType";
+import {Constructor} from "./core/constructor";
+import {IteratorCallback} from "./core/iteratorCallback";
+import {Lookup} from "./core/lookup";
+import {PropertyFlags} from "./mapping/propertyFlags";
+import {ResultCallback} from "./core/resultCallback";
+import {InternalSession} from "./internalSession";
+import {InternalSessionFactory} from "./internalSessionFactory";
+import {TaskQueue} from "./taskQueue";
+import {Persister} from "./persister";
+import {Batch} from "./batch";
+import {Reference} from "./reference";
+import {Table} from "./core/table";
+import {EntityMapping} from "./mapping/entityMapping";
+import {QueryBuilder} from "./query/queryBuilder";
+import {QueryBuilderImpl} from "./query/queryBuilderImpl";
+import {FindOneQuery} from "./query/findOneQuery";
+import {QueryDefinition} from "./query/queryDefinition";
+import {Observer} from "./observer";
 
 /**
  * The state of an object.
@@ -111,7 +110,7 @@ var cachedDetachedLinks: ObjectLinks = {
 // TODO: review all errors and decide if they are operational or programmer errors. For example, what about mapping errors?
 // TODO: decide where it makes sense to use WeakMap, Promise, Set, WeakSet which is now a native part of Node 12
 // TODO: raise events on UnitOfWork
-class SessionImpl extends events.EventEmitter implements InternalSession {
+export class SessionImpl extends EventEmitter implements InternalSession {
 
     /**
      * Cached Persisters by Mapping
@@ -126,7 +125,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
     /**
      * Hash table containing all objects by id associated with the session.
      */
-    private _objectLinksById: Map<ObjectLinks> = {};
+    private _objectLinksById: Lookup<ObjectLinks> = {};
 
     /**
      * List of all ObjectLinks associated with the session.
@@ -222,7 +221,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         this._queue.add(Action.Close, Action.All, undefined, callback);
     }
 
-    executeQuery(query: QueryDescriptor, callback: ResultCallback<any>): void {
+    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
 
         if(query.readOnly) {
             this._queue.add(Action.FindQuery, Action.All & ~Action.ReadOnly, query, callback);
@@ -325,12 +324,12 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
 
     private _trackChanges(links: ObjectLinks): void {
 
-        if((links.flags & ObjectFlags.Dirty) || links.persister.changeTracking == ChangeTracking.DeferredImplicit) {
+        if((links.flags & ObjectFlags.Dirty) || links.persister.changeTracking == ChangeTrackingType.DeferredImplicit) {
             this._makeDirty(links);
             return;
         }
 
-        if (links.persister.changeTracking != ChangeTracking.Observe) {
+        if (links.persister.changeTracking != ChangeTrackingType.Observe) {
             return;
         }
 
@@ -413,7 +412,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
                 break;
             case Action.FindQuery:
             case Action.ModifyQuery:
-                (<QueryDescriptor>arg).execute(callback);
+                (<QueryDefinition>arg).execute(callback);
                 break;
             case Action.Close:
                 this._close(callback);
@@ -453,7 +452,7 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
             else {
                 switch (links.state) {
                     case ObjectState.Managed:
-                        if (links.persister.changeTracking == ChangeTracking.DeferredExplicit) {
+                        if (links.persister.changeTracking == ChangeTrackingType.DeferredExplicit) {
                             this._makeDirty(links);
                         }
                         break;
@@ -986,5 +985,3 @@ class SessionImpl extends events.EventEmitter implements InternalSession {
         }
     }
 }
-
-export = SessionImpl;

@@ -1,6 +1,4 @@
-interface NamingStrategy {
+export interface NamingStrategy {
 
     (name: string): string;
 }
-
-export = NamingStrategy;

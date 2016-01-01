@@ -1,24 +1,24 @@
-import Map = require("../core/map");
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import PropertyFlags = require("./propertyFlags");
-import Property = require("./property");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import Reference = require("../reference");
-import InternalSession = require("../internalSession");
-import ResultCallback = require("../core/resultCallback");
-import ResolveContext = require("./resolveContext");
-import ClassMapping = require("./classMapping");
-import ReadContext = require("./readContext");
-import Observer = require("../observer");
-import InternalMapping = require("./internalMapping");
+import {Lookup} from "../core/lookup";
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {PropertyFlags} from "./propertyFlags";
+import {Property} from "./property";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {Reference} from "../reference";
+import {InternalSession} from "../internalSession";
+import {ResultCallback} from "../core/resultCallback";
+import {ResolveContext} from "./resolveContext";
+import {ClassMapping} from "./classMapping";
+import {ReadContext} from "./readContext";
+import {Observer} from "../observer";
+import {InternalMapping} from "./internalMapping";
 
-class ObjectMapping extends MappingBase {
+export class ObjectMapping extends MappingBase {
 
     properties: Property[] = [];
-    private _propertiesByName: Map<Property> = {};
-    private _propertiesByField: Map<Property> = {};
+    private _propertiesByName: Lookup<Property> = {};
+    private _propertiesByField: Lookup<Property> = {};
 
     constructor() {
         super(MappingFlags.Object | MappingFlags.Embeddable);
@@ -38,11 +38,11 @@ class ObjectMapping extends MappingBase {
             throw new Error("Property must define a 'field' mapping if the property is not ignored.");
         }
 
-        if (Map.hasProperty(this._propertiesByName, property.name)) {
+        if (Lookup.hasProperty(this._propertiesByName, property.name)) {
             throw new Error("There is already a mapped property with the name '" + property.name + "'.");
         }
 
-        if (Map.hasProperty(this._propertiesByField, property.field)) {
+        if (Lookup.hasProperty(this._propertiesByField, property.field)) {
             throw new Error("There is already a mapped property for field '" + property.field + "'.");
         }
 
@@ -62,12 +62,12 @@ class ObjectMapping extends MappingBase {
             throw new Error("Missing required argument 'name'.");
         }
 
-        return Map.getProperty(this._propertiesByName, name);
+        return Lookup.getProperty(this._propertiesByName, name);
     }
 
     getPropertyForField(field: string): Property {
 
-        return Map.getProperty(this._propertiesByField, field);
+        return Lookup.getProperty(this._propertiesByField, field);
     }
 
     getProperties(flags?: PropertyFlags): Property[] {
@@ -316,7 +316,7 @@ class ObjectMapping extends MappingBase {
         var property = this.getProperty(context.currentProperty);
         if (property === undefined) {
             if(this.flags & MappingFlags.Class) {
-                context.setError("Undefined property for class '" + (<ClassMapping>this).name +"'.");
+                context.setError("Undefined property for class '" + (<any>this).name +"'.");
             }
             else {
                 context.setError("Undefined property.");
@@ -339,5 +339,3 @@ class ObjectMapping extends MappingBase {
         property.mapping.resolve(context);
     }
 }
-
-export = ObjectMapping;

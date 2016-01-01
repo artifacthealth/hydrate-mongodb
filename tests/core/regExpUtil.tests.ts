@@ -1,10 +1,8 @@
 /// <reference path="../../typings/mocha.d.ts"/>
 /// <reference path="../../typings/chai.d.ts"/>
 
-import chai = require("chai");
-import assert = chai.assert;
-
-import RegExpUtil = require("../../src/core/regExpUtil");
+import {assert} from "chai";
+import * as RegExpUtil from "../../src/core/regExpUtil";
 
 describe('RegExpUtil', () => {
 

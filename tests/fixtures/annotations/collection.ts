@@ -1,30 +1,24 @@
-/**
- * @entity
- */
+import { Entity, Collection, Field } from "../../../src/mapping/providers/decorators";
+
+@Entity()
 export class A {
 
 }
 
-/**
- * @entity
- * @collection "someCollection"
- */
+@Entity()
+@Collection("someCollection")
 export class B {
 
 }
 
-/**
- * @entity
- * @collection db: "someDatabase"
- */
+@Entity()
+@Collection({ db: "someDatabase" })
 export class C {
 
 }
 
-/**
- * @entity
- * @collection name: "someCollection", db: "someDatabase"
- */
+@Entity()
+@Collection({ name: "someCollection", db: "someDatabase" })
 export class D {
 
 }

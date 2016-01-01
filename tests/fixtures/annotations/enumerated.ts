@@ -1,5 +1,6 @@
+import { Entity, Field, Enumerated } from "../../../src/mapping/providers/decorators";
+
 /** Enum stored as string
- * @enumerated "string"
  */
 export enum E1 {
     value0,
@@ -8,7 +9,6 @@ export enum E1 {
 }
 
 /** Enum stored as ordinal
- * @enumerated "ordinal"
  */
 export enum E2 {
     value0,
@@ -16,20 +16,13 @@ export enum E2 {
     value2
 }
 
-/** Enum stored using default method (ordinal) */
-export enum E3 {
-    value0,
-    value1,
-    value2
-}
-
-/**
- * @entity
- */
+@Entity()
 export class A {
 
+    @Enumerated(E1)
     e1: E1;
+
+    @Field()
     e2: E2;
-    e3: E3;
 }
 

@@ -1,11 +1,8 @@
-import ResultCallback = require("../core/resultCallback");
-import Query = require("./query");
+import {ResultCallback} from "../core/resultCallback";
+import {Query} from "./query";
 
-interface CountQuery extends Query<number> {
+export interface CountQuery extends Query<number> {
 
     limit(value: number, callback?: ResultCallback<number>): CountQuery;
     skip(value: number, callback?: ResultCallback<number>): CountQuery;
 }
-
-export = CountQuery;
-

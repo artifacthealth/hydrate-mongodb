@@ -1,13 +1,13 @@
 /// <reference path="../typings/node.d.ts" />
-import events = require("events");
 
-import Callback = require("./core/callback");
-import ResultCallback = require("./core/resultCallback");
-import Constructor = require("./core/constructor");
-import QueryBuilder = require("./query/queryBuilder");
-import FindOneQuery = require("./query/findOneQuery")
+import {EventEmitter} from "events";
+import {Callback} from "./core/callback";
+import {ResultCallback} from "./core/resultCallback";
+import {Constructor} from "./core/constructor";
+import {QueryBuilder} from "./query/queryBuilder";
+import {FindOneQuery} from "./query/findOneQuery"
 
-interface Session extends events.EventEmitter {
+export interface Session extends EventEmitter {
 
     save(obj: Object, callback?: Callback): void;
     remove(obj: Object, callback?: Callback): void;
@@ -26,5 +26,3 @@ interface Session extends events.EventEmitter {
     getId(obj: Object): any;
     getReference<T>(ctr: Constructor<T>, id: any): T;
 }
-
-export = Session;

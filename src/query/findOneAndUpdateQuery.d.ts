@@ -1,7 +1,7 @@
-import ResultCallback = require("../core/resultCallback");
-import Query = require("./query");
+import {ResultCallback} from "../core/resultCallback";
+import {Query} from "./query";
 
-interface FindOneAndUpdateQuery<T> extends Query<T> {
+export interface FindOneAndUpdateQuery<T> extends Query<T> {
 
     sort(field: string, direction: number, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
     sort(fields: [string, number][], callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
@@ -9,5 +9,3 @@ interface FindOneAndUpdateQuery<T> extends Query<T> {
     fetch(paths: string[], callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
     returnUpdated(callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
 }
-
-export = FindOneAndUpdateQuery;

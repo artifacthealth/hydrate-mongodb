@@ -1,21 +1,21 @@
 /// <reference path="../typings/async.d.ts" />
 
-import Table = require("./core/table");
-import ResultCallback = require("./core/resultCallback");
-import InternalSession = require("./internalSession");
-import PropertyFlags = require("./mapping/propertyFlags");
-import Batch = require("./batch");
-import ChangeTracking = require("./mapping/changeTracking");
-import IdentityGenerator = require("./id/identityGenerator");
-import EntityMapping = require("./mapping/entityMapping");
-import Result = require("./core/result");
-import Callback = require("./core/callback");
-import QueryDefinition = require("./query/queryDefinition");
-import Observer = require("./observer");
+import {Table} from "./core/table";
+import {ResultCallback} from "./core/resultCallback";
+import {InternalSession} from "./internalSession";
+import {PropertyFlags} from "./mapping/propertyFlags";
+import {Batch} from "./batch";
+import {ChangeTrackingType} from "./mapping/changeTrackingType";
+import {IdentityGenerator} from "./id/identityGenerator";
+import {EntityMapping} from "./mapping/entityMapping";
+import {Result} from "./core/result";
+import {Callback} from "./core/callback";
+import {QueryDefinition} from "./query/queryDefinition";
+import {Observer} from "./observer";
 
-interface Persister {
+export interface Persister {
 
-    changeTracking: ChangeTracking;
+    changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object>;
@@ -31,5 +31,3 @@ interface Persister {
     findInverseOf(entity: Object, path: string, callback: ResultCallback<Object[]>): void;
     findOneInverseOf(entity: Object, path: string, callback: ResultCallback<Object>): void;
 }
-
-export = Persister;

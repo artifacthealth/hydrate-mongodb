@@ -1,8 +1,6 @@
-import Cat = require("./cat");
+import Cat from "./cat";
 
-class Kitten extends Cat {
+export default class Kitten extends Cat {
 
     ageInWeeks: number;
 }
-
-export = Kitten;

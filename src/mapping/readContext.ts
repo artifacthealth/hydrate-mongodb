@@ -1,8 +1,8 @@
-import MappingError = require("./mappingError");
-import InternalSession = require("../internalSession");
-import Observer = require("../observer");
+import {MappingError} from "./mappingError";
+import {InternalSession} from "../internalSession";
+import {Observer} from "../observer";
 
-class ReadContext {
+export class ReadContext {
 
     /**
      * The current path.
@@ -50,5 +50,3 @@ class ReadContext {
         return MappingError.createErrorMessage(this.errors);
     }
 }
-
-export = ReadContext;

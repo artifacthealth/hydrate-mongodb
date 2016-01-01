@@ -7,8 +7,8 @@
  * Released under the MIT license
  */
 
-import Callback = require("./callback");
-import ResultCallback = require("./resultCallback");
+import {Callback} from "./callback";
+import {ResultCallback} from "./resultCallback";
 
 /**
  * Returns a new callback that will raise an error if called more than once.

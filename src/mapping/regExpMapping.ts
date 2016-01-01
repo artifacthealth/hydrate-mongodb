@@ -1,12 +1,12 @@
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import RegExpUtil = require("../core/regExpUtil");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import InternalSession = require("../internalSession");
-import ReadContext = require("./readContext");
+import * as RegExpUtil from "../core/regExpUtil";
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {InternalSession} from "../internalSession";
+import {ReadContext} from "./readContext";
 
-class RegExpMapping extends MappingBase {
+export class RegExpMapping extends MappingBase {
 
     constructor() {
         super(MappingFlags.RegExp);
@@ -39,5 +39,3 @@ class RegExpMapping extends MappingBase {
         return false;
     }
 }
-
-export = RegExpMapping;

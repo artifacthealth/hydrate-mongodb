@@ -1,6 +1,4 @@
-interface QueryDocument {
+export interface QueryDocument {
 
     [name: string]: any;
 }
-
-export = QueryDocument;

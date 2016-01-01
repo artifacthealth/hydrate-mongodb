@@ -1,18 +1,23 @@
-class ClassSimple {
+import { Entity, Field } from "../../src/mapping/providers/decorators";
 
+@Entity()
+export default class ClassSimple {
+
+    @Field()
     a: string;
+
+    @Field()
     b: number;
+
+    @Field()
     c: boolean;
 
-    /** transient */
     d: Date;
 
-    /** persistent */
+    @Field()
     e: RegExp;
 }
 
 class ClassSimple2 extends ClassSimple {
 
 }
-
-export = ClassSimple;

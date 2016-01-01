@@ -1,9 +1,7 @@
-import IndexOptions = require("./indexOptions");
+import {IndexOptions} from "./indexOptions";
 
-interface Index {
+export interface Index {
 
     keys: [string, number][];
     options?: IndexOptions;
 }
-
-export = Index;

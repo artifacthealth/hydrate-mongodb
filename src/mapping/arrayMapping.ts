@@ -1,20 +1,20 @@
-import Async = require("../core/async");
-import InternalMapping = require("./internalMapping");
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import Reference = require("../reference");
-import PropertyFlags = require("./propertyFlags");
-import InternalSession = require("../internalSession");
-import ResultCallback = require("../core/resultCallback");
-import EntityMapping = require("./entityMapping");
-import ResolveContext = require("./resolveContext");
-import TupleMapping = require("./tupleMapping");
-import ReadContext = require("./readContext");
-import Observer = require("../observer");
+import * as Async from "../core/async";
+import {InternalMapping} from "./internalMapping";
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {Reference} from "../reference";
+import {PropertyFlags} from "./propertyFlags";
+import {InternalSession} from "../internalSession";
+import {ResultCallback} from "../core/resultCallback";
+import {EntityMapping} from "./entityMapping";
+import {ResolveContext} from "./resolveContext";
+import {TupleMapping} from "./tupleMapping";
+import {ReadContext} from "./readContext";
+import {Observer} from "../observer";
 
-class ArrayMapping extends MappingBase {
+export class ArrayMapping extends MappingBase {
 
     constructor(public elementMapping: InternalMapping) {
         super(MappingFlags.Array);
@@ -207,7 +207,3 @@ class ArrayMapping extends MappingBase {
     }
 
 }
-
-export = ArrayMapping;
-
-

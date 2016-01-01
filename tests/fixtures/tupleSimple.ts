@@ -1,7 +1,4 @@
-class TupleSimple {
+export default class TupleSimple {
 
     tuple: [string, number];
 }
-
-export = TupleSimple;
-

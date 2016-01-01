@@ -1,8 +1,8 @@
 /// <reference path="../../typings/mongodb.d.ts" />
 
-import mongodb = require("mongodb");
+import * as mongodb from "mongodb";
 
-class MockBulk implements mongodb.UnorderedBulkOperation {
+export class MockBulk implements mongodb.UnorderedBulkOperation {
 
     update(updateDocument: any): mongodb.UnorderedBulkOperation {
         return this;
@@ -33,5 +33,3 @@ class MockBulk implements mongodb.UnorderedBulkOperation {
 
     }
 }
-
-export = MockBulk;

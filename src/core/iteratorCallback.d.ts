@@ -1,8 +1,6 @@
-import Callback = require("./callback");
+import {Callback} from "./callback";
 
-interface IteratorCallback<T> {
+export interface IteratorCallback<T> {
 
     (item: T, callback: Callback): any;
 }
-
-export = IteratorCallback;

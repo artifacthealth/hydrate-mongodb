@@ -1,14 +1,13 @@
 /// <reference path="../../typings/mongodb.d.ts" />
 
-import mongodb = require("mongodb");
-import ObjectID = mongodb.ObjectID;
-import IdentityGenerator = require("./identityGenerator");
+import {ObjectID} from "mongodb";
+import {IdentityGenerator} from "./identityGenerator";
 
-class ObjectIdGenerator implements IdentityGenerator {
+export class ObjectIdGenerator implements IdentityGenerator {
 
     constructor() {
         // Turn on caching of the hex string representation of the ObjectID
-        (<any>mongodb.ObjectID).cacheHexString = true;
+        (<any>ObjectID).cacheHexString = true;
     }
 
     generate(): any {
@@ -39,4 +38,3 @@ class ObjectIdGenerator implements IdentityGenerator {
     }
 }
 
-export = ObjectIdGenerator;

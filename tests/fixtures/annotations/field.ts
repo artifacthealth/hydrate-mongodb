@@ -1,12 +1,15 @@
-/** @entity */
+import { Entity, Field } from "../../../src/mapping/providers/decorators";
+
+@Entity()
 export class A {
 
-    /** @field "a" */
+    @Field({ name: "a" })
     b: string;
 
+    @Field()
     c: string;
 
-    /** @field name: "someName" */
+    @Field({ name: "someName" })
     d: string;
 }
 

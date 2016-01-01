@@ -1,24 +1,40 @@
-/**
- * @entity
- * @discriminatorField "__test"
- */
+import { Entity, Embeddable, Field, DiscriminatorField, DiscriminatorValue } from "../../src/mapping/providers/decorators";
+
+@Entity()
+@DiscriminatorField("__test")
 export class Animal {
 
+    @Field()
     legs: number;
-    eyes: { color: string }[];
+
+    @Field()
+    eyes: Eye[];
+
+    @Field()
     mate: Animal;
+
+    @Field()
     name: Name;
 }
 
-/** @discriminatorValue "dog" */
+@Embeddable()
+export class Eye {
+
+    @Field()
+    color: string;
+}
+
+@DiscriminatorValue("dog")
 export class Dog extends Animal {
 
+    @Field()
     breed: string;
 }
 
-/** @discriminatorValue "cat" */
+@DiscriminatorValue("cat")
 export class Cat extends Animal {
 
+    @Field()
     color: string;
 }
 

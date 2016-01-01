@@ -1,11 +1,11 @@
-import InternalSession = require("../../src/internalSession");
-import QueryDefinition = require("../../src/query/queryDefinition");
-import IteratorCallback = require("../../src/core/iteratorCallback");
-import QueryDocument = require("../../src/query/queryDocument");
-import QueryKind = require("../../src/query/queryKind");
-import ResultCallback = require("../../src/core/resultCallback");
+import {InternalSession} from "../../src/internalSession";
+import {QueryDefinition} from "../../src/query/queryDefinition";
+import {IteratorCallback} from "../../src/core/iteratorCallback";
+import {QueryDocument} from "../../src/query/queryDocument";
+import {QueryKind} from "../../src/query/queryKind";
+import {ResultCallback} from "../../src/core/resultCallback";
 
-class QueryDefinitionStub implements QueryDefinition {
+export class QueryDefinitionStub implements QueryDefinition {
 
     key: string;
     id: any;
@@ -32,5 +32,3 @@ class QueryDefinitionStub implements QueryDefinition {
         throw new Error("Not implemented");
     }
 }
-
-export = QueryDefinitionStub;

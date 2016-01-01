@@ -1,15 +1,15 @@
 /// <reference path="../../typings/node.d.ts" />
 /// <reference path="../../typings/mongodb.d.ts" />
 
-import mongodb = require("mongodb");
+import {Binary} from "mongodb";
 
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import InternalSession = require("../internalSession");
-import ReadContext = require("./readContext");
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {InternalSession} from "../internalSession";
+import {ReadContext} from "./readContext";
 
-class BufferMapping extends MappingBase {
+export class BufferMapping extends MappingBase {
 
     constructor() {
         super(MappingFlags.Buffer);
@@ -21,7 +21,7 @@ class BufferMapping extends MappingBase {
             context.addError("Expected Binary.");
             return;
         }
-        return (<mongodb.Binary>value).value(true);
+        return (<Binary>value).value(true);
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
@@ -31,9 +31,7 @@ class BufferMapping extends MappingBase {
             return;
         }
 
-        return new mongodb.Binary(value);
+        return new Binary(value);
     }
 
 }
-
-export = BufferMapping;

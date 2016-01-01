@@ -1,23 +1,23 @@
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import Reference = require("../reference");
-import PropertyFlags = require("./propertyFlags");
-import InternalSession = require("../internalSession");
-import ResultCallback = require("../core/resultCallback");
-import ResolveContext = require("./resolveContext");
-import Map = require("../core/map");
-import ReadContext = require("./readContext");
-import Observer = require("../observer");
-import InternalMapping = require("./internalMapping");
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {Reference} from "../reference";
+import {PropertyFlags} from "./propertyFlags";
+import {InternalSession} from "../internalSession";
+import {ResultCallback} from "../core/resultCallback";
+import {ResolveContext} from "./resolveContext";
+import {Lookup} from "../core/lookup";
+import {ReadContext} from "./readContext";
+import {Observer} from "../observer";
+import {InternalMapping} from "./internalMapping";
 
 var nextMappingId = 1;
 
-class MappingBase implements InternalMapping {
+export class MappingBase implements InternalMapping {
 
     id: number;
 
-    private _resolveCache: Map<ResolveContext>;
+    private _resolveCache: Lookup<ResolveContext>;
 
     constructor(public flags: MappingFlags) {
         this.id = nextMappingId++;
@@ -98,5 +98,3 @@ class MappingBase implements InternalMapping {
         }
     }
 }
-
-export = MappingBase;

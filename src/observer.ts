@@ -1,8 +1,8 @@
 /// <reference path="./core/observe.d.ts" />
 
-import Reference = require("./reference");
+import {Reference} from "./reference";
 
-class Observer {
+export class Observer {
 
     private _watching: any[] = [];
     private _onChange: (changes: ObjectChangeInfo[]) => void;
@@ -50,5 +50,3 @@ class Observer {
         }
     }
 }
-
-export = Observer;

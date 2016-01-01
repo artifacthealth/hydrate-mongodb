@@ -1,9 +1,11 @@
-/** @entity */
+import { Entity } from "../../../src/mapping/providers/decorators";
+
+@Entity()
 export class A {
 
 }
 
-/** @entity */
+@Entity()
 export class B extends A {
 
 }

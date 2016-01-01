@@ -1,19 +1,15 @@
-module RegExpUtil {
+export function clone(source: RegExp): RegExp {
 
-    export function clone(source: RegExp): RegExp {
-
-        var flags: string[] = [];
-        if (source.global) {
-            flags.push('g');
-        }
-        if (source.multiline) {
-            flags.push('m');
-        }
-        if (source.ignoreCase) {
-            flags.push('i');
-        }
-        return new RegExp(source.source, flags.join(''));
+    var flags: string[] = [];
+    if (source.global) {
+        flags.push('g');
     }
+    if (source.multiline) {
+        flags.push('m');
+    }
+    if (source.ignoreCase) {
+        flags.push('i');
+    }
+    return new RegExp(source.source, flags.join(''));
 }
 
-export = RegExpUtil;

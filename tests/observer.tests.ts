@@ -2,15 +2,13 @@
 /// <reference path="../typings/chai.d.ts"/>
 /// <reference path="../src/core/observe.d.ts" />
 
-import chai = require("chai");
-import assert = chai.assert;
+import {assert} from "chai";
+import * as helpers from "./helpers";
+import * as model from "./fixtures/model";
 
-import Observer = require("../src/observer");
-import Reference = require("../src/reference");
-import ObjectIdGenerator = require("../src/id/objectIdGenerator");
-
-import helpers = require("./helpers");
-import model = require("./fixtures/model");
+import {Observer} from "../src/observer";
+import {Reference} from "../src/reference";
+import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
 
 describe('Observer', () => {
 

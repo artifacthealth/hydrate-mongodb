@@ -1,9 +1,7 @@
-import Map = require("../core/map");
+import {Lookup} from "../core/lookup";
 
-interface Changes {
+export interface Changes {
 
-    $set?: Map<any>;
-    $unset?: Map<any>;
+    $set?: Lookup<any>;
+    $unset?: Lookup<any>;
 }
-
-export = Changes;

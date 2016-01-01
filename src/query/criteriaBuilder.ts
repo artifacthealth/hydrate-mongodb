@@ -1,16 +1,16 @@
-import QueryDocument = require("./queryDocument");
-import ResolveContext = require("../mapping/resolveContext");
-import MappingFlags = require("../mapping/mappingFlags");
-import ArrayMapping = require("../mapping/arrayMapping");
-import InternalMapping = require("../mapping/internalMapping");
-import MappingError = require("../mapping/mappingError");
-import RegExpUtil = require("../core/regExpUtil");
-import EntityMapping = require("../mapping/entityMapping");
+import * as RegExpUtil from "../core/regExpUtil";
+import {QueryDocument} from "./queryDocument";
+import {ResolveContext} from "../mapping/resolveContext";
+import {MappingFlags} from "../mapping/mappingFlags";
+import {ArrayMapping} from "../mapping/arrayMapping";
+import {InternalMapping} from "../mapping/internalMapping";
+import {MappingError} from "../mapping/mappingError";
+import {EntityMapping} from "../mapping/entityMapping";
 
 /**
  * Class that builds a database query document.
  */
-class CriteriaBuilder {
+export class CriteriaBuilder {
 
     /**
      * The last error encounter by the CriteriaBuilder. The value is cleared before each build.
@@ -276,5 +276,3 @@ class CriteriaBuilder {
         return false;
     }
 }
-
-export = CriteriaBuilder;

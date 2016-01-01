@@ -1,11 +1,111 @@
-/**
- * @entity
- * @changeTracking "deferredImplicit"
- */
+/// <reference path="../../typings/node.d.ts" />
+
+import { Entity, Embeddable, Field, ChangeTracking, Converter, ReferenceMany, Enumerated, EmbedMany, Versioned } from "../../src/mapping/providers/decorators";
+import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
+import {CascadeFlags} from "../../src/mapping/cascadeFlags";
+import {EnumType} from "../../src/mapping/enumType";
+import {PropertyConverter} from "../../src/mapping/propertyConverter";
+
+export class PhoneTypeConverter implements PropertyConverter {
+
+    convertToDocumentField(property: any): any {
+
+        switch(property) {
+            case PhoneType.Work:
+                return "W";
+            case PhoneType.Home:
+                return "H";
+        }
+    }
+
+    convertToObjectProperty(field: any): any {
+
+        switch(field) {
+            case "W":
+                return PhoneType.Work;
+            case "H":
+                return PhoneType.Home;
+        }
+    }
+}
+
+@Embeddable()
+export class Address {
+
+    @Field()
+    street1: string;
+
+    @Field()
+    street2: string;
+
+    @Field()
+    city: string;
+
+    @Field()
+    state: string;
+
+    @Field()
+    zip: string;
+}
+
+
+export enum Gender {
+    Female,
+    Male,
+    Other,
+    Unknown,
+    Ambiguous,
+    NotApplicable
+}
+
+export enum PhoneType {
+
+    Work,
+    Home
+}
+
+@Embeddable()
+export class Phone {
+
+    @Field()
+    number: string;
+
+    @Enumerated(PhoneType)
+    type: PhoneType;
+
+    constructor(number: string, type: PhoneType) {
+
+        this.number = number;
+        this.type = type;
+    }
+}
+
+export class WorkPhone extends Phone {
+
+    @Field({ name: "extension" })
+    private _extension: string;
+
+    get extension(): string {
+        return this._extension;
+    }
+
+    constructor(number: string, extension: string) {
+        super(number, PhoneType.Work);
+
+        this._extension = extension;
+    }
+}
+
+@Entity()
+@ChangeTracking(ChangeTrackingType.DeferredImplicit)
 export class Party {
 
-    /** @field "name" */
+    @Field({ name: "name" })
     protected _name: string;
+
+    //@Field()
+    //test: Set<number>;
+
     get name(): string {
         return this._name;
     }
@@ -15,83 +115,25 @@ export class Party {
     }
 }
 
-export class Person extends Party {
-
-    createdAt: Date;
-    personName: PersonName;
-
-    birthDate: Date;
-    age: number;
-
-    aliases: string[];
-
-    /** @field nullable: true */
-    gender: Gender;
-    race: string;
-
-    address: Address;
-    phones: Phone[];
-    email: string;
-
-    /** @converter "PhoneTypeConverter" */
-    preferredPhone: PhoneType;
-
-    workPhone: WorkPhone;
-
-    /** @cascade "save, remove" */
-    parents: Person[];
-
-    /** @cascade "save, remove" */
-    /** @inverse "parents" */
-    children: Person[];
-
-    attributes: { [ name: string ]: string };
-
-    constructor(name: PersonName) {
-        this.personName = name;
-        super(name.toString());
-    }
-
-    addParent(parent: Person): void {
-        if(!this.parents) {
-            this.parents = [];
-        }
-        if(!parent.children) {
-            parent.children = [];
-        }
-        if(parent.children.indexOf(this) == -1) {
-            parent.children.push(this);
-        }
-        this.parents.push(parent);
-    }
-
-    addAttribute(name: string, value: string): void {
-        if(!this.attributes) {
-            this.attributes = {};
-        }
-        this.attributes[name] = value;
-    }
-}
-
-export class Organization extends Party {
-
-    constructor(name: string) {
-        super(name);
-    }
-
-    set name(value: string) {
-        this._name = value;
-    }
-}
-
-/** @embeddable */
+@Embeddable()
 export class PersonName {
 
+    @Field()
     first: string;
+
+    @Field()
     last: string;
+
+    @Field()
     middle: string;
+
+    @Field()
     prefix: string;
+
+    @Field()
     suffix: string;
+
+    @Field()
     degree: string;
 
     constructor(last: string, first?: string, middle?: string) {
@@ -132,90 +174,111 @@ export class PersonName {
     }
 }
 
-/** @enumerated "string" */
-export enum Gender {
-    Female,
-    Male,
-    Other,
-    Unknown,
-    Ambiguous,
-    NotApplicable
-}
+export class Person extends Party {
 
-/** @embeddable */
-export class Address {
+    @Field()
+    createdAt: Date;
 
-    street1: string;
-    street2: string;
-    city: string;
-    state: string;
-    zip: string;
-}
+    @Field()
+    personName: PersonName;
 
-/** @enumerated "string" */
-export enum PhoneType {
+    @Field()
+    birthDate: Date;
 
-    Work,
-    Home
-}
+    @Field()
+    age: number;
 
-export class PhoneTypeConverter {
+    @EmbedMany(String)
+    aliases: string[];
 
-    convertToDocumentField(property: any): any {
+    //test: Set;
 
-        switch(property) {
-            case PhoneType.Work:
-                return "W";
-            case PhoneType.Home:
-                return "H";
+    @Field({ nullable: true })
+    @Enumerated(Gender)
+    gender: Gender;
+
+    @Field()
+    race: string;
+
+    @Field()
+    address: Address;
+
+    @EmbedMany(Phone)
+    phones: Phone[];
+
+    @Field()
+    email: string;
+
+    @Converter(new PhoneTypeConverter())
+    preferredPhone: PhoneType;
+
+    @Field()
+    workPhone: WorkPhone;
+
+    @ReferenceMany({ target: Person, cascade: CascadeFlags.Save | CascadeFlags.Remove })
+    parents: Person[];
+
+    @ReferenceMany({ target: Person, inverseOf: "parents", cascade: CascadeFlags.Save | CascadeFlags.Remove })
+    children: Person[];
+
+    // TODO: how to handle
+    attributes: { [ name: string ]: string };
+
+    constructor(name: PersonName) {
+        super(name.toString());
+
+        this.personName = name;
+    }
+
+    addParent(parent: Person): void {
+        if(!this.parents) {
+            this.parents = [];
         }
-    }
-
-    convertToObjectProperty(field: any): any {
-
-        switch(field) {
-            case "W":
-                return PhoneType.Work;
-            case "H":
-                return PhoneType.Home;
+        if(!parent.children) {
+            parent.children = [];
         }
+        if(parent.children.indexOf(this) == -1) {
+            parent.children.push(this);
+        }
+        this.parents.push(parent);
+    }
+
+    addAttribute(name: string, value: string): void {
+        if(!this.attributes) {
+            this.attributes = {};
+        }
+        this.attributes[name] = value;
     }
 }
 
-/** @embeddable */
-export class Phone {
+export class Organization extends Party {
 
-    constructor(public number: string, public type: PhoneType) {
+    constructor(name: string) {
+        super(name);
+    }
 
+    set name(value: string) {
+        this._name = value;
     }
 }
 
-export class WorkPhone extends Phone {
 
-    /** @field "extension" */
-    private _extension: string;
-    get extension(): string {
-        return this._extension;
-    }
-
-    constructor(number: string, extension: string) {
-        super(number, PhoneType.Work);
-
-        this._extension = extension;
-    }
-}
-
-/**
- * @entity
- * @versioned false
- */
+@Entity()
+@Versioned(false)
 export class User {
 
+    @Field()
     password: string;
+
+    @Field()
     person: Person;
 
-    constructor(public username: string) {
+    @Field()
+    username: string
 
+    constructor(username: string) {
+
+        this.username = username;
     }
 }
 

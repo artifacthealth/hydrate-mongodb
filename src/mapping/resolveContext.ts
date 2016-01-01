@@ -1,6 +1,6 @@
-import InternalMapping = require("./internalMapping");
+import {InternalMapping} from "./internalMapping";
 
-class ResolveContext {
+export class ResolveContext {
 
     resolvedPath: string;
     resolvedMapping: InternalMapping;
@@ -64,5 +64,3 @@ class ResolveContext {
         this._resolvePath = undefined;
     }
 }
-
-export = ResolveContext;

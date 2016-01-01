@@ -1,6 +1,6 @@
-import IdentityGenerator = require("../../src/id/identityGenerator");
+import {IdentityGenerator} from "../../src/id/identityGenerator";
 
-class MockIdentityGenerator implements IdentityGenerator {
+export class MockIdentityGenerator implements IdentityGenerator {
 
     nextId = 1;
 
@@ -23,5 +23,3 @@ class MockIdentityGenerator implements IdentityGenerator {
         return first === second;
     }
 }
-
-export = MockIdentityGenerator;

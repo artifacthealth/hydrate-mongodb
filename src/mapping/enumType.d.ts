@@ -1,7 +1,5 @@
-declare const enum EnumType {
+export declare const enum EnumType {
 
     String,
     Ordinal
 }
-
-export = EnumType;

@@ -1,16 +1,16 @@
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import InternalSessionFactory = require("../internalSessionFactory");
-import Changes = require("./changes");
-import Reference = require("../reference");
-import PropertyFlags = require("./propertyFlags");
-import InternalSession = require("../internalSession");
-import ResultCallback = require("../core/resultCallback");
-import ResolveContext = require("./resolveContext");
-import ReadContext = require("./readContext");
-import Observer = require("../observer");
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {InternalSessionFactory} from "../internalSessionFactory";
+import {Changes} from "./changes";
+import {Reference} from "../reference";
+import {PropertyFlags} from "./propertyFlags";
+import {InternalSession} from "../internalSession";
+import {ResultCallback} from "../core/resultCallback";
+import {ResolveContext} from "./resolveContext";
+import {ReadContext} from "./readContext";
+import {Observer} from "../observer";
 
-interface InternalMapping {
+export interface InternalMapping {
 
     id: number;
     flags: MappingFlags;
@@ -24,5 +24,3 @@ interface InternalMapping {
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
 }
-
-export = InternalMapping;

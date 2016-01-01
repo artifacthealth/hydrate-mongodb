@@ -1,7 +1,7 @@
-import InternalMapping = require("./internalMapping");
-import PropertyFlags = require("./propertyFlags");
+import {InternalMapping} from "./internalMapping";
+import {PropertyFlags} from "./propertyFlags";
 
-class Property {
+export class Property {
 
     /**
      * The name of the property.
@@ -83,5 +83,3 @@ class Property {
         document[this.field] = value;
     }
 }
-
-export = Property;

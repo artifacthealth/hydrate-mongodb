@@ -1,4 +1,4 @@
-interface IndexOptions {
+export interface IndexOptions {
     w?: any;
     wtimeout?: number;
     fsync?: boolean;
@@ -13,5 +13,3 @@ interface IndexOptions {
     expireAfterSeconds?: number;
     name?: string;
 }
-
-export = IndexOptions;

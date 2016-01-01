@@ -1,8 +1,8 @@
-export module a {
+import { Entity } from "../../../src/mapping/providers/decorators";
 
-    /**
-     * @entity
-     */
+export namespace a {
+
+    @Entity()
     export class A {
 
     }

@@ -1,20 +1,20 @@
-import Map = require("../core/map");
-import MappingError = require("./mappingError");
-import ObjectMapping = require("./objectMapping");
-import MappingRegistry = require("./mappingRegistry");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import Reference = require("../reference");
-import PropertyFlags = require("./propertyFlags");
-import InternalSession = require("../internalSession");
-import ResultCallback = require("../core/resultCallback");
-import ReadContext = require("./readContext");
+import {Lookup} from "../core/lookup";
+import {MappingError} from "./mappingError";
+import {ObjectMapping} from "./objectMapping";
+import {MappingRegistry} from "./mappingRegistry";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {Reference} from "../reference";
+import {PropertyFlags} from "./propertyFlags";
+import {InternalSession} from "../internalSession";
+import {ResultCallback} from "../core/resultCallback";
+import {ReadContext} from "./readContext";
 
-class ClassMapping extends ObjectMapping {
+export class ClassMapping extends ObjectMapping {
 
     private _baseClass: ClassMapping;
     private _subclasses: ClassMapping[];
-    private _discriminatorMap: Map<ClassMapping>;
+    private _discriminatorMap: Lookup<ClassMapping>;
     private _registry: MappingRegistry;
 
     inheritanceRoot: ClassMapping;
@@ -272,5 +272,3 @@ class ClassMapping extends ObjectMapping {
     }
 
 }
-
-export = ClassMapping;

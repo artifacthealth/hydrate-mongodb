@@ -1,12 +1,12 @@
-import SessionFactoryImpl = require("../src/sessionFactoryImpl");
-import InternalSession = require("../src/internalSession");
-import Persister = require("../src/persister");
-import EntityMapping = require("../src/mapping/entityMapping");
-import MappingRegistry = require("../src/mapping/mappingRegistry");
-import MockPersister = require("./mockPersister");
-import Constructor = require("../src/core/constructor");
+import {SessionFactoryImpl} from "../src/sessionFactoryImpl";
+import {InternalSession} from "../src/internalSession";
+import {Persister} from "../src/persister";
+import {EntityMapping} from "../src/mapping/entityMapping";
+import {MappingRegistry} from "../src/mapping/mappingRegistry";
+import {MockPersister} from "./mockPersister";
+import {Constructor} from "../src/core/constructor";
 
-class MockSessionFactory extends SessionFactoryImpl {
+export class MockSessionFactory extends SessionFactoryImpl {
 
     constructor(mappingRegistry: MappingRegistry) {
         super(null, mappingRegistry);
@@ -30,5 +30,3 @@ class MockSessionFactory extends SessionFactoryImpl {
         return <MockPersister>session.getPersister(this.getMappingForConstructor(ctr));
     }
 }
-
-export = MockSessionFactory

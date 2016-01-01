@@ -1,8 +1,8 @@
-import InternalSession = require("./internalSession");
-import EntityMapping = require("./mapping/entityMapping");
-import ResultCallback = require("./core/resultCallback");
+import {InternalSession} from "./internalSession";
+import {EntityMapping} from "./mapping/entityMapping";
+import {ResultCallback} from "./core/resultCallback";
 
-class Reference {
+export class Reference {
 
     /**
      * True if the Reference has been fetched; otherwise, false.
@@ -110,4 +110,3 @@ class Reference {
     }
 }
 
-export = Reference;

@@ -1,14 +1,12 @@
 /// <reference path="../../typings/mocha.d.ts"/>
 /// <reference path="../../typings/chai.d.ts"/>
 
-import chai = require("chai");
-import assert = chai.assert;
-import helpers = require("../helpers");
-import model = require("../fixtures/model");
-
-import MappingRegistry = require("../../src/mapping/MappingRegistry");
-import EntityMapping = require("../../src/mapping/entityMapping");
-import ClassMapping = require("../../src/mapping/classMapping");
+import {assert} from "chai";
+import * as helpers from "../helpers";
+import * as model from "../fixtures/model";
+import {MappingRegistry} from "../../src/mapping/MappingRegistry";
+import {EntityMapping} from "../../src/mapping/entityMapping";
+import {ClassMapping} from "../../src/mapping/classMapping";
 
 describe('MappingRegistry', () => {
 
@@ -48,7 +46,6 @@ interface Fixture {
 
 function createFixture() {
 
-    var fixture = helpers.requireFixture("model");
     var registry = new MappingRegistry();
 
     var partyMapping = new EntityMapping();

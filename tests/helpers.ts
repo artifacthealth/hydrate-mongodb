@@ -1,31 +1,16 @@
-/// <reference path="../typings/tsreflect.d.ts"/>
+import * as model from "./fixtures/model";
+import {Lookup} from "../src/core/lookup";
+import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
+import {MappingRegistry} from "../src/mapping/mappingRegistry";
+import {Configuration} from "../src/config/configuration";
+import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
+import {PersisterImpl} from "../src/persisterImpl";
+import {MockCollection} from "./driver/mockCollection";
+import {MockSessionFactory} from "./mockSessionFactory";
+import {Mapping} from "../src/mapping/mapping";
+import {ClassMapping} from "../src/mapping/classMapping";
 
-import reflect = require("tsreflect");
-import Map = require("../src/core/map");
-import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
-import MappingRegistry = require("../src/mapping/mappingRegistry");
-import Configuration = require("../src/config/configuration");
-import ObjectIdGenerator = require("../src/id/objectIdGenerator");
-import PersisterImpl = require("../src/persisterImpl");
-import MockCollection = require("./driver/mockCollection");
-import MockSessionFactory = require("./mockSessionFactory");
-import model = require("./fixtures/model");
-import Mapping = require("../src/mapping/mapping");
-import ClassMapping = require("../src/mapping/classMapping");
-
-var fixtureDir = "tests/fixtures/";
-
-export function referenceFixture(filename: string): void {
-
-    reflect.reference(fixtureDir + filename);
-}
-
-export function requireFixture(filename: string): reflect.Symbol {
-
-    return reflect.require(fixtureDir + filename);
-}
-
-var registryCache: Map<MappingRegistry> = {};
+var registryCache: Lookup<MappingRegistry> = {};
 
 export function createFactory(files: string, callback: (err: Error, result?: MockSessionFactory) => void): void;
 export function createFactory(files: string[], callback: (err: Error, result?: MockSessionFactory) => void): void;
@@ -46,10 +31,9 @@ export function createFactory(files: any, callback: (err: Error, result?: MockSe
 
     var provider = new AnnotationMappingProvider();
 
-    files.forEach((file: string) => provider.addFile("build/tests/fixtures/" + file + ".d.json"));
+    files.forEach((file: string) => provider.addFile("build/tests/fixtures/" + file + ".js"));
 
     var config = new Configuration();
-    config.propertyConverters["PhoneTypeConverter"] = new model.PhoneTypeConverter();
 
     provider.getMapping(config, (err, mappings) => {
         if(err) return callback(err);

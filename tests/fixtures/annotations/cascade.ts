@@ -1,9 +1,17 @@
-/** @entity */
-export class A {
+import { Entity, Reference, Field } from "../../../src/mapping/providers/decorators";
+import { CascadeFlags } from "../../../src/mapping/cascadeFlags";
 
-    a: string;
+@Entity()
+export class B {
 
-    /** @cascade "save, remove" */
-    b: string;
 }
 
+@Entity()
+export class A {
+
+    @Field()
+    a: string;
+
+    @Reference({ cascade: CascadeFlags.Save | CascadeFlags.Remove })
+    b: B;
+}

@@ -2,17 +2,14 @@
 /// <reference path="../../typings/chai.d.ts"/>
 /// <reference path="../../typings/async.d.ts" />
 
-import async = require("async");
-import chai = require("chai");
-import assert = chai.assert;
-
-import model = require("../fixtures/model");
-import helpers = require("../helpers");
-
-import Constructor = require("../../src/core/constructor");
-import Callback = require("../../src/core/callback");
-import CriteriaBuilder = require("../../src/query/criteriaBuilder");
-import QueryDocument = require("../../src/query/queryDocument");
+import {assert} from "chai";
+import * as async from "async";
+import * as helpers from "../helpers";
+import * as model from "../fixtures/model";
+import {Constructor} from "../../src/core/constructor";
+import {Callback} from "../../src/core/callback";
+import {CriteriaBuilder} from "../../src/query/criteriaBuilder";
+import {QueryDocument} from "../../src/query/queryDocument";
 
 describe('CriteriaBuilder', () => {
 

@@ -1,21 +1,18 @@
 /// <reference path="../../../typings/mocha.d.ts"/>
 /// <reference path="../../../typings/chai.d.ts"/>
-/// <reference path="../../../typings/tsreflect.d.ts"/>
 
-import chai = require("chai");
-import assert = chai.assert;
-import reflect = require("tsreflect");
-import AnnotationMappingProvider = require("../../../src/mapping/providers/annotationMappingProvider");
-import Configuration = require("../../../src/config/Configuration");
-import MappingRegistry = require("../../../src/mapping/mappingRegistry");
-import MappingsFlags = require("../../../src/mapping/mappingFlags");
-import EnumMapping = require("../../../src/mapping/enumMapping");
-import ClassMapping = require("../../../src/mapping/classMapping");
-import EntityMapping = require("../../../src/mapping/entityMapping");
-import EnumType = require("../../../src/mapping/enumType");
-import PropertyConverter = require("../../../src/mapping/propertyConverter");
-import ConverterFixture = require("../../fixtures/annotations/converter");
-import ConverterOnClassFixture = require("../../fixtures/annotations/converterOnClass");
+import {assert} from "chai";
+import {AnnotationMappingProvider} from "../../../src/mapping/providers/annotationMappingProvider";
+import {Configuration} from "../../../src/config/Configuration";
+import {MappingRegistry} from "../../../src/mapping/mappingRegistry";
+import {MappingFlags} from "../../../src/mapping/mappingFlags";
+import {EnumMapping} from "../../../src/mapping/enumMapping";
+import {ClassMapping} from "../../../src/mapping/classMapping";
+import {EntityMapping} from "../../../src/mapping/entityMapping";
+import {EnumType} from "../../../src/mapping/enumType";
+import {PropertyConverter} from "../../../src/mapping/propertyConverter";
+import * as ConverterFixture from "../../fixtures/annotations/converter";
+import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
 
 describe('AnnotationMappingProvider', () => {
 
@@ -26,8 +23,10 @@ describe('AnnotationMappingProvider', () => {
             processFixture("classWithBuffer", done, (results) => {
 
                 assert.lengthOf(results, 1);
-                var mapping = findMapping(results, "ClassWithBuffer").getProperty("data").mapping;
-                assert.isTrue((mapping.flags & MappingsFlags.Buffer) === MappingsFlags.Buffer);
+                var classMapping = findMapping(results, "ClassWithBuffer");
+                var property = classMapping.getProperty("data");
+                assert.isTrue(property != null, "Could not find property 'data'");
+                assert.isTrue((property.mapping.flags & MappingFlags.Buffer) === MappingFlags.Buffer);
             });
         });
     });
@@ -49,7 +48,7 @@ describe('AnnotationMappingProvider', () => {
 
                 processFixture("entityMultiple", (err) => {
                     assert.ok(err);
-                    assert.include(err.message, "Only one class per inheritance hierarchy can have the 'entity' or 'embeddable' annotation");
+                    assert.include(err.message, "Only one class per inheritance hierarchy can have the @Entity or @Embeddable annotation");
                     done();
                 });
             });
@@ -72,7 +71,7 @@ describe('AnnotationMappingProvider', () => {
 
         describe('@enumerated', () => {
 
-            it("sets enum type to String if value is 'string'", (done) => {
+            it("sets enum type to String", (done) => {
 
                 processFixture("enumerated", done, (results) => {
 
@@ -82,23 +81,16 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
 
-            it("sets enum type to Ordinal if value is 'ordinal'", (done) => {
+            it("correctly sets enum members", (done) => {
 
                 processFixture("enumerated", done, (results) => {
 
                     var classMapping = findMapping(results, "A");
-                    var enumMapping = <EnumMapping>classMapping.getProperty("e2").mapping;
-                    assert.equal(enumMapping.type, EnumType.Ordinal);
-                });
-            });
+                    var enumMapping = <EnumMapping>classMapping.getProperty("e1").mapping;
 
-            it("sets enum type to Ordinal if @enumerated annotation is not specified", (done) => {
-
-                processFixture("enumerated", done, (results) => {
-
-                    var classMapping = findMapping(results, "A");
-                    var enumMapping = <EnumMapping>classMapping.getProperty("e3").mapping;
-                    assert.equal(enumMapping.type, EnumType.Ordinal);
+                    assert.equal(enumMapping.members["value0"], 0);
+                    assert.equal(enumMapping.members["value1"], 1);
+                    assert.equal(enumMapping.members["value2"], 2);
                 });
             });
         });
@@ -136,7 +128,8 @@ describe('AnnotationMappingProvider', () => {
                 processFixture("index", done, (results) => {
 
                     var mappingA = findMapping(results, "A");
-                    assert.equal(findMapping(results, "B").indexes, undefined);
+                    var mappingB = findMapping(results, "B");
+                    assert.equal(mappingB.indexes, undefined);
                     assert.lengthOf(mappingA.indexes, 3);
                 });
             });
@@ -195,6 +188,30 @@ describe('AnnotationMappingProvider', () => {
             });
         });
 
+        describe('@referenceMany', () => {
+
+            it("throws error if target is not an entity", (done) => {
+
+                processFixture("referenceManyWrongTarget", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Target of @ReferenceMany annotation must be an Entity");
+                    done();
+                });
+            });
+        });
+
+        describe('@embedMany', () => {
+
+            it("throws error if target is not a built-in type or embeddable", (done) => {
+
+                processFixture("embedManyWrongTarget", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Target of @EmbedMany annotation must be a built-in type or an class annotated with @Embeddable");
+                    done();
+                });
+            });
+        });
+
         describe("@cascade", () => {
 
             // There was a bug where switch was missing break and @cascade fell through to @field, setting the name of the field
@@ -238,7 +255,7 @@ describe('AnnotationMappingProvider', () => {
         });
 
         describe('@converter', () => {
-            it("sets the mapping for the property to a ConvertMapping with the correct converter", (done) => {
+            it("sets the mapping for the property to a ConverterMapping with the correct named converter", (done) => {
 
                 var config = new Configuration();
 
@@ -249,6 +266,20 @@ describe('AnnotationMappingProvider', () => {
 
                     var mapping = findMapping(results, "B");
                     assert.equal((<any>mapping.getProperty("a").mapping).converter, converter);
+                });
+            });
+
+            it("sets the mapping for the property to a ConverterMapping with the specified converter instance", (done) => {
+
+                var config = new Configuration();
+
+                var converter = new MyEnumConverter();
+                config.propertyConverters["MyEnumConverter"] = converter;
+
+                processFixtureWithConfiguration("converter", config, done, (results) => {
+
+                    var mapping = findMapping(results, "B");
+                    assert.equal((<any>mapping.getProperty("b").mapping).converter.constructor.name, "SomeConverter");
                 });
             });
 
@@ -286,6 +317,8 @@ function findMapping(mappings: EntityMapping[], name: string): EntityMapping {
             return mapping;
         }
     }
+
+    throw new Error("Could not find mapping with name '" + name + "'.");
 }
 
 function processFixture(file: string, done: (err?: Error) => void, callback?: (results: EntityMapping[]) => void): void {
@@ -296,12 +329,12 @@ function processFixture(file: string, done: (err?: Error) => void, callback?: (r
 function processFixtureWithConfiguration(file: string, config: Configuration, done: (err?: Error) => void, callback?: (results: EntityMapping[]) => void): void {
 
     var provider = new AnnotationMappingProvider();
-    provider.addFile("build/tests/fixtures/annotations/" + file + ".d.json");
+    provider.addFile("build/tests/fixtures/annotations/" + file + ".js");
     provider.getMapping(config, (err, mappings) => {
         if(err) return done(err);
 
         if(callback) {
-            callback(<EntityMapping[]>mappings.filter((x) => (x.flags & MappingsFlags.Entity) !== 0));
+            callback(<EntityMapping[]>mappings.filter((x) => (x.flags & MappingFlags.Entity) !== 0));
         }
         done();
     });

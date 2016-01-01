@@ -1,4 +1,4 @@
-const enum MappingFlags {
+export const enum MappingFlags {
 
     Array               = 0x00000001,
     Boolean             = 0x00000002,
@@ -18,5 +18,3 @@ const enum MappingFlags {
 
     ArrayLike = Array | Tuple
 }
-
-export = MappingFlags;

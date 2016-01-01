@@ -1,8 +1,6 @@
-import Callback = require("./callback");
+import {Callback} from "./callback";
 
-interface Command {
+export interface Command {
 
     execute(callback: Callback): void;
 }
-
-export = Command;

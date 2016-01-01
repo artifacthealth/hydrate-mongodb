@@ -1,16 +1,15 @@
-import QueryDocument = require("./queryDocument");
-import ResolveContext = require("../mapping/resolveContext");
-import MappingFlags = require("../mapping/mappingFlags");
-import ArrayMapping = require("../mapping/arrayMapping");
-import InternalMapping = require("../mapping/internalMapping");
-import MappingError = require("../mapping/mappingError");
-import RegExpUtil = require("../core/regExpUtil");
-import CriteriaBuilder = require("./criteriaBuilder");
-import ObjectMapping = require("../mapping/objectMapping");
-import ClassMapping = require("../mapping/classMapping");
-import EntityMapping = require("../mapping/entityMapping");
+import {QueryDocument} from "./queryDocument";
+import {ResolveContext} from "../mapping/resolveContext";
+import {MappingFlags} from "../mapping/mappingFlags";
+import {ArrayMapping} from "../mapping/arrayMapping";
+import {InternalMapping} from "../mapping/internalMapping";
+import {MappingError} from "../mapping/mappingError";
+import {CriteriaBuilder} from "./criteriaBuilder";
+import {ObjectMapping} from "../mapping/objectMapping";
+import {ClassMapping} from "../mapping/classMapping";
+import {EntityMapping} from "../mapping/entityMapping";
 
-class UpdateDocumentBuilder extends CriteriaBuilder {
+export class UpdateDocumentBuilder extends CriteriaBuilder {
 
     build(updateDocument: QueryDocument): QueryDocument {
 
@@ -191,5 +190,3 @@ class UpdateDocumentBuilder extends CriteriaBuilder {
         return sortSpecification;
     }
 }
-
-export = UpdateDocumentBuilder;

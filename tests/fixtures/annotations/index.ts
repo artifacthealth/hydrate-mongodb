@@ -1,31 +1,29 @@
-/**
- * @entity
- * @index keys: [ 'a', 1 ]
- * @index keys: [ ['a', 1], ['b', -1] ]
- */
+import { Entity, Field, Index } from "../../../src/mapping/providers/decorators";
+
+@Entity()
+@Index({ keys: [ [ 'a', 1 ] ]})
+@Index({ keys: [ ['a', 1], ['b', -1] ] })
 export class A {
 
     a: string;
     b: string;
 }
 
-/**
- * @index keys: [ 'c', 1 ]
- */
+@Index({ keys: [ [ 'c', 1 ] ]})
 export class B extends A {
 
     c: string;
 }
 
-/** @entity */
+@Entity()
 export class D {
 
-    /** @index */
+    @Index()
     a: string;
 
-    /** @index order: -1 */
+    @Index({ order: -1 })
     g: number;
 
-    /** @index dropDups: true */
+    @Index({ options: { dropDups: true } })
     c: number;
 }

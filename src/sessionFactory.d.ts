@@ -1,8 +1,6 @@
-import Session = require("./session");
+import {Session} from "./session";
 
-interface SessionFactory {
+export interface SessionFactory {
 
     createSession(): Session;
 }
-
-export = SessionFactory;

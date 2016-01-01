@@ -1,12 +1,12 @@
-import FindOneAndRemoveQuery = require("./findOneAndRemoveQuery");
-import FindOneAndUpdateQuery = require("./findOneAndUpdateQuery");
-import FindOneQuery = require("./findOneQuery");
-import FindQuery = require("./findQuery");
-import CountQuery = require("./countQuery");
-import QueryDocument = require("./queryDocument");
-import ResultCallback = require("../core/resultCallback");
+import {FindOneAndRemoveQuery} from "./findOneAndRemoveQuery";
+import {FindOneAndUpdateQuery} from "./findOneAndUpdateQuery";
+import {FindOneQuery} from "./findOneQuery";
+import {FindQuery} from "./findQuery";
+import {CountQuery} from "./countQuery";
+import {QueryDocument} from "./queryDocument";
+import {ResultCallback} from "../core/resultCallback";
 
-interface QueryBuilder<T> {
+export interface QueryBuilder<T> {
     findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
     findAll(criteria: QueryDocument, callback?: ResultCallback<T[]>): FindQuery<T>;
     findOne(callback?: ResultCallback<T>): FindOneQuery<T>;
@@ -29,5 +29,3 @@ interface QueryBuilder<T> {
     count(callback?: ResultCallback<number>): CountQuery;
     count(criteria: QueryDocument, callback?: ResultCallback<number>): CountQuery;
 }
-
-export = QueryBuilder;

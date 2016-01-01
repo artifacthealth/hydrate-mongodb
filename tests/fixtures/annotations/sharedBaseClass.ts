@@ -1,16 +1,21 @@
+import { Entity, Field } from "../../../src/mapping/providers/decorators";
+
 export class A {
 
+    @Field()
     a: string;
 }
 
-/** @entity */
+@Entity()
 export class B extends A {
 
+    @Field()
     b: string;
 }
 
-/** @entity */
+@Entity()
 export class C extends A {
 
+    @Field()
     c: string;
 }

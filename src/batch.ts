@@ -1,11 +1,11 @@
 /// <reference path="../typings/async.d.ts" />
 
-import async = require("async");
-import Table = require("./core/table");
-import Callback = require("./core/callback");
-import Command = require("./core/command");
+import * as async from "async";
+import {Table} from "./core/table";
+import {Callback} from "./core/callback";
+import {Command} from "./core/command";
 
-class Batch implements Command {
+export class Batch implements Command {
 
     private _commandTable: Table<Command> = [];
     private _commands: Command[] = [];
@@ -54,5 +54,3 @@ class Batch implements Command {
         async.each(this._commands, (command: Command, done: (err?: Error) => void) => command.execute(done), callback);
     }
 }
-
-export = Batch;

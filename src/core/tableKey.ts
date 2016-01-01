@@ -1,7 +1,7 @@
 /**
  * Gets or sets hidden key associated with arbitrary object for use in indexing an array-based table.
  */
-class TableKey {
+export class TableKey {
 
     private _name: string;
     private _nextValue: number = 0;
@@ -41,5 +41,3 @@ class TableKey {
         return value;
     }
 }
-
-export = TableKey;

@@ -1,7 +1,5 @@
-interface ArrayWithProperties extends Array<string> {
+export interface ArrayWithProperties extends Array<string> {
 
     someNumberProp: number;
     someStringProp: string;
 }
-
-export = ArrayWithProperties;

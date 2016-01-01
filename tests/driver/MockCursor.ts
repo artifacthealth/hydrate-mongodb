@@ -1,10 +1,10 @@
 /// <reference path="../../typings/mongodb.d.ts" />
 /// <reference path="../../typings/async.d.ts" />
 
-import mongodb = require("mongodb");
-import async = require("async");
+import * as mongodb from "mongodb";
+import * as async from "async";
 
-class MockCursor implements mongodb.Cursor {
+export class MockCursor implements mongodb.Cursor {
 
     private _closed = false;
 
@@ -101,5 +101,3 @@ class MockCursor implements mongodb.Cursor {
         return this._closed;
     }
 }
-
-export = MockCursor;

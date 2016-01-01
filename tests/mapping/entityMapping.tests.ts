@@ -1,13 +1,11 @@
 /// <reference path="../../typings/mocha.d.ts"/>
 /// <reference path="../../typings/chai.d.ts"/>
 
-import chai = require("chai");
-import assert = chai.assert;
-import helpers = require("../helpers");
-import model = require("../fixtures/model");
-
-import EntityMapping = require("../../src/mapping/entityMapping");
-import ObjectIdGenerator = require("../../src/id/objectIdGenerator");
+import {assert} from "chai";
+import * as helpers from "../helpers";
+import * as model from "../fixtures/model";
+import {EntityMapping} from "../../src/mapping/entityMapping";
+import {ObjectIdGenerator} from "../../src/id/objectIdGenerator";
 
 describe('EntityMapping', () => {
 

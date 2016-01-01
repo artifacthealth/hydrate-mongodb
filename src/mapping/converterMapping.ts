@@ -1,14 +1,13 @@
-import Table = require("../core/table");
-import Map = require("../core/map");
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import InternalSession = require("../internalSession");
-import ReadContext = require("./readContext");
-import PropertyConverter = require("./propertyConverter");
+import {Table} from "../core/table";
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {InternalSession} from "../internalSession";
+import {ReadContext} from "./readContext";
+import {PropertyConverter} from "./propertyConverter";
 
-class ConverterMapping extends MappingBase {
+export class ConverterMapping extends MappingBase {
 
     constructor(public converter: PropertyConverter) {
         super(MappingFlags.Converter);
@@ -40,5 +39,3 @@ class ConverterMapping extends MappingBase {
         return result;
     }
 }
-
-export = ConverterMapping;

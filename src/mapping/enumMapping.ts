@@ -1,26 +1,26 @@
-import Table = require("../core/table");
-import Map = require("../core/map");
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import InternalSession = require("../internalSession");
-import ReadContext = require("./readContext");
-import EnumType = require("./enumType");
+import {Table} from "../core/table";
+import {Lookup} from "../core/lookup";
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {InternalSession} from "../internalSession";
+import {ReadContext} from "./readContext";
+import {EnumType} from "./enumType";
 
-class EnumMapping extends MappingBase {
+export class EnumMapping extends MappingBase {
 
     ignoreCase = false;
     type = EnumType.Ordinal;
 
     private _values: Table<string> = [];
 
-    constructor(public members: Map<number>) {
+    constructor(public members: Lookup<number>) {
         super(MappingFlags.Enum);
 
         // create map from value to name
         for(var name in members) {
-            if(members.hasOwnProperty(name)) {
+            if(typeof name === "string" && members.hasOwnProperty(name)) {
                 var value = members[name];
                 this._values[value] = name;
             }
@@ -91,5 +91,3 @@ class EnumMapping extends MappingBase {
         }
     }
 }
-
-export = EnumMapping;

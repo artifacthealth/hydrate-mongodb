@@ -1,10 +1,10 @@
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import InternalSession = require("../internalSession");
-import ReadContext = require("./readContext");
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {InternalSession} from "../internalSession";
+import {ReadContext} from "./readContext";
 
-class NumberMapping extends MappingBase {
+export class NumberMapping extends MappingBase {
 
     constructor() {
         super(MappingFlags.Number);
@@ -28,5 +28,3 @@ class NumberMapping extends MappingBase {
         return value;
     }
 }
-
-export = NumberMapping;

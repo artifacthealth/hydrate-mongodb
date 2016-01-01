@@ -1,19 +1,19 @@
-interface Map<T> {
+export interface Lookup<T> {
     [index: string]: T;
 }
 
-module Map {
+export namespace Lookup {
     var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-    export function hasProperty<T>(map: Map<T>, key: string): boolean {
+    export function hasProperty<T>(map: Lookup<T>, key: string): boolean {
         return hasOwnProperty.call(map, key);
     }
 
-    export function getProperty<T>(map: Map<T>, key: string): T {
+    export function getProperty<T>(map: Lookup<T>, key: string): T {
         return hasOwnProperty.call(map, key) ? map[key] : undefined;
     }
 
-    export function isEmpty<T>(map: Map<T>) {
+    export function isEmpty<T>(map: Lookup<T>) {
         for (var id in map) {
             if (hasProperty(map, id)) {
                 return false;
@@ -31,7 +31,7 @@ module Map {
         return <T>result;
     }
 
-    export function forEachValue<T, U>(map: Map<T>, callback: (value: T) => U): U {
+    export function forEachValue<T, U>(map: Lookup<T>, callback: (value: T) => U): U {
         var result: U;
         for (var id in map) {
             if (result = callback(map[id])) break;
@@ -39,7 +39,7 @@ module Map {
         return result;
     }
 
-    export function forEachKey<T, U>(map: Map<T>, callback: (key: string) => U): U {
+    export function forEachKey<T, U>(map: Lookup<T>, callback: (key: string) => U): U {
         var result: U;
         for (var id in map) {
             if (result = callback(id)) break;
@@ -47,11 +47,11 @@ module Map {
         return result;
     }
 
-    export function lookUp<T>(map: Map<T>, key: string): T {
+    export function lookUp<T>(map: Lookup<T>, key: string): T {
         return hasProperty(map, key) ? map[key] : undefined;
     }
 
-    export function mapToArray<T>(map: Map<T>): T[] {
+    export function mapToArray<T>(map: Lookup<T>): T[] {
         var result: T[] = [];
 
         for (var id in map) {
@@ -71,8 +71,8 @@ module Map {
      * the same key with the given 'makeKey' function, then the element with the higher
      * index in the array will be the one associated with the produced key.
      */
-    export function arrayToMap<T>(array: T[], makeKey: (value: T) => string): Map<T> {
-        var result: Map<T> = {};
+    export function arrayToMap<T>(array: T[], makeKey: (value: T) => string): Lookup<T> {
+        var result: Lookup<T> = {};
 
         for (var i = 0, l = array.length; i < l; i++) {
             var value = array[i];
@@ -114,5 +114,3 @@ module Map {
         return _getHashCode(obj) || setHashCode(obj, (nextHashCode++).toString());
     }
 }
-
-export = Map;

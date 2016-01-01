@@ -1,15 +1,17 @@
-/**
- * @entity
- * @changeTracking "observe"
- */
-class Cat {
+import { Entity, Field, ChangeTracking } from "../../src/mapping/providers/decorators";
+import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
 
+@Entity()
+@ChangeTracking(ChangeTrackingType.Observe)
+export default class Cat {
+
+    @Field()
     name: string;
+
+    @Field()
     parent: Cat;
 
     constructor(name: string) {
         this.name = name;
     }
 }
-
-export = Cat;

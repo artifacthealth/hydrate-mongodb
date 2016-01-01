@@ -1,17 +1,17 @@
-import InternalMapping = require("./internalMapping");
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import Reference = require("../reference");
-import PropertyFlags = require("./propertyFlags");
-import InternalSession = require("../internalSession");
-import ResultCallback = require("../core/resultCallback");
-import ResolveContext = require("./resolveContext");
-import ReadContext = require("./readContext");
-import Observer = require("../observer");
+import {InternalMapping} from "./internalMapping";
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {Reference} from "../reference";
+import {PropertyFlags} from "./propertyFlags";
+import {InternalSession} from "../internalSession";
+import {ResultCallback} from "../core/resultCallback";
+import {ResolveContext} from "./resolveContext";
+import {ReadContext} from "./readContext";
+import {Observer} from "../observer";
 
-class TupleMapping extends MappingBase {
+export class TupleMapping extends MappingBase {
 
     constructor(public elementMappings: InternalMapping[]) {
         super(MappingFlags.Tuple);
@@ -165,5 +165,3 @@ class TupleMapping extends MappingBase {
         context.setError("Expected index for Tuple.");
     }
 }
-
-export = TupleMapping;

@@ -3,22 +3,16 @@
 /// <reference path="../typings/async.d.ts" />
 /// <reference path="../typings/mongodb.d.ts" />
 
-import util = require("util");
-
-import async = require("async");
-import chai = require("chai");
-import mongodb = require("mongodb");
-
-import assert = chai.assert;
-
-import model = require("./fixtures/model");
-import helpers = require("./helpers");
-
-import MockCursor = require("./driver/mockCursor");
-import MockCollection = require("./driver/mockCollection");
-import QueryDefinitionStub = require("./query/queryDefinitionStub");
-import QueryKind = require("../src/query/queryKind");
-import Batch = require("../src/batch");
+import {assert} from "chai";
+import * as async from "async";
+import * as helpers from "./helpers";
+import * as model from "./fixtures/model";
+import {Cursor} from "mongodb";
+import {MockCursor} from "./driver/mockCursor";
+import {MockCollection} from "./driver/mockCollection";
+import {QueryDefinitionStub} from "./query/queryDefinitionStub";
+import {QueryKind} from "../src/query/queryKind";
+import {Batch} from "../src/batch";
 
 describe('PersisterImpl', () => {
 
@@ -68,8 +62,6 @@ describe('PersisterImpl', () => {
                 done();
                 return collection.createCursor();
             }
-
-            var batch =
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);
@@ -189,7 +181,7 @@ describe('PersisterImpl', () => {
 
                         var cursor = new MockCursor();
 
-                        cursor.onSort = (keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void): mongodb.Cursor => {
+                        cursor.onSort = (keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void): Cursor => {
 
                             assert.deepEqual(keyOrList, [ { 'name': 1 }]);
                             done();

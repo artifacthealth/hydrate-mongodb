@@ -11,7 +11,7 @@ import Cat = require("../tests/fixtures/cat");
 import helpers = require("../tests/helpers");
 import SessionFactoryImpl = require("../src/sessionFactoryImpl");
 import Persister = require("../src/persister");
-import ChangeTracking = require("../src/mapping/changeTracking");
+import ChangeTrackingType = require("../src/mapping/changeTrackingType");
 import IdentityGenerator = require("../src/id/identityGenerator");
 import Batch = require("../src/batch");
 import Result = require("../src/core/result");
@@ -34,7 +34,7 @@ suite("SessionImpl", () => {
 
         /*
         var provider = new AnnotationMappingProvider(new Configuration());
-        provider.addFile("build/tests/fixtures/cat.d.json");
+        provider.addFile("build/tests/fixtures/cat.js");
         provider.getMapping((err, registry) => {
             if (err) return done(err);
 
@@ -45,7 +45,7 @@ suite("SessionImpl", () => {
         */
 
         var mapping = new AnnotationMappingProvider();
-        mapping.addFile("build/tests/fixtures/cat.d.json");
+        mapping.addFile("build/tests/fixtures/cat.js");
 
         var config = new Configuration();
         config.addMapping(mapping);
@@ -106,7 +106,7 @@ class DummySessionFactory extends SessionFactoryImpl {
 
 class DummyPersister implements Persister {
 
-    changeTracking: ChangeTracking;
+    changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
 
     constructor(mapping: EntityMapping) {

@@ -1,8 +1,6 @@
-import ResultCallback = require("../core/resultCallback");
+import {ResultCallback} from "../core/resultCallback";
 
-interface Query<T> {
+export interface Query<T> {
 
     execute(callback: ResultCallback<T>): void;
 }
-
-export = Query;

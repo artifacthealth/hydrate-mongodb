@@ -1,4 +1,4 @@
-const enum QueryKind {
+export const enum QueryKind {
 
     FindAll             = 0x00000001,
     FindEach            = 0x00000002,
@@ -16,5 +16,3 @@ const enum QueryKind {
 
     ReadOnly = FindAll | FindEach | FindOne | FindOneById | Distinct | Count
 }
-
-export = QueryKind;

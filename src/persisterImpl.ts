@@ -2,36 +2,35 @@
 /// <reference path="../typings/node.d.ts" />
 /// <reference path="../typings/mongodb.d.ts" />
 
-import mongodb = require("mongodb");
-import stream = require("stream");
-
-import async = require("async");
-import EntityMapping = require("./mapping/entityMapping");
-import ResultCallback = require("./core/resultCallback");
-import InternalSession = require("./internalSession");
-import ChangeTracking = require("./mapping/changeTracking");
-import IdentityGenerator = require("./id/identityGenerator");
-import Batch = require("./batch");
-import Callback = require("./core/callback");
-import MappingError = require("./mapping/mappingError");
-import Reference = require("./reference");
-import PropertyFlags = require("./mapping/propertyFlags");
-import Result = require("./core/result");
-import Persister = require("./persister");
-import Command = require("./core/command");
-import Changes = require("./mapping/changes");
-import Map = require("./core/map");
-import QueryDefinition = require("./query/queryDefinition");
-import QueryKind = require("./query/queryKind");
-import IteratorCallback = require("./core/iteratorCallback");
-import QueryDocument = require("./query/queryDocument");
-import CriteriaBuilder = require("./query/criteriaBuilder");
-import UpdateDocumentBuilder = require("./query/updateDocumentBuilder");
-import ResolveContext = require("./mapping/resolveContext");
-import ReadContext = require("./mapping/readContext");
-import Observer = require("./observer");
-import CallbackUtil = require("./core/callbackUtil");
-import OrderDocument = require("./query/orderDocument");
+//import {Readable} from "stream";
+import * as mongodb from "mongodb";
+import * as CallbackUtil from "./core/callbackUtil";
+import * as async from "async";
+import {EntityMapping} from "./mapping/entityMapping";
+import {ResultCallback} from "./core/resultCallback";
+import {InternalSession} from "./internalSession";
+import {ChangeTrackingType} from "./mapping/changeTrackingType";
+import {IdentityGenerator} from "./id/identityGenerator";
+import {Batch} from "./batch";
+import {Callback} from "./core/callback";
+import {MappingError} from "./mapping/mappingError";
+import {Reference} from "./reference";
+import {PropertyFlags} from "./mapping/propertyFlags";
+import {Result} from "./core/result";
+import {Persister} from "./persister";
+import {Command} from "./core/command";
+import {Changes} from "./mapping/changes";
+import {Lookup} from "./core/lookup";
+import {QueryDefinition} from "./query/queryDefinition";
+import {QueryKind} from "./query/queryKind";
+import {IteratorCallback} from "./core/iteratorCallback";
+import {QueryDocument} from "./query/queryDocument";
+import {CriteriaBuilder} from "./query/criteriaBuilder";
+import {UpdateDocumentBuilder} from "./query/updateDocumentBuilder";
+import {ResolveContext} from "./mapping/resolveContext";
+import {ReadContext} from "./mapping/readContext";
+import {Observer} from "./observer";
+import {OrderDocument} from "./query/orderDocument";
 
 interface FindOneQuery {
 
@@ -77,9 +76,9 @@ interface CountOptions {
     skip: number;
 }
 
-class PersisterImpl implements Persister {
+export class PersisterImpl implements Persister {
 
-    changeTracking: ChangeTracking;
+    changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
 
     private _versioned: boolean;
@@ -823,7 +822,7 @@ class FindQueue {
 
     private _persister: PersisterImpl;
     private _ids: any[];
-    private _callbacks: Map<ResultCallback<any>>;
+    private _callbacks: Lookup<ResultCallback<any>>;
 
     constructor(persister: PersisterImpl) {
         this._persister = persister;
@@ -903,7 +902,7 @@ class FindQueue {
     }
 }
 /*
-class QueryStream extends stream.Readable {
+class QueryStream extends Readable {
 
     private _cursor: Cursor;
 
@@ -938,4 +937,3 @@ class QueryStream extends stream.Readable {
     }
 }
 */
-export = PersisterImpl;

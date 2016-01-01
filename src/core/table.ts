@@ -1,5 +1,3 @@
-interface Table<T> {
+export interface Table<T> {
     [index: number]: T;
 }
-
-export = Table;

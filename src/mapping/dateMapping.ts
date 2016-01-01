@@ -1,11 +1,11 @@
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import InternalSession = require("../internalSession");
-import ReadContext = require("./readContext");
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {InternalSession} from "../internalSession";
+import {ReadContext} from "./readContext";
 
-class DateMapping extends MappingBase {
+export class DateMapping extends MappingBase {
 
     constructor() {
         super(MappingFlags.Date);
@@ -38,5 +38,3 @@ class DateMapping extends MappingBase {
         return false;
     }
 }
-
-export = DateMapping;

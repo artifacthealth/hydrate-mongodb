@@ -1,11 +1,11 @@
-import MappingBase = require("./mappingBase");
-import MappingError = require("./mappingError");
-import MappingFlags = require("./mappingFlags");
-import Changes = require("./changes");
-import InternalSession = require("../internalSession");
-import ReadContext = require("./readContext");
+import {MappingBase} from "./mappingBase";
+import {MappingError} from "./mappingError";
+import {MappingFlags} from "./mappingFlags";
+import {Changes} from "./changes";
+import {InternalSession} from "../internalSession";
+import {ReadContext} from "./readContext";
 
-class BooleanMapping extends MappingBase {
+export class BooleanMapping extends MappingBase {
 
     constructor() {
         super(MappingFlags.Boolean);
@@ -28,7 +28,4 @@ class BooleanMapping extends MappingBase {
         }
         return value;
     }
-
 }
-
-export = BooleanMapping;

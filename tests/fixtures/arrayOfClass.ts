@@ -1,8 +1,8 @@
-import ClassSimple = require("./classSimple");
+import ClassSimple from "./classSimple";
 
 interface ArrayOfClass {
 
     array: ClassSimple[];
 }
 
-export = ArrayOfClass;
+export default ArrayOfClass;

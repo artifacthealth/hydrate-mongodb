@@ -1,11 +1,11 @@
-import ClassMapping = require("./classMapping");
-import EntityMapping = require("./entityMapping");
-import Constructor = require("../core/constructor");
-import Table = require("../core/table");
-import TableKey = require("../core/tableKey");
-import MappingFlags = require("./mappingFlags");
+import {ClassMapping} from "./classMapping";
+import {EntityMapping} from "./entityMapping";
+import {Constructor} from "../core/constructor";
+import {Table} from "../core/table";
+import {TableKey} from "../core/tableKey";
+import {MappingFlags} from "./mappingFlags";
 
-class MappingRegistry {
+export class MappingRegistry {
 
     private _mappingByConstructor: ClassMapping[] = [];
 
@@ -52,5 +52,3 @@ class MappingRegistry {
         }
     }
 }
-
-export = MappingRegistry;
