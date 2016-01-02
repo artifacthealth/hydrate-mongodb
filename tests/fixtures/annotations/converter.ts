@@ -38,10 +38,16 @@ class SomeConverter implements PropertyConverter {
 @Entity()
 export class B {
 
+    // named converter
     @Converter("MyEnumConverter")
     a: MyEnum;
 
+    // converter instance
     @Converter(new SomeConverter())
     b: MyEnum;
+
+    // converter constructor
+    @Converter(SomeConverter)
+    c: MyEnum;
 }
 

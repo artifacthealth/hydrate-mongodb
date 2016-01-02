@@ -2,7 +2,7 @@
 
 import "reflect-metadata";
 
-import {Constructor} from "../../core/constructor";
+import {Constructor, ParameterlessConstructor} from "../../core/constructor";
 import * as ReflectUtil from "../../core/reflectUtil";
 
 import {
@@ -21,7 +21,6 @@ import {
     ReferenceManyAnnotation,
     EmbedManyAnnotation,
     FieldAnnotation,
-  //  CollectionAnnotation,
     EnumeratedAnnotation
 } from "./annotations";
 
@@ -41,7 +40,7 @@ export interface EmbeddableDecoratorFactory {
 }
 
 export interface ConverterDecoratorFactory {
-    (converter: string | PropertyConverter): PropertyDecorator;
+    (converter: string | PropertyConverter | ParameterlessConstructor<PropertyConverter>): ClassDecorator & PropertyDecorator;
 }
 
 export interface CollectionDecoratorFactory {
@@ -97,11 +96,6 @@ export interface FieldDecoratorFactory {
     (args?: { name?: string, nullable?: boolean }): PropertyDecorator;
 }
 
-/*
-export interface CollectionDecoratorFactory {
-    (elementType: Object): PropertyDecorator;
-}
-*/
 export interface EnumeratedDecoratorFactory {
     (members: Object): PropertyDecorator;
 }

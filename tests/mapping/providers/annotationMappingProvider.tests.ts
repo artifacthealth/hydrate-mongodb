@@ -283,6 +283,20 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
 
+            it("sets the mapping for the property to a ConverterMapping with the specified converter constructor", (done) => {
+
+                var config = new Configuration();
+
+                var converter = new MyEnumConverter();
+                config.propertyConverters["MyEnumConverter"] = converter;
+
+                processFixtureWithConfiguration("converter", config, done, (results) => {
+
+                    var mapping = findMapping(results, "B");
+                    assert.equal((<any>mapping.getProperty("c").mapping).converter.constructor.name, "SomeConverter");
+                });
+            });
+
             it("causes types of property to be ignored when building type mappings", (done) => {
 
                 var config = new Configuration();
@@ -294,6 +308,23 @@ describe('AnnotationMappingProvider', () => {
 
                     var mapping = findMapping(results, "B");
                     assert.equal((<any>mapping.getProperty("a").mapping).converter, converter);
+                });
+            });
+
+            it("when placed on a class definition, sets converter mapping for all properties referencing the class", (done) => {
+
+                var config = new Configuration();
+
+                var converter = new PointConverter();
+                config.propertyConverters["PointConverter"] = converter;
+
+                processFixtureWithConfiguration("converterOnClassDefinition", config, done, (results) => {
+
+                    var mapping = findMapping(results, "B");
+                    console.log(mapping);
+                    var property = mapping.getProperty("a");
+                    assert.ok(property);
+                    assert.equal((<any>property).mapping.converter, converter);
                 });
             });
 

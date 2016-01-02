@@ -4,7 +4,7 @@
 import * as async from "async";
 import * as mongodb from "mongodb";
 
-import * as NamingStrategies from "./NamingStrategies";
+import {NamingStrategies} from "./namingStrategies";
 import {ResultCallback} from "../core/resultCallback";
 import {MappingProvider} from "../mapping/providers/mappingProvider";
 import {MappingRegistry} from "../mapping/mappingRegistry";

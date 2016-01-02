@@ -120,7 +120,7 @@ export class AnnotationMappingProvider implements MappingProvider {
 
         // check to see if the export is an Entity or Embeddable type
         if(typeof obj === "function") {
-            if(ReflectUtil.hasClassAnnotation(obj, EntityAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, EmbeddableAnnotation, true)) {
+            if(ReflectUtil.hasClassAnnotation(obj, EntityAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, EmbeddableAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, ConverterAnnotation)) {
                 this._types.push(obj);
             }
         }
@@ -144,7 +144,8 @@ enum MappingKind {
     Embeddable,
     RootEmbeddable,
     Global,
-    Enumerated
+    Enumerated,
+    Converted
 }
 
 interface Type {
@@ -250,6 +251,9 @@ class MappingBuilder {
             else if(ReflectUtil.hasClassAnnotation(<Type>obj, EmbeddableAnnotation, true)) {
                 this._addObjectType(<Type>obj, ReflectUtil.hasClassAnnotation(<Type>obj, EmbeddableAnnotation) ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
             }
+            else if(ReflectUtil.hasClassAnnotation(<Type>obj, ConverterAnnotation)) {
+                this._addObjectType(<Type>obj, MappingKind.Converted);
+            }
         } else if(typeof obj !== "object") {
             return;
         }
@@ -270,15 +274,24 @@ class MappingBuilder {
             var propertyType = <Type>ReflectUtil.getType(type.prototype, propertyName);
 
             if(propertyType && !ReflectUtil.hasPropertyAnnotation(<Type>type, propertyName, ConverterAnnotation)) {
-                this._findEmbeddedTypes(propertyType);
+
+                if(this._isArray(propertyType)) {
+                    var elementType = this._getArrayElementType(<Type>type, propertyName);
+                    if(elementType) {
+                        this._findEmbeddedTypes(elementType);
+                    }
+                }
+                else {
+                    this._findEmbeddedTypes(propertyType);
+                }
             }
         }
     }
 
     private _findEmbeddedTypes(type: Type): void {
 
-        if(type.name != "Array" && !this._typeTable[this._key.ensureValue(type)]) {
-            this._addError("Invalid type '"+ type.name +"'. All referenced classes must belong to an inheritance hierarchy annotated with @Entity or @Embeddable.");
+        if(!this._isArray(type) && !this._typeTable[this._key.ensureValue(type)]) {
+            this._addError("Invalid type '"+ type.name +"'. All referenced classes must belong to an inheritance hierarchy annotated with @Entity or @Embeddable, or annotated with @Converter.");
             return;
         }
 
@@ -287,15 +300,6 @@ class MappingBuilder {
         }
 
         // TODO: handle scanning indexed types
-        // TODO: Handle Array!
-        /*
-        if(type.isArray()) {
-            // note that any properties stored on an array type are not persisted, same with tuple
-            this._findEmbeddedTypes(type.getElementType());
-            return;
-        }
-        */
-
         // TOOD: Handle Tuple?
         /*
         if(type.isTuple()) {
@@ -385,6 +389,9 @@ class MappingBuilder {
                     this._addError("Parent of mapping for '" + type.name + "' must be an entity mapping.");
                 }
                 mapping = Mapping.createEntityMapping((<Mapping.EntityMapping>parentMapping));
+                break;
+            case MappingKind.Converted:
+                mapping = this._createConverterMapping(ReflectUtil.getClassAnnotations(type, ConverterAnnotation)[0]);
                 break;
         }
 
@@ -653,7 +660,7 @@ class MappingBuilder {
             return this._createEnumMapping(propertyType, ReflectUtil.getPropertyAnnotations(parentType, propertyName, EnumeratedAnnotation)[0]);
         }
 
-        if(propertyType === Array) {
+        if(this._isArray(propertyType)) {
             var referenceManyAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, ReferenceManyAnnotation)[0];
             if(referenceManyAnnotation) {
                 var mapping = this._createTypeMapping(referenceManyAnnotation.target);
@@ -672,27 +679,8 @@ class MappingBuilder {
                 return Mapping.createArrayMapping(mapping);
             }
 
-            throw new Error("Properties with array types must be annotationed with @ReferenceMany or @EmbedMany.")
+            throw new Error("Properties with array types must be annotated with @ReferenceMany or @EmbedMany.");
         }
-
-        /*
-         Array               = 0x00000001,
-         Boolean             = 0x00000002,
-         Class               = 0x00000004,
-         Date                = 0x00000008,
-         Enum                = 0x00000010,
-         Number              = 0x00000020,
-         Object              = 0x00000040,
-         RegExp              = 0x00000080,
-         String              = 0x00000100,
-         Tuple               = 0x00000200,
-         Entity              = 0x00000400,
-         Embeddable          = 0x00000800,
-         InheritanceRoot     = 0x00001000,
-         Converter           = 0x00002000,
-         Buffer              = 0x00004000,
-
-         */
 
         // TODO: Handle Tuple mapping
         /*
@@ -702,6 +690,24 @@ class MappingBuilder {
         */
 
         return this._createTypeMapping(propertyType);
+    }
+
+    private _isArray(type: Type): boolean {
+
+        return type && type.name === "Array";
+    }
+
+    private _getArrayElementType(type: Type, propertyName: string): Type {
+
+        var referenceManyAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceManyAnnotation)[0];
+        if(referenceManyAnnotation) {
+            return referenceManyAnnotation.target;
+        }
+
+        var embedManyAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedManyAnnotation)[0];
+        if(embedManyAnnotation) {
+            return embedManyAnnotation.target;
+        }
     }
 
     private _createTypeMapping(type: Type): Mapping {
@@ -742,8 +748,12 @@ class MappingBuilder {
             return Mapping.createConverterMapping(annotation.converter);
         }
 
+        if(annotation.converterCtr) {
+            return Mapping.createConverterMapping(new annotation.converterCtr());
+        }
+
         if(!annotation.converterName) {
-            throw new Error("Invalid annotation @Converter. Either convert instance or name must be specified.");
+            throw new Error("Invalid annotation @Converter. A convert instance, constructor, or name must be specified.");
         }
 
         var converter = this.config.propertyConverters && this.config.propertyConverters[annotation.converterName];

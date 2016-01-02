@@ -4,7 +4,7 @@ import {IndexOptions} from "../indexOptions";
 import {ChangeTrackingType} from "../changeTrackingType";
 import {EnumType} from "../enumType";
 import {CascadeFlags} from "../cascadeFlags";
-import {Constructor} from "../../core/constructor";
+import {Constructor, ParameterlessConstructor} from "../../core/constructor";
 
 export class EntityAnnotation {
 
@@ -17,19 +17,23 @@ export class EmbeddableAnnotation {
 export class ConverterAnnotation {
 
     converter: PropertyConverter;
+    converterCtr: ParameterlessConstructor<PropertyConverter>;
     converterName: string;
 
     /**
      * Constructs a ConverterAnnotation object.
-     * @param converter The name or instance of the PropertyConverter to apply to the property.
+     * @param converter The name, instance, or constructor of the PropertyConverter to apply to the property or class.
      */
-    constructor(converter: string | PropertyConverter) {
+    constructor(converter: string | PropertyConverter | ParameterlessConstructor<PropertyConverter>) {
 
         if(typeof converter === "string") {
             this.converterName = converter;
         }
+        else if(typeof converter === "function") {
+            this.converterCtr = <ParameterlessConstructor<PropertyConverter>>converter;
+        }
         else {
-            this.converter = converter;
+            this.converter = <PropertyConverter>converter;
         }
     }
 }
