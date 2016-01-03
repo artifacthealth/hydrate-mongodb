@@ -1,27 +1,27 @@
 /// <reference path="../typings/baseline.d.ts" />
 /// <reference path="../typings/mongodb.d.ts" />
 
-import mongodb = require("mongodb");
+import * as mongodb from "mongodb";
 
-import Session = require("../src/session");
-import Configuration = require("../src/config/configuration");
-import AnnotationMappingProvider = require("../src/mapping/providers/annotationMappingProvider");
-import SessionFactory = require("../src/sessionFactory");
-import Cat = require("../tests/fixtures/cat");
-import helpers = require("../tests/helpers");
-import SessionFactoryImpl = require("../src/sessionFactoryImpl");
-import Persister = require("../src/persister");
-import ChangeTrackingType = require("../src/mapping/changeTrackingType");
-import IdentityGenerator = require("../src/id/identityGenerator");
-import Batch = require("../src/batch");
-import Result = require("../src/core/result");
-import PropertyFlags = require("../src/mapping/propertyFlags");
-import MappingRegistry = require("../src/mapping/mappingRegistry");
-import ResultCallback = require("../src/core/resultCallback");
-import EntityMapping = require("../src/mapping/entityMapping");
-import QueryDefinition = require("../src/query/queryDefinition");
-import InternalSession = require("../src/internalSession");
-import Observer = require("../src/observer");
+import { Session } from "../src/session";
+import { Configuration } from "../src/config/configuration";
+import { AnnotationMappingProvider } from "../src/mapping/providers/annotationMappingProvider";
+import { SessionFactory } from "../src/sessionFactory";
+import Cat from "../tests/fixtures/cat";
+import * as helpers from "../tests/helpers";
+import { SessionFactoryImpl } from "../src/sessionFactoryImpl";
+import { Persister } from "../src/persister";
+import { ChangeTrackingType } from "../src/mapping/changeTrackingType";
+import { IdentityGenerator } from "../src/id/identityGenerator";
+import { Batch } from "../src/batch";
+import { Result } from "../src/core/result";
+import { PropertyFlags } from "../src/mapping/propertyFlags";
+import { MappingRegistry } from "../src/mapping/mappingRegistry";
+import { ResultCallback } from "../src/core/resultCallback";
+import { EntityMapping } from "../src/mapping/entityMapping";
+import { QueryDefinition } from "../src/query/queryDefinition";
+import { InternalSession } from "../src/internalSession";
+import { Observer } from "../src/observer";
 
 suite("SessionImpl", () => {
 

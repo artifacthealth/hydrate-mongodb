@@ -39,7 +39,11 @@ module.exports = function(grunt) {
                 declaration: true,
                 noImplicitAny: true,
                 emitDecoratorMetadata: true,
-                experimentalDecorators: true
+                experimentalDecorators: true,
+                noLib: true,
+                references: [
+                    "node_modules/typescript/lib/lib.es6.d.ts"
+                ]
 
             },
             build: {

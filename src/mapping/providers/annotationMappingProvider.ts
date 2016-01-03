@@ -6,8 +6,6 @@ import * as path from "path";
 import * as glob from "glob";
 import * as ReflectUtil from "../../core/reflectUtil";
 import {absolutePath, hasExtension} from "../../core/fileUtil";
-import {Table} from "../../core/table";
-import {TableKey} from "../../core/tableKey";
 import {ResultCallback} from "../../core/resultCallback";
 import {MappingRegistry} from "../mappingRegistry";
 import {MappingProvider} from "./mappingProvider";
@@ -163,8 +161,7 @@ interface TypeLinks {
 class MappingBuilder {
 
     private _objectTypes: Type[] = [];
-    private _typeTable: Table<TypeLinks> = [];
-    private _key = new TableKey();
+    private _typeTable: WeakMap<Type, TypeLinks> = new WeakMap();
     private _errors: string[] = [];
     private _mappings: Mapping.ClassMapping[] = [];
 
@@ -207,7 +204,7 @@ class MappingBuilder {
 
         // Create mappings. We need to create the mappings before we populate so we can create property mappings.
         for(var i = 0, l = objectTypes.length; i < l; i++) {
-            var links = this._typeTable[this._key.ensureValue(objectTypes[i])];
+            var links = this._getTypeLinks(objectTypes[i]);
             if(!links.mapping) {
                 this._createMapping(links);
             }
@@ -215,7 +212,7 @@ class MappingBuilder {
 
         // Populate mappings.
         for(var i = 0, l = objectTypes.length; i < l; i++) {
-            this._populateMapping(this._typeTable[this._key.ensureValue(objectTypes[i])]);
+            this._populateMapping(this._getTypeLinks(objectTypes[i]));
         }
 
         return this._mappings;
@@ -227,11 +224,22 @@ class MappingBuilder {
         if(!type) {
             throw new Error("Could not find global type '" + name + '.');
         }
-        this._typeTable[this._key.ensureValue(type)] = {
+        this._setTypeLinks(type, {
             type: type,
             mapping: mapping,
             kind: MappingKind.Global
-        }
+        });
+    }
+
+    private _setTypeLinks(type: Type, links: TypeLinks): TypeLinks {
+
+        this._typeTable.set(type, links);
+        return links;
+    }
+
+    private _getTypeLinks(type: Type): TypeLinks {
+
+        return this._typeTable.get(type);
     }
 
     get hasErrors(): boolean {
@@ -290,12 +298,12 @@ class MappingBuilder {
 
     private _findEmbeddedTypes(type: Type): void {
 
-        if(!this._isArray(type) && !this._typeTable[this._key.ensureValue(type)]) {
+        if(!this._isArray(type) && !this._getTypeLinks(type)) {
             this._addError("Invalid type '"+ type.name +"'. All referenced classes must belong to an inheritance hierarchy annotated with @Entity or @Embeddable, or annotated with @Converter.");
             return;
         }
 
-        if(this._typeTable[this._key.ensureValue(type)]) {
+        if(this._getTypeLinks(type)) {
             return;
         }
 
@@ -326,10 +334,10 @@ class MappingBuilder {
 
     private _addType(type: Type, kind: MappingKind): TypeLinks {
 
-        return this._typeTable[this._key.ensureValue(type)] = {
+        return this._setTypeLinks(type, {
             type: type,
             kind: kind
-        }
+        });
     }
 
     private _ensureOneRootPerHierarchy(): void {
@@ -346,14 +354,14 @@ class MappingBuilder {
 
     private _subclassMarkedAsRootType(type: Type): boolean {
 
-        var links = this._typeTable[this._key.ensureValue(type)];
+        var links = this._getTypeLinks(type);
         if(links.kind != MappingKind.RootEntity && links.kind != MappingKind.RootEmbeddable) {
             return false;
         }
 
         var baseClass = ReflectUtil.getBaseType(type);
         while(baseClass) {
-            var links = this._typeTable[this._key.ensureValue(baseClass)];
+            var links = this._getTypeLinks(baseClass);
             if(links && (links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable)) {
                 return true;
             }
@@ -402,7 +410,7 @@ class MappingBuilder {
 
         var baseClass = ReflectUtil.getBaseType(type);
         if(baseClass) {
-            var links = this._typeTable[this._key.ensureValue(baseClass)];
+            var links = this._getTypeLinks(baseClass);
             if(links) {
                 var mapping = links.mapping
                 if (!mapping) {
@@ -712,7 +720,7 @@ class MappingBuilder {
 
     private _createTypeMapping(type: Type): Mapping {
 
-        var links = this._typeTable[this._key.ensureValue(type)];
+        var links = this._getTypeLinks(type);
         if(links && links.mapping) {
             return links.mapping;
         }
