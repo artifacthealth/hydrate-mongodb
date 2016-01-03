@@ -129,6 +129,8 @@ export class Configuration {
 
         async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
 
+            var localConnection = connection;
+
             if(!(mapping.flags & MappingFlags.InheritanceRoot)) return done();
 
             // make sure we have a collection name
@@ -137,23 +139,23 @@ export class Configuration {
             }
 
             // make sure db/collection is not mapped to some other type.
-            var key = [(mapping.databaseName || connection.databaseName), "/", mapping.collectionName].join("");
+            var key = [(mapping.databaseName || localConnection.databaseName), "/", mapping.collectionName].join("");
             if (Lookup.hasProperty(names, key)) {
                 return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
             }
             names[key] = true;
 
             // change current database if a databaseName was specified in the mapping
-            if(mapping.databaseName && mapping.databaseName !== connection.databaseName) {
-                connection = connection.db(mapping.databaseName);
+            if(mapping.databaseName && mapping.databaseName !== localConnection.databaseName) {
+                localConnection = localConnection.db(mapping.databaseName);
             }
 
-            connection.listCollections({ name: mapping.collectionName }).toArray((err: Error, names: string[]): void => {
+            localConnection.listCollections({ name: mapping.collectionName }).toArray((err: Error, names: string[]): void => {
                 if(err) return done(err);
 
                 if(names.length == 0) {
                     // collection does not exist, create it
-                    connection.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
+                    localConnection.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
                         // TODO: create indexes for newly created collection
@@ -162,7 +164,7 @@ export class Configuration {
                 }
                 else {
                     // collection exists, get it
-                    connection.collection(mapping.collectionName, { strict: true }, (err: Error, collection: mongodb.Collection) => {
+                    localConnection.collection(mapping.collectionName, { strict: true }, (err: Error, collection: mongodb.Collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
                         done();
