@@ -1,4 +1,4 @@
-import { Entity, Reference, ReferenceMany, Field } from "../../src/mapping/providers/decorators";
+import { Entity, ReferenceOne, ReferenceMany, Field } from "../../src/mapping/providers/decorators";
 import {CascadeFlags} from "../../src/mapping/cascadeFlags";
 
 @Entity()
@@ -7,7 +7,7 @@ export class SaveTest {
     @ReferenceMany({ target: SaveTest, cascade: CascadeFlags.Save })
     cascadeArray: SaveTest[];
 
-    @Reference({ cascade: CascadeFlags.Save })
+    @ReferenceOne({ cascade: CascadeFlags.Save })
     cascadeField: SaveTest;
 
     // Do not cascade to these members
@@ -15,7 +15,7 @@ export class SaveTest {
     @ReferenceMany({ target: SaveTest, cascade: CascadeFlags.Remove })
     controlArray: SaveTest[];
 
-    @Reference({ cascade: CascadeFlags.Remove })
+    @ReferenceOne({ cascade: CascadeFlags.Remove })
     controlField: SaveTest;
 
     static create(): SaveTest {
@@ -35,7 +35,7 @@ export class DetachTest {
     @ReferenceMany({ target: DetachTest, cascade: CascadeFlags.Save | CascadeFlags.Detach })
     cascadeArray: DetachTest[];
 
-    @Reference({ cascade: CascadeFlags.Save | CascadeFlags.Detach })
+    @ReferenceOne({ cascade: CascadeFlags.Save | CascadeFlags.Detach })
     cascadeField: DetachTest;
 
     // Do not cascade to these members
@@ -43,7 +43,7 @@ export class DetachTest {
     @ReferenceMany({ target: DetachTest, cascade: CascadeFlags.Save })
     controlArray: DetachTest[];
 
-    @Reference({ cascade: CascadeFlags.Save })
+    @ReferenceOne({ cascade: CascadeFlags.Save })
     controlField: DetachTest;
 
     static create(): DetachTest {
@@ -63,7 +63,7 @@ export class RemoveTest {
     @ReferenceMany({ target: RemoveTest, cascade: CascadeFlags.Save | CascadeFlags.Remove })
     cascadeArray: RemoveTest[];
 
-    @Reference({ cascade:  CascadeFlags.Save | CascadeFlags.Remove })
+    @ReferenceOne({ cascade:  CascadeFlags.Save | CascadeFlags.Remove })
     cascadeField: RemoveTest;
 
     // Do not cascade to these members
@@ -71,7 +71,7 @@ export class RemoveTest {
     @ReferenceMany({ target: RemoveTest, cascade: CascadeFlags.Save })
     controlArray: RemoveTest[];
 
-    @Reference({ cascade: CascadeFlags.Save })
+    @ReferenceOne({ cascade: CascadeFlags.Save })
     controlField: RemoveTest;
 
     static create(): RemoveTest {
@@ -88,9 +88,9 @@ export class RemoveTest {
 @Entity()
 export class RemoveReferenceTest {
 
-    @Reference({ cascade: CascadeFlags.Save | CascadeFlags.Remove })
+    @ReferenceOne({ cascade: CascadeFlags.Save | CascadeFlags.Remove })
     cascadeField: RemoveTest;
 
-    @Reference({ cascade: CascadeFlags.Save })
+    @ReferenceOne({ cascade: CascadeFlags.Save })
     controlField: RemoveTest;
 }

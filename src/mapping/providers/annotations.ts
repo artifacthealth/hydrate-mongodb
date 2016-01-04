@@ -147,32 +147,18 @@ export class TransientAnnotation {
 
 }
 
-export class ReferenceAnnotation {
+export class ReferencedAnnotation {
 
+    target: Constructor<any> | string;
     inverseOf: string;
     cascade: CascadeFlags;
 
-    constructor(args?: { inverseOf?: string, cascade?: CascadeFlags }) {
+    constructor(target: Constructor<any> | string);
+    constructor(args?: { target?: Constructor<any> | string, inverseOf?: string, cascade?: CascadeFlags });
+    constructor(args?: any) {
 
         if(args) {
-            this.inverseOf = args.inverseOf;
-            this.cascade = args.cascade;
-        }
-    }
-}
-
-export class ReferenceManyAnnotation {
-
-    target: Constructor<any>;
-    inverseOf: string;
-    cascade: CascadeFlags;
-
-    constructor(target: Constructor<any>);
-    constructor(args: { target: Constructor<any>, inverseOf?: string, cascade?: CascadeFlags });
-    constructor(args: any) {
-
-        if(args) {
-            if (typeof args === "function") {
+            if (typeof args === "function" || typeof args === "string") {
                 this.target = args;
             }
             else {
@@ -184,11 +170,27 @@ export class ReferenceManyAnnotation {
     }
 }
 
-export class EmbedManyAnnotation {
+export class ReferenceOneAnnotation extends ReferencedAnnotation {
 
-    constructor(public target: Constructor<any>) {
+}
+
+export class ReferenceManyAnnotation extends ReferencedAnnotation {
+
+}
+
+export class EmbeddedAnnotation {
+
+    constructor(public target: Constructor<any> | string) {
 
     }
+}
+
+export class EmbedOneAnnotation extends EmbeddedAnnotation {
+
+}
+
+export class EmbedManyAnnotation extends EmbeddedAnnotation {
+
 }
 
 export class FieldAnnotation {

@@ -12,6 +12,7 @@ import {EntityMapping} from "../../../src/mapping/entityMapping";
 import {EnumType} from "../../../src/mapping/enumType";
 import {PropertyConverter} from "../../../src/mapping/propertyConverter";
 import * as ConverterFixture from "../../fixtures/annotations/converter";
+import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
 
 describe('AnnotationMappingProvider', () => {
@@ -198,6 +199,20 @@ describe('AnnotationMappingProvider', () => {
                     done();
                 });
             });
+
+            it("can handle circular references by specifying target as class name", (done) => {
+
+                processFixture("circularReference", done, (results) => {
+
+                    assert.lengthOf(results, 2);
+                    results.forEach(x => assert.instanceOf(x, EntityMapping));
+
+                    // validate that we have mappings
+                    // validate that we have mappings
+                    assert.equal((<any>findMapping(results, "A").getProperty("b").mapping).classConstructor, CircularReferenceFixture.B);
+                    assert.equal((<any>findMapping(results, "B").getProperty("a").mapping).classConstructor, CircularReferenceFixture.A);
+                });
+            });
         });
 
         describe('@embedMany', () => {
@@ -206,7 +221,7 @@ describe('AnnotationMappingProvider', () => {
 
                 processFixture("embedManyWrongTarget", (err) => {
                     assert.ok(err);
-                    assert.include(err.message, "Target of @EmbedMany annotation must be a built-in type or an class annotated with @Embeddable");
+                    assert.include(err.message, "Target of @EmbedMany annotation must be a built-in type or a class annotated with @Embeddable");
                     done();
                 });
             });
@@ -321,7 +336,6 @@ describe('AnnotationMappingProvider', () => {
                 processFixtureWithConfiguration("converterOnClassDefinition", config, done, (results) => {
 
                     var mapping = findMapping(results, "B");
-                    console.log(mapping);
                     var property = mapping.getProperty("a");
                     assert.ok(property);
                     assert.equal((<any>property).mapping.converter, converter);

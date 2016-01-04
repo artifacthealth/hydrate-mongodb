@@ -17,9 +17,10 @@ import {
     DiscriminatorFieldAnnotation,
     DiscriminatorValueAnnotation,
     TransientAnnotation,
-    ReferenceAnnotation,
     ReferenceManyAnnotation,
+    ReferenceOneAnnotation,
     EmbedManyAnnotation,
+    EmbedOneAnnotation,
     FieldAnnotation,
     EnumeratedAnnotation
 } from "./annotations";
@@ -79,17 +80,18 @@ export interface TransientDecoratorFactory {
     (): PropertyDecorator;
 }
 
-export interface ReferenceDecoratorFactory {
-    (args?: { inverseOf?: string, cascade?: CascadeFlags }): PropertyDecorator;
-}
-
 export interface ReferenceManyDecoratorFactory {
-    (type: Constructor<any>): PropertyDecorator;
-    (args: { target: Constructor<any>, inverseOf?: string, cascade?: CascadeFlags }): PropertyDecorator;
+    (type: Constructor<any> | string): PropertyDecorator;
+    (args: { target: Constructor<any> | string, inverseOf?: string, cascade?: CascadeFlags }): PropertyDecorator;
 }
 
-export interface EmbedManyDecoratorFactory {
-    (type: Constructor<any>): PropertyDecorator;
+export interface ReferenceOneDecoratorFactory {
+    (type: Constructor<any> | string): PropertyDecorator;
+    (args: { target?: Constructor<any> | string, inverseOf?: string, cascade?: CascadeFlags }): PropertyDecorator;
+}
+
+export interface EmbeddedDecoratorFactory {
+    (type: Constructor<any> | string): PropertyDecorator;
 }
 
 export interface FieldDecoratorFactory {
@@ -111,12 +113,12 @@ export var ChangeTracking = <ChangeTrackingDecoratorFactory>makeDecorator(Change
 export var DiscriminatorField = <DiscriminatorFieldDecoratorFactory>makeDecorator(DiscriminatorFieldAnnotation);
 export var DiscriminatorValue = <DiscriminatorValueDecoratorFactory>makeDecorator(DiscriminatorValueAnnotation);
 export var Transient = <TransientDecoratorFactory>makeDecorator(TransientAnnotation);
-export var Reference = <ReferenceDecoratorFactory>makeDecorator(ReferenceAnnotation);
-export var ReferenceMany = <ReferenceManyDecoratorFactory>makeDecorator(ReferenceManyAnnotation);
-export var EmbedMany = <EmbedManyDecoratorFactory>makeDecorator(EmbedManyAnnotation);
 export var Field = <FieldDecoratorFactory>makeDecorator(FieldAnnotation);
-//export var Collection = <CollectionDecoratorFactory>makeDecorator(CollectionAnnotation);
 export var Enumerated = <EnumeratedDecoratorFactory>makeDecorator(EnumeratedAnnotation);
+export var ReferenceMany = <ReferenceManyDecoratorFactory>makeDecorator(ReferenceManyAnnotation);
+export var ReferenceOne = <ReferenceOneDecoratorFactory>makeDecorator(ReferenceOneAnnotation);
+export var EmbedMany = <EmbeddedDecoratorFactory>makeDecorator(EmbedManyAnnotation);
+export var EmbedOne = <EmbeddedDecoratorFactory>makeDecorator(EmbedOneAnnotation);
 
 function makeDecorator(annotationCtr: Constructor<any>) {
 

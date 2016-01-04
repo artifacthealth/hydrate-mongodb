@@ -30,9 +30,10 @@ import {
     DiscriminatorFieldAnnotation,
     DiscriminatorValueAnnotation,
     TransientAnnotation,
-    ReferenceAnnotation,
     ReferenceManyAnnotation,
+    ReferenceOneAnnotation,
     EmbedManyAnnotation,
+    EmbedOneAnnotation,
     FieldAnnotation,
     //CollectionAnnotation,
     EnumeratedAnnotation
@@ -162,30 +163,23 @@ class MappingBuilder {
 
     private _objectTypes: Type[] = [];
     private _typeTable: WeakMap<Type, TypeLinks> = new WeakMap();
+    private _typesByName: Map<string, Type> = new Map();
     private _errors: string[] = [];
     private _mappings: Mapping.ClassMapping[] = [];
-
 
     constructor(public config: Configuration) {
 
     }
 
-    private _globalStringMapping = Mapping.createStringMapping();
-    private _globalNumberMapping = Mapping.createNumberMapping();
-    private _globalBooleanMapping = Mapping.createBooleanMapping();
-    private _globalDateMapping = Mapping.createDateMapping();
-    private _globalRegExpMapping = Mapping.createRegExpMapping();
-    private _globalBufferMapping = Mapping.createBufferMapping();
-
     build(types: Type[]): Mapping.ClassMapping[] {
 
         // create global mappings
-        this._addGlobalMapping("String", this._globalStringMapping);
-        this._addGlobalMapping("Number", this._globalNumberMapping);
-        this._addGlobalMapping("Boolean", this._globalBooleanMapping);
-        this._addGlobalMapping("Date", this._globalDateMapping);
-        this._addGlobalMapping("RegExp", this._globalRegExpMapping);
-        this._addGlobalMapping("Buffer", this._globalBufferMapping);
+        this._addGlobalMapping("String", Mapping.createStringMapping());
+        this._addGlobalMapping("Number", Mapping.createNumberMapping());
+        this._addGlobalMapping("Boolean", Mapping.createBooleanMapping());
+        this._addGlobalMapping("Date", Mapping.createDateMapping());
+        this._addGlobalMapping("RegExp", Mapping.createRegExpMapping());
+        this._addGlobalMapping("Buffer", Mapping.createBufferMapping());
 
         // find all entity types
         for(var i = 0, l = types.length; i < l; i++) {
@@ -233,8 +227,26 @@ class MappingBuilder {
 
     private _setTypeLinks(type: Type, links: TypeLinks): TypeLinks {
 
+        if(this._typesByName.has(type.name)) {
+            throw new Error("Duplicate class name '" + type.name + "'. All Entity and Embedded classes must have unique names.");
+        }
+        this._typesByName.set(type.name, type);
+
         this._typeTable.set(type, links);
         return links;
+    }
+
+    private _resolveType(type: Type | string): Type {
+
+        if(typeof type === "string") {
+            var resolved = this._typesByName.get(type);
+            if(!resolved) {
+                throw new Error("Unknown type '" + type + "'.");
+            }
+            return resolved;
+        }
+
+        return <Type>type;
     }
 
     private _getTypeLinks(type: Type): TypeLinks {
@@ -279,12 +291,12 @@ class MappingBuilder {
         var propertyNames = ReflectUtil.getPropertyNames(type);
         for(var i = 0; i < propertyNames.length; i++) {
             var propertyName = propertyNames[i];
-            var propertyType = <Type>ReflectUtil.getType(type.prototype, propertyName);
+            var propertyType = this._getPropertyType(type, propertyName);
 
             if(propertyType && !ReflectUtil.hasPropertyAnnotation(<Type>type, propertyName, ConverterAnnotation)) {
 
                 if(this._isArray(propertyType)) {
-                    var elementType = this._getArrayElementType(<Type>type, propertyName);
+                    var elementType = this._getCollectionElementType(<Type>type, propertyName);
                     if(elementType) {
                         this._findEmbeddedTypes(elementType);
                     }
@@ -294,6 +306,30 @@ class MappingBuilder {
                 }
             }
         }
+    }
+
+    private _getPropertyType(type: Type, propertyName: string): Type {
+
+        // Check to see if type is specified by an annotation
+        var target: Type | string;
+
+        var referencedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceOneAnnotation)[0];
+        if(referencedAnnotation) {
+            target = referencedAnnotation.target;
+        }
+        else {
+            var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedOneAnnotation)[0];
+            if (embeddedAnnotation) {
+                target = embeddedAnnotation.target;
+            }
+        }
+
+        if(target) {
+            return this._resolveType(target);
+        }
+
+        // get property type from the compiler generated metadata.
+        return <Type>ReflectUtil.getType(type.prototype, propertyName);
     }
 
     private _findEmbeddedTypes(type: Type): void {
@@ -557,15 +593,9 @@ class MappingBuilder {
 
         for(var i = 0; i < propertyNames.length; i++) {
             var propertyName = propertyNames[i];
-            var propertyType = <Type>ReflectUtil.getType(type.prototype, propertyName);
-
-            if(!propertyType) {
-                this._addError("Invalid property '" + propertyName + "' on type '" + type.name + "': Unable to determine type of property. Perhaps the type is referenced before it is defined?");
-                return;
-            }
 
             try {
-                var property = this._createProperty(mapping, type, propertyName, propertyType);
+                var property = this._createProperty(mapping, type, propertyName);
                 if(property) {
                     // add to mapping after property has been fully initialized
                     mapping.addProperty(property);
@@ -589,10 +619,10 @@ class MappingBuilder {
         return mapping;
     }
 
-    private _createProperty(mapping: Mapping, parentType: Type, propertyName: string, propertyType: Type): Mapping.Property {
+    private _createProperty(mapping: Mapping, parentType: Type, propertyName: string): Mapping.Property {
 
         try {
-            var propertyMapping = this._createPropertyMapping(parentType, propertyName, propertyType);
+            var propertyMapping = this._createPropertyMapping(parentType, propertyName);
         }
         catch(e) {
             this._addError("Error creating property '" + propertyName + "' of type '" + parentType.name + "': " + e.message);
@@ -616,11 +646,11 @@ class MappingBuilder {
                         property.setFlags(PropertyFlags.Ignored);
                         break;
                         */
-                    case "ReferenceAnnotation":
-                        this._setReference(property, <ReferenceAnnotation>annotation);
-                        break;
                     case "ReferenceManyAnnotation":
-                        this._setReferenceMany(property, <ReferenceManyAnnotation>annotation);
+                        this._setReferenced(property, <ReferenceManyAnnotation>annotation);
+                        break;
+                    case "ReferenceOneAnnotation":
+                        this._setReferenced(property, <ReferenceOneAnnotation>annotation);
                         break;
                     case "FieldAnnotation":
                         this._setField(property, <FieldAnnotation>annotation);
@@ -658,10 +688,16 @@ class MappingBuilder {
         return property;
     }
 
-    private _createPropertyMapping(parentType: Type, propertyName: string, propertyType: Type): Mapping {
+    private _createPropertyMapping(parentType: Type, propertyName: string): Mapping {
 
         if(ReflectUtil.hasPropertyAnnotation(parentType, propertyName, ConverterAnnotation)) {
             return this._createConverterMapping(ReflectUtil.getPropertyAnnotations( parentType, propertyName, ConverterAnnotation)[0]);
+        }
+
+        var propertyType = this._getPropertyType(parentType, propertyName);
+        if(!propertyType) {
+            this._addError("Invalid property '" + propertyName + "' on type '" + parentType.name + "': Unable to determine type of property. This may be because of a circular reference. Try adding @EmbedOne or @ReferenceOne annotation with the name of the class as the target.");
+            return;
         }
 
         if(ReflectUtil.hasPropertyAnnotation(parentType, propertyName, EnumeratedAnnotation)) {
@@ -669,20 +705,20 @@ class MappingBuilder {
         }
 
         if(this._isArray(propertyType)) {
-            var referenceManyAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, ReferenceManyAnnotation)[0];
-            if(referenceManyAnnotation) {
-                var mapping = this._createTypeMapping(referenceManyAnnotation.target);
+            var referencedAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, ReferenceManyAnnotation)[0];
+            if(referencedAnnotation) {
+                var mapping = this._createTypeMapping(referencedAnnotation.target);
                 if(!(mapping.flags & MappingFlags.Entity)) {
                     throw new Error("Target of @ReferenceMany annotation must be an Entity.");
                 }
                 return Mapping.createArrayMapping(mapping);
             }
 
-            var embedManyAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, EmbedManyAnnotation)[0];
-            if(embedManyAnnotation) {
-                var mapping = this._createTypeMapping(embedManyAnnotation.target);
-                if(!(mapping.flags & (MappingFlags.Embeddable | MappingFlags.Boolean | MappingFlags.String | MappingFlags.Number | MappingFlags.Enum | MappingFlags.RegExp | MappingFlags.Date))) {
-                    throw new Error("Target of @EmbedMany annotation must be a built-in type or an class annotated with @Embeddable.");
+            var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, EmbedManyAnnotation)[0];
+            if(embeddedAnnotation) {
+                var mapping = this._createTypeMapping(embeddedAnnotation.target);
+                if(!(mapping.flags & (MappingFlags.Embeddable | MappingFlags.Boolean | MappingFlags.String | MappingFlags.Number | MappingFlags.Enum | MappingFlags.RegExp | MappingFlags.Date | MappingFlags.Buffer))) {
+                    throw new Error("Target of @EmbedMany annotation must be a built-in type or a class annotated with @Embeddable.");
                 }
                 return Mapping.createArrayMapping(mapping);
             }
@@ -705,20 +741,27 @@ class MappingBuilder {
         return type && type.name === "Array";
     }
 
-    private _getArrayElementType(type: Type, propertyName: string): Type {
+    private _getCollectionElementType(type: Type, propertyName: string): Type {
 
-        var referenceManyAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceManyAnnotation)[0];
-        if(referenceManyAnnotation) {
-            return referenceManyAnnotation.target;
+        var target: Type | string;
+
+        var referencedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceManyAnnotation)[0];
+        if(referencedAnnotation) {
+            target = referencedAnnotation.target;
+        }
+        else {
+            var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedManyAnnotation)[0];
+            if (embeddedAnnotation) {
+                target = embeddedAnnotation.target;
+            }
         }
 
-        var embedManyAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedManyAnnotation)[0];
-        if(embedManyAnnotation) {
-            return embedManyAnnotation.target;
-        }
+        return this._resolveType(target);
     }
 
-    private _createTypeMapping(type: Type): Mapping {
+    private _createTypeMapping(target: Type | string): Mapping {
+
+        var type = this._resolveType(target);
 
         var links = this._getTypeLinks(type);
         if(links && links.mapping) {
@@ -731,20 +774,6 @@ class MappingBuilder {
          throw new Error("'Any' type is not supported.");
          }
          */
-
-        if(type === Number) {
-            return this._globalNumberMapping;
-        }
-        if(type === Boolean) {
-            return this._globalBooleanMapping;
-        }
-        if(type === String) {
-            return this._globalStringMapping;
-        }
-
-        if(type === Buffer) {
-            return this._globalBufferMapping;
-        }
 
         throw new Error("Unable to create mapping for '" + type.name + "'.");
 
@@ -854,6 +883,12 @@ class MappingBuilder {
 
     }
 
+    private _isEntity(type: Type): boolean {
+
+        var links = this._getTypeLinks(type);
+        return links && (links.kind == MappingKind.Entity || links.kind == MappingKind.RootEntity);
+    }
+
     private _setDiscriminatorField(mapping: Mapping.ClassMapping, annotation: DiscriminatorFieldAnnotation): void {
 
         this._assertRootClassMapping(mapping);
@@ -890,20 +925,7 @@ class MappingBuilder {
         mapping.changeTracking = annotation.type;
     }
 
-    private _setReference(property: Mapping.Property, annotation: ReferenceAnnotation): void {
-
-        if(annotation.inverseOf) {
-            // TODO: validate inverse relationship
-            property.inverseOf = annotation.inverseOf;
-            property.setFlags(PropertyFlags.InverseSide);
-        }
-
-        if(annotation.cascade) {
-            property.setFlags(annotation.cascade & PropertyFlags.CascadeAll);
-        }
-    }
-
-    private _setReferenceMany(property: Mapping.Property, annotation: ReferenceManyAnnotation): void {
+    private _setReferenced(property: Mapping.Property, annotation: ReferenceManyAnnotation): void {
 
         if(annotation.inverseOf) {
             // TODO: validate inverse relationship
