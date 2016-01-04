@@ -35,7 +35,6 @@ import {
     EmbedManyAnnotation,
     EmbedOneAnnotation,
     FieldAnnotation,
-    //CollectionAnnotation,
     EnumeratedAnnotation
 } from "./annotations";
 
