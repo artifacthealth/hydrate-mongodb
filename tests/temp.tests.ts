@@ -22,6 +22,7 @@ import {Configuration} from "../src/config/configuration";
 import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
 import {ReadContext} from "../src/mapping/readContext";
 import {ClassMapping} from "../src/mapping/classMapping";
+import {MockDb} from "./driver/mockDb";
 
 describe('Temp', () => {
 
@@ -222,7 +223,7 @@ describe('Temp', () => {
 
             var registry = new MappingRegistry();
             registry.addMappings(<ClassMapping[]>mappings);
-            var factory = new SessionFactoryImpl({}, registry);
+            var factory = new SessionFactoryImpl(new MockDb(), registry);
             var session = <InternalSession>factory.createSession();
             var identity = (<EntityMapping>registry.getMappingForConstructor(model.Person).inheritanceRoot).identity;
 

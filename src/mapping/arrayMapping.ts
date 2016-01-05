@@ -158,9 +158,14 @@ export class ArrayMapping extends MappingBase {
             return callback(new Error("Element mapping must be an entity to resolve inverse relationship."));
         }
 
-        session.getPersister(<EntityMapping>this.elementMapping).findInverseOf(parentEntity, propertyName, (err, value) => {
+        session.getPersister(<EntityMapping>this.elementMapping, (err, persister) => {
             if(err) return callback(err);
-            this.fetch(session, this, value, path, depth, callback);
+
+            persister.findInverseOf(parentEntity, propertyName, (err, value) => {
+                if(err) return callback(err);
+
+                this.fetch(session, this, value, path, depth, callback);
+            });
         });
     }
 

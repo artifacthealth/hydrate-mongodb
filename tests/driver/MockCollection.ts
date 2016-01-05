@@ -83,8 +83,9 @@ export class MockCollection implements mongodb.Collection {
 
     }
 
-    constructor(public contents?: any[]) {
+    constructor(public contents?: any[], name?: string) {
 
+        this.collectionName = name;
     }
 
     find(selector: Object, callback?: (err: Error, result: mongodb.Cursor) => void): mongodb.Cursor {

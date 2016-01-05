@@ -13,7 +13,7 @@ export interface InternalSession extends Session {
     getObject(id: any): any;
     registerManaged(persister: Persister, entity: Object, document: any): void;
     notifyRemoved(entity: Object): void;
-    getPersister(mapping: EntityMapping): Persister;
+    getPersister(mapping: EntityMapping, callback: ResultCallback<Persister>): void;
     getReferenceInternal(mapping: EntityMapping, id: any): any;
     fetchInternal(entity: Object, paths: string[], callback: ResultCallback<any>): void;
     executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void;

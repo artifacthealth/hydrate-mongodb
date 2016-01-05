@@ -27,16 +27,6 @@ export class MappingRegistry {
         this._mappings.push(mapping);
     }
 
-    getEntityMappings(): EntityMapping[] {
-
-        return <EntityMapping[]>this._mappings.filter(mapping => (mapping.flags & MappingFlags.Entity) !== 0);
-    }
-
-    getMappings(): ClassMapping[] {
-
-        return this._mappings;
-    }
-
     getMappingForObject(obj: any): ClassMapping {
 
         return this.getMappingForConstructor(obj.constructor);
