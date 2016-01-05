@@ -2,15 +2,17 @@ import {ClassMapping} from "./classMapping";
 import {EntityMapping} from "./entityMapping";
 import {Constructor} from "../core/constructor";
 import {MappingFlags} from "./mappingFlags";
+import {MappingProvider} from "./providers/mappingProvider";
+import {ResultCallback} from "../core/resultCallback";
 
 export class MappingRegistry {
 
-    private _mappingByConstructor: WeakMap<Function, ClassMapping> = new WeakMap();
-    private _mappings: ClassMapping[] = [];
+    private _mappings: WeakMap<Function, Promise<ClassMapping>> = new WeakMap();
+    private _providers: MappingProvider[];
 
-    addMappings(mappings: ClassMapping[]): void {
+    constructor(providers?: MappingProvider[]) {
 
-        mappings.forEach(x => this.addMapping(x));
+        this._providers = providers;
     }
 
     addMapping(mapping: ClassMapping): void {
@@ -19,23 +21,48 @@ export class MappingRegistry {
             throw new Error("Class mapping is missing classConstructor.");
         }
 
-        if(this._mappingByConstructor.has(mapping.classConstructor)) {
+        if(this._mappings.has(mapping.classConstructor)) {
             throw new Error("Mapping '" + mapping.name + "' has already been registered.");
         }
 
-        this._mappingByConstructor.set(mapping.classConstructor, mapping);
-        this._mappings.push(mapping);
+        this._mappings.set(mapping.classConstructor, new Promise((resolve) => resolve(mapping)));
     }
 
-    getMappingForObject(obj: any): ClassMapping {
+    getMappingForObject(obj: any, callback: ResultCallback<ClassMapping>): void {
 
-        return this.getMappingForConstructor(obj.constructor);
+        this.getMappingForConstructor(obj.constructor, callback);
     }
 
-    getMappingForConstructor(ctr: Constructor<any>): ClassMapping {
+    getMappingForConstructor(ctr: Constructor<any>, callback: ResultCallback<ClassMapping>): void {
 
-        if(ctr) {
-            return this._mappingByConstructor.get(<any>ctr);
+        var promise = this._mappings.get(<any>ctr);
+        if(!promise) {
+            var resolved = false;
+            promise = new Promise((resolve, reject) => {
+                var self = this;
+
+                next(0);
+
+                function next(index: number) {
+                    if(index >= self._providers.length) {
+                        resolve(null);
+                    }
+
+                    self._providers[index].getMapping(ctr, (err, mapping) => {
+                        if(err) return reject(err);
+
+                        if(mapping) {
+                            resolve(mapping);
+                        }
+                        else {
+                            next(index++);
+                        }
+                    });
+                }
+            });
+            this._mappings.set(<any>ctr, promise);
         }
+
+        promise.then((mapping) => callback(null, mapping), (err) => callback(err));
     }
 }

@@ -83,6 +83,11 @@ export class Configuration {
      */
     addMapping(mapping: MappingProvider): void {
 
+        if(this._mappings.indexOf(mapping) != -1) {
+            return;
+        }
+
+        mapping.configure(this);
         this._mappings.push(mapping);
     }
 
@@ -93,26 +98,11 @@ export class Configuration {
      */
     createSessionFactory(connection: mongodb.Db, callback: ResultCallback<SessionFactory>): void {
 
-        var registry = new MappingRegistry();
-
         if(!this._mappings || this._mappings.length == 0) {
             return callback(new Error("No mappings were added to the configuration."));
         }
 
-        // Get the mappings from the mapping providers
-        async.each(this._mappings, (provider, done) => {
-
-            provider.getMapping(this, (err, r) => {
-                if(err) return done(err, null);
-
-                // Merge all registries. Duplicates will cause an error.
-                registry.addMappings(<ClassMapping[]>r);
-                done(null, null);
-            });
-        }, (err) => {
-            if(err) return callback(err);
-
-            callback(null, new SessionFactoryImpl(connection, registry));
-        });
+        // TODO: Creation of session factory is no longer async. Should we make the function sync or leave it as async incase other things make it async in the future?
+        callback(null, new SessionFactoryImpl(connection, new MappingRegistry(this._mappings)));
     }
 }

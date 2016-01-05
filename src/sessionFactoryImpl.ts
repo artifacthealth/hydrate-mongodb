@@ -23,7 +23,6 @@ export class SessionFactoryImpl implements InternalSessionFactory {
 
     constructor(connection: Db, mappingRegistry: MappingRegistry) {
 
-        // TODO: get rid of mapping registry and handle directly in session factory
         this._connection = connection;
         this._mappingRegistry = mappingRegistry;
     }
@@ -35,24 +34,26 @@ export class SessionFactoryImpl implements InternalSessionFactory {
 
     getMappingForObject(obj: any, callback: ResultCallback<EntityMapping>): void {
 
-        var mapping = this._mappingRegistry.getMappingForObject(obj);
-        if(mapping && (mapping.flags & MappingFlags.Entity)) {
-            callback(null, <EntityMapping>mapping);
-            return;
-        }
+        this._mappingRegistry.getMappingForObject(obj, (err, mapping) => {
+            if (mapping && (mapping.flags & MappingFlags.Entity)) {
+                callback(null, <EntityMapping>mapping);
+                return;
+            }
 
-        callback(new Error("Type of object is not mapped as an entity."));
+            callback(new Error("Type of object is not mapped as an entity."));
+        });
     }
 
     getMappingForConstructor(ctr: Constructor<any>, callback: ResultCallback<EntityMapping>): void {
 
-        var mapping = this._mappingRegistry.getMappingForConstructor(ctr);
-        if(mapping && (mapping.flags & MappingFlags.Entity)) {
-            callback(null, <EntityMapping>mapping);
-            return;
-        }
+        this._mappingRegistry.getMappingForConstructor(ctr, (err, mapping) => {
+            if(mapping && (mapping.flags & MappingFlags.Entity)) {
+                callback(null, <EntityMapping>mapping);
+                return;
+            }
 
-        callback(new Error("Type is not mapped as an entity."));
+            callback(new Error("Type is not mapped as an entity."));
+        });
     }
 
     createPersister(session: InternalSession, mapping: EntityMapping, callback: ResultCallback<Persister>): void {
