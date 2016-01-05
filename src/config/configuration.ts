@@ -154,11 +154,12 @@ export class Configuration {
                 if(err) return done(err);
 
                 if(names.length == 0) {
+                    // TODO: disable this in production (because of race condition. Return error if collection does not exist.)
                     // collection does not exist, create it
                     localConnection.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
-                        // TODO: create indexes for newly created collection
+                        // TODO: create indexes for newly created collection (except in production)
                         done();
                     });
                 }

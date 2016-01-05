@@ -115,12 +115,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     /**
      * Cached Persisters by Mapping
      */
-    private _persisterByMapping: Table<Persister> = [];
-
-    /**
-     * Cached Query Builders by Mapping
-     */
-    private _queryByMapping: Table<QueryBuilder<any>> = [];
+    private _persisters: Table<Persister> = [];
 
     /**
      * Hash table containing all objects by id associated with the session.
@@ -263,25 +258,29 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      * Get an instance whose state may be fetched in the future.
      * @param ctr The constructor
      * @param id The id of the entity
-     * @returns The entity instance or a reference to the entity instance.
+     * @param callback Called with the reference.
      */
-    getReference<T>(ctr: Constructor<T>, id: any): T {
+    getReference<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void {
 
-        // If mapping is not found, the reference is still created and an error is returned when the client tries
-        // to resolve the reference.
         var mapping = this.factory.getMappingForConstructor(ctr);
-        if (mapping) {
-            var rootMapping = (<EntityMapping>mapping.inheritanceRoot);
-            if (rootMapping && rootMapping.identity) {
-                if (typeof id === "string") {
-                    id = rootMapping.identity.fromString(id);
-                }
-                // If identifier is missing or invalid, the reference is still created and an error is returned when 
-                // the client tries to resolve the reference
+        if (!mapping) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
+
+        var identityGenerator = (<EntityMapping>mapping.inheritanceRoot).identity;
+
+        if(typeof id === "string") {
+            id = identityGenerator.fromString(id);
+        }
+        else {
+            if (!identityGenerator.validate(id)) {
+                process.nextTick(() => callback(new Error("Missing or invalid identifier.")));
+                return;
             }
         }
 
-        return this.getReferenceInternal(mapping, id);
+        callback(null, this.getReferenceInternal(mapping, id));
     }
 
     getReferenceInternal(mapping: EntityMapping, id: any): any {
@@ -356,25 +355,13 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     getPersister(mapping: EntityMapping): Persister {
 
-        return this._persisterByMapping[mapping.id]
-            || (this._persisterByMapping[mapping.id] = this.factory.createPersister(this, mapping));
+        return this._persisters[mapping.id]
+            || (this._persisters[mapping.id] = this.factory.createPersister(this, mapping));
     }
 
     query<T>(ctr: Constructor<T>): QueryBuilder<T> {
 
-        var mapping = this.factory.getMappingForConstructor(ctr);
-        if(!mapping) {
-            // TODO: instead of throwing error, return a placeholder Query object that will return an error when one of it's functions are called
-            throw new Error("Object type is not mapped as an entity.");
-        }
-
-        var query = this._queryByMapping[mapping.id];
-        if(!query) {
-            query = new QueryBuilderImpl(this, this.getPersister(mapping));
-            this._queryByMapping[mapping.id] = query;
-        }
-
-        return query;
+        return new QueryBuilderImpl(this, ctr);
     }
 
     /**
@@ -438,11 +425,13 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             var obj = entities[i];
             var links = this._getObjectLinks(obj);
             if (!links) {
-                var persister = this._getPersisterForObject(obj);
-                if (!persister) {
+                var mapping = this.factory.getMappingForObject(obj);
+                if (!mapping) {
                     callback(new Error("Object type is not mapped as an entity."));
                     return;
                 }
+
+                var persister = this.getPersister(mapping);
 
                 // we haven't seen this object before
                 obj["_id"] = persister.identity.generate();
@@ -967,21 +956,5 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 this._walk(reference.mapping, entity, flags, entities, embedded, done);
             });
         }, callback);
-    }
-
-    private _getPersisterForObject(obj: any): Persister {
-
-        var mapping = this.factory.getMappingForObject(obj);
-        if(mapping) {
-            return this.getPersister(mapping);
-        }
-    }
-
-    private _getPersisterForConstructor(ctr: Constructor<any>): Persister {
-
-        var mapping = this.factory.getMappingForConstructor(ctr);
-        if(mapping) {
-            return this.getPersister(mapping);
-        }
     }
 }

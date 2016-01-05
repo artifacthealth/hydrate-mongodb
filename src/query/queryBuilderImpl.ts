@@ -14,16 +14,17 @@ import {FindOneQuery} from "./findOneQuery";
 import {FindQuery} from "./findQuery";
 import {CountQuery} from "./countQuery";
 import {QueryDocument} from "./queryDocument";
+import {Constructor} from "../core/constructor"
 
 export class QueryBuilderImpl implements QueryBuilder<Object> {
 
     private _session: InternalSession;
-    private _persister: Persister;
+    private _entityCtr: Constructor<any>;
 
-    constructor(session: InternalSession, persister: Persister) {
+    constructor(session: InternalSession, entityCtr: Constructor<any>) {
 
         this._session = session;
-        this._persister = persister;
+        this._entityCtr = entityCtr;
     }
 
     findAll(callback?: ResultCallback<Object[]>): FindQuery<Object>;
@@ -64,9 +65,6 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
 
         var query = this._createQuery(QueryKind.FindOneById);
 
-        if(typeof id === "string") {
-            id = this._persister.identity.fromString(id);
-        }
         if(id == null) {
             query.error = new Error("Missing or invalid identifier.");
         }
@@ -218,7 +216,7 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
 
     private _createQuery(kind: QueryKind): QueryObject {
 
-        return new QueryObject(this._session, this._persister, kind);
+        return new QueryObject(this._session, this._entityCtr, kind);
     }
 }
 
@@ -239,13 +237,13 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     error: Error;
 
     private _session: InternalSession;
-    private _persister: Persister;
+    private _entityCtr: Constructor<any>;
     private _executed: boolean;
 
-    constructor(session: InternalSession, persister: Persister, public kind: QueryKind) {
+    constructor(session: InternalSession, entityCtr: Constructor<any>, public kind: QueryKind) {
 
         this._session = session;
-        this._persister = persister;
+        this._entityCtr = entityCtr;
     }
 
     get readOnly(): boolean {
@@ -373,6 +371,12 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
 
     execute(callback: ResultCallback<any>): void {
 
-        this._persister.executeQuery(this, callback);
+        var mapping = this._session.factory.getMappingForConstructor(this._entityCtr);
+        if(!mapping) {
+            callback(new Error("Object type is not mapped as an entity."));
+            return;
+        }
+
+        this._session.getPersister(mapping).executeQuery(this, callback);
     }
 }

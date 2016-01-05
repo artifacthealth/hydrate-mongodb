@@ -443,7 +443,7 @@ export class PersisterImpl implements Persister {
         function error(err: Error) {
             cursor.close(null); // close the cursor since it may not be exhausted
             callback(err);
-            callback = function () {}; // if called for error, make sure it can't be called again
+            callback = <Callback>function () {}; // if called for error, make sure it can't be called again
         }
     }
 
@@ -476,7 +476,7 @@ export class PersisterImpl implements Persister {
         function error(err: Error) {
             cursor.close(null); // close the cursor since it may not be exhausted
             callback(err);
-            callback = function () {}; // if called for error, make sure it can't be called again
+            callback = <Callback>function () {}; // if called for error, make sure it can't be called again
         }
     }
 
@@ -861,6 +861,13 @@ class FindQueue {
         if(ids.length == 1) {
             var id = ids[0],
                 callback = callbacks[id.toString()];
+
+            if(typeof id === "string") {
+                id = this._persister.identity.fromString(id);
+                if(id == null) {
+                    return callback(new Error(`Unable to convert string '${id}' to valid identifier.`))
+                }
+            }
 
             this._persister.findOne({ _id:  id }, (err, entity) => {
                 if(err) return callback(err);

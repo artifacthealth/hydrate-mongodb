@@ -5,8 +5,7 @@ import {MappingFlags} from "./mappingFlags";
 
 export class MappingRegistry {
 
-    private _mappingByConstructor: WeakMap<Function, ClassMapping> = new WeakMap();
-    private _mappings: ClassMapping[] = [];
+    private _mappings: Map<Function, ClassMapping> = new Map();
 
     addMappings(mappings: ClassMapping[]): void {
 
@@ -19,22 +18,25 @@ export class MappingRegistry {
             throw new Error("Class mapping is missing classConstructor.");
         }
 
-        if(this._mappingByConstructor.has(mapping.classConstructor)) {
+        if(this._mappings.has(mapping.classConstructor)) {
             throw new Error("Mapping '" + mapping.name + "' has already been registered.");
         }
 
-        this._mappingByConstructor.set(mapping.classConstructor, mapping);
-        this._mappings.push(mapping);
+        this._mappings.set(mapping.classConstructor, mapping);
     }
 
     getEntityMappings(): EntityMapping[] {
 
-        return <EntityMapping[]>this._mappings.filter(mapping => (mapping.flags & MappingFlags.Entity) !== 0);
-    }
+        var entities: EntityMapping[] = [];
 
-    getMappings(): ClassMapping[] {
+        for(var mapping in this._mappings.values()) {
 
-        return this._mappings;
+            if((mapping.flags & MappingFlags.Entity) != 0) {
+                entities.push(mapping);
+            }
+        }
+
+        return entities;
     }
 
     getMappingForObject(obj: any): ClassMapping {
@@ -45,7 +47,7 @@ export class MappingRegistry {
     getMappingForConstructor(ctr: Constructor<any>): ClassMapping {
 
         if(ctr) {
-            return this._mappingByConstructor.get(<any>ctr);
+            return this._mappings.get(<any>ctr);
         }
     }
 }

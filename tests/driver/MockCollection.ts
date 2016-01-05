@@ -10,6 +10,12 @@ export class MockCollection implements mongodb.Collection {
     collectionName: string;
     hint: any;
 
+    constructor(public contents?: any[], name?: string) {
+
+        this.collectionName = name;
+    }
+
+
     insert(query: any, optionsOrCallback: any, callback?: (err: Error, result?: any) => void): void {
 
     }
@@ -80,10 +86,6 @@ export class MockCollection implements mongodb.Collection {
     }
 
     stats(optionsOrCallback: any, callback?: (err: Error, results: mongodb.CollStats) => void): void {
-
-    }
-
-    constructor(public contents?: any[]) {
 
     }
 

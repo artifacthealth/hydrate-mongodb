@@ -13,21 +13,7 @@ export class Reference {
 
     fetch(session: InternalSession, callback: ResultCallback<any>): void {
 
-        if(this.mapping) {
-            var persister = session.getPersister(this.mapping);
-        }
-
-        if (!persister) {
-            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-            return;
-        }
-
-        if(this._id == null) {
-            process.nextTick(() => callback(new Error("References has missing or invalid identifier.")));
-            return;
-        }
-
-        persister.findOneById(this._id, callback);
+        session.getPersister(this.mapping).findOneById(this._id, callback);
     }
 
     getId(): any {
@@ -40,12 +26,7 @@ export class Reference {
      */
     equals(other: any): boolean {
 
-        if (other == null) return false;
-
-        var id = Reference.isReference(other) ? (<Reference>other)._id : other._id;
-        if (id == null) return false;
-
-        return (<EntityMapping>this.mapping.inheritanceRoot).identity.areEqual(this._id, id)
+        return Reference.areEqual(this, other);
     }
 
     /**
