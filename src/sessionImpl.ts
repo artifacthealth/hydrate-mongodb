@@ -24,6 +24,8 @@ import {QueryBuilderImpl} from "./query/queryBuilderImpl";
 import {FindOneQuery} from "./query/findOneQuery";
 import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
+import {MappingFlags} from "./mapping/mappingFlags";
+
 
 /**
  * The state of an object.
@@ -259,18 +261,35 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      * Get an instance whose state may be fetched in the future.
      * @param ctr The constructor
      * @param id The id of the entity
-     * @returns The entity instance or a reference to the entity instance.
+     * @param callback Called with a reference to the entity or the entity if already managed.
      */
-    getReference<T>(ctr: Constructor<T>, id: any): T {
+    getReference<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void {
 
-        // TODO: should we cache references so all references with the same id share the same object?
-        return this.getObject(id) || new Reference(undefined, ctr, id);
+        this.factory.getMappingForConstructor(ctr, (err, mapping) => {
+            if(err) return callback(err);
+
+            // we do not have to check that mapping is an entity mapping because getMappingForConstructor will
+            // create an error if the ctr does not resolve to an entity type.
+            var identityGenerator = (<EntityMapping>mapping.inheritanceRoot).identity;
+
+            if(typeof id === "string") {
+                id = identityGenerator.fromString(id);
+            }
+            else {
+                if (!identityGenerator.validate(id)) {
+                    callback(new Error("Missing or invalid identifier."));
+                    return;
+                }
+            }
+
+            callback(null, this.getReferenceInternal(mapping, id));
+        });
     }
 
     getReferenceInternal(mapping: EntityMapping, id: any): any {
 
         // TODO: should we cache references so all references with the same id share the same object?
-        return this.getObject(id) || new Reference(mapping, undefined, id);
+        return this.getObject(id) || new Reference(mapping, id);
     }
 
     /**

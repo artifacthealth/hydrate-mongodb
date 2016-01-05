@@ -16,42 +16,17 @@ export class Reference {
     mapping: EntityMapping;
 
     /**
-     * The constructor for the referenced type if the mapping is not available.
-     */
-    private _ctr: Constructor<any>;
-
-    /**
      * True if the Reference has been fetched; otherwise, false.
      */
-    constructor(mapping: EntityMapping, ctr: Constructor<any>, id: any) {
+    constructor(mapping: EntityMapping, id: any) {
 
         this.mapping = mapping;
-        this._ctr = ctr;
         this._id = id;
     }
 
     fetch(session: InternalSession, callback: ResultCallback<any>): void {
 
-        if (this._id == null) {
-            process.nextTick(() => callback(new Error("Reference has missing or invalid identifier.")));
-            return;
-        }
-
-        if(this.mapping) {
-            this._fetchObject(session, this.mapping, callback);
-            return;
-        }
-
-        session.factory.getMappingForConstructor(this._ctr, (err, mapping) => {
-            if(err) return callback(err);
-
-            this._fetchObject(session, this.mapping = mapping, callback);
-        });
-    }
-
-    private _fetchObject(session: InternalSession, mapping: EntityMapping, callback: ResultCallback<any>): void {
-
-        session.getPersister(mapping, (err, persister) => {
+        session.getPersister(this.mapping, (err, persister) => {
             if (err) return callback(err);
 
             persister.findOneById(this._id, callback);
