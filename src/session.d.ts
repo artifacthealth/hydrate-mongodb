@@ -16,7 +16,7 @@ export interface Session extends EventEmitter {
     flush(callback?: Callback): void;
     clear(callback?: Callback): void;
     find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T>;
-    getReference<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void;
+    getReference<T>(ctr: Constructor<T>, id: any): T;
     fetch<T>(obj: T, callback?: ResultCallback<T>): void;
     fetch<T>(obj: T, path: string, callback?: ResultCallback<T>): void;
     fetch<T>(obj: T, paths: string[], callback?: ResultCallback<T>): void;

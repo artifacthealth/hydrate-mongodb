@@ -13,6 +13,16 @@ export class Reference {
 
     fetch(session: InternalSession, callback: ResultCallback<any>): void {
 
+        if (!this.mapping) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
+
+        if (this._id == null) {
+            process.nextTick(() => callback(new Error("Missing or invalid identifier.")));
+            return;
+        }
+
         session.getPersister(this.mapping).findOneById(this._id, callback);
     }
 

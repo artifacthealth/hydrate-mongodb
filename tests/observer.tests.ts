@@ -108,23 +108,21 @@ describe('Observer', () => {
 
             var generator = new ObjectIdGenerator();
             var id = generator.generate();
-            session.getReference(model.Person, id, (err, ref) => {
-                if(err) return done(err);
+            var ref = session.getReference(model.Person, id);
 
-                var obj: any = {
-                    parent: ref
-                }
-                observer.watch(obj);
+            var obj: any = {
+                parent: ref
+            }
+            observer.watch(obj);
 
-                obj.parent = {
-                    _id: id
-                }
+            obj.parent = {
+                _id: id
+            }
 
-                setTimeout(() => {
-                    assert.equal(called, 0, "Callback should not have been called.");
-                    done();
-                }, 0);
-            });
+            setTimeout(() => {
+                assert.equal(called, 0, "Callback should not have been called.");
+                done();
+            }, 0);
         });
     });
 
@@ -142,22 +140,21 @@ describe('Observer', () => {
 
             var generator = new ObjectIdGenerator();
             var id = generator.generate();
-            session.getReference(model.Person, id, (err, ref) => {
+            var ref = session.getReference(model.Person, id);
 
-                var obj: any = {
-                    parent: ref
-                }
-                observer.watch(obj);
+            var obj: any = {
+                parent: ref
+            }
+            observer.watch(obj);
 
-                obj.parent = {
-                    _id: generator.generate()
-                }
+            obj.parent = {
+                _id: generator.generate()
+            }
 
-                setTimeout(() => {
-                    assert.equal(called, 1, "Callback was not called");
-                    done();
-                }, 0);
-            });
+            setTimeout(() => {
+                assert.equal(called, 1, "Callback was not called");
+                done();
+            }, 0);
         });
     });
 

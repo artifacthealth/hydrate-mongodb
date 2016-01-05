@@ -260,27 +260,27 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      * @param id The id of the entity
      * @param callback Called with the reference.
      */
-    getReference<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void {
+    getReference<T>(ctr: Constructor<T>, id: any): T {
 
-        var mapping = this.factory.getMappingForConstructor(ctr);
-        if (!mapping) {
-            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
-            return;
-        }
-
-        var identityGenerator = (<EntityMapping>mapping.inheritanceRoot).identity;
-
-        if(typeof id === "string") {
-            id = identityGenerator.fromString(id);
-        }
-        else {
-            if (!identityGenerator.validate(id)) {
-                process.nextTick(() => callback(new Error("Missing or invalid identifier.")));
-                return;
+        var mapping = this.factory.getMappingForConstructor(ctr)
+        if(mapping) {
+            // validate the id that was passed in now instead of when reference is resolved so we save time on references
+            // that were already validated by the mapping
+            var identityGenerator = (<EntityMapping>mapping.inheritanceRoot).identity;
+            if (typeof id === "string") {
+                id = identityGenerator.fromString(id);
+            }
+            else {
+                if (!identityGenerator.validate(id)) {
+                    // If the id is invalid, clear it out. An error will be returned when the reference is fetched
+                    id = null;
+                }
             }
         }
 
-        callback(null, this.getReferenceInternal(mapping, id));
+        // If the mapping is not found, the reference is still created. An error will be returned when the reference
+        // is fetched.
+        return this.getReferenceInternal(mapping, id);
     }
 
     getReferenceInternal(mapping: EntityMapping, id: any): any {

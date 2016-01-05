@@ -249,15 +249,13 @@ describe('SessionImpl', () => {
                     });
                 }
 
-                session.getReference(model.Person, entityId, (err, entity) => {
-                    if(err) return done(err);
+                var entity = session.getReference(model.Person, entityId);
 
-                    session.remove(entity, err => {
-                        if (err) return done(err);
+                session.remove(entity, err => {
+                    if (err) return done(err);
 
-                        assert.equal(fetchCalled, 1, "Entity was not fetched");
-                        done();
-                    });
+                    assert.equal(fetchCalled, 1, "Entity was not fetched");
+                    done();
                 });
             });
         });
@@ -411,35 +409,30 @@ describe('SessionImpl', () => {
                 var generator = new ObjectIdGenerator();
                 var ctr = cascade.RemoveTest;
 
-                session.getReference(ctr, generator.generate(), (err, cascadeField) => {
+                var cascadeField = session.getReference(ctr, generator.generate());
+                var controlField = session.getReference(ctr, generator.generate());
+
+                entity.cascadeField = cascadeField;
+                entity.controlField = controlField;
+
+                var persister = factory.getPersisterForConstructor(session, cascade.RemoveTest);
+                persister.onFindOneById = (id, callback) => {
+                    var ret = <any>new cascade.RemoveTest();
+                    ret._id = id;
+                    session.registerManaged(persister, ret, {});
+                    callback(null, ret);
+                }
+
+                session.save(entity);
+                session.flush();
+                session.remove(entity);
+                session.flush(err => {
                     if (err) return done(err);
-
-                    session.getReference(ctr, generator.generate(), (err, controlField) => {
-                        if (err) return done(err);
-
-                        entity.cascadeField = cascadeField;
-                        entity.controlField = controlField;
-
-                        var persister = factory.getPersisterForConstructor(session, cascade.RemoveTest);
-                        persister.onFindOneById = (id, callback) => {
-                            var ret = <any>new cascade.RemoveTest();
-                            ret._id = id;
-                            session.registerManaged(persister, ret, {});
-                            callback(null, ret);
-                        }
-
-                        session.save(entity);
-                        session.flush();
-                        session.remove(entity);
-                        session.flush(err => {
-                            if (err) return done(err);
-                            // There are two different persisters. The persister for RemoveReferenceTest will call remove
-                            // once and the persister for RemoveTest will cal remove once
-                            assert.equal(factory.getPersisterForConstructor(session, cascade.RemoveReferenceTest).removeCalled, 1);
-                            assert.equal(factory.getPersisterForConstructor(session, cascade.RemoveTest).removeCalled, 1);
-                            done();
-                        });
-                    });
+                    // There are two different persisters. The persister for RemoveReferenceTest will call remove
+                    // once and the persister for RemoveTest will cal remove once
+                    assert.equal(factory.getPersisterForConstructor(session, cascade.RemoveReferenceTest).removeCalled, 1);
+                    assert.equal(factory.getPersisterForConstructor(session, cascade.RemoveTest).removeCalled, 1);
+                    done();
                 });
             });
         });
@@ -959,14 +952,12 @@ describe('SessionImpl', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                session.getReference(Kitten, new ObjectIdGenerator().generate().toString(), (err, ref) => {
-                    if (err) return done(err);
+                var ref = session.getReference(Kitten, new ObjectIdGenerator().generate().toString());
 
-                    var id = session.getId(ref);
+                var id = session.getId(ref);
 
-                    assert.instanceOf(id, ObjectID);
-                    done();
-                });
+                assert.instanceOf(id, ObjectID);
+                done();
             });
         });
     });
@@ -1008,32 +999,30 @@ describe('SessionImpl', () => {
                 var session = factory.createSession();
                 var entity = new Cat("Mittens");
 
-                session.getReference(Cat, new ObjectIdGenerator().generate(), (err, parent) => {
+                var parent = session.getReference(Cat, new ObjectIdGenerator().generate());
+
+                entity.parent = parent;
+
+                // setup persister to handle fetch call
+                var persister = factory.getPersisterForObject(session, entity);
+                persister.onFetch = (entity, path, callback) => {
+                    assert.equal(path, "parent");
+                    var parent = new Cat("Tails");
+                    (<any>parent)._id = (<Reference>entity.parent).getId();
+                    entity.parent = parent;
+                    process.nextTick(callback);
+                }
+
+                // save and flush entity so we start tracking changes
+                session.save(entity);
+                session.flush();
+                // make sure fetching does not cause object to become dirty
+                session.fetch(entity, "parent");
+                session.flush((err) => {
                     if (err) return done(err);
 
-                    entity.parent = parent;
-
-                    // setup persister to handle fetch call
-                    var persister = factory.getPersisterForObject(session, entity);
-                    persister.onFetch = (entity, path, callback) => {
-                        assert.equal(path, "parent");
-                        var parent = new Cat("Tails");
-                        (<any>parent)._id = (<Reference>entity.parent).getId();
-                        entity.parent = parent;
-                        process.nextTick(callback);
-                    }
-
-                    // save and flush entity so we start tracking changes
-                    session.save(entity);
-                    session.flush();
-                    // make sure fetching does not cause object to become dirty
-                    session.fetch(entity, "parent");
-                    session.flush((err) => {
-                        if (err) return done(err);
-
-                        assert.equal(persister.dirtyCheckCalled, 0, "Fetch caused object to become dirty");
-                        done();
-                    });
+                    assert.equal(persister.dirtyCheckCalled, 0, "Fetch caused object to become dirty");
+                    done();
                 });
             });
         });
