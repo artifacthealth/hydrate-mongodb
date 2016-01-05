@@ -29,12 +29,12 @@ export class MappingRegistry {
 
         var entities: EntityMapping[] = [];
 
-        for(var mapping in this._mappings.values()) {
+        this._mappings.forEach((mapping) => {
 
             if((mapping.flags & MappingFlags.Entity) != 0) {
-                entities.push(mapping);
+                entities.push(<EntityMapping>mapping);
             }
-        }
+        });
 
         return entities;
     }

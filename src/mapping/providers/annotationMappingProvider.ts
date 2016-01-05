@@ -672,8 +672,7 @@ class MappingBuilder {
 
         var propertyType = this._getPropertyType(parentType, propertyName);
         if(!propertyType) {
-            this._addError("Invalid property '" + propertyName + "' on type '" + parentType.name + "': Unable to determine type of property. This may be because of a circular reference. Try adding @EmbedOne or @ReferenceOne annotation with the name of the class as the target.");
-            return;
+            throw new Error("Unable to determine type of property. This may be because of a circular reference. Try adding @EmbedOne or @ReferenceOne annotation with the name of the class as the target.");
         }
 
         if(ReflectUtil.hasPropertyAnnotation(parentType, propertyName, EnumeratedAnnotation)) {

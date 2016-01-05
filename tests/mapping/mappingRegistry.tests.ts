@@ -34,6 +34,19 @@ describe('MappingRegistry', () => {
             assert.isUndefined(fixture.registry.getMappingForConstructor(model.Phone));
         });
     });
+
+    describe('getEntityMappings', () => {
+
+        it('returns a list of all entity mappings in the registry', () => {
+
+            var fixture = createFixture();
+            var mappings = fixture.registry.getEntityMappings();
+            assert.equal(mappings.length, 2);
+            assert.equal(mappings[0], fixture.partyMapping);
+            assert.equal(mappings[1], fixture.personMapping);
+        });
+
+    });
 });
 
 interface Fixture {
