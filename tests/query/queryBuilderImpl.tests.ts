@@ -29,18 +29,15 @@ describe('QueryBuilderImpl', () => {
 
                 var session = factory.createSession();
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.FindAll);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    done();
+                }
+
+                session.query(model.Person).findAll(queryCriteria, (err, results) => {
                     if(err) return done(err);
-
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.FindAll);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        done();
-                    }
-
-                    session.query(model.Person).findAll(queryCriteria, (err, results) => {
-                        if(err) return done(err);
-                    });
                 });
             });
         });
@@ -53,19 +50,16 @@ describe('QueryBuilderImpl', () => {
                 var resultToReturn = [ { name: 'Bob' } ];
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object[]>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object[]>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        callback(null, resultToReturn)
-                    }
-
-                    session.query(model.Person).findAll((err, results) => {
-                        if (err) return done(err);
-                        assert.equal(results, resultToReturn);
-                        done();
-                    });
+                session.query(model.Person).findAll((err, results) => {
+                    if(err) return done(err);
+                    assert.equal(results, resultToReturn);
+                    done();
                 });
             });
         });
@@ -76,21 +70,18 @@ describe('QueryBuilderImpl', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.limitCount, 10);
+                    assert.equal(query.skipCount, 22);
+                    assert.equal(query.batchSizeValue, 10000);
+                    assert.deepEqual(query.sortValue, [['name', 1]]);
+                    assert.deepEqual(query.fetchPaths, [ 'children' ]);
+                    done();
+                }
+
+                session.query(model.Person).findAll({}).limit(10).skip(22).batchSize(10000).sort([['name', 1]]).fetch("children", (err, results) => {
                     if(err) return done(err);
-
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.limitCount, 10);
-                        assert.equal(query.skipCount, 22);
-                        assert.equal(query.batchSizeValue, 10000);
-                        assert.deepEqual(query.sortValue, [['name', 1]]);
-                        assert.deepEqual(query.fetchPaths, [ 'children' ]);
-                        done();
-                    }
-
-                    session.query(model.Person).findAll({}).limit(10).skip(22).batchSize(10000).sort([['name', 1]]).fetch("children", (err, results) => {
-                        if(err) return done(err);
-                    });
                 });
             });
         });
@@ -103,18 +94,15 @@ describe('QueryBuilderImpl', () => {
                 var iterator = (item: any, done: Callback) => {};
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.FindEach);
+                    assert.equal(query.iterator, iterator);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.FindEach);
-                        assert.equal(query.iterator, iterator);
-                        done();
-                    }
-
-                    session.query(model.Person).findAll({}).each(iterator, (err) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).findAll({}).each(iterator, (err) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -127,18 +115,15 @@ describe('QueryBuilderImpl', () => {
                 var iterator = (item: any, done: Callback) => {};
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.FindEachSeries);
+                    assert.equal(query.iterator, iterator);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.FindEachSeries);
-                        assert.equal(query.iterator, iterator);
-                        done();
-                    }
-
-                    session.query(model.Person).findAll({}).eachSeries(iterator, (err) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).findAll({}).eachSeries(iterator, (err) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -166,18 +151,15 @@ describe('QueryBuilderImpl', () => {
 
                 var session = factory.createSession();
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.FindOne);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.FindOne);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        done();
-                    }
-
-                    session.query(model.Person).findOne(queryCriteria, (err, result) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).findOne(queryCriteria, (err, result) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -190,18 +172,15 @@ describe('QueryBuilderImpl', () => {
                 var resultToReturn = { name: 'Bob' };
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object>) => {
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object>) => {
-                        callback(null, resultToReturn)
-                    }
-
-                    session.query(model.Person).findOne((err, result) => {
-                        if (err) return done(err);
-                        assert.equal(result, resultToReturn);
-                        done();
-                    });
+                session.query(model.Person).findOne((err, result) => {
+                    if(err) return done(err);
+                    assert.equal(result, resultToReturn);
+                    done();
                 });
             });
         });
@@ -212,17 +191,14 @@ describe('QueryBuilderImpl', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.deepEqual(query.fetchPaths, [ 'parents' ]);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.deepEqual(query.fetchPaths, ['parents']);
-                        done();
-                    }
-
-                    session.query(model.Person).findOne({name: 'Test'}).fetch("parents", (err, result) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).findOne({ name: 'Test' }).fetch("parents", (err, result) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -250,18 +226,15 @@ describe('QueryBuilderImpl', () => {
 
                 var session = factory.createSession();
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.FindOneAndRemove);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.FindOneAndRemove);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        done();
-                    }
-
-                    session.query(model.Person).findOneAndRemove(queryCriteria, (err, result) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).findOneAndRemove(queryCriteria, (err, result) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -274,24 +247,21 @@ describe('QueryBuilderImpl', () => {
                 var resultToReturn = { name: 'bob' };
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        callback(null, resultToReturn)
-                    }
+                session.query(model.Person).findOneAndRemove((err, result) => {
+                    if(err) return done(err);
+                    assert.equal(result, resultToReturn);
 
-                    session.query(model.Person).findOneAndRemove((err, result) => {
-                        if (err) return done(err);
+                    session.query(model.Person).findOneAndRemove().fetch("parents", (err, result) => {
+                        if(err) return done(err);
                         assert.equal(result, resultToReturn);
 
-                        session.query(model.Person).findOneAndRemove().fetch("parents", (err, result) => {
-                            if (err) return done(err);
-                            assert.equal(result, resultToReturn);
-
-                            done();
-                        });
+                        done();
                     });
                 });
             });
@@ -303,18 +273,15 @@ describe('QueryBuilderImpl', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.deepEqual(query.fetchPaths, [ 'parents' ]);
+                    assert.deepEqual(query.sortValue, [['name',1]]);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.deepEqual(query.fetchPaths, ['parents']);
-                        assert.deepEqual(query.sortValue, [['name', 1]]);
-                        done();
-                    }
-
-                    session.query(model.Person).findOneAndRemove({name: 'Test'}).sort([['name', 1]]).fetch("parents", (err, result) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).findOneAndRemove({ name: 'Test' }).sort([['name',1]]).fetch("parents", (err, result) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -344,20 +311,17 @@ describe('QueryBuilderImpl', () => {
                 var session = factory.createSession();
                 var document: QueryDocument = { $set: { age: 42 }};
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.FindOneAndUpdate);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    assert.deepEqual(query.updateDocument, document);
+                    assert.isUndefined(query.wantsUpdated);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.FindOneAndUpdate);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        assert.deepEqual(query.updateDocument, document);
-                        assert.isUndefined(query.wantsUpdated);
-                        done();
-                    }
-
-                    session.query(model.Person).findOneAndUpdate(queryCriteria, document, (err, result) => {
-                        if(err) return done(err);
-                    });
+                session.query(model.Person).findOneAndUpdate(queryCriteria, document, (err, result) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -368,19 +332,16 @@ describe('QueryBuilderImpl', () => {
                 if (err) return done(err);
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.deepEqual(query.fetchPaths, [ 'parents' ]);
+                    assert.deepEqual(query.sortValue, [['name',1]]);
+                    assert.isTrue(query.wantsUpdated);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.deepEqual(query.fetchPaths, ['parents']);
-                        assert.deepEqual(query.sortValue, [['name', 1]]);
-                        assert.isTrue(query.wantsUpdated);
-                        done();
-                    }
-
-                    session.query(model.Person).findOneAndUpdate({name: 'Test'}, {name: 'Bob'}).sort([['name', 1]]).fetch("parents").returnUpdated((err, result) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).findOneAndUpdate({ name: 'Test' }, { name: 'Bob' }).sort([['name',1]]).fetch("parents").returnUpdated((err, result) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -394,24 +355,21 @@ describe('QueryBuilderImpl', () => {
                 var document: QueryDocument = { $set: { age: 42 }};
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.updateDocument, document);
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<Object>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        assert.deepEqual(query.updateDocument, document);
-                        callback(null, resultToReturn)
-                    }
+                session.query(model.Person).findOneAndUpdate(document, (err, result) => {
+                    if(err) return done(err);
+                    assert.equal(result, resultToReturn);
 
-                    session.query(model.Person).findOneAndUpdate(document, (err, result) => {
-                        if (err) return done(err);
+                    session.query(model.Person).findOneAndUpdate(document).fetch("parents", (err, result) => {
+                        if(err) return done(err);
                         assert.equal(result, resultToReturn);
-
-                        session.query(model.Person).findOneAndUpdate(document).fetch("parents", (err, result) => {
-                            if (err) return done(err);
-                            assert.equal(result, resultToReturn);
-                            done();
-                        });
+                        done();
                     });
                 });
             });
@@ -441,18 +399,15 @@ describe('QueryBuilderImpl', () => {
 
                 var session = factory.createSession();
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.RemoveAll);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    done();
+                }
+
+                session.query(model.Person).removeAll(queryCriteria, (err, count) => {
                     if (err) return done(err);
-
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.RemoveAll);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        done();
-                    }
-
-                    session.query(model.Person).removeAll(queryCriteria, (err, count) => {
-                        if (err) return done(err);
-                    });
                 });
             });
         });
@@ -465,19 +420,16 @@ describe('QueryBuilderImpl', () => {
                 var resultToReturn = 42;
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        callback(null, resultToReturn)
-                    }
-
-                    session.query(model.Person).removeAll((err, count) => {
-                        if (err) return done(err);
-                        assert.equal(count, resultToReturn, "The number of items removed was not returned");
-                        done();
-                    });
+                session.query(model.Person).removeAll((err, count) => {
+                    if(err) return done(err);
+                    assert.equal(count, resultToReturn, "The number of items removed was not returned");
+                    done();
                 });
             });
         });
@@ -492,18 +444,15 @@ describe('QueryBuilderImpl', () => {
 
                 var session = factory.createSession();
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.RemoveOne);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.RemoveOne);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        done();
-                    }
-
-                    session.query(model.Person).removeOne(queryCriteria, (err, count) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).removeOne(queryCriteria, (err, count) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -516,19 +465,16 @@ describe('QueryBuilderImpl', () => {
                 var resultToReturn = 1;
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        callback(null, resultToReturn)
-                    }
-
-                    session.query(model.Person).removeOne((err, count) => {
-                        if (err) return done(err);
-                        assert.equal(count, resultToReturn, "The number of items removed was not returned");
-                        done();
-                    });
+                session.query(model.Person).removeOne((err, count) => {
+                    if(err) return done(err);
+                    assert.equal(count, resultToReturn, "The number of items removed was not returned");
+                    done();
                 });
             });
         });
@@ -544,19 +490,16 @@ describe('QueryBuilderImpl', () => {
                 var session = factory.createSession();
                 var document: QueryDocument = { $set: { age: 42 }};
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.UpdateAll);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    assert.deepEqual(query.updateDocument, document);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.UpdateAll);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        assert.deepEqual(query.updateDocument, document);
-                        done();
-                    }
-
-                    session.query(model.Person).updateAll(queryCriteria, document, (err, count) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).updateAll(queryCriteria, document, (err, count) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -570,20 +513,17 @@ describe('QueryBuilderImpl', () => {
                 var document: QueryDocument = { $set: { age: 42 }};
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.updateDocument, document);
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        assert.deepEqual(query.updateDocument, document);
-                        callback(null, resultToReturn)
-                    }
-
-                    session.query(model.Person).updateAll(document, (err, count) => {
-                        if (err) return done(err);
-                        assert.equal(count, resultToReturn, "The number of items updated was not returned");
-                        done();
-                    });
+                session.query(model.Person).updateAll(document, (err, count) => {
+                    if(err) return done(err);
+                    assert.equal(count, resultToReturn, "The number of items updated was not returned");
+                    done();
                 });
             });
         });
@@ -599,19 +539,16 @@ describe('QueryBuilderImpl', () => {
                 var session = factory.createSession();
                 var document: QueryDocument = { $set: { age: 42 }};
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.UpdateOne);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    assert.deepEqual(query.updateDocument, document);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.UpdateOne);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        assert.deepEqual(query.updateDocument, document);
-                        done();
-                    }
-
-                    session.query(model.Person).updateOne(queryCriteria, document, (err, count) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).updateOne(queryCriteria, document, (err, count) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -625,20 +562,17 @@ describe('QueryBuilderImpl', () => {
                 var document: QueryDocument = { $set: { age: 42 }};
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    assert.deepEqual(query.updateDocument, document);
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        assert.deepEqual(query.updateDocument, document);
-                        callback(null, resultToReturn)
-                    }
-
-                    session.query(model.Person).updateOne(document, (err, count) => {
-                        if (err) return done(err);
-                        assert.equal(count, resultToReturn, "The number of items updated was not returned");
-                        done();
-                    });
+                session.query(model.Person).updateOne(document, (err, count) => {
+                    if(err) return done(err);
+                    assert.equal(count, resultToReturn, "The number of items updated was not returned");
+                    done();
                 });
             });
         });
@@ -654,19 +588,16 @@ describe('QueryBuilderImpl', () => {
                 var session = factory.createSession();
                 var key = 'test';
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.Distinct);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    assert.equal(query.key, key);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.Distinct);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        assert.equal(query.key, key);
-                        done();
-                    }
-
-                    session.query(model.Person).distinct(key, queryCriteria, (err, results) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).distinct(key, queryCriteria, (err, results) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -680,20 +611,17 @@ describe('QueryBuilderImpl', () => {
                 var key = 'test';
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<any[]>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    assert.equal(query.key, key);
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<any[]>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        assert.equal(query.key, key);
-                        callback(null, resultToReturn)
-                    }
-
-                    session.query(model.Person).distinct(key, (err, count) => {
-                        if (err) return done(err);
-                        assert.equal(count, resultToReturn);
-                        done();
-                    });
+                session.query(model.Person).distinct(key, (err, count) => {
+                    if(err) return done(err);
+                    assert.equal(count, resultToReturn);
+                    done();
                 });
             });
         });
@@ -708,18 +636,15 @@ describe('QueryBuilderImpl', () => {
 
                 var session = factory.createSession();
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.kind, QueryKind.Count);
+                    assert.deepEqual(query.criteria, preparedCriteria);
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.kind, QueryKind.Count);
-                        assert.deepEqual(query.criteria, preparedCriteria);
-                        done();
-                    }
-
-                    session.query(model.Person).count(queryCriteria, (err, count) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).count(queryCriteria, (err, count) => {
+                    if(err) return done(err);
                 });
             });
         });
@@ -732,19 +657,16 @@ describe('QueryBuilderImpl', () => {
                 var resultToReturn = 122;
 
                 var session = factory.createSession();
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    callback(null, resultToReturn)
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition, callback: ResultCallback<number>) => {
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        callback(null, resultToReturn)
-                    }
-
-                    session.query(model.Person).count((err, count) => {
-                        if (err) return done(err);
-                        assert.equal(count, resultToReturn);
-                        done();
-                    });
+                session.query(model.Person).count((err, count) => {
+                    if(err) return done(err);
+                    assert.equal(count, resultToReturn);
+                    done();
                 });
             });
         });
@@ -756,19 +678,16 @@ describe('QueryBuilderImpl', () => {
 
                 var session = factory.createSession();
 
-                factory.getPersisterForConstructor(session, model.Person, (err, persister) => {
-                    if (err) return done(err);
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.equal(query.limitCount, 10);
+                    assert.equal(query.skipCount, 22);
+                    assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
+                    done();
+                }
 
-                    persister.onExecuteQuery = (query: QueryDefinition) => {
-                        assert.equal(query.limitCount, 10);
-                        assert.equal(query.skipCount, 22);
-                        assert.deepEqual(query.criteria, emptyPreparedCriteria, "Criteria should default to {} if not provided");
-                        done();
-                    }
-
-                    session.query(model.Person).count().limit(10).skip(22, (err, count) => {
-                        if (err) return done(err);
-                    });
+                session.query(model.Person).count().limit(10).skip(22, (err, count) => {
+                    if(err) return done(err);
                 });
             });
         });

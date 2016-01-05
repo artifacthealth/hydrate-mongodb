@@ -9,7 +9,6 @@ import {PropertyFlags} from "./propertyFlags";
 import {InternalSession} from "../internalSession";
 import {ResultCallback} from "../core/resultCallback";
 import {ReadContext} from "./readContext";
-import {Constructor} from "../core/constructor";
 
 export class ClassMapping extends ObjectMapping {
 
@@ -17,7 +16,6 @@ export class ClassMapping extends ObjectMapping {
     private _subclasses: ClassMapping[];
     private _discriminatorMap: Lookup<ClassMapping>;
     private _registry: MappingRegistry;
-    private _mappingByConstructor: WeakMap<Function, ClassMapping> = new WeakMap();
 
     inheritanceRoot: ClassMapping;
 
@@ -153,6 +151,23 @@ export class ClassMapping extends ObjectMapping {
         this._discriminatorMap[value] = mapping;
     }
 
+    private _ensureRegistry(): MappingRegistry {
+
+        if(!this._registry) {
+            this._registry = new MappingRegistry();
+            // add this mapping to the registry then add subclasses
+            this._registry.addMapping(this);
+            if(this._subclasses) {
+                var subclasses = this._subclasses;
+                for (var i = 0, l = subclasses.length; i < l; i++) {
+                    this._registry.addMapping(subclasses[i]);
+                }
+            }
+        }
+
+        return this._registry;
+    }
+
     read(context: ReadContext, value: any): any {
 
         var mapping = this.inheritanceRoot.getMapping(context, value);
@@ -184,25 +199,6 @@ export class ClassMapping extends ObjectMapping {
         return discriminatorValue === undefined ? this : this.inheritanceRoot._discriminatorMap[discriminatorValue]
     }
 
-    private _getMappingForObject(obj: any): ClassMapping {
-
-        var ctr = obj.constructor;
-        if(ctr) {
-            if(!this._mappingByConstructor) {
-                this._mappingByConstructor.set(this.classConstructor, this);
-                if(this._subclasses) {
-                    var subclasses = this._subclasses;
-                    for (var i = 0, l = subclasses.length; i < l; i++) {
-                        var subclass = subclasses[i];
-                        this._mappingByConstructor.set(subclass.classConstructor, subclass);
-                    }
-                }
-            }
-
-            return this._mappingByConstructor.get(<any>ctr);
-        }
-    }
-
     protected readClass(context: ReadContext, value: any): any {
 
         return this.readObject(context, Object.create(this.classConstructor.prototype), value, /*checkRemoved*/ false);
@@ -212,7 +208,7 @@ export class ClassMapping extends ObjectMapping {
 
         // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
         // does not exist, default to current mapping.
-        var mapping = this._getMappingForObject(value);
+        var mapping = this._ensureRegistry().getMappingForObject(value);
         return (mapping || this).writeClass(value, path, errors, visited, !!mapping);
     }
 
@@ -256,7 +252,7 @@ export class ClassMapping extends ObjectMapping {
 
         if (!value || typeof value !== "object") return;
 
-        return (this._getMappingForObject(value) || this)._walk(session, value, flags, entities, embedded, references);
+        return (this._ensureRegistry().getMappingForObject(value) || this)._walk(session, value, flags, entities, embedded, references);
     }
 
     private _walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
@@ -268,7 +264,7 @@ export class ClassMapping extends ObjectMapping {
             return callback(null, value);
         }
 
-        return (this._getMappingForObject(value) || this)._fetch(session, parentEntity, value, path, depth, callback);
+        return (this._ensureRegistry().getMappingForObject(value) || this)._fetch(session, parentEntity, value, path, depth, callback);
     }
 
     private _fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {

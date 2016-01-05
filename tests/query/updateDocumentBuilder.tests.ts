@@ -186,18 +186,14 @@ function assertDocument(done: Callback, originalDocument: any, expectedDocument:
     helpers.createFactory("model", (err, factory) => {
         if (err) return done(err);
 
-        factory.getMappingForConstructor(ctr || model.Person, (err, mapping) => {
-            if(err) return done(err);
+        var builder = new UpdateDocumentBuilder(factory.getMappingForConstructor(ctr || model.Person))
+        var result = builder.build(originalDocument);
+        if(builder.error) {
+            return done(builder.error);
+        }
 
-            var builder = new UpdateDocumentBuilder(mapping)
-            var result = builder.build(originalDocument);
-            if(builder.error) {
-                return done(builder.error);
-            }
-
-            assert.deepEqual(result, expectedDocument);
-            done();
-        });
+        assert.deepEqual(result, expectedDocument);
+        done();
     });
 }
 

@@ -238,13 +238,9 @@ export class EntityMapping extends ClassMapping {
             return callback(new Error("Parent entity required to resolve inverse relationship."));
         }
 
-        session.getPersister(this, (err, persister) => {
+        session.getPersister(this).findOneInverseOf(parentEntity, propertyName, (err, value) => {
             if(err) return callback(err);
-
-            persister.findOneInverseOf(parentEntity, propertyName, (err, value) => {
-                if(err) return callback(err);
-                super.fetch(session, this, value, path, depth, callback);
-            });
+            super.fetch(session, this, value, path, depth, callback);
         });
     }
 

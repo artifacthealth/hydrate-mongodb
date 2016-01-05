@@ -5,18 +5,16 @@ import {EntityMapping} from "../src/mapping/entityMapping";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {MockPersister} from "./mockPersister";
 import {Constructor} from "../src/core/constructor";
-import {ResultCallback} from "../src/core/resultCallback";
-import {MockDb} from "./driver/mockDb";
 
 export class MockSessionFactory extends SessionFactoryImpl {
 
     constructor(mappingRegistry: MappingRegistry) {
-        super(new MockDb("test"), mappingRegistry);
+        super(null, mappingRegistry);
     }
 
-    createPersister(session: InternalSession, mapping: EntityMapping, callback: ResultCallback<Persister>): void {
+    createPersister(session: InternalSession, mapping: EntityMapping): Persister {
 
-        process.nextTick(() => callback(null, new MockPersister(mapping)));
+        return new MockPersister(mapping);
     }
 
     createSession(): InternalSession {
@@ -24,22 +22,11 @@ export class MockSessionFactory extends SessionFactoryImpl {
         return <InternalSession>super.createSession();
     }
 
-    getPersisterForObject(session: InternalSession, obj: any, callback: ResultCallback<MockPersister>): void {
-
-        this.getMappingForObject(obj, (err, mapping) => {
-            if(err) return callback(err);
-
-            session.getPersister(mapping, callback);
-        });
-
+    getPersisterForObject(session: InternalSession, obj: any): MockPersister {
+        return <MockPersister>session.getPersister(this.getMappingForObject(obj));
     }
 
-    getPersisterForConstructor(session: InternalSession, ctr: Constructor<any>, callback: ResultCallback<MockPersister>): void {
-
-        this.getMappingForConstructor(ctr, (err, mapping) => {
-            if(err) return callback(err);
-
-            session.getPersister(mapping, callback);
-        });
+    getPersisterForConstructor(session: InternalSession, ctr: Constructor<any>): MockPersister {
+        return <MockPersister>session.getPersister(this.getMappingForConstructor(ctr));
     }
 }

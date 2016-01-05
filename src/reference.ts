@@ -1,36 +1,33 @@
 import {InternalSession} from "./internalSession";
 import {EntityMapping} from "./mapping/entityMapping";
 import {ResultCallback} from "./core/resultCallback";
-import {Constructor} from "./core/constructor";
 
 export class Reference {
 
     /**
-     * The referenced id.
-     */
-    private _id: any;
-
-    /**
-     * The mapping for the referenced type. May not be available until after a fetch is performed on the Reference.
-     */
-    mapping: EntityMapping;
-
-    /**
      * True if the Reference has been fetched; otherwise, false.
      */
-    constructor(mapping: EntityMapping, id: any) {
+    constructor(public mapping: EntityMapping, private _id: any) {
 
-        this.mapping = mapping;
-        this._id = id;
     }
 
     fetch(session: InternalSession, callback: ResultCallback<any>): void {
 
-        session.getPersister(this.mapping, (err, persister) => {
-            if (err) return callback(err);
+        if(this.mapping) {
+            var persister = session.getPersister(this.mapping);
+        }
 
-            persister.findOneById(this._id, callback);
-        });
+        if (!persister) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
+
+        if(this._id == null) {
+            process.nextTick(() => callback(new Error("References has missing or invalid identifier.")));
+            return;
+        }
+
+        persister.findOneById(this._id, callback);
     }
 
     getId(): any {
@@ -43,7 +40,12 @@ export class Reference {
      */
     equals(other: any): boolean {
 
-        return Reference.areEqual(this, other);
+        if (other == null) return false;
+
+        var id = Reference.isReference(other) ? (<Reference>other)._id : other._id;
+        if (id == null) return false;
+
+        return (<EntityMapping>this.mapping.inheritanceRoot).identity.areEqual(this._id, id)
     }
 
     /**
@@ -56,21 +58,34 @@ export class Reference {
         if(value1 == value2) return true;
         if(value1 == null || value2 == null) return false;
 
-        var id1 = value1._id,
-            id2 = value2._id;
+        if(Reference.isReference(value1)) {
+            var mapping1 = (<Reference>value1).mapping;
+            var id1 = (<Reference>value1)._id;
+        }
+        else {
+            // if value is not a Reference, we assume it's an Entity
+            var id1 = value1._id;
+        }
+
+        if(Reference.isReference(value2)) {
+            var mapping2 = (<Reference>value2).mapping;
+            var id2 = (<Reference>value2)._id;
+        }
+        else {
+            // if value is not a Reference, we assume it's an Entity
+            var id2 = value2._id;
+        }
+
+        // if neither value is a Reference, then return false
+        if (mapping1 == null && mapping2 == null) return false;
 
         // if we are not able to find both identifiers, then return false
         if (id1 == null || id2 == null) return false;
 
-        // identifiers are required to be globally unique so there is no need to check the mapping, etc.
-
-        // if the id has an equals function then use it
-        if(id1.equals) {
-            return id1.equals(id2);
-        }
-
-        // otherwise, convert to a string and compare
-        return id1.toString() === id2.toString();
+        // No need to check that the mappings are equivalent since the identifiers are assumed to be globally
+        // unique. The identity generator's 'areEqual' function should return false if identifier types are
+        // not compatible.
+        return (<EntityMapping>(mapping1 || mapping2).inheritanceRoot).identity.areEqual(id1, id2)
     }
 
     static isReference(obj: any): boolean {

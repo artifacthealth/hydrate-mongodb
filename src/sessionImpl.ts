@@ -24,8 +24,6 @@ import {QueryBuilderImpl} from "./query/queryBuilderImpl";
 import {FindOneQuery} from "./query/findOneQuery";
 import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
-import {MappingFlags} from "./mapping/mappingFlags";
-
 
 /**
  * The state of an object.
@@ -117,7 +115,12 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     /**
      * Cached Persisters by Mapping
      */
-    private _persisters: Table<Promise<Persister>> = [];
+    private _persisterByMapping: Table<Persister> = [];
+
+    /**
+     * Cached Query Builders by Mapping
+     */
+    private _queryByMapping: Table<QueryBuilder<any>> = [];
 
     /**
      * Hash table containing all objects by id associated with the session.
@@ -149,7 +152,6 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         super();
 
         this._queue = new TaskQueue((action, args, callback) => this._execute(action, args, callback));
-
 
         // if we get an error on the queue, raise it on the session
         this._queue.on('error', (err: Error) => {
@@ -261,29 +263,25 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      * Get an instance whose state may be fetched in the future.
      * @param ctr The constructor
      * @param id The id of the entity
-     * @param callback Called with a reference to the entity or the entity if already managed.
+     * @returns The entity instance or a reference to the entity instance.
      */
-    getReference<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<T>): void {
+    getReference<T>(ctr: Constructor<T>, id: any): T {
 
-        this.factory.getMappingForConstructor(ctr, (err, mapping) => {
-            if(err) return callback(err);
-
-            // we do not have to check that mapping is an entity mapping because getMappingForConstructor will
-            // create an error if the ctr does not resolve to an entity type.
-            var identityGenerator = (<EntityMapping>mapping.inheritanceRoot).identity;
-
-            if(typeof id === "string") {
-                id = identityGenerator.fromString(id);
-            }
-            else {
-                if (!identityGenerator.validate(id)) {
-                    callback(new Error("Missing or invalid identifier."));
-                    return;
+        // If mapping is not found, the reference is still created and an error is returned when the client tries
+        // to resolve the reference.
+        var mapping = this.factory.getMappingForConstructor(ctr);
+        if (mapping) {
+            var rootMapping = (<EntityMapping>mapping.inheritanceRoot);
+            if (rootMapping && rootMapping.identity) {
+                if (typeof id === "string") {
+                    id = rootMapping.identity.fromString(id);
                 }
+                // If identifier is missing or invalid, the reference is still created and an error is returned when 
+                // the client tries to resolve the reference
             }
+        }
 
-            callback(null, this.getReferenceInternal(mapping, id));
-        });
+        return this.getReferenceInternal(mapping, id);
     }
 
     getReferenceInternal(mapping: EntityMapping, id: any): any {
@@ -356,26 +354,27 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }
     }
 
-    getPersister(mapping: EntityMapping, callback: ResultCallback<Persister>): void  {
+    getPersister(mapping: EntityMapping): Persister {
 
-        var promise = this._persisters[mapping.id];
-        if(!promise) {
-            promise = new Promise((resolve, reject) => {
-                this.factory.createPersister(this, mapping, (err, collection) => {
-                    if (err) return reject(err);
-
-                    resolve(collection);
-                });
-            });
-            this._persisters[mapping.id] = promise;
-        }
-
-        promise.then((collection) => callback(null, collection), (err) => callback(err));
+        return this._persisterByMapping[mapping.id]
+            || (this._persisterByMapping[mapping.id] = this.factory.createPersister(this, mapping));
     }
 
     query<T>(ctr: Constructor<T>): QueryBuilder<T> {
 
-        return new QueryBuilderImpl(this, ctr);
+        var mapping = this.factory.getMappingForConstructor(ctr);
+        if(!mapping) {
+            // TODO: instead of throwing error, return a placeholder Query object that will return an error when one of it's functions are called
+            throw new Error("Object type is not mapped as an entity.");
+        }
+
+        var query = this._queryByMapping[mapping.id];
+        if(!query) {
+            query = new QueryBuilderImpl(this, this.getPersister(mapping));
+            this._queryByMapping[mapping.id] = query;
+        }
+
+        return query;
     }
 
     /**
@@ -435,26 +434,20 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     private _saveEntities(entities: any[], callback: Callback): void {
 
-        async.each(entities, (obj: any, done: (err?: Error) => void) => {
-
+        for(var i = 0, l = entities.length; i < l; i++) {
+            var obj = entities[i];
             var links = this._getObjectLinks(obj);
             if (!links) {
-                this.factory.getMappingForObject(obj, (err, mapping) => {
-                    if(err) return callback(err);
+                var persister = this._getPersisterForObject(obj);
+                if (!persister) {
+                    callback(new Error("Object type is not mapped as an entity."));
+                    return;
+                }
 
-                    this.getPersister(mapping, (err, persister) => {
-                        if(err) return done (err);
-
-                        // check again that this object hasn't been added to the links while we were getting the mapping
-                        if(!this._getObjectLinks(obj)) {
-                            // we haven't seen this object before
-                            obj["_id"] = persister.identity.generate();
-                            links = this._linkObject(obj, persister);
-                            this._scheduleOperation(links, ScheduledOperation.Insert);
-                        }
-                        done();
-                    });
-                });
+                // we haven't seen this object before
+                obj["_id"] = persister.identity.generate();
+                links = this._linkObject(obj, persister);
+                this._scheduleOperation(links, ScheduledOperation.Insert);
             }
             else {
                 switch (links.state) {
@@ -464,7 +457,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                         }
                         break;
                     case ObjectState.Detached:
-                        done(new Error("Cannot save a detached object."));
+                        callback(new Error("Cannot save a detached object."));
                         return;
                     case ObjectState.Removed:
                         if (links.scheduledOperation == ScheduledOperation.Delete) {
@@ -481,9 +474,10 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                         links.state = ObjectState.Managed;
                         break;
                 }
-                done();
             }
-        }, callback);
+        }
+
+        callback();
     }
 
     private _makeDirty(links: ObjectLinks): void {
@@ -946,16 +940,18 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
 
-        this.factory.getMappingForObject(obj, (err, mapping) => {
-            if(err) return callback(err);
+        var mapping = this.factory.getMappingForObject(obj);
+        if (!mapping) {
+            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            return;
+        }
 
-            var entities: any[] = [],
-                embedded: any[] = [];
+        var entities: any[] = [],
+            embedded: any[] = [];
 
-            this._walk(mapping, obj, flags, entities, embedded, err => {
-                if (err) return process.nextTick(() => callback(err));
-                return process.nextTick(() => callback(null, entities));
-            });
+        this._walk(mapping, obj, flags, entities, embedded, err => {
+            if (err) return process.nextTick(() => callback(err));
+            return process.nextTick(() => callback(null, entities));
         });
     }
 
@@ -971,5 +967,21 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 this._walk(reference.mapping, entity, flags, entities, embedded, done);
             });
         }, callback);
+    }
+
+    private _getPersisterForObject(obj: any): Persister {
+
+        var mapping = this.factory.getMappingForObject(obj);
+        if(mapping) {
+            return this.getPersister(mapping);
+        }
+    }
+
+    private _getPersisterForConstructor(ctr: Constructor<any>): Persister {
+
+        var mapping = this.factory.getMappingForConstructor(ctr);
+        if(mapping) {
+            return this.getPersister(mapping);
+        }
     }
 }

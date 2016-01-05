@@ -37,9 +37,28 @@ import {
     FieldAnnotation,
     EnumeratedAnnotation
 } from "./annotations";
-import {Constructor} from "../../core/constructor";
 
 export class AnnotationMappingProvider implements MappingProvider {
+
+    private _filePaths: string[] = [];
+    private _types: Type[] = [];
+
+    constructor(paths?: string | string[]) {
+
+        if(paths) {
+            if(typeof paths === "string") {
+                this.addFile(paths);
+            }
+            else {
+                paths.forEach(path => this.addFile(path));
+            }
+        }
+    }
+
+    addFile(path: string): void {
+
+        this._filePaths.push(path);
+    }
 
     // 1. Find all the classes that are annotated with "entity" or are a subclass of a class
     //    that is annotated with "entity"
@@ -50,32 +69,68 @@ export class AnnotationMappingProvider implements MappingProvider {
 
     // TODO: support UUID for _id in addition to ObjectID?  I believe it's universally unique just like ObjectID so shouldn't be a big deal to support.
 
+    // TODO: any special mapping for enumerations? allowing changing persisted value, etc.
+
     // TODO: have a plan for supporting all these data types: http://docs.mongodb.org/manual/reference/bson-types/
 
-    private _builder: MappingBuilder;
+     getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void {
 
-    constructor() {
+         async.each(this._filePaths, (path, done) => this._processPath(path, done), (err: Error) => {
+             if (err) return callback(err, null);
 
+             var builder = new MappingBuilder(config);
+             var mappings = builder.build(this._types);
+
+             if(builder.hasErrors) {
+                 callback(new Error(builder.getErrorMessage()), null);
+             }
+             else {
+                 callback(null, mappings);
+             }
+         });
     }
 
-    configure(config: Configuration): void {
+    private _processPath(filePath: string, callback: (err?: Error) => void): void {
 
-        if(this._builder) {
-            throw new Error("Provider is already configured.");
-        }
+        var relativePath = path.relative(process.cwd(), filePath);
+        glob(relativePath, (err: Error, matches: string[]) => {
+            if (err) return callback(err);
 
-        this._builder = new MappingBuilder(config);
+            // If there were not any matches then filePath was probably a path to a single file
+            // without an extension. Pass in the original path and let _processExports figure
+            // it out.
+            if (!matches || matches.length == 0) {
+                matches = [relativePath];
+            }
+
+            for(var i = 0; i < matches.length; i++) {
+                var match = matches[i];
+                if(hasExtension(match, ".js")) {
+                    this._processExports(require(absolutePath(match)));
+                }
+            }
+
+            callback();
+        });
     }
 
-    getMapping(ctr: Constructor<any>, callback: ResultCallback<Mapping.ClassMapping>): void {
+    private _processExports(obj: any): boolean {
 
-        var mapping = this._builder.build(ctr);
-
-        if(this._builder.hasErrors) {
-            callback(new Error(this._builder.getErrorMessage()), null);
+        // check to see if the export is an Entity or Embeddable type
+        if(typeof obj === "function") {
+            if(ReflectUtil.hasClassAnnotation(obj, EntityAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, EmbeddableAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, ConverterAnnotation)) {
+                this._types.push(obj);
+            }
         }
-        else {
-            callback(null, mapping);
+        else if (typeof obj !== "object") {
+            return;
+        }
+
+        // recursive search exports for types
+        for (var p in obj) {
+            if (obj.hasOwnProperty(p)) {
+                this._processExports(obj[p]);
+            }
         }
     }
 }
@@ -113,6 +168,10 @@ class MappingBuilder {
 
     constructor(public config: Configuration) {
 
+    }
+
+    build(types: Type[]): Mapping.ClassMapping[] {
+
         // create global mappings
         this._addGlobalMapping("String", Mapping.createStringMapping());
         this._addGlobalMapping("Number", Mapping.createNumberMapping());
@@ -120,9 +179,6 @@ class MappingBuilder {
         this._addGlobalMapping("Date", Mapping.createDateMapping());
         this._addGlobalMapping("RegExp", Mapping.createRegExpMapping());
         this._addGlobalMapping("Buffer", Mapping.createBufferMapping());
-    }
-
-    build(type: Type): Mapping.ClassMapping[] {
 
         // find all entity types
         for(var i = 0, l = types.length; i < l; i++) {
@@ -131,6 +187,8 @@ class MappingBuilder {
 
         this._ensureOneRootPerHierarchy();
 
+        // TODO: identity supertypes as embeddable or entity. error on conflicts.
+        // TODO: perhaps named types should be required to have @entity or @embeddable. how to handle multiple inheritance?
         // find all embedded types
         var objectTypes = this._objectTypes;
         for(var i = 0, l = objectTypes.length; i < l; i++) {

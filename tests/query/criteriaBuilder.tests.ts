@@ -181,16 +181,12 @@ function assertCriteria(done: Callback, originalCriteria: QueryDocument, expecte
     helpers.createFactory("model", (err, factory) => {
         if (err) return done(err);
 
-        factory.getMappingForConstructor(ctr || model.Person, (err, mapping) => {
-            if(err) return done(err);
-
-            var builder = new CriteriaBuilder(mapping);
-            var result = builder.build(originalCriteria);
-            if(builder.error) {
-                return done(builder.error);
-            }
-            assert.deepEqual(result, expectedCriteria);
-            done();
-        });
+        var builder = new CriteriaBuilder(factory.getMappingForConstructor(ctr || model.Person))
+        var result = builder.build(originalCriteria);
+        if(builder.error) {
+            return done(builder.error);
+        }
+        assert.deepEqual(result, expectedCriteria);
+        done();
     });
 }

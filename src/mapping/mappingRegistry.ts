@@ -2,17 +2,15 @@ import {ClassMapping} from "./classMapping";
 import {EntityMapping} from "./entityMapping";
 import {Constructor} from "../core/constructor";
 import {MappingFlags} from "./mappingFlags";
-import {MappingProvider} from "./providers/mappingProvider";
-import {ResultCallback} from "../core/resultCallback";
 
 export class MappingRegistry {
 
-    private _mappings: WeakMap<Function, Promise<ClassMapping>> = new WeakMap();
-    private _providers: MappingProvider[];
+    private _mappingByConstructor: WeakMap<Function, ClassMapping> = new WeakMap();
+    private _mappings: ClassMapping[] = [];
 
-    constructor(providers?: MappingProvider[]) {
+    addMappings(mappings: ClassMapping[]): void {
 
-        this._providers = providers;
+        mappings.forEach(x => this.addMapping(x));
     }
 
     addMapping(mapping: ClassMapping): void {
@@ -21,48 +19,33 @@ export class MappingRegistry {
             throw new Error("Class mapping is missing classConstructor.");
         }
 
-        if(this._mappings.has(mapping.classConstructor)) {
+        if(this._mappingByConstructor.has(mapping.classConstructor)) {
             throw new Error("Mapping '" + mapping.name + "' has already been registered.");
         }
 
-        this._mappings.set(mapping.classConstructor, new Promise((resolve) => resolve(mapping)));
+        this._mappingByConstructor.set(mapping.classConstructor, mapping);
+        this._mappings.push(mapping);
     }
 
-    getMappingForObject(obj: any, callback: ResultCallback<ClassMapping>): void {
+    getEntityMappings(): EntityMapping[] {
 
-        this.getMappingForConstructor(obj.constructor, callback);
+        return <EntityMapping[]>this._mappings.filter(mapping => (mapping.flags & MappingFlags.Entity) !== 0);
     }
 
-    getMappingForConstructor(ctr: Constructor<any>, callback: ResultCallback<ClassMapping>): void {
+    getMappings(): ClassMapping[] {
 
-        var promise = this._mappings.get(<any>ctr);
-        if(!promise) {
-            var resolved = false;
-            promise = new Promise((resolve, reject) => {
-                var self = this;
+        return this._mappings;
+    }
 
-                next(0);
+    getMappingForObject(obj: any): ClassMapping {
 
-                function next(index: number) {
-                    if(index >= self._providers.length) {
-                        resolve(null);
-                    }
+        return this.getMappingForConstructor(obj.constructor);
+    }
 
-                    self._providers[index].getMapping(ctr, (err, mapping) => {
-                        if(err) return reject(err);
+    getMappingForConstructor(ctr: Constructor<any>): ClassMapping {
 
-                        if(mapping) {
-                            resolve(mapping);
-                        }
-                        else {
-                            next(index++);
-                        }
-                    });
-                }
-            });
-            this._mappings.set(<any>ctr, promise);
+        if(ctr) {
+            return this._mappingByConstructor.get(<any>ctr);
         }
-
-        promise.then((mapping) => callback(null, mapping), (err) => callback(err));
     }
 }

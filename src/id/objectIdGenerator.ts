@@ -33,7 +33,6 @@ export class ObjectIdGenerator implements IdentityGenerator {
         return ObjectID.createFromHexString(text);
     }
 
-    // TODO: drop areEqual?
     areEqual(first: any, second: any): boolean {
         return first.equals(second);
     }

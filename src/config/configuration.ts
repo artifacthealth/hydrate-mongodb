@@ -83,11 +83,6 @@ export class Configuration {
      */
     addMapping(mapping: MappingProvider): void {
 
-        if(this._mappings.indexOf(mapping) != -1) {
-            return;
-        }
-
-        mapping.configure(this);
         this._mappings.push(mapping);
     }
 
@@ -98,11 +93,94 @@ export class Configuration {
      */
     createSessionFactory(connection: mongodb.Db, callback: ResultCallback<SessionFactory>): void {
 
+        var registry = new MappingRegistry();
+
         if(!this._mappings || this._mappings.length == 0) {
             return callback(new Error("No mappings were added to the configuration."));
         }
 
-        // TODO: Creation of session factory is no longer async. Should we make the function sync or leave it as async incase other things make it async in the future?
-        callback(null, new SessionFactoryImpl(connection, new MappingRegistry(this._mappings)));
+        // Get the mappings from the mapping providers
+        async.each(this._mappings, (provider, done) => {
+
+            provider.getMapping(this, (err, r) => {
+                if(err) return done(err, null);
+
+                // Merge all registries. Duplicates will cause an error.
+                registry.addMappings(<ClassMapping[]>r);
+                done(null, null);
+            });
+        }, (err) => {
+            if(err) return callback(err);
+
+            this._buildCollections(connection, registry, (err, collections) => {
+                if(err) return callback(err);
+
+                callback(null, new SessionFactoryImpl(collections, registry));
+            });
+        });
+    }
+
+    private _buildCollections(connection: mongodb.Db, registry: MappingRegistry, callback: ResultCallback<Table<mongodb.Collection>>): void {
+
+        // Get all the collections and make sure they exit. We can also use this as a chance to build the
+        // collection if it does not exist.
+        var collections: Table<mongodb.Collection> = [];
+        var names: Lookup<boolean> = {};
+
+        async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
+
+            var localConnection = connection;
+
+            if(!(mapping.flags & MappingFlags.InheritanceRoot)) return done();
+
+            // make sure we have a collection name
+            if (!mapping.collectionName) {
+                return done(new Error("Missing collection name on mapping for type '" + mapping.name + "'."));
+            }
+
+            // make sure db/collection is not mapped to some other type.
+            var key = [(mapping.databaseName || localConnection.databaseName), "/", mapping.collectionName].join("");
+            if (Lookup.hasProperty(names, key)) {
+                return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
+            }
+            names[key] = true;
+
+            // change current database if a databaseName was specified in the mapping
+            if(mapping.databaseName && mapping.databaseName !== localConnection.databaseName) {
+                localConnection = localConnection.db(mapping.databaseName);
+            }
+
+            localConnection.listCollections({ name: mapping.collectionName }).toArray((err: Error, names: string[]): void => {
+                if(err) return done(err);
+
+                if(names.length == 0) {
+                    // collection does not exist, create it
+                    localConnection.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
+                        if(err) return done(err);
+                        collections[mapping.id] = collection;
+                        // TODO: create indexes for newly created collection
+                        done();
+                    });
+                }
+                else {
+                    // collection exists, get it
+                    localConnection.collection(mapping.collectionName, { strict: true }, (err: Error, collection: mongodb.Collection) => {
+                        if(err) return done(err);
+                        collections[mapping.id] = collection;
+                        done();
+                    });
+                }
+
+            });
+
+            function done(err?: Error): void {
+                process.nextTick(() => {
+                    callback(err);
+                });
+            }
+        }, (err) => {
+            if(err) return callback(err);
+            callback(null, collections);
+        });
     }
 }
