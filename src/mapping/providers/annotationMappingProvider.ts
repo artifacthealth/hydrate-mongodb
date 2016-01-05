@@ -1,5 +1,6 @@
 /// <reference path="../../../typings/async.d.ts" />
 /// <reference path="../../../typings/glob.d.ts" />
+/// <reference path="../../../typings/node.d.ts" />
 
 import * as async from "async";
 import * as path from "path";
@@ -40,24 +41,23 @@ import {
 
 export class AnnotationMappingProvider implements MappingProvider {
 
-    private _filePaths: string[] = [];
+    private _modules: Object[] = [];
     private _types: Type[] = [];
 
-    constructor(paths?: string | string[]) {
+    addModule(module: Object): void {
 
-        if(paths) {
-            if(typeof paths === "string") {
-                this.addFile(paths);
-            }
-            else {
-                paths.forEach(path => this.addFile(path));
-            }
+        if(module) {
+            this._modules.push(module);
         }
     }
 
-    addFile(path: string): void {
+    addModules(modules: Object[]): void {
 
-        this._filePaths.push(path);
+        if(modules) {
+            for(let module of modules) {
+                this.addModule(module);
+            }
+        }
     }
 
     // 1. Find all the classes that are annotated with "entity" or are a subclass of a class
@@ -75,43 +75,20 @@ export class AnnotationMappingProvider implements MappingProvider {
 
      getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void {
 
-         async.each(this._filePaths, (path, done) => this._processPath(path, done), (err: Error) => {
-             if (err) return callback(err, null);
+         for(let module of this._modules) {
 
-             var builder = new MappingBuilder(config);
-             var mappings = builder.build(this._types);
+             this._processExports(module);
+         }
 
-             if(builder.hasErrors) {
-                 callback(new Error(builder.getErrorMessage()), null);
-             }
-             else {
-                 callback(null, mappings);
-             }
-         });
-    }
+         var builder = new MappingBuilder(config);
+         var mappings = builder.build(this._types);
 
-    private _processPath(filePath: string, callback: (err?: Error) => void): void {
-
-        var relativePath = path.relative(process.cwd(), filePath);
-        glob(relativePath, (err: Error, matches: string[]) => {
-            if (err) return callback(err);
-
-            // If there were not any matches then filePath was probably a path to a single file
-            // without an extension. Pass in the original path and let _processExports figure
-            // it out.
-            if (!matches || matches.length == 0) {
-                matches = [relativePath];
-            }
-
-            for(var i = 0; i < matches.length; i++) {
-                var match = matches[i];
-                if(hasExtension(match, ".js")) {
-                    this._processExports(require(absolutePath(match)));
-                }
-            }
-
-            callback();
-        });
+         if(builder.hasErrors) {
+             callback(new Error(builder.getErrorMessage()), null);
+         }
+         else {
+             callback(null, mappings);
+         }
     }
 
     private _processExports(obj: any): boolean {
@@ -127,7 +104,7 @@ export class AnnotationMappingProvider implements MappingProvider {
         }
 
         // recursive search exports for types
-        for (var p in obj) {
+        for (let p in obj) {
             if (obj.hasOwnProperty(p)) {
                 this._processExports(obj[p]);
             }

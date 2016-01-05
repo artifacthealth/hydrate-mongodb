@@ -30,7 +30,7 @@ describe('Temp', () => {
         mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
 
             var mapping = new AnnotationMappingProvider();
-            mapping.addFile("build/tests/fixtures/model.js");
+            mapping.addModule(model);
 
             var config = new Configuration();
             config.addMapping(mapping);
@@ -168,7 +168,7 @@ describe('Temp', () => {
         mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
 
             var mapping = new AnnotationMappingProvider();
-            mapping.addFile("build/tests/fixtures/model.js")
+            mapping.addModule(model);
 
             var config = new Configuration();
             config.addMapping(mapping);
@@ -216,7 +216,7 @@ describe('Temp', () => {
     it.skip('performance test', (done) => {
 
         var mappingProvider = new AnnotationMappingProvider();
-        mappingProvider.addFile("build/tests/fixtures/model.js");
+        mappingProvider.addModule(model);
         mappingProvider.getMapping(new Configuration(), (err, mappings) => {
             if (err) return done(err);
 

@@ -421,6 +421,9 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     private _saveEntities(entities: any[], callback: Callback): void {
 
+        // Note that if you decide to make this async so you can make identity.genereate async, then you need to make
+        // sure to check for the object links a second time before create a new links object incase save is called twice
+
         for(var i = 0, l = entities.length; i < l; i++) {
             var obj = entities[i];
             var links = this._getObjectLinks(obj);

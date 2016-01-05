@@ -1,4 +1,7 @@
 import * as model from "./fixtures/model";
+import * as path from "path";
+import * as glob from "glob";
+import * as async from "async";
 import {Lookup} from "../src/core/lookup";
 import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
@@ -9,6 +12,8 @@ import {MockCollection} from "./driver/mockCollection";
 import {MockSessionFactory} from "./mockSessionFactory";
 import {Mapping} from "../src/mapping/mapping";
 import {ClassMapping} from "../src/mapping/classMapping";
+import {absolutePath, hasExtension} from "../src/core/fileUtil";
+import {ResultCallback} from "../src/core/resultCallback";
 
 var registryCache: Lookup<MappingRegistry> = {};
 
@@ -29,21 +34,24 @@ export function createFactory(files: any, callback: (err: Error, result?: MockSe
         return callback(null, new MockSessionFactory(registry));
     }
 
+    var config = new Configuration();
     var provider = new AnnotationMappingProvider();
 
-    files.forEach((file: string) => provider.addFile("build/tests/fixtures/" + file + ".js"));
-
-    var config = new Configuration();
-
-    provider.getMapping(config, (err, mappings) => {
+    requireFiles(files.map((file: string) => "build/tests/fixtures/" + file + ".js"), (err, modules) => {
         if(err) return callback(err);
 
-        var registry = new MappingRegistry();
-        registry.addMappings(<ClassMapping[]>mappings);
+        provider.addModules(modules);
 
-        registryCache[key] = registry; // cache result
+        provider.getMapping(config, (err, mappings) => {
+            if(err) return callback(err);
 
-        callback(null, new MockSessionFactory(registry));
+            var registry = new MappingRegistry();
+            registry.addMappings(<ClassMapping[]>mappings);
+
+            registryCache[key] = registry; // cache result
+
+            callback(null, new MockSessionFactory(registry));
+        });
     });
 }
 
@@ -77,5 +85,37 @@ export function createPersister(collection: MockCollection, ctrOrCallback: any, 
         if (err) return callback(err);
         var session = factory.createSession();
         callback(null, new PersisterImpl(session, factory.getMappingForConstructor(ctr), collection));
+    });
+}
+
+
+export function requireFiles(filePaths: string[], callback: ResultCallback<Object[]>): void {
+
+    var modules: Object[] = [];
+
+    async.each(filePaths, (filePath, done) => {
+        var relativePath = path.relative(process.cwd(), filePath);
+        glob(relativePath, (err: Error, matches: string[]) => {
+            if (err) return callback(err);
+
+            // If there were not any matches then filePath was probably a path to a single file
+            // without an extension. Pass in the original path and let _processExports figure
+            // it out.
+            if (!matches || matches.length == 0) {
+                matches = [relativePath];
+            }
+
+            for (var i = 0; i < matches.length; i++) {
+                var match = matches[i];
+                if (hasExtension(match, ".js")) {
+                    modules.push(require(absolutePath(match)));
+                }
+            }
+
+            done();
+        });
+    }, (err) => {
+        if(err) return callback(err);
+        callback(null, modules);
     });
 }

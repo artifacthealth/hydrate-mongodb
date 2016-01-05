@@ -14,6 +14,7 @@ import {PropertyConverter} from "../../../src/mapping/propertyConverter";
 import * as ConverterFixture from "../../fixtures/annotations/converter";
 import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
+import {requireFiles} from "../../helpers";
 
 describe('AnnotationMappingProvider', () => {
 
@@ -374,14 +375,19 @@ function processFixture(file: string, done: (err?: Error) => void, callback?: (r
 function processFixtureWithConfiguration(file: string, config: Configuration, done: (err?: Error) => void, callback?: (results: EntityMapping[]) => void): void {
 
     var provider = new AnnotationMappingProvider();
-    provider.addFile("build/tests/fixtures/annotations/" + file + ".js");
-    provider.getMapping(config, (err, mappings) => {
+    requireFiles(["build/tests/fixtures/annotations/" + file + ".js"], (err, modules) => {
         if(err) return done(err);
 
-        if(callback) {
-            callback(<EntityMapping[]>mappings.filter((x) => (x.flags & MappingFlags.Entity) !== 0));
-        }
-        done();
+        provider.addModules(modules);
+
+        provider.getMapping(config, (err, mappings) => {
+            if(err) return done(err);
+
+            if(callback) {
+                callback(<EntityMapping[]>mappings.filter((x) => (x.flags & MappingFlags.Entity) !== 0));
+            }
+            done();
+        });
     });
 }
 
