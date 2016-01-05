@@ -42,7 +42,6 @@ import {
 export class AnnotationMappingProvider implements MappingProvider {
 
     private _modules: Object[] = [];
-    private _types: Type[] = [];
 
     addModule(module: Object): void {
 
@@ -75,13 +74,14 @@ export class AnnotationMappingProvider implements MappingProvider {
 
      getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void {
 
-         for(let module of this._modules) {
+         var types: Set<Type> = new Set();
 
-             this._processExports(module);
+         for(let module of this._modules) {
+             this._processExports(types, module);
          }
 
          var builder = new MappingBuilder(config);
-         var mappings = builder.build(this._types);
+         var mappings = builder.build(types);
 
          if(builder.hasErrors) {
              callback(new Error(builder.getErrorMessage()), null);
@@ -91,12 +91,12 @@ export class AnnotationMappingProvider implements MappingProvider {
          }
     }
 
-    private _processExports(obj: any): boolean {
+    private _processExports(types: Set<Type>, obj: any): boolean {
 
         // check to see if the export is an Entity or Embeddable type
         if(typeof obj === "function") {
             if(ReflectUtil.hasClassAnnotation(obj, EntityAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, EmbeddableAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, ConverterAnnotation)) {
-                this._types.push(obj);
+                types.add(obj);
             }
         }
         else if (typeof obj !== "object") {
@@ -106,7 +106,7 @@ export class AnnotationMappingProvider implements MappingProvider {
         // recursive search exports for types
         for (let p in obj) {
             if (obj.hasOwnProperty(p)) {
-                this._processExports(obj[p]);
+                this._processExports(types, obj[p]);
             }
         }
     }
@@ -147,7 +147,7 @@ class MappingBuilder {
 
     }
 
-    build(types: Type[]): Mapping.ClassMapping[] {
+    build(types: Set<Type>): Mapping.ClassMapping[] {
 
         // create global mappings
         this._addGlobalMapping("String", Mapping.createStringMapping());
@@ -158,31 +158,21 @@ class MappingBuilder {
         this._addGlobalMapping("Buffer", Mapping.createBufferMapping());
 
         // find all entity types
-        for(var i = 0, l = types.length; i < l; i++) {
-            this._findClasses(types[i]);
-        }
+        types.forEach(type => this._findTypes(type));
 
         this._ensureOneRootPerHierarchy();
 
-        // TODO: identity supertypes as embeddable or entity. error on conflicts.
-        // TODO: perhaps named types should be required to have @entity or @embeddable. how to handle multiple inheritance?
-        // find all embedded types
-        var objectTypes = this._objectTypes;
-        for(var i = 0, l = objectTypes.length; i < l; i++) {
-            this._scanPropertiesForEmbeddedTypes(objectTypes[i]);
-        }
-
         // Create mappings. We need to create the mappings before we populate so we can create property mappings.
-        for(var i = 0, l = objectTypes.length; i < l; i++) {
-            var links = this._getTypeLinks(objectTypes[i]);
+        for(let type of this._objectTypes) {
+            var links = this._getTypeLinks(type);
             if(!links.mapping) {
                 this._createMapping(links);
             }
         }
 
         // Populate mappings.
-        for(var i = 0, l = objectTypes.length; i < l; i++) {
-            this._populateMapping(this._getTypeLinks(objectTypes[i]));
+        for(let type of this._objectTypes) {
+            this._populateMapping(this._getTypeLinks(type));
         }
 
         return this._mappings;
@@ -238,53 +228,49 @@ class MappingBuilder {
         return "Unable to build type mappings from declaration files:\n" + this._errors.join("\n");
     }
 
-    private _findClasses(obj: Type | Object): void {
+    private _findTypes(type: Type): void {
 
-        if(typeof obj === "function") {
-            if(ReflectUtil.hasClassAnnotation(<Type>obj, EntityAnnotation, true)) {
-                this._addObjectType(<Type>obj, ReflectUtil.hasClassAnnotation(<Type>obj, EntityAnnotation) ? MappingKind.RootEntity : MappingKind.Entity);
-            }
-            else if(ReflectUtil.hasClassAnnotation(<Type>obj, EmbeddableAnnotation, true)) {
-                this._addObjectType(<Type>obj, ReflectUtil.hasClassAnnotation(<Type>obj, EmbeddableAnnotation) ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
-            }
-            else if(ReflectUtil.hasClassAnnotation(<Type>obj, ConverterAnnotation)) {
-                this._addObjectType(<Type>obj, MappingKind.Converted);
-            }
-        } else if(typeof obj !== "object") {
+        if(this._isArray(type) || this._getTypeLinks(type)) {
             return;
         }
 
-        // recursively search exports for classes
-        for(var p in obj) {
-            if(obj.hasOwnProperty(p)) {
-                this._findClasses((<any>obj)[p]);
-            }
+        if(ReflectUtil.hasClassAnnotation(type, ConverterAnnotation)) {
+            this._addObjectType(type, MappingKind.Converted);
+            return;
         }
+
+        if(ReflectUtil.hasClassAnnotation(type, EntityAnnotation, true)) {
+            this._addObjectType(type, ReflectUtil.hasClassAnnotation(type, EntityAnnotation) ? MappingKind.RootEntity : MappingKind.Entity);
+        }
+        else if(ReflectUtil.hasClassAnnotation(type, EmbeddableAnnotation, true)) {
+            this._addObjectType(type, ReflectUtil.hasClassAnnotation(type, EmbeddableAnnotation) ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
+        }
+        else {
+            return;
+        }
+
+        this._scanPropertiesForTypes(type);
     }
 
-    private _scanPropertiesForEmbeddedTypes(type: Type): void {
+    private _scanPropertiesForTypes(classType: Type): void {
 
-        var propertyNames = ReflectUtil.getPropertyNames(type);
+        var propertyNames = ReflectUtil.getPropertyNames(classType);
         for(var i = 0; i < propertyNames.length; i++) {
             var propertyName = propertyNames[i];
-            var propertyType = this._getPropertyType(type, propertyName);
+            if(ReflectUtil.hasPropertyAnnotation(classType, propertyName, ConverterAnnotation)) continue;
 
-            if(propertyType && !ReflectUtil.hasPropertyAnnotation(<Type>type, propertyName, ConverterAnnotation)) {
+            var type = this._getPropertyType(classType, propertyName, false);
+            if(type) {
+                if(this._isArray(type)) {
+                    type = this._getCollectionElementType(type, propertyName);
+                }
 
-                if(this._isArray(propertyType)) {
-                    var elementType = this._getCollectionElementType(<Type>type, propertyName);
-                    if(elementType) {
-                        this._findEmbeddedTypes(elementType);
-                    }
-                }
-                else {
-                    this._findEmbeddedTypes(propertyType);
-                }
+                this._findTypes(type);
             }
         }
     }
 
-    private _getPropertyType(type: Type, propertyName: string): Type {
+    private _getPropertyType(type: Type, propertyName: string, resolveTypeNames = true): Type {
 
         // Check to see if type is specified by an annotation
         var target: Type | string;
@@ -301,41 +287,15 @@ class MappingBuilder {
         }
 
         if(target) {
+            if(typeof target === "string" && !resolveTypeNames) {
+                return null;
+            }
+
             return this._resolveType(target);
         }
 
         // get property type from the compiler generated metadata.
         return <Type>ReflectUtil.getType(type.prototype, propertyName);
-    }
-
-    private _findEmbeddedTypes(type: Type): void {
-
-        if(!this._isArray(type) && !this._getTypeLinks(type)) {
-            this._addError("Invalid type '"+ type.name +"'. All referenced classes must belong to an inheritance hierarchy annotated with @Entity or @Embeddable, or annotated with @Converter.");
-            return;
-        }
-
-        if(this._getTypeLinks(type)) {
-            return;
-        }
-
-        // TODO: handle scanning indexed types
-        // TOOD: Handle Tuple?
-        /*
-        if(type.isTuple()) {
-            var elementTypes = type.getElementTypes();
-            for(var i = 0, l = elementTypes.length; i < l; i++) {
-                this._findEmbeddedTypes(elementTypes[i]);
-            }
-            return;
-        }
-        */
-
-        // TODO: Handle interface types?
-        /*
-        this._addObjectType(type, MappingKind.Embeddable);
-        this._scanPropertiesForEmbeddedTypes(type);
-        */
     }
 
     private _addObjectType(type: Type, kind: MappingKind): void {
