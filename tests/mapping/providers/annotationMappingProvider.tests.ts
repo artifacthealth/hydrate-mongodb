@@ -214,6 +214,24 @@ describe('AnnotationMappingProvider', () => {
                     assert.equal((<any>findMapping(results, "B").getProperty("a").mapping).classConstructor, CircularReferenceFixture.A);
                 });
             });
+
+
+            it("throws error if target cannot be found", (done) => {
+
+                processFixture("referenceManyCantGetType", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Unable to determine type of target");
+                    done();
+                });
+            });
+/*
+            it.only('test', (done) => {
+
+                processFixture("set", done, (results) => {
+
+                });
+            });
+            */
         });
 
         describe('@embedMany', () => {
@@ -226,6 +244,16 @@ describe('AnnotationMappingProvider', () => {
                     done();
                 });
             });
+
+            it("throws error if target cannot be found", (done) => {
+
+                processFixture("embedManyCantGetType", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Unable to determine type of target");
+                    done();
+                });
+            });
+
         });
 
         describe("@cascade", () => {

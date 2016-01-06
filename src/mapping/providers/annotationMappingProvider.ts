@@ -230,7 +230,7 @@ class MappingBuilder {
 
     private _findTypes(type: Type): void {
 
-        if(!type || this._isArray(type) || this._getTypeLinks(type)) {
+        if(!type || this._isCollection(type) || this._getTypeLinks(type)) {
             return;
         }
 
@@ -636,16 +636,19 @@ class MappingBuilder {
 
         var propertyType = this._getPropertyType(parentType, propertyName);
         if(!propertyType) {
-            throw new Error("Unable to determine type of property. This may be because of a circular reference. Try adding @EmbedOne or @ReferenceOne annotation with the name of the class as the target.");
+            throw new Error("Unable to determine type of property. This may be because of a circular reference or the type is used before it is defined. Try adding @EmbedOne or @ReferenceOne annotation with the name of the class as the target.");
         }
 
         if(ReflectUtil.hasPropertyAnnotation(parentType, propertyName, EnumeratedAnnotation)) {
             return this._createEnumMapping(propertyType, ReflectUtil.getPropertyAnnotations(parentType, propertyName, EnumeratedAnnotation)[0]);
         }
 
-        if(this._isArray(propertyType)) {
+        if(this._isCollection(propertyType)) {
             var referencedAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, ReferenceManyAnnotation)[0];
             if(referencedAnnotation) {
+                if(!referencedAnnotation.target) {
+                    throw new Error("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class .");
+                }
                 var mapping = this._createTypeMapping(referencedAnnotation.target);
                 if(!(mapping.flags & MappingFlags.Entity)) {
                     throw new Error("Target of @ReferenceMany annotation must be an Entity.");
@@ -655,6 +658,9 @@ class MappingBuilder {
 
             var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, EmbedManyAnnotation)[0];
             if(embeddedAnnotation) {
+                if(!embeddedAnnotation.target) {
+                    throw new Error("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class.");
+                }
                 var mapping = this._createTypeMapping(embeddedAnnotation.target);
                 if(!(mapping.flags & (MappingFlags.Embeddable | MappingFlags.Boolean | MappingFlags.String | MappingFlags.Number | MappingFlags.Enum | MappingFlags.RegExp | MappingFlags.Date | MappingFlags.Buffer))) {
                     throw new Error("Target of @EmbedMany annotation must be a built-in type or a class annotated with @Embeddable.");
@@ -665,17 +671,10 @@ class MappingBuilder {
             throw new Error("Properties with array types must be annotated with @ReferenceMany or @EmbedMany.");
         }
 
-        // TODO: Handle Tuple mapping
-        /*
-        if(type.isTuple()) {
-            return Mapping.createTupleMapping(type.getElementTypes().map(type => this._createPropertyMapping(type)));
-        }
-        */
-
         return this._createTypeMapping(propertyType);
     }
 
-    private _getPropertyType(type: Type, propertyName: string, resolveTypeNames = true): Type {
+    private _getPropertyType(type: Type, propertyName: string): Type {
 
         // Check to see if type is specified by an annotation
         var target: Type | string;
@@ -692,10 +691,6 @@ class MappingBuilder {
         }
 
         if(target) {
-            if(typeof target === "string" && !resolveTypeNames) {
-                return null;
-            }
-
             return this._resolveType(target);
         }
 
@@ -703,9 +698,10 @@ class MappingBuilder {
         return <Type>ReflectUtil.getType(type.prototype, propertyName);
     }
 
-    private _isArray(type: Type): boolean {
+    private _isCollection(type: Type): boolean {
 
-        return type && type.name === "Array";
+        return type != null && type.name == "Array";
+        //return type != null && (type.name == "Array" || type.name == "Set" || type.name == "Map");
     }
 
     private _createTypeMapping(target: Type | string): Mapping {
