@@ -72,6 +72,12 @@ export namespace Mapping {
 
         addProperty(property: Property): void;
         getProperty(name: string): Property;
+        /**
+         * Validates a property before adding it to the mapping. Returns any validation error messages or undefined if none.
+         * @param property The property to validate.
+         * @returns The error message.
+         */
+        validateProperty(property: Property): string;
     }
 
     export interface ClassMapping extends ObjectMapping {

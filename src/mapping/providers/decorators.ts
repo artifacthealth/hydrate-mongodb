@@ -16,7 +16,6 @@ import {
     ChangeTrackingAnnotation,
     DiscriminatorFieldAnnotation,
     DiscriminatorValueAnnotation,
-    TransientAnnotation,
     ReferenceManyAnnotation,
     ReferenceOneAnnotation,
     EmbedManyAnnotation,
@@ -76,10 +75,6 @@ export interface DiscriminatorValueDecoratorFactory {
     (value: string): ClassDecorator;
 }
 
-export interface TransientDecoratorFactory {
-    (): PropertyDecorator;
-}
-
 export interface ReferenceManyDecoratorFactory {
     (type: Constructor<any> | string): PropertyDecorator;
     (args: { target: Constructor<any> | string, inverseOf?: string, cascade?: CascadeFlags }): PropertyDecorator;
@@ -112,7 +107,6 @@ export var Versioned = <VersionedDecoratorFactory>makeDecorator(VersionedAnnotat
 export var ChangeTracking = <ChangeTrackingDecoratorFactory>makeDecorator(ChangeTrackingAnnotation);
 export var DiscriminatorField = <DiscriminatorFieldDecoratorFactory>makeDecorator(DiscriminatorFieldAnnotation);
 export var DiscriminatorValue = <DiscriminatorValueDecoratorFactory>makeDecorator(DiscriminatorValueAnnotation);
-export var Transient = <TransientDecoratorFactory>makeDecorator(TransientAnnotation);
 export var Field = <FieldDecoratorFactory>makeDecorator(FieldAnnotation);
 export var Enumerated = <EnumeratedDecoratorFactory>makeDecorator(EnumeratedAnnotation);
 export var ReferenceMany = <ReferenceManyDecoratorFactory>makeDecorator(ReferenceManyAnnotation);

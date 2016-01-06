@@ -13,7 +13,7 @@ import {InternalMapping} from "./internalMapping";
 
 var nextMappingId = 1;
 
-export class MappingBase implements InternalMapping {
+export abstract class MappingBase implements InternalMapping {
 
     id: number;
 
@@ -23,13 +23,9 @@ export class MappingBase implements InternalMapping {
         this.id = nextMappingId++;
     }
 
-    read(context: ReadContext, value: any): any {
-        throw new Error("Not implemented");
-    }
+    abstract read(context: ReadContext, value: any): any;
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
-        throw new Error("Not implemented");
-    }
+    abstract write(value: any, path: string, errors: MappingError[], visited: any[]): any;
 
     watch(value: any, observer: Observer, visited: any[]): void {
 

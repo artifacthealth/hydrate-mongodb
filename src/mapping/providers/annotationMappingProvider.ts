@@ -22,23 +22,13 @@ import {Configuration} from "../../config/configuration";
 import {ReflectContext} from "../../core/reflectContext";
 import {Type} from "../../core/type";
 import {Symbol} from "../../core/symbol";
-import {MappedTypeAnnotation,TargetClassAnnotation} from "./annotations";
+import {MappingBuilderAnnotation,TargetClassAnnotation} from "./annotations";
 import {Constructor} from "../../core/constructor";
-import {MappedTypeContext} from "./mappedTypeContext";
-import {MappedType} from "./mappedType";
-import {ClassMappedType} from "./classMappedType";
-import {EntityMappedType} from "./entityMappedType";
+import {MappingBuilderContext} from "./mappingBuilderContext";
+import {MappingBuilder} from "./mappingBuilder";
+import {ClassMappingBuilder} from "./classMappingBuilder";
+import {EntityMappingBuilder} from "./entityMappingBuilder";
 
-enum MappingKind {
-
-    Entity,
-    RootEntity,
-    Embeddable,
-    RootEmbeddable,
-    Global,
-    Enumerated,
-    Converted
-}
 
 export class AnnotationMappingProvider implements MappingProvider {
 
@@ -70,22 +60,13 @@ export class AnnotationMappingProvider implements MappingProvider {
         }
     }
 
-    // 1. Find all the classes that are annotated with "entity" or are a subclass of a class
-    //    that is annotated with "entity"
-    // 2. Recursively search types found in #1 to find all other object types. Make sure to only search
-    //    declared fields so we are not duplicating searches from the parent type.
-    // 3. Build type mapping. Mark properties as having an intrinsic type, embedded, or reference. It's a reference
-    //    if it's a reference to a class that was found in #1. It's embedded if it's a reference to a type found in #2 or is an anonymous type
-
     // TODO: support UUID for _id in addition to ObjectID?  I believe it's universally unique just like ObjectID so shouldn't be a big deal to support.
-
     // TODO: any special mapping for enumerations? allowing changing persisted value, etc.
-
     // TODO: have a plan for supporting all these data types: http://docs.mongodb.org/manual/reference/bson-types/
 
     getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void {
 
-        var builder = new MappingBuilder(config);
+        var builder = new Builder(config);
         var mappings = builder.build(this._modules);
 
         if (builder.hasErrors) {
@@ -97,13 +78,13 @@ export class AnnotationMappingProvider implements MappingProvider {
     }
 }
 
-class MappingBuilder {
+class Builder {
 
-    private _context: MappedTypeContext;
+    private _context: MappingBuilderContext;
 
     constructor(config: Configuration) {
 
-        this._context = new MappedTypeContext(config);
+        this._context = new MappingBuilderContext(config);
     }
 
     build(modules: Object[]): Mapping.ClassMapping[] {
@@ -128,19 +109,19 @@ class MappingBuilder {
     }
 
     getErrorMessage(): string {
-        return "Unable to build type mappings from declaration files:\n" + this._context.errors.join("\n");
+        return "Unable to build type mappings:\n" + this._context.errors.join("\n");
     }
 
     private _addGlobalMapping(name: string, mapping: Mapping): void {
 
         var ctr = (<any>global)[name];
         if(!ctr) {
-            throw new Error("Could not find global type '" + name + '.');
+            this._context.addError("Could not find global type '" + name + '.');
+            return;
         }
 
         var type = this._context.getType(ctr);
-
-        this._context.addMappedType(new MappedType(this._context, type, mapping));
+        this._context.addBuilder(new MappingBuilder(this._context, type, mapping));
     }
 
     private _processModule(obj: any): void {
@@ -163,7 +144,7 @@ class MappingBuilder {
 
     private _findTypes(type: Type): void {
 
-        if(!type || type.isCollection || this._context.hasMappedType(type)) {
+        if(!type || type.isCollection || this._context.hasBuilder(type)) {
             return;
         }
 
@@ -172,9 +153,9 @@ class MappingBuilder {
             this._findTypes(type.baseType);
         }
 
-        for(let annotation of <MappedTypeAnnotation[]>type.getAnnotations()) {
-            if(annotation.createMappedType) {
-                this._context.addMappedType(annotation.createMappedType(this._context, type));
+        for(let annotation of <MappingBuilderAnnotation[]>type.getAnnotations()) {
+            if(annotation.createBuilder) {
+                this._context.addBuilder(annotation.createBuilder(this._context, type));
                 break;
             }
         }

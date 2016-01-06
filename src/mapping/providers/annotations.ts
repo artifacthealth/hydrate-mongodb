@@ -6,16 +6,16 @@ import {EnumType} from "../enumType";
 import {CascadeFlags} from "../cascadeFlags";
 import {Constructor, ParameterlessConstructor} from "../../core/constructor";
 import {Mapping} from "../mapping";
-import {MappedTypeContext} from "./mappedTypeContext";
-import {MappedType} from "./mappedType";
+import {MappingBuilderContext} from "./mappingBuilderContext";
+import {MappingBuilder} from "./mappingBuilder";
 import {Type} from "../../core/type";
 import {MappingFlags} from "../mappingFlags";
-import {EntityMappedType} from "./entityMappedType";
-import {ClassMappedType} from "./classMappedType";
+import {EntityMappingBuilder} from "./entityMappingBuilder";
+import {ClassMappingBuilder} from "./classMappingBuilder";
 
-export interface MappedTypeAnnotation {
+export interface MappingBuilderAnnotation {
 
-    createMappedType(context: MappedTypeContext, type: Type): MappedType;
+    createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder;
 }
 
 export interface TargetClassAnnotation {
@@ -23,9 +23,9 @@ export interface TargetClassAnnotation {
     target: Constructor<any> | string;
 }
 
-export class EntityAnnotation implements MappedTypeAnnotation {
+export class EntityAnnotation implements MappingBuilderAnnotation {
 
-    createMappedType(context: MappedTypeContext, type: Type): MappedType {
+    createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
         var parentMapping = <Mapping.EntityMapping>getParentMapping(context, type);
         if(parentMapping && (parentMapping.flags & MappingFlags.Entity) == 0) {
@@ -33,13 +33,17 @@ export class EntityAnnotation implements MappedTypeAnnotation {
             return;
         }
 
-        return new EntityMappedType(context, type, Mapping.createEntityMapping((parentMapping)));
+        return new EntityMappingBuilder(context, type, Mapping.createEntityMapping((parentMapping)));
+    }
+
+    toString(): string {
+        return "@Entity";
     }
 }
 
-export class EmbeddableAnnotation implements MappedTypeAnnotation {
+export class EmbeddableAnnotation implements MappingBuilderAnnotation {
 
-    createMappedType(context: MappedTypeContext, type: Type): MappedType {
+    createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
         var parentMapping = getParentMapping(context, type);
         if(parentMapping && (parentMapping.flags & MappingFlags.Embeddable) == 0) {
@@ -47,11 +51,15 @@ export class EmbeddableAnnotation implements MappedTypeAnnotation {
             return;
         }
 
-        return new ClassMappedType(context, type, Mapping.createClassMapping(parentMapping));
+        return new ClassMappingBuilder(context, type, Mapping.createClassMapping(parentMapping));
+    }
+
+    toString(): string {
+        return "@Embeddable";
     }
 }
 
-export class ConverterAnnotation implements MappedTypeAnnotation {
+export class ConverterAnnotation implements MappingBuilderAnnotation {
 
     converter: PropertyConverter;
     converterCtr: ParameterlessConstructor<PropertyConverter>;
@@ -74,12 +82,16 @@ export class ConverterAnnotation implements MappedTypeAnnotation {
         }
     }
 
-    createMappedType(context: MappedTypeContext, type: Type): MappedType {
-
-        return new MappedType(context, type, this.createConverterMapping(context));
+    toString(): string {
+        return "@Converter";
     }
 
-    createConverterMapping(context: MappedTypeContext): Mapping {
+    createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
+
+        return new MappingBuilder(context, type, this.createMapping(context));
+    }
+
+    createMapping(context: MappingBuilderContext): Mapping {
 
         if(this.converter) {
             return Mapping.createConverterMapping(this.converter);
@@ -90,12 +102,14 @@ export class ConverterAnnotation implements MappedTypeAnnotation {
         }
 
         if(!this.converterName) {
-            throw new Error("Invalid annotation @Converter. A convert instance, constructor, or name must be specified.");
+            context.addError("A convert instance, constructor, or name must be specified.");
+            return;
         }
 
         var converter = context.config.propertyConverters && context.config.propertyConverters[this.converterName];
         if(!converter) {
-            throw new Error("Invalid annotation @Converter. Unknown converter '" + this.converterName + "'. Make sure to add your converter to propertyConverters in the configuration.");
+            context.addError("Unknown converter '" + this.converterName + "'. Make sure to add your converter to propertyConverters in the configuration.");
+            return;
         }
 
         return Mapping.createConverterMapping(converter);
@@ -133,6 +147,10 @@ export class CollectionAnnotation {
             this.options = nameOrArgs.options;
         }
     }
+
+    toString(): string {
+        return "@Collection";
+    }
 }
 
 export class IndexAnnotation {
@@ -162,6 +180,10 @@ export class IndexAnnotation {
             this.options = args.options;
         }
     }
+
+    toString(): string {
+        return "@Index";
+    }
 }
 
 export class VersionFieldAnnotation {
@@ -173,6 +195,10 @@ export class VersionFieldAnnotation {
     constructor(public name: string) {
 
     }
+
+    toString(): string {
+        return "@VersionField";
+    }
 }
 
 export class VersionedAnnotation {
@@ -183,6 +209,10 @@ export class VersionedAnnotation {
      */
     constructor(public enabled: boolean = true) {
 
+    }
+
+    toString(): string {
+        return "@Versioned";
     }
 }
 
@@ -198,6 +228,10 @@ export class DiscriminatorFieldAnnotation {
     constructor(public name: string) {
 
     }
+
+    toString(): string {
+        return "@DiscriminatorField";
+    }
 }
 
 export class DiscriminatorValueAnnotation {
@@ -205,10 +239,10 @@ export class DiscriminatorValueAnnotation {
     constructor(public value: string) {
 
     }
-}
 
-export class TransientAnnotation {
-
+    toString(): string {
+        return "@DiscriminatorValue";
+    }
 }
 
 export class ReferencedAnnotation implements TargetClassAnnotation {
@@ -236,10 +270,16 @@ export class ReferencedAnnotation implements TargetClassAnnotation {
 
 export class ReferenceOneAnnotation extends ReferencedAnnotation {
 
+    toString(): string {
+        return "@ReferenceOne";
+    }
 }
 
 export class ReferenceManyAnnotation extends ReferencedAnnotation {
 
+    toString(): string {
+        return "@ReferenceMany";
+    }
 }
 
 export class EmbeddedAnnotation implements TargetClassAnnotation {
@@ -251,10 +291,16 @@ export class EmbeddedAnnotation implements TargetClassAnnotation {
 
 export class EmbedOneAnnotation extends EmbeddedAnnotation {
 
+    toString(): string {
+        return "@EmbedOne";
+    }
 }
 
 export class EmbedManyAnnotation extends EmbeddedAnnotation {
 
+    toString(): string {
+        return "@EmbedMany";
+    }
 }
 
 export class FieldAnnotation {
@@ -269,6 +315,10 @@ export class FieldAnnotation {
             this.nullable = args.nullable;
         }
     }
+
+    toString(): string {
+        return "@Field";
+    }
 }
 
 export class EnumeratedAnnotation {
@@ -276,15 +326,19 @@ export class EnumeratedAnnotation {
     constructor(public members: Object) {
 
     }
+
+    toString(): string {
+        return "@Enumerated";
+    }
 }
 
-function getParentMapping(context: MappedTypeContext, type: Type): Mapping.ClassMapping {
+function getParentMapping(context: MappingBuilderContext, type: Type): Mapping.ClassMapping {
 
     var baseType = type.baseType;
     if(baseType) {
-        var mappedType = context.getMappedType(baseType);
-        if(mappedType) {
-            return <Mapping.ClassMapping>mappedType.mapping;
+        var builder = context.getBuilder(baseType);
+        if(builder) {
+            return <Mapping.ClassMapping>builder.mapping;
         }
     }
 }

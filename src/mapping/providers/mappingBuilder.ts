@@ -1,17 +1,17 @@
 import {Mapping} from "../mapping";
 import {Type} from "../../core/type";
-import {MappedTypeContext} from "./mappedTypeContext";
+import {MappingBuilderContext} from "./mappingBuilderContext";
 
-export class MappedType {
+export class MappingBuilder {
 
     type: Type;
     mapping: Mapping;
 
-    protected context: MappedTypeContext;
+    protected context: MappingBuilderContext;
 
     private _populated: boolean;
 
-    constructor(context: MappedTypeContext, type: Type, mapping: Mapping) {
+    constructor(context: MappingBuilderContext, type: Type, mapping: Mapping) {
 
         this.context = context;
         this.type = type;

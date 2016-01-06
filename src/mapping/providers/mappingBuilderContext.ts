@@ -3,17 +3,21 @@ import {Type} from "../../core/type";
 import {Symbol} from "../../core/symbol";
 import {ReflectContext} from "../../core/reflectContext";
 import {Constructor} from "../../core/constructor";
-import {MappedType} from "./mappedType";
+import {MappingBuilder} from "./mappingBuilder";
 import {Mapping} from "../mapping";
 import {MappingFlags} from "../mappingFlags";
 import {ClassMapping} from "../classMapping";
 
-export class MappedTypeContext {
+export class MappingBuilderContext {
 
     config: Configuration;
     errors: string[] = [];
 
-    private _typeTable: Map<Type, MappedType> = new Map();
+    currentType: Type;
+    currentProperty: Symbol;
+    currentAnnotation: any;
+
+    private _builders: Map<Type, MappingBuilder> = new Map();
     private _typesByName: Map<string, Type> = new Map();
     private _reflect: ReflectContext;
 
@@ -26,8 +30,9 @@ export class MappedTypeContext {
 
         var classMappings: Mapping.ClassMapping[] = [];
 
-        this._typeTable.forEach(mappedType => {
+        this._builders.forEach(mappedType => {
 
+            this.currentType = mappedType.type;
             mappedType.populate();
 
             if(mappedType.mapping.flags & MappingFlags.Class) {
@@ -35,20 +40,25 @@ export class MappedTypeContext {
             }
         });
 
+        this.currentType = null;
+
         return classMappings;
     }
 
-    addAnnotationError(type: Type, annotation: any, message: string): void {
-
-        this.addError("Invalid annotation '" + (annotation && annotation.constructor.name) + "' on '" + type.name + "': " + message);
-    }
-
-    addPropertyAnnotationError(symbol: Symbol, annotation: any, message: string): void {
-
-        this.addError("Invalid annotation '" + (annotation && annotation.constructor.name) + "' on property '" + symbol.name + "' of type '" + symbol.parent.name + "': " + message);
-    }
-
     addError(message: string): void {
+
+        if(this.currentAnnotation) {
+            message = `Invalid annotation ${this.currentAnnotation.toString()}: ${message}`;
+        }
+
+        if(this.currentProperty) {
+
+            message = `Error processing property '${this.currentProperty.name}' on type '${this.currentProperty.parent.name}': ${message}`;
+        }
+        else if (this.currentType) {
+
+            message = `Error processing type '${this.currentType.name}': ${message}`
+        }
 
         this.errors.push(message);
     }
@@ -58,34 +68,36 @@ export class MappedTypeContext {
         if(typeof type === "string") {
             var resolved = this._typesByName.get(type);
             if(!resolved) {
-                throw new Error("Unknown type '" + type + "'.");
+                this.addError("Unknown type '" + type + "'.");
+                return;
             }
+
             return resolved;
         }
 
         return this._reflect.getType(<Constructor<any>>type);
     }
 
-    addMappedType(mappedType: MappedType): void {
+    addBuilder(mappedType: MappingBuilder): void {
 
         if(!mappedType) return;
 
         if(this._typesByName.has(mappedType.type.name)) {
-            throw new Error("Duplicate class name '" + mappedType.type.name + "'. All named types must have unique names.");
+            this.addError("Duplicate class name '" + mappedType.type.name + "'. All named types must have unique names.");
         }
         this._typesByName.set(mappedType.type.name, mappedType.type);
-        this._typeTable.set(mappedType.type, mappedType);
+        this._builders.set(mappedType.type, mappedType);
     }
 
-    getMappedType(type: Type): MappedType {
+    getBuilder(type: Type): MappingBuilder {
 
         if(!type) return null;
 
-        return this._typeTable.get(type);
+        return this._builders.get(type);
     }
 
-    hasMappedType(type: Type): boolean {
+    hasBuilder(type: Type): boolean {
 
-        return this._typeTable.has(type);
+        return this._builders.has(type);
     }
 }

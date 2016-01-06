@@ -30,20 +30,9 @@ export class ObjectMapping extends MappingBase {
             throw new Error("Missing required argument 'property'.");
         }
 
-        if(!property.name) {
-            throw new Error("Property is missing 'name'.");
-        }
-
-        if(!property.field && !property.hasFlags(PropertyFlags.Ignored)) {
-            throw new Error("Property must define a 'field' mapping if the property is not ignored.");
-        }
-
-        if (Lookup.hasProperty(this._propertiesByName, property.name)) {
-            throw new Error("There is already a mapped property with the name '" + property.name + "'.");
-        }
-
-        if (Lookup.hasProperty(this._propertiesByField, property.field)) {
-            throw new Error("There is already a mapped property for field '" + property.field + "'.");
+        var error = this.validateProperty(property);
+        if(error) {
+            throw new Error(error);
         }
 
         this._propertiesByName[property.name] = property;
@@ -54,6 +43,30 @@ export class ObjectMapping extends MappingBase {
 
         this.properties.push(property);
         return property;
+    }
+
+    /**
+     * Validates a property before adding it to the mapping. Returns any validation error messages or undefined if none.
+     * @param property The property to validate.
+     * @returns The error message.
+     */
+    validateProperty(property: Property): string {
+
+        if(!property.name) {
+            return "Property is missing 'name'.";
+        }
+
+        if(!property.field && !property.hasFlags(PropertyFlags.Ignored)) {
+            return "Property must define a 'field' mapping if the property is not ignored.";
+        }
+
+        if (Lookup.hasProperty(this._propertiesByName, property.name)) {
+            return "There is already a mapped property with the name '" + property.name + "'.";
+        }
+
+        if (Lookup.hasProperty(this._propertiesByField, property.field)) {
+            return "There is already a mapped property for field '" + property.field + "'.";
+        }
     }
 
     getProperty(name: string): Property {
