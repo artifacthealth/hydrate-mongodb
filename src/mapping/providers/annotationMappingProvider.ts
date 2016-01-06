@@ -22,25 +22,7 @@ import {Configuration} from "../../config/configuration";
 import {ReflectContext} from "../../core/reflectContext";
 import {Type} from "../../core/type";
 import {Symbol} from "../../core/symbol";
-import {
-    EntityAnnotation,
-    EmbeddableAnnotation,
-    ConverterAnnotation,
-    CollectionAnnotation,
-    IndexAnnotation,
-    VersionFieldAnnotation,
-    VersionedAnnotation,
-    ChangeTrackingAnnotation,
-    DiscriminatorFieldAnnotation,
-    DiscriminatorValueAnnotation,
-    TransientAnnotation,
-    ReferenceManyAnnotation,
-    ReferenceOneAnnotation,
-    EmbedManyAnnotation,
-    EmbedOneAnnotation,
-    FieldAnnotation,
-    EnumeratedAnnotation
-} from "./annotations";
+import {MappedTypeAnnotation,TargetClassAnnotation} from "./annotations";
 import {Constructor} from "../../core/constructor";
 import {MappedTypeContext} from "./mappedTypeContext";
 import {MappedType} from "./mappedType";
@@ -56,13 +38,6 @@ enum MappingKind {
     Global,
     Enumerated,
     Converted
-}
-
-interface TypeLinks {
-
-    type: Type;
-    kind: MappingKind;
-    mapping?: Mapping;
 }
 
 export class AnnotationMappingProvider implements MappingProvider {
@@ -145,9 +120,7 @@ class MappingBuilder {
             this._processModule(module);
         }
 
-        this._context.populateMappings();
-
-        return this._context.getClassMappings();
+        return this._context.populateMappings();
     }
 
     get hasErrors(): boolean {
@@ -194,25 +167,16 @@ class MappingBuilder {
             return;
         }
 
-        // if the type has a converter then no further processing is needed here
-        if(type.hasAnnotation(ConverterAnnotation)) {
-            this._addObjectMapping(type, MappingKind.Converted);
-            return;
-        }
-
         // process mappings for any base type first
         if(type.baseType) {
             this._findTypes(type.baseType);
         }
 
-        if(type.hasAnnotation(EntityAnnotation, true)) {
-            this._addObjectMapping(type, type.hasAnnotation(EntityAnnotation) ? MappingKind.RootEntity : MappingKind.Entity);
-        }
-        else if(type.hasAnnotation(EmbeddableAnnotation, true)) {
-            this._addObjectMapping(type, type.hasAnnotation(EmbeddableAnnotation) ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
-        }
-        else {
-            return;
+        for(let annotation of <MappedTypeAnnotation[]>type.getAnnotations()) {
+            if(annotation.createMappedType) {
+                this._context.addMappedType(annotation.createMappedType(this._context, type));
+                break;
+            }
         }
 
         this._scanPropertiesForTypes(type);
@@ -227,105 +191,17 @@ class MappingBuilder {
 
     private _getPropertyTypeToScan(property: Symbol): Type {
 
-        // If the property has a converter, the type is ignored.
-        if(property.hasAnnotation(ConverterAnnotation)) {
-            return null;
-        }
-
-        var annotation: { target: Constructor<any> | string },
-            target: Constructor<any> | string;
-
-        annotation = property.getAnnotations(ReferenceManyAnnotation)[0];
-        if(annotation) {
-            target = annotation.target;
-        }
-        else {
-            annotation = property.getAnnotations(ReferenceOneAnnotation)[0];
-            if (annotation) {
-                target = annotation.target;
-            }
-            else {
-                annotation = property.getAnnotations(EmbedManyAnnotation)[0];
-                if (annotation) {
-                    target = annotation.target;
+        for(let annotation of <TargetClassAnnotation[]>property.getAnnotations()) {
+            if(annotation.target) {
+                // Since this is used for type discovery, we are not interested in types indicated by name.
+                if(typeof annotation.target === "string") {
+                    return null;
                 }
-                else {
-                    annotation = property.getAnnotations(EmbedOneAnnotation)[0];
-                    if (annotation) {
-                        target = annotation.target;
-                    }
-                }
+                return this._context.getType(<Constructor<any>>annotation.target);
+                break;
             }
-        }
-
-        // If an annotation was provided, we want to use the target even if it's null. If the target was null then
-        // that means there was a circular reference or the type was used before it was defined so we should return
-        // null so we can inform the user of the error.
-        if(annotation) {
-            // Since this is used for type discovery, we are not interested in type indicated by name.
-            if (typeof target === "string") {
-                return null;
-            }
-            return this._context.getType(<Constructor<any>>target);
         }
 
         return property.type;
-    }
-
-    private _addObjectMapping(type: Type, kind: MappingKind): void {
-
-        var mappedType: MappedType;
-
-        switch(kind) {
-            case MappingKind.RootEmbeddable:
-                mappedType = new ClassMappedType(this._context, type, Mapping.createClassMapping());
-                break;
-            case MappingKind.Embeddable:
-                var parentMapping = this._getParentMapping(type);
-                if(parentMapping && (parentMapping.flags & MappingFlags.Embeddable) == 0) {
-                    this._context.addError("Parent of mapping for '" + type.name + "' must be an embeddable mapping.");
-                }
-                mappedType = new ClassMappedType(this._context, type, Mapping.createClassMapping(parentMapping));
-                break;
-            case MappingKind.RootEntity:
-                mappedType = new EntityMappedType(this._context, type, Mapping.createEntityMapping());
-                break;
-            case MappingKind.Entity:
-                var parentMapping = this._getParentMapping(type);
-                if(parentMapping && (parentMapping.flags & MappingFlags.Entity) == 0) {
-                    this._context.addError("Parent of mapping for '" + type.name + "' must be an entity mapping.");
-                }
-                mappedType = new EntityMappedType(this._context, type, Mapping.createEntityMapping((<Mapping.EntityMapping>parentMapping)));
-                break;
-            case MappingKind.Converted:
-                mappedType = new MappedType(this._context, type, type.getAnnotations(ConverterAnnotation)[0].createConverterMapping(this._context));
-                break;
-        }
-
-        if(mappedType) {
-            this._context.addMappedType(mappedType)
-        }
-    }
-
-    private _getParentMapping(type: Type): Mapping.ClassMapping {
-
-        var baseType = type.baseType;
-        if(baseType) {
-            var links = this._context.getMappedType(baseType);
-            if(links) {
-                var mapping = links.mapping
-                if (!mapping) {
-                    // this should not happen since the base type is processed first
-                    throw new Error("Could not find parent mapping for '" + type.name + "'.");
-                }
-
-                if ((mapping.flags & MappingFlags.Class) == 0) {
-                    this._context.addError("Parent of mapping for '" + type.name + "' must be a class mapping.");
-                    return undefined;
-                }
-
-                return <Mapping.ClassMapping>links.mapping;
-            }
-        }
     }
 }

@@ -12,13 +12,6 @@ export class ClassMappedType extends ObjectMappedType {
 
     protected populateCore(): void {
 
-        // before we populate the mapping, check to make sure that there is only one root in the hierarchy
-        if(this._subclassMarkedAsRootType()) {
-            let annotation = this.type.getAnnotations(EntityAnnotation)[0] || this.type.getAnnotations(EmbeddableAnnotation)[0];
-            this.context.addAnnotationError(this.type, annotation, "Only one class per inheritance hierarchy can have the @Entity or @Embeddable annotation.");
-            return;
-        }
-
         var mapping = <Mapping.ClassMapping>this.mapping;
 
         mapping.name = this.type.name;
@@ -57,29 +50,6 @@ export class ClassMappedType extends ObjectMappedType {
         }
 
         super.populateCore()
-    }
-
-    private _subclassMarkedAsRootType(): boolean {
-
-        if(!this.isRoot) {
-            return false;
-        }
-
-        var type = this.type.baseType;
-        while(type) {
-            var mappedType = <ClassMappedType>this.context.getMappedType(type);
-            if(mappedType && mappedType.isRoot) {
-                return true;
-            }
-            type = type.baseType;
-        }
-
-        return false;
-    }
-
-    private get isRoot(): boolean {
-
-        return this.type.hasAnnotation(EntityAnnotation) || this.type.hasAnnotation(EmbeddableAnnotation);
     }
 
     private _setDiscriminatorField(mapping: Mapping.ClassMapping, annotation: DiscriminatorFieldAnnotation): void {

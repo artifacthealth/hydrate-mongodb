@@ -7,16 +7,51 @@ import {CascadeFlags} from "../cascadeFlags";
 import {Constructor, ParameterlessConstructor} from "../../core/constructor";
 import {Mapping} from "../mapping";
 import {MappedTypeContext} from "./mappedTypeContext";
+import {MappedType} from "./mappedType";
+import {Type} from "../../core/type";
+import {MappingFlags} from "../mappingFlags";
+import {EntityMappedType} from "./entityMappedType";
+import {ClassMappedType} from "./classMappedType";
 
-export class EntityAnnotation {
+export interface MappedTypeAnnotation {
 
+    createMappedType(context: MappedTypeContext, type: Type): MappedType;
 }
 
-export class EmbeddableAnnotation {
+export interface TargetClassAnnotation {
 
+    target: Constructor<any> | string;
 }
 
-export class ConverterAnnotation {
+export class EntityAnnotation implements MappedTypeAnnotation {
+
+    createMappedType(context: MappedTypeContext, type: Type): MappedType {
+
+        var parentMapping = <Mapping.EntityMapping>getParentMapping(context, type);
+        if(parentMapping && (parentMapping.flags & MappingFlags.Entity) == 0) {
+            context.addError("Parent of mapping for '" + type.name + "' must be an entity mapping.");
+            return;
+        }
+
+        return new EntityMappedType(context, type, Mapping.createEntityMapping((parentMapping)));
+    }
+}
+
+export class EmbeddableAnnotation implements MappedTypeAnnotation {
+
+    createMappedType(context: MappedTypeContext, type: Type): MappedType {
+
+        var parentMapping = getParentMapping(context, type);
+        if(parentMapping && (parentMapping.flags & MappingFlags.Embeddable) == 0) {
+            context.addError("Parent of mapping for '" + type.name + "' must be an embeddable mapping.");
+            return;
+        }
+
+        return new ClassMappedType(context, type, Mapping.createClassMapping(parentMapping));
+    }
+}
+
+export class ConverterAnnotation implements MappedTypeAnnotation {
 
     converter: PropertyConverter;
     converterCtr: ParameterlessConstructor<PropertyConverter>;
@@ -37,6 +72,11 @@ export class ConverterAnnotation {
         else {
             this.converter = <PropertyConverter>converter;
         }
+    }
+
+    createMappedType(context: MappedTypeContext, type: Type): MappedType {
+
+        return new MappedType(context, type, this.createConverterMapping(context));
     }
 
     createConverterMapping(context: MappedTypeContext): Mapping {
@@ -171,7 +211,7 @@ export class TransientAnnotation {
 
 }
 
-export class ReferencedAnnotation {
+export class ReferencedAnnotation implements TargetClassAnnotation {
 
     target: Constructor<any> | string;
     inverseOf: string;
@@ -202,7 +242,7 @@ export class ReferenceManyAnnotation extends ReferencedAnnotation {
 
 }
 
-export class EmbeddedAnnotation {
+export class EmbeddedAnnotation implements TargetClassAnnotation {
 
     constructor(public target: Constructor<any> | string) {
 
@@ -231,23 +271,20 @@ export class FieldAnnotation {
     }
 }
 
-/**
- * Indicates the element type of a collection, such as an Array.
- */
-    /*
-export class CollectionAnnotation {
-
-    constructor(public elementType: Object) {
-
-        if(!elementType) {
-            throw new Error("Missing required argument 'elementType'.");
-        }
-    }
-}
-*/
 export class EnumeratedAnnotation {
 
     constructor(public members: Object) {
 
+    }
+}
+
+function getParentMapping(context: MappedTypeContext, type: Type): Mapping.ClassMapping {
+
+    var baseType = type.baseType;
+    if(baseType) {
+        var mappedType = context.getMappedType(baseType);
+        if(mappedType) {
+            return <Mapping.ClassMapping>mappedType.mapping;
+        }
     }
 }

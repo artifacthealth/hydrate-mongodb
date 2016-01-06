@@ -9,10 +9,12 @@ export namespace a {
 
     export module b {
 
+        @Entity()
         export class B extends A {
 
         }
 
+        @Entity()
         export class C extends B {
 
         }

@@ -9,6 +9,7 @@ export class A {
     b: string;
 }
 
+@Entity()
 @Index({ keys: [ [ 'c', 1 ] ]})
 export class B extends A {
 

@@ -80,6 +80,7 @@ export class Phone {
     }
 }
 
+@Embeddable()
 export class WorkPhone extends Phone {
 
     @Field({ name: "extension" })
@@ -174,6 +175,7 @@ export class PersonName {
     }
 }
 
+@Entity()
 export class Person extends Party {
 
     @Field()
@@ -251,6 +253,7 @@ export class Person extends Party {
     }
 }
 
+@Entity()
 export class Organization extends Party {
 
     constructor(name: string) {

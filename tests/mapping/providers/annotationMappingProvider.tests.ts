@@ -37,24 +37,6 @@ describe('AnnotationMappingProvider', () => {
 
         describe('@entity', () => {
 
-            it("maps all subclasses of class annotated with 'entity' as document type", (done) => {
-
-                processFixture("entityHierarchy", done, (results) => {
-
-                    assert.lengthOf(results, 3);
-                    results.forEach(x => assert.instanceOf(x, EntityMapping));
-                });
-            });
-
-            it("throws error if there is more than one 'entity' annotation in a class hierarchy", (done) => {
-
-                processFixture("entityMultiple", (err) => {
-                    assert.ok(err);
-                    assert.include(err.message, "Only one class per inheritance hierarchy can have the @Entity or @Embeddable annotation");
-                    done();
-                });
-            });
-
             it("entity mappings can share a common base class", (done) => {
 
                 processFixture("sharedBaseClass", done, (results) => {

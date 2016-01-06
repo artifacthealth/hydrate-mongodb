@@ -18,6 +18,7 @@ export default class ClassSimple {
     e: RegExp;
 }
 
+@Entity()
 class ClassSimple2 extends ClassSimple {
 
 }

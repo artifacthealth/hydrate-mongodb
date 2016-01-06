@@ -10,11 +10,13 @@ export class Animal {
     b: string;
 }
 
+@Entity()
 @DiscriminatorValue("C")
 export class Cat extends Animal {
 
 }
 
+@Entity()
 @DiscriminatorValue("C")
 export class Dog extends Animal {
 

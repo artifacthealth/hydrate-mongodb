@@ -24,6 +24,7 @@ export class Eye {
     color: string;
 }
 
+@Entity()
 @DiscriminatorValue("dog")
 export class Dog extends Animal {
 
@@ -31,6 +32,7 @@ export class Dog extends Animal {
     breed: string;
 }
 
+@Entity()
 @DiscriminatorValue("cat")
 export class Cat extends Animal {
 

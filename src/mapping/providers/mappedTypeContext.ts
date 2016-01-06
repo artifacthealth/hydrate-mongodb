@@ -22,9 +22,20 @@ export class MappedTypeContext {
         this._reflect = new ReflectContext();
     }
 
-    populateMappings(): void {
+    populateMappings(): Mapping.ClassMapping[] {
 
-        this._typeTable.forEach(mappedType => mappedType.populate());
+        var classMappings: Mapping.ClassMapping[] = [];
+
+        this._typeTable.forEach(mappedType => {
+
+            mappedType.populate();
+
+            if(mappedType.mapping.flags & MappingFlags.Class) {
+                classMappings.push(<ClassMapping>mappedType.mapping);
+            }
+        });
+
+        return classMappings;
     }
 
     addAnnotationError(type: Type, annotation: any, message: string): void {
@@ -57,6 +68,8 @@ export class MappedTypeContext {
 
     addMappedType(mappedType: MappedType): void {
 
+        if(!mappedType) return;
+
         if(this._typesByName.has(mappedType.type.name)) {
             throw new Error("Duplicate class name '" + mappedType.type.name + "'. All named types must have unique names.");
         }
@@ -74,17 +87,5 @@ export class MappedTypeContext {
     hasMappedType(type: Type): boolean {
 
         return this._typeTable.has(type);
-    }
-
-    getClassMappings(): Mapping.ClassMapping[] {
-
-        var classMappings: Mapping.ClassMapping[] = [];
-        this._typeTable.forEach(mappedType => {
-            if(mappedType.mapping.flags & MappingFlags.Class) {
-                classMappings.push(<ClassMapping>mappedType.mapping);
-            }
-        });
-
-        return classMappings;
     }
 }
