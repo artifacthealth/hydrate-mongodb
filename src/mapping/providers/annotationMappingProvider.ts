@@ -230,7 +230,7 @@ class MappingBuilder {
 
     private _findTypes(type: Type): void {
 
-        if(this._isArray(type) || this._getTypeLinks(type)) {
+        if(!type || this._isArray(type) || this._getTypeLinks(type)) {
             return;
         }
 
@@ -256,46 +256,50 @@ class MappingBuilder {
 
         var propertyNames = ReflectUtil.getPropertyNames(classType);
         for(var i = 0; i < propertyNames.length; i++) {
-            var propertyName = propertyNames[i];
-            if(ReflectUtil.hasPropertyAnnotation(classType, propertyName, ConverterAnnotation)) continue;
-
-            var type = this._getPropertyType(classType, propertyName, false);
-            if(type) {
-                if(this._isArray(type)) {
-                    type = this._getCollectionElementType(type, propertyName);
-                }
-
-                this._findTypes(type);
-            }
+            this._findTypes(this._getPropertyTypeToScan(classType, propertyNames[i]));
         }
     }
 
-    private _getPropertyType(type: Type, propertyName: string, resolveTypeNames = true): Type {
+    private _getPropertyTypeToScan(type: Type, propertyName: string): Type {
 
-        // Check to see if type is specified by an annotation
-        var target: Type | string;
-
-        var referencedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceOneAnnotation)[0];
-        if(referencedAnnotation) {
-            target = referencedAnnotation.target;
-        }
-        else {
-            var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedOneAnnotation)[0];
-            if (embeddedAnnotation) {
-                target = embeddedAnnotation.target;
-            }
+        // If the property has a converter, the type is ignored.
+        if(ReflectUtil.hasPropertyAnnotation(type, propertyName, ConverterAnnotation)) {
+            return null;
         }
 
-        if(target) {
-            if(typeof target === "string" && !resolveTypeNames) {
-                return null;
-            }
+        var target = this._getTypeFromAnnotations(type, propertyName);
 
-            return this._resolveType(target);
+        // Since this is used for type discovery, we are not interested in type indicated by name.
+        if(target && typeof target === "string") {
+            return null;
         }
 
-        // get property type from the compiler generated metadata.
         return <Type>ReflectUtil.getType(type.prototype, propertyName);
+    }
+
+    private _getTypeFromAnnotations(type: Type, propertyName: string): Type | string {
+
+        var annotation: { target: Type | string };
+
+        annotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceManyAnnotation)[0];
+        if(annotation) {
+            return annotation.target;
+        }
+
+        annotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceOneAnnotation)[0];
+        if(annotation) {
+            return annotation.target;
+        }
+
+        annotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedManyAnnotation)[0];
+        if (annotation) {
+            return annotation.target;
+        }
+
+        annotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedOneAnnotation)[0];
+        if (annotation) {
+            return annotation.target;
+        }
     }
 
     private _addObjectType(type: Type, kind: MappingKind): void {
@@ -671,27 +675,37 @@ class MappingBuilder {
         return this._createTypeMapping(propertyType);
     }
 
-    private _isArray(type: Type): boolean {
+    private _getPropertyType(type: Type, propertyName: string, resolveTypeNames = true): Type {
 
-        return type && type.name === "Array";
-    }
-
-    private _getCollectionElementType(type: Type, propertyName: string): Type {
-
+        // Check to see if type is specified by an annotation
         var target: Type | string;
 
-        var referencedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceManyAnnotation)[0];
+        var referencedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceOneAnnotation)[0];
         if(referencedAnnotation) {
             target = referencedAnnotation.target;
         }
         else {
-            var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedManyAnnotation)[0];
+            var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedOneAnnotation)[0];
             if (embeddedAnnotation) {
                 target = embeddedAnnotation.target;
             }
         }
 
-        return this._resolveType(target);
+        if(target) {
+            if(typeof target === "string" && !resolveTypeNames) {
+                return null;
+            }
+
+            return this._resolveType(target);
+        }
+
+        // get property type from the compiler generated metadata.
+        return <Type>ReflectUtil.getType(type.prototype, propertyName);
+    }
+
+    private _isArray(type: Type): boolean {
+
+        return type && type.name === "Array";
     }
 
     private _createTypeMapping(target: Type | string): Mapping {
