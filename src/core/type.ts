@@ -59,5 +59,9 @@ export class Type {
     get isArray(): boolean {
         return this.ctr.name == "Array";
     }
+
+    get isCollection(): boolean {
+        return this.isArray;
+    }
 }
 

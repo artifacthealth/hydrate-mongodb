@@ -5,6 +5,8 @@ import {ChangeTrackingType} from "../changeTrackingType";
 import {EnumType} from "../enumType";
 import {CascadeFlags} from "../cascadeFlags";
 import {Constructor, ParameterlessConstructor} from "../../core/constructor";
+import {Mapping} from "../mapping";
+import {MappedTypeContext} from "./mappedTypeContext";
 
 export class EntityAnnotation {
 
@@ -35,6 +37,28 @@ export class ConverterAnnotation {
         else {
             this.converter = <PropertyConverter>converter;
         }
+    }
+
+    createConverterMapping(context: MappedTypeContext): Mapping {
+
+        if(this.converter) {
+            return Mapping.createConverterMapping(this.converter);
+        }
+
+        if(this.converterCtr) {
+            return Mapping.createConverterMapping(new this.converterCtr());
+        }
+
+        if(!this.converterName) {
+            throw new Error("Invalid annotation @Converter. A convert instance, constructor, or name must be specified.");
+        }
+
+        var converter = context.config.propertyConverters && context.config.propertyConverters[this.converterName];
+        if(!converter) {
+            throw new Error("Invalid annotation @Converter. Unknown converter '" + this.converterName + "'. Make sure to add your converter to propertyConverters in the configuration.");
+        }
+
+        return Mapping.createConverterMapping(converter);
     }
 }
 
