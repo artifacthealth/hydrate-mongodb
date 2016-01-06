@@ -43,93 +43,6 @@ import {
 } from "./annotations";
 import {Constructor} from "../../core/constructor";
 
-export class AnnotationMappingProvider implements MappingProvider {
-
-    private _modules: Object[] = [];
-    private _reflect: ReflectContext;
-
-    constructor(modules?: Object | Object[]) {
-
-        if(modules) {
-            if (!Array.isArray(modules)) {
-                modules = [<Object>modules];
-            }
-            this.addModules(<Object[]>modules);
-        }
-
-        this._reflect = new ReflectContext();
-    }
-
-    addModule(module: Object): void {
-
-        if(module) {
-            this._modules.push(module);
-        }
-    }
-
-    addModules(modules: Object[]): void {
-
-        if(modules) {
-            for(let module of modules) {
-                this.addModule(module);
-            }
-        }
-    }
-
-    // 1. Find all the classes that are annotated with "entity" or are a subclass of a class
-    //    that is annotated with "entity"
-    // 2. Recursively search types found in #1 to find all other object types. Make sure to only search
-    //    declared fields so we are not duplicating searches from the parent type.
-    // 3. Build type mapping. Mark properties as having an intrinsic type, embedded, or reference. It's a reference
-    //    if it's a reference to a class that was found in #1. It's embedded if it's a reference to a type found in #2 or is an anonymous type
-
-    // TODO: support UUID for _id in addition to ObjectID?  I believe it's universally unique just like ObjectID so shouldn't be a big deal to support.
-
-    // TODO: any special mapping for enumerations? allowing changing persisted value, etc.
-
-    // TODO: have a plan for supporting all these data types: http://docs.mongodb.org/manual/reference/bson-types/
-
-     getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void {
-
-         var types: Set<Type> = new Set();
-
-         for(let module of this._modules) {
-             this._processExports(types, module);
-         }
-
-         var builder = new MappingBuilder(config, this._reflect);
-         var mappings = builder.build(types);
-
-         if(builder.hasErrors) {
-             callback(new Error(builder.getErrorMessage()), null);
-         }
-         else {
-             callback(null, mappings);
-         }
-    }
-
-    private _processExports(types: Set<Type>, obj: any): boolean {
-
-        // check to see if the export is an Entity or Embeddable type
-        if(typeof obj === "function") {
-            var type = this._reflect.getType(obj);
-            if(type.hasAnnotation(EntityAnnotation, true) || type.hasAnnotation(EmbeddableAnnotation, true) || type.hasAnnotation(ConverterAnnotation)) {
-                types.add(type);
-            }
-        }
-        else if (typeof obj !== "object") {
-            return;
-        }
-
-        // recursive search exports for types
-        for (let p in obj) {
-            if (obj.hasOwnProperty(p)) {
-                this._processExports(types, obj[p]);
-            }
-        }
-    }
-}
-
 enum MappingKind {
 
     Entity,
@@ -148,21 +61,77 @@ interface TypeLinks {
     mapping?: Mapping;
 }
 
+export class AnnotationMappingProvider implements MappingProvider {
+
+    private _modules: Object[] = [];
+
+    constructor(modules?: Object | Object[]) {
+
+        if (modules) {
+            if (!Array.isArray(modules)) {
+                modules = [<Object>modules];
+            }
+            this.addModules(<Object[]>modules);
+        }
+    }
+
+    addModule(module: Object): void {
+
+        if (module) {
+            this._modules.push(module);
+        }
+    }
+
+    addModules(modules: Object[]): void {
+
+        if (modules) {
+            for (let module of modules) {
+                this.addModule(module);
+            }
+        }
+    }
+
+    // 1. Find all the classes that are annotated with "entity" or are a subclass of a class
+    //    that is annotated with "entity"
+    // 2. Recursively search types found in #1 to find all other object types. Make sure to only search
+    //    declared fields so we are not duplicating searches from the parent type.
+    // 3. Build type mapping. Mark properties as having an intrinsic type, embedded, or reference. It's a reference
+    //    if it's a reference to a class that was found in #1. It's embedded if it's a reference to a type found in #2 or is an anonymous type
+
+    // TODO: support UUID for _id in addition to ObjectID?  I believe it's universally unique just like ObjectID so shouldn't be a big deal to support.
+
+    // TODO: any special mapping for enumerations? allowing changing persisted value, etc.
+
+    // TODO: have a plan for supporting all these data types: http://docs.mongodb.org/manual/reference/bson-types/
+
+    getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void {
+
+        var builder = new MappingBuilder(config);
+        var mappings = builder.build(this._modules);
+
+        if (builder.hasErrors) {
+            callback(new Error(builder.getErrorMessage()), null);
+        }
+        else {
+            callback(null, mappings);
+        }
+    }
+}
+
 class MappingBuilder {
 
-    private _objectTypes: Type[] = [];
-    private _typeTable: WeakMap<Type, TypeLinks> = new WeakMap();
+    private _typeTable: Map<Type, TypeLinks> = new Map();
     private _typesByName: Map<string, Type> = new Map();
     private _errors: string[] = [];
     private _mappings: Mapping.ClassMapping[] = [];
     private _reflect: ReflectContext;
 
-    constructor(public config: Configuration, reflect: ReflectContext) {
+    constructor(public config: Configuration) {
 
-        this._reflect = reflect;
+        this._reflect = new ReflectContext();
     }
 
-    build(types: Set<Type>): Mapping.ClassMapping[] {
+    build(modules: Object[]): Mapping.ClassMapping[] {
 
         // create global mappings
         this._addGlobalMapping("String", Mapping.createStringMapping());
@@ -172,25 +141,24 @@ class MappingBuilder {
         this._addGlobalMapping("RegExp", Mapping.createRegExpMapping());
         this._addGlobalMapping("Buffer", Mapping.createBufferMapping());
 
-        // find all entity types
-        types.forEach(type => this._findTypes(type));
+        for(let module of modules) {
+            this._processModule(module);
+        }
 
         this._ensureOneRootPerHierarchy();
 
-        // Create mappings. We need to create the mappings before we populate so we can create property mappings.
-        for(let type of this._objectTypes) {
-            var links = this._getTypeLinks(type);
-            if(!links.mapping) {
-                this._createMapping(links);
-            }
-        }
-
         // Populate mappings.
-        for(let type of this._objectTypes) {
-            this._populateMapping(this._getTypeLinks(type));
-        }
+        this._typeTable.forEach(links => this._populateMapping(links));
 
         return this._mappings;
+    }
+
+    get hasErrors(): boolean {
+        return this._errors.length > 0;
+    }
+
+    getErrorMessage(): string {
+        return "Unable to build type mappings from declaration files:\n" + this._errors.join("\n");
     }
 
     private _addGlobalMapping(name: string, mapping: Mapping): void {
@@ -238,12 +206,22 @@ class MappingBuilder {
         return this._typeTable.get(type);
     }
 
-    get hasErrors(): boolean {
-        return this._errors.length > 0;
-    }
+    private _processModule(obj: any): void {
 
-    getErrorMessage(): string {
-        return "Unable to build type mappings from declaration files:\n" + this._errors.join("\n");
+        // check to see if the export is an Entity or Embeddable type
+        if(typeof obj === "function") {
+            this._findTypes(this._reflect.getType(obj));
+        }
+        else if (typeof obj !== "object") {
+            return;
+        }
+
+        // search exports for types
+        for (let p in obj) {
+            if (obj.hasOwnProperty(p)) {
+                this._processModule(obj[p]);
+            }
+        }
     }
 
     private _findTypes(type: Type): void {
@@ -252,16 +230,22 @@ class MappingBuilder {
             return;
         }
 
+        // if the type has a converter then no further processing is needed here
         if(type.hasAnnotation(ConverterAnnotation)) {
-            this._addObjectType(type, MappingKind.Converted);
+            this._addObjectMapping(type, MappingKind.Converted);
             return;
         }
 
+        // process mappings for any base type first
+        if(type.baseType) {
+            this._findTypes(type.baseType);
+        }
+
         if(type.hasAnnotation(EntityAnnotation, true)) {
-            this._addObjectType(type, type.hasAnnotation(EntityAnnotation) ? MappingKind.RootEntity : MappingKind.Entity);
+            this._addObjectMapping(type, type.hasAnnotation(EntityAnnotation) ? MappingKind.RootEntity : MappingKind.Entity);
         }
         else if(type.hasAnnotation(EmbeddableAnnotation, true)) {
-            this._addObjectType(type, type.hasAnnotation(EmbeddableAnnotation) ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
+            this._addObjectMapping(type, type.hasAnnotation(EmbeddableAnnotation) ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
         }
         else {
             return;
@@ -324,30 +308,15 @@ class MappingBuilder {
         return property.type;
     }
 
-    private _addObjectType(type: Type, kind: MappingKind): void {
-
-        this._objectTypes.push(type);
-        this._addType(type, kind);
-    }
-
-    private _addType(type: Type, kind: MappingKind): TypeLinks {
-
-        return this._setTypeLinks(type, {
-            type: type,
-            kind: kind
-        });
-    }
-
     private _ensureOneRootPerHierarchy(): void {
 
-        var types = this._objectTypes;
-        for(var i = 0, l = types.length; i < l; i++) {
-            var type = types[i];
+       this._typeTable.forEach(links => {
+            var type = links.type;
             if(this._subclassMarkedAsRootType(type)) {
                 var annotation = type.getAnnotations(EntityAnnotation)[0] || type.getAnnotations(EmbeddableAnnotation)[0];
                 this._addAnnotationError(type, annotation, "Only one class per inheritance hierarchy can have the @Entity or @Embeddable annotation.");
             }
-        }
+       });
     }
 
     private _subclassMarkedAsRootType(type: Type): boolean {
@@ -369,12 +338,11 @@ class MappingBuilder {
         return false;
     }
 
-    private _createMapping(links: TypeLinks): Mapping {
+    private _addObjectMapping(type: Type, kind: MappingKind): void {
 
-        var mapping: Mapping,
-            type = links.type;
+        var mapping: Mapping;
 
-        switch(links.kind) {
+        switch(kind) {
             case MappingKind.RootEmbeddable:
                 mapping = Mapping.createClassMapping();
                 break;
@@ -400,23 +368,23 @@ class MappingBuilder {
                 break;
         }
 
-        return links.mapping = mapping;
+        this._setTypeLinks(type, {
+            type,
+            kind,
+            mapping
+        });
     }
 
     private _getParentMapping(type: Type): Mapping.ClassMapping {
 
-        var baseClass = type.baseType;
-        if(baseClass) {
-            var links = this._getTypeLinks(baseClass);
+        var baseType = type.baseType;
+        if(baseType) {
+            var links = this._getTypeLinks(baseType);
             if(links) {
                 var mapping = links.mapping
                 if (!mapping) {
-                    // If the mapping for the parent class does not exist, creat it
-                    mapping = this._createMapping(links);
-                    if (!mapping) {
-                        this._addError("Error creating parent mapping for '" + type.name + "'.");
-                        return undefined;
-                    }
+                    // this should not happen since the base type is processed first
+                    throw new Error("Could not find parent mapping for '" + type.name + "'.");
                 }
 
                 if ((mapping.flags & MappingFlags.Class) == 0) {
