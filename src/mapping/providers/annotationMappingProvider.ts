@@ -197,8 +197,8 @@ class MappingBuilder {
             throw new Error("Duplicate class name '" + type.name + "'. All Entity and Embedded classes must have unique names.");
         }
         this._typesByName.set(type.name, type);
-
         this._typeTable.set(type, links);
+
         return links;
     }
 
@@ -357,12 +357,11 @@ class MappingBuilder {
                 mapping = Mapping.createClassMapping();
                 break;
             case MappingKind.Embeddable:
-                if(typeof type === "function") {
-                    mapping = Mapping.createClassMapping(this._getParentMapping(type));
+                var parentMapping = this._getParentMapping(type);
+                if(parentMapping && (parentMapping.flags & MappingFlags.Embeddable) == 0) {
+                    this._addError("Parent of mapping for '" + type.name + "' must be an embeddable mapping.");
                 }
-                else {
-                    mapping = Mapping.createObjectMapping();
-                }
+                mapping = Mapping.createClassMapping(parentMapping);
                 break;
             case MappingKind.RootEntity:
                 mapping = Mapping.createEntityMapping();
