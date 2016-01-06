@@ -4,7 +4,7 @@ import "reflect-metadata";
 import {Constructor} from "./constructor"
 import {inherits} from "util";
 
-export function getType(obj: Object, method: string): Object {
+export function getPropertyType(obj: Object, method: string): Object {
 
     return Reflect.getMetadata('design:type', obj, method);
 }
@@ -81,7 +81,7 @@ export function hasClassAnnotation<T>(target: Constructor<any>, annotationCtr: C
 }
 
 
-export function hasPropertyAnnotation<T>(target: Constructor<any>, propertyName: string, annotationCtr: Constructor<T>) : boolean {
+export function hasPropertyAnnotation(target: Constructor<any>, propertyName: string, annotationCtr: Constructor<any>) : boolean {
 
     return getPropertyAnnotations(target, propertyName, annotationCtr).length > 0;
 }

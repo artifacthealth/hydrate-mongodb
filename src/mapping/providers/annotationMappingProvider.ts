@@ -19,6 +19,9 @@ import {EnumType} from "../enumType";
 import {Mapping} from "../mapping";
 import {MappingFlags} from "../mappingFlags";
 import {Configuration} from "../../config/configuration";
+import {ReflectContext} from "../../core/reflectContext";
+import {Type} from "../../core/type";
+import {Symbol} from "../../core/symbol";
 import {
     EntityAnnotation,
     EmbeddableAnnotation,
@@ -38,10 +41,24 @@ import {
     FieldAnnotation,
     EnumeratedAnnotation
 } from "./annotations";
+import {Constructor} from "../../core/constructor";
 
 export class AnnotationMappingProvider implements MappingProvider {
 
     private _modules: Object[] = [];
+    private _reflect: ReflectContext;
+
+    constructor(modules?: Object | Object[]) {
+
+        if(modules) {
+            if (!Array.isArray(modules)) {
+                modules = [<Object>modules];
+            }
+            this.addModules(<Object[]>modules);
+        }
+
+        this._reflect = new ReflectContext();
+    }
 
     addModule(module: Object): void {
 
@@ -80,7 +97,7 @@ export class AnnotationMappingProvider implements MappingProvider {
              this._processExports(types, module);
          }
 
-         var builder = new MappingBuilder(config);
+         var builder = new MappingBuilder(config, this._reflect);
          var mappings = builder.build(types);
 
          if(builder.hasErrors) {
@@ -95,8 +112,9 @@ export class AnnotationMappingProvider implements MappingProvider {
 
         // check to see if the export is an Entity or Embeddable type
         if(typeof obj === "function") {
-            if(ReflectUtil.hasClassAnnotation(obj, EntityAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, EmbeddableAnnotation, true) || ReflectUtil.hasClassAnnotation(obj, ConverterAnnotation)) {
-                types.add(obj);
+            var type = this._reflect.getType(obj);
+            if(type.hasAnnotation(EntityAnnotation, true) || type.hasAnnotation(EmbeddableAnnotation, true) || type.hasAnnotation(ConverterAnnotation)) {
+                types.add(type);
             }
         }
         else if (typeof obj !== "object") {
@@ -123,11 +141,6 @@ enum MappingKind {
     Converted
 }
 
-interface Type {
-    name?: string;
-    new(...args: any[]): any;
-}
-
 interface TypeLinks {
 
     type: Type;
@@ -142,9 +155,11 @@ class MappingBuilder {
     private _typesByName: Map<string, Type> = new Map();
     private _errors: string[] = [];
     private _mappings: Mapping.ClassMapping[] = [];
+    private _reflect: ReflectContext;
 
-    constructor(public config: Configuration) {
+    constructor(public config: Configuration, reflect: ReflectContext) {
 
+        this._reflect = reflect;
     }
 
     build(types: Set<Type>): Mapping.ClassMapping[] {
@@ -180,10 +195,13 @@ class MappingBuilder {
 
     private _addGlobalMapping(name: string, mapping: Mapping): void {
 
-        var type = (<any>global)[name];
-        if(!type) {
+        var ctr = (<any>global)[name];
+        if(!ctr) {
             throw new Error("Could not find global type '" + name + '.');
         }
+
+        var type = this._reflect.getType(ctr);
+
         this._setTypeLinks(type, {
             type: type,
             mapping: mapping,
@@ -202,7 +220,7 @@ class MappingBuilder {
         return links;
     }
 
-    private _resolveType(type: Type | string): Type {
+    private _resolveType(type: Constructor<any> | string): Type {
 
         if(typeof type === "string") {
             var resolved = this._typesByName.get(type);
@@ -212,7 +230,7 @@ class MappingBuilder {
             return resolved;
         }
 
-        return <Type>type;
+        return this._reflect.getType(<Constructor<any>>type);
     }
 
     private _getTypeLinks(type: Type): TypeLinks {
@@ -234,16 +252,16 @@ class MappingBuilder {
             return;
         }
 
-        if(ReflectUtil.hasClassAnnotation(type, ConverterAnnotation)) {
+        if(type.hasAnnotation(ConverterAnnotation)) {
             this._addObjectType(type, MappingKind.Converted);
             return;
         }
 
-        if(ReflectUtil.hasClassAnnotation(type, EntityAnnotation, true)) {
-            this._addObjectType(type, ReflectUtil.hasClassAnnotation(type, EntityAnnotation) ? MappingKind.RootEntity : MappingKind.Entity);
+        if(type.hasAnnotation(EntityAnnotation, true)) {
+            this._addObjectType(type, type.hasAnnotation(EntityAnnotation) ? MappingKind.RootEntity : MappingKind.Entity);
         }
-        else if(ReflectUtil.hasClassAnnotation(type, EmbeddableAnnotation, true)) {
-            this._addObjectType(type, ReflectUtil.hasClassAnnotation(type, EmbeddableAnnotation) ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
+        else if(type.hasAnnotation(EmbeddableAnnotation, true)) {
+            this._addObjectType(type, type.hasAnnotation(EmbeddableAnnotation) ? MappingKind.RootEmbeddable : MappingKind.Embeddable);
         }
         else {
             return;
@@ -252,54 +270,58 @@ class MappingBuilder {
         this._scanPropertiesForTypes(type);
     }
 
-    private _scanPropertiesForTypes(classType: Type): void {
+    private _scanPropertiesForTypes(type: Type): void {
 
-        var propertyNames = ReflectUtil.getPropertyNames(classType);
-        for(var i = 0; i < propertyNames.length; i++) {
-            this._findTypes(this._getPropertyTypeToScan(classType, propertyNames[i]));
+        for(var property of type.properties) {
+            this._findTypes(this._getPropertyTypeToScan(property));
         }
     }
 
-    private _getPropertyTypeToScan(type: Type, propertyName: string): Type {
+    private _getPropertyTypeToScan(property: Symbol): Type {
 
         // If the property has a converter, the type is ignored.
-        if(ReflectUtil.hasPropertyAnnotation(type, propertyName, ConverterAnnotation)) {
+        if(property.hasAnnotation(ConverterAnnotation)) {
             return null;
         }
 
-        var target = this._getTypeFromAnnotations(type, propertyName);
+        var annotation: { target: Constructor<any> | string },
+            target: Constructor<any> | string;
 
-        // Since this is used for type discovery, we are not interested in type indicated by name.
-        if(target && typeof target === "string") {
-            return null;
-        }
-
-        return <Type>ReflectUtil.getType(type.prototype, propertyName);
-    }
-
-    private _getTypeFromAnnotations(type: Type, propertyName: string): Type | string {
-
-        var annotation: { target: Type | string };
-
-        annotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceManyAnnotation)[0];
+        annotation = property.getAnnotations(ReferenceManyAnnotation)[0];
         if(annotation) {
-            return annotation.target;
+            target = annotation.target;
+        }
+        else {
+            annotation = property.getAnnotations(ReferenceOneAnnotation)[0];
+            if (annotation) {
+                target = annotation.target;
+            }
+            else {
+                annotation = property.getAnnotations(EmbedManyAnnotation)[0];
+                if (annotation) {
+                    target = annotation.target;
+                }
+                else {
+                    annotation = property.getAnnotations(EmbedOneAnnotation)[0];
+                    if (annotation) {
+                        target = annotation.target;
+                    }
+                }
+            }
         }
 
-        annotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceOneAnnotation)[0];
+        // If an annotation was provided, we want to use the target even if it's null. If the target was null then
+        // that means there was a circular reference or the type was used before it was defined so we should return
+        // null so we can inform the user of the error.
         if(annotation) {
-            return annotation.target;
+            // Since this is used for type discovery, we are not interested in type indicated by name.
+            if (typeof target === "string") {
+                return null;
+            }
+            return this._reflect.getType(<Constructor<any>>target);
         }
 
-        annotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedManyAnnotation)[0];
-        if (annotation) {
-            return annotation.target;
-        }
-
-        annotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedOneAnnotation)[0];
-        if (annotation) {
-            return annotation.target;
-        }
+        return property.type;
     }
 
     private _addObjectType(type: Type, kind: MappingKind): void {
@@ -322,7 +344,7 @@ class MappingBuilder {
         for(var i = 0, l = types.length; i < l; i++) {
             var type = types[i];
             if(this._subclassMarkedAsRootType(type)) {
-                var annotation = ReflectUtil.getClassAnnotations(type, EntityAnnotation)[0] || ReflectUtil.getClassAnnotations(type, EmbeddableAnnotation)[0];
+                var annotation = type.getAnnotations(EntityAnnotation)[0] || type.getAnnotations(EmbeddableAnnotation)[0];
                 this._addAnnotationError(type, annotation, "Only one class per inheritance hierarchy can have the @Entity or @Embeddable annotation.");
             }
         }
@@ -335,13 +357,13 @@ class MappingBuilder {
             return false;
         }
 
-        var baseClass = ReflectUtil.getBaseType(type);
+        var baseClass = type.baseType;
         while(baseClass) {
             var links = this._getTypeLinks(baseClass);
             if(links && (links.kind == MappingKind.RootEntity || links.kind == MappingKind.RootEmbeddable)) {
                 return true;
             }
-            baseClass = ReflectUtil.getBaseType(baseClass);
+            baseClass = baseClass.baseType;
         }
 
         return false;
@@ -374,7 +396,7 @@ class MappingBuilder {
                 mapping = Mapping.createEntityMapping((<Mapping.EntityMapping>parentMapping));
                 break;
             case MappingKind.Converted:
-                mapping = this._createConverterMapping(ReflectUtil.getClassAnnotations(type, ConverterAnnotation)[0]);
+                mapping = this._createConverterMapping(type.getAnnotations(ConverterAnnotation)[0]);
                 break;
         }
 
@@ -383,7 +405,7 @@ class MappingBuilder {
 
     private _getParentMapping(type: Type): Mapping.ClassMapping {
 
-        var baseClass = ReflectUtil.getBaseType(type);
+        var baseClass = type.baseType;
         if(baseClass) {
             var links = this._getTypeLinks(baseClass);
             if(links) {
@@ -426,7 +448,7 @@ class MappingBuilder {
     private _populateEntityMapping(mapping: Mapping.EntityMapping, type: Type): Mapping {
 
         // get type level annotations
-        var annotations = ReflectUtil.getClassAnnotations(type);
+        var annotations = type.getAnnotations();
         for(var i = 0, l = annotations.length; i < l; i++) {
             var annotation = annotations[i];
 
@@ -486,10 +508,10 @@ class MappingBuilder {
     private _populateClassMapping(mapping: Mapping.ClassMapping, type: Type): Mapping {
 
         mapping.name = type.name;
-        mapping.classConstructor = <any>type;
+        mapping.classConstructor = <any>type.ctr;
 
         // get type level annotations
-        var annotations = ReflectUtil.getClassAnnotations(type);
+        var annotations = type.getAnnotations();
         for(var i = 0, l = annotations.length; i < l; i++) {
             var annotation = annotations[i];
 
@@ -527,21 +549,17 @@ class MappingBuilder {
 
     private _populateObjectMapping(mapping: Mapping.ObjectMapping, type: Type): Mapping {
 
-        // process all properties in the type
-        var propertyNames = ReflectUtil.getPropertyNames(type);
-
-        for(var i = 0; i < propertyNames.length; i++) {
-            var propertyName = propertyNames[i];
+        for(var symbol of type.properties) {
 
             try {
-                var property = this._createProperty(mapping, type, propertyName);
+                var property = this._createProperty(mapping, symbol);
                 if(property) {
                     // add to mapping after property has been fully initialized
                     mapping.addProperty(property);
                 }
             }
             catch(e) {
-                this._addError("Invalid property '" + propertyName + "' on type '" + type.name + "': " + e.message);
+                this._addError("Invalid property '" + symbol.name + "' on type '" + type.name + "': " + e.message);
                 return null;
             }
         }
@@ -550,28 +568,27 @@ class MappingBuilder {
         //mapping.addDefaultMappings(this.config);
 
         // The mapping holds all properties inlcuding the properties for it's base types so populate those as well.
-        var baseType = ReflectUtil.getBaseType(type);
-        if(baseType) {
-            this._populateObjectMapping(mapping, baseType);
+        if(type.baseType) {
+            this._populateObjectMapping(mapping, type.baseType);
         }
 
         return mapping;
     }
 
-    private _createProperty(mapping: Mapping, parentType: Type, propertyName: string): Mapping.Property {
+    private _createProperty(mapping: Mapping, symbol: Symbol): Mapping.Property {
 
         try {
-            var propertyMapping = this._createPropertyMapping(parentType, propertyName);
+            var propertyMapping = this._createPropertyMapping(symbol);
         }
         catch(e) {
-            this._addError("Error creating property '" + propertyName + "' of type '" + parentType.name + "': " + e.message);
+            this._addError("Error creating property '" + symbol.name + "' of type '" + symbol.parent.name + "': " + e.message);
             return null;
         }
 
-        var property = Mapping.createProperty(propertyName, propertyMapping);
+        var property = Mapping.createProperty(symbol.name, propertyMapping);
 
         // process all property annotations
-        var annotations = ReflectUtil.getPropertyAnnotations(parentType, propertyName),
+        var annotations = symbol.getAnnotations(),
             indexAnnotations: IndexAnnotation[];
 
         try {
@@ -603,7 +620,7 @@ class MappingBuilder {
             }
         }
         catch (e) {
-            this._addPropertyAnnotationError(parentType, property, annotation, e.message);
+            this._addPropertyAnnotationError(symbol, annotation, e.message);
         }
 
         // add default values
@@ -620,30 +637,30 @@ class MappingBuilder {
                 }
             }
             catch (e) {
-                this._addPropertyAnnotationError(parentType, property, indexAnnotation, e.message);
+                this._addPropertyAnnotationError(symbol, indexAnnotation, e.message);
             }
         }
 
         return property;
     }
 
-    private _createPropertyMapping(parentType: Type, propertyName: string): Mapping {
+    private _createPropertyMapping(symbol: Symbol): Mapping {
 
-        if(ReflectUtil.hasPropertyAnnotation(parentType, propertyName, ConverterAnnotation)) {
-            return this._createConverterMapping(ReflectUtil.getPropertyAnnotations( parentType, propertyName, ConverterAnnotation)[0]);
+        if(symbol.hasAnnotation(ConverterAnnotation)) {
+            return this._createConverterMapping(symbol.getAnnotations(ConverterAnnotation)[0]);
         }
 
-        var propertyType = this._getPropertyType(parentType, propertyName);
+        var propertyType = this._getPropertyType(symbol);
         if(!propertyType) {
             throw new Error("Unable to determine type of property. This may be because of a circular reference or the type is used before it is defined. Try adding @EmbedOne or @ReferenceOne annotation with the name of the class as the target.");
         }
 
-        if(ReflectUtil.hasPropertyAnnotation(parentType, propertyName, EnumeratedAnnotation)) {
-            return this._createEnumMapping(propertyType, ReflectUtil.getPropertyAnnotations(parentType, propertyName, EnumeratedAnnotation)[0]);
+        if(symbol.hasAnnotation(EnumeratedAnnotation)) {
+            return this._createEnumMapping(propertyType, symbol.getAnnotations(EnumeratedAnnotation)[0]);
         }
 
         if(this._isCollection(propertyType)) {
-            var referencedAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, ReferenceManyAnnotation)[0];
+            var referencedAnnotation = symbol.getAnnotations(ReferenceManyAnnotation)[0];
             if(referencedAnnotation) {
                 if(!referencedAnnotation.target) {
                     throw new Error("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class .");
@@ -655,7 +672,7 @@ class MappingBuilder {
                 return Mapping.createArrayMapping(mapping);
             }
 
-            var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(parentType, propertyName, EmbedManyAnnotation)[0];
+            var embeddedAnnotation = symbol.getAnnotations(EmbedManyAnnotation)[0];
             if(embeddedAnnotation) {
                 if(!embeddedAnnotation.target) {
                     throw new Error("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class.");
@@ -673,17 +690,17 @@ class MappingBuilder {
         return this._createTypeMapping(propertyType);
     }
 
-    private _getPropertyType(type: Type, propertyName: string): Type {
+    private _getPropertyType(symbol: Symbol): Type {
 
         // Check to see if type is specified by an annotation
-        var target: Type | string;
+        var target: Constructor<any> | string;
 
-        var referencedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, ReferenceOneAnnotation)[0];
+        var referencedAnnotation = symbol.getAnnotations(ReferenceOneAnnotation)[0];
         if(referencedAnnotation) {
             target = referencedAnnotation.target;
         }
         else {
-            var embeddedAnnotation = ReflectUtil.getPropertyAnnotations(type, propertyName, EmbedOneAnnotation)[0];
+            var embeddedAnnotation = symbol.getAnnotations(EmbedOneAnnotation)[0];
             if (embeddedAnnotation) {
                 target = embeddedAnnotation.target;
             }
@@ -694,18 +711,27 @@ class MappingBuilder {
         }
 
         // get property type from the compiler generated metadata.
-        return <Type>ReflectUtil.getType(type.prototype, propertyName);
+        return symbol.type;
     }
 
     private _isCollection(type: Type): boolean {
 
-        return type != null && type.name == "Array";
+        return type && type.isArray;
+
         //return type != null && (type.name == "Array" || type.name == "Set" || type.name == "Map");
     }
 
-    private _createTypeMapping(target: Type | string): Mapping {
+    private _createTypeMapping(target: Type | Constructor<any> | string): Mapping {
 
-        var type = this._resolveType(target);
+        var type: Type;
+
+        if(typeof target === "string" || typeof target === "function") {
+
+            type = this._resolveType(<(Constructor<any> | string)>target);
+        }
+        else {
+            type = <Type>target;
+        }
 
         var links = this._getTypeLinks(type);
         if(links && links.mapping) {
@@ -747,7 +773,7 @@ class MappingBuilder {
 
     private _createEnumMapping(type: Type, annotation: EnumeratedAnnotation): Mapping {
 
-        if(type !== Number) {
+        if(!type.isNumber) {
             throw new Error("Cannot use @Enumerated annotation on a non-numeric field.");
         }
 
@@ -927,9 +953,9 @@ class MappingBuilder {
         this._addError("Invalid annotation '" + (annotation && annotation.constructor.name) + "' on '" + type.name + "': " + message);
     }
 
-    private _addPropertyAnnotationError(type: Type, property: Mapping.Property, annotation: any, message: string): void {
+    private _addPropertyAnnotationError(symbol: Symbol, annotation: any, message: string): void {
 
-        this._addError("Invalid annotation '" + (annotation && annotation.constructor.name) + "' on property '" + property.name + "' of type '" + type.name + "': " + message);
+        this._addError("Invalid annotation '" + (annotation && annotation.constructor.name) + "' on property '" + symbol.name + "' of type '" + symbol.parent.name + "': " + message);
     }
 
     private _addError(message: string): void {
