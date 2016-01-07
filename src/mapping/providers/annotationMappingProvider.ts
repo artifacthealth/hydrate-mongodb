@@ -1,10 +1,8 @@
 /// <reference path="../../../typings/async.d.ts" />
-/// <reference path="../../../typings/glob.d.ts" />
 /// <reference path="../../../typings/node.d.ts" />
 
 import * as async from "async";
 import * as path from "path";
-import * as glob from "glob";
 import * as ReflectUtil from "../../core/reflectUtil";
 import {absolutePath, hasExtension} from "../../core/fileUtil";
 import {ResultCallback} from "../../core/resultCallback";
@@ -28,7 +26,6 @@ import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";
 import {EntityMappingBuilder} from "./entityMappingBuilder";
-
 
 export class AnnotationMappingProvider implements MappingProvider {
 

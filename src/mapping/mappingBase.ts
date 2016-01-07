@@ -80,14 +80,14 @@ export abstract class MappingBase implements InternalMapping {
             context = pathOrContext;
         }
 
-        this._resolveCore(context);
+        this.resolveCore(context);
 
         if(cache) {
             return cache[pathOrContext] = context
         }
     }
 
-    protected _resolveCore(context: ResolveContext): void {
+    protected resolveCore(context: ResolveContext): void {
 
         if(!context.isEop) {
             context.setError("Undefined property.");

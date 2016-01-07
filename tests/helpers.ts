@@ -1,3 +1,6 @@
+/// <reference path="../typings/glob.d.ts" />
+/// <reference path="../typings/async.d.ts" />
+
 import * as model from "./fixtures/model";
 import * as path from "path";
 import * as glob from "glob";

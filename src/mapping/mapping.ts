@@ -22,6 +22,7 @@ import {EnumType} from "./enumType";
 import {PropertyConverter} from "./propertyConverter";
 import {ConverterMapping} from "./converterMapping";
 import {BufferMapping} from "./bufferMapping";
+import {SetMapping} from "./setMapping";
 
 export interface Mapping {
     id: number;
@@ -134,6 +135,13 @@ export namespace Mapping {
             throw new Error("Missing required argument 'elementMapping'.");
         }
         return new ArrayMapping(<InternalMapping>elementMapping);
+    }
+
+    export function createSetMapping(elementMapping: Mapping): Mapping {
+        if(!elementMapping) {
+            throw new Error("Missing required argument 'elementMapping'.");
+        }
+        return new SetMapping(<InternalMapping>elementMapping);
     }
 
     export function createBooleanMapping(): Mapping {

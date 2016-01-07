@@ -121,8 +121,13 @@ export class CriteriaBuilder {
                             // Doesn't have any query operators so just write the value
 
                             if(resolvedMapping.flags & MappingFlags.Array) {
-                                // if the mapping is an array we need to figure out if we are going to use the array
-                                // mapping or the element mapping
+                                // If the mapping is an array we need to figure out if we are going to use the array
+                                // mapping or the element mapping. When querying against arrays you can pass a single
+                                // element that will match if that element is in the array OR you can pass an array and
+                                // the query will only match if you have an exact match on the array. If we support tuple
+                                // and nested array mappings then the decision is unclear. That is what the logic below
+                                // for. If we drop support for nested array mappings and tuples then we can get rid of
+                                // this logic.
                                 var arrayMapping = (<ArrayMapping>resolvedMapping);
                                 if(!Array.isArray(value) || (arrayMapping.nestedDepth > 1 && arrayMapping.nestedDepth > this._findArrayDepth(value))) {
                                     // use element mapping if the value is not an array OR we have nested arrays and

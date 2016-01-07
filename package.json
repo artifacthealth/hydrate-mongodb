@@ -22,12 +22,12 @@
   "dependencies": {
     "async": "^0.9.0",
     "change-case": "^2.2.0",
-    "glob": "^6.0.3",
     "mongodb": "^2.0.42",
     "reflect-metadata": "^0.1.2"
   },
   "devDependencies": {
     "chai": "^1.9.2",
+    "glob": "^6.0.3",
     "grunt": "^0.4.5",
     "grunt-baseline": "^0.1.7",
     "grunt-contrib-clean": "^0.6.0",

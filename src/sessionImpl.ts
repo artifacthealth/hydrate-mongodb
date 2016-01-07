@@ -750,23 +750,11 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }
 
         if(Array.isArray(obj)) {
-            // TODO: warn in documentation that if array is modified before this callback returns then results are unpredictable
-            Async.forEach(obj, (item, index, done) => {
-                // note, depth is not incremented for array
-                this.fetchInternal(item, paths, (err, result) => {
-                    if(err) return done(err);
-                    if(item !== result) {
-                        obj[index] = result;
-                    }
-                    done();
-                });
-            }, (err) => {
-                if(err) return callback(err);
-                callback(null, obj);
-            });
-            //async.map(obj, (entity, done) => this.fetchInternal(entity, paths, done), callback);
+            async.map(obj, (item, done) => this.fetchInternal(item, paths, done), callback);
             return;
         }
+
+        // TODO: handle set
 
         // TODO: when a reference is resolved do we update the referenced object? __proto__ issue.
         Reference.fetch(this, obj, (err, entity) => {

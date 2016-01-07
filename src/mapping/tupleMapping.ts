@@ -138,7 +138,7 @@ export class TupleMapping extends MappingBase {
         });
     }
 
-    _resolveCore(context: ResolveContext): void {
+    protected resolveCore(context: ResolveContext): void {
 
         var property = context.currentProperty;
         if(property == "$") {

@@ -57,11 +57,17 @@ export class Type {
     }
 
     get isArray(): boolean {
+        // TODO: Is there a better way to do this? This will return true for any class named 'Array'
         return this.ctr.name == "Array";
     }
 
+    get isSet(): boolean {
+        // TODO: Is there a better way to do this? This will return true for any class named 'Set'
+        return this.ctr.name == "Set";
+    }
+
     get isCollection(): boolean {
-        return this.isArray;
+        return this.isArray || this.isSet;
     }
 }
 

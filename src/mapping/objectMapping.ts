@@ -324,7 +324,7 @@ export class ObjectMapping extends MappingBase {
         }
     }
 
-    _resolveCore(context: ResolveContext): void {
+    protected resolveCore(context: ResolveContext): void {
 
         var property = this.getProperty(context.currentProperty);
         if (property === undefined) {
