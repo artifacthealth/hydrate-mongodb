@@ -991,6 +991,7 @@ describe('SessionImpl', () => {
                 });
             });
         });
+
         it('should not cause object to become dirty when change tracking is observe', (done) => {
 
             helpers.createFactory("cat", (err, factory) => {

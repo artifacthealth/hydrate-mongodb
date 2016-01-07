@@ -139,7 +139,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
                     return;
                 }
 
-                return Mapping.createArrayMapping(mapping);
+                return this._createCollectionMapping(propertyType, mapping);
             }
 
             var embeddedAnnotation = symbol.getAnnotations(EmbedManyAnnotation)[0];
@@ -157,7 +157,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
                     return;
                 }
 
-                return Mapping.createArrayMapping(mapping);
+                return this._createCollectionMapping(propertyType, mapping);
             }
 
             this.context.addError("Properties with array types must be annotated with @ReferenceMany or @EmbedMany.");
@@ -165,6 +165,17 @@ export class ObjectMappingBuilder extends MappingBuilder {
         }
 
         return this._getMapping(propertyType);
+    }
+
+    private _createCollectionMapping(propertyType: Type, mapping: Mapping): Mapping {
+
+        if(propertyType.isArray) {
+            return Mapping.createArrayMapping(mapping);
+        }
+
+        if(propertyType.isSet) {
+            return Mapping.createSetMapping(mapping);
+        }
     }
 
     private _getPropertyType(symbol: Symbol): Type {

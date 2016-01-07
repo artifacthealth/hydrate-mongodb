@@ -15,6 +15,7 @@ import * as ConverterFixture from "../../fixtures/annotations/converter";
 import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
 import {requireFiles} from "../../helpers";
+import {SetMapping} from "../../../src/mapping/setMapping";
 
 describe('AnnotationMappingProvider', () => {
 
@@ -206,14 +207,15 @@ describe('AnnotationMappingProvider', () => {
                     done();
                 });
             });
-/*
-            it.only('test', (done) => {
+
+            it('creates SetMapping if field has a Set type', (done) => {
 
                 processFixture("set", done, (results) => {
 
+                    assert.instanceOf((<any>findMapping(results, "A").getProperty("field2").mapping), SetMapping);
                 });
             });
-            */
+
         });
 
         describe('@embedMany', () => {

@@ -3,7 +3,6 @@
 
 import * as async from "async";
 import {EventEmitter} from "events";
-import * as Async from "./core/Async";
 import {Callback} from "./core/callback";
 import {ChangeTrackingType} from "./mapping/changeTrackingType";
 import {Constructor} from "./core/constructor";

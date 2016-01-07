@@ -8,42 +8,34 @@
  * Released under the MIT license
  */
 
-import {Callback} from "./callback";
+import {ResultCallback} from "./resultCallback";
 
-
-/**
- * Asynchronous forEach. Same as async.each except it passes the index to the iterator.
- * See https://github.com/caolan/async.
- * @param arr The array to iterate over.
- * @param iterator The iterator to call for each item in teh array.
- * @param callback Called on error or after all items have been handled.
- */
-export function forEach (arr: any[], iterator: (item: any, index: number, done: Callback) => void, callback: Callback): void {
+export function mapSet<T> (s: Set<T>, iterator: (item: T, done: ResultCallback<T>) => void, callback: ResultCallback<Set<T>>): void {
     callback = callback || function () {};
-    if (!arr.length) {
-        return callback();
+    if (!s.size) {
+        return callback(null);
     }
     var completed = 0;
 
-    for (var i = 0; i < arr.length; i++) {
-        iterator(arr[i], i, only_once(done));
-    }
+    var result = new Set();
+    s.forEach((item) => iterator(item, only_once(done)));
 
-    function done(err?: Error) {
+    function done(err: Error, item: T) {
         if (err) {
             callback(err);
             callback = function () {};
         }
         else {
             completed += 1;
-            if (completed >= arr.length) {
-                callback();
+            result.add(item);
+            if (completed >= s.size) {
+                callback(null, result);
             }
         }
     }
 }
 
-function only_once(fn: Callback): Callback {
+function only_once<T>(fn: ResultCallback<T>): ResultCallback<T> {
     var called = false;
     return function() {
         if (called) throw new Error("Callback was already called.");
