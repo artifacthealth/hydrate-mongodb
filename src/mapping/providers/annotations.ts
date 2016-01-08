@@ -23,6 +23,13 @@ export interface TargetClassAnnotation {
     target: Constructor<any> | string;
 }
 
+export class IdAnnotation {
+
+    toString(): string {
+        return "@Id";
+    }
+}
+
 export class EntityAnnotation implements MappingBuilderAnnotation {
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {

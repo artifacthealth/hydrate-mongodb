@@ -18,6 +18,7 @@ import {Symbol} from "../../core/symbol";
 import {Constructor} from "../../core/constructor";
 import {EnumType} from "../enumType";
 import {Index} from "../index";
+import {IdentityMapping} from "../identityMapping";
 
 export class ObjectMappingBuilder extends MappingBuilder {
 
@@ -84,6 +85,9 @@ export class ObjectMappingBuilder extends MappingBuilder {
                     // queue up index annotations until after all annotations are processed and default mappings
                     // are applied because we may not know the field name yet.
                     (indexAnnotations || (indexAnnotations = [])).push(<IndexAnnotation>annotation);
+                    break;
+                case "IdAnnotation":
+                    this._setIdentity(property);
                     break;
             }
         }
@@ -264,6 +268,15 @@ export class ObjectMappingBuilder extends MappingBuilder {
         if(annotation.nullable) {
             property.setFlags(PropertyFlags.Nullable);
         }
+    }
+
+    private _setIdentity(property: Mapping.Property): void {
+
+        if(!this._assertEntityMapping(this.mapping)) return;
+
+        property.setFlags(PropertyFlags.ReadOnly);
+        property.field = "_id";
+        property.mapping = new IdentityMapping();
     }
 
     private _addPropertyIndex(mapping: Mapping.EntityMapping, property: Mapping.Property, value: IndexAnnotation): void {

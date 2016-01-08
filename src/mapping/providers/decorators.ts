@@ -21,7 +21,8 @@ import {
     EmbedManyAnnotation,
     EmbedOneAnnotation,
     FieldAnnotation,
-    EnumeratedAnnotation
+    EnumeratedAnnotation,
+    IdAnnotation
 } from "./annotations";
 
 import {PropertyConverter} from "../propertyConverter";
@@ -46,6 +47,10 @@ export interface ConverterDecoratorFactory {
 export interface CollectionDecoratorFactory {
     (name: string): ClassDecorator;
     (args?: { name?: string; db?: string, options?: CollectionOptions; }): ClassDecorator;
+}
+
+export interface IdAnnotationFactory {
+    (): PropertyDecorator;
 }
 
 export interface IndexDecoratorFactory {
@@ -113,6 +118,7 @@ export var ReferenceMany = <ReferenceManyDecoratorFactory>makeDecorator(Referenc
 export var ReferenceOne = <ReferenceOneDecoratorFactory>makeDecorator(ReferenceOneAnnotation);
 export var EmbedMany = <EmbeddedDecoratorFactory>makeDecorator(EmbedManyAnnotation);
 export var EmbedOne = <EmbeddedDecoratorFactory>makeDecorator(EmbedOneAnnotation);
+export var Id = <IdAnnotationFactory>makeDecorator(IdAnnotation);
 
 function makeDecorator(annotationCtr: Constructor<any>) {
 

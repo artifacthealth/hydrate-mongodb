@@ -196,7 +196,7 @@ export class ObjectMapping extends MappingBase {
                 flags = property.flags;
 
             // skip fields that are not persisted
-            if (flags & (PropertyFlags.Ignored | PropertyFlags.InverseSide)) {
+            if (flags & (PropertyFlags.Ignored | PropertyFlags.InverseSide | PropertyFlags.ReadOnly)) {
                 continue;
             }
 

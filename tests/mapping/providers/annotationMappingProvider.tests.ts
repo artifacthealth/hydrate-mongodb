@@ -16,6 +16,11 @@ import * as CircularReferenceFixture from "../../fixtures/annotations/circularRe
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
 import {requireFiles} from "../../helpers";
 import {SetMapping} from "../../../src/mapping/setMapping";
+import {IdentityMapping} from "../../../src/mapping/identityMapping";
+import {Callback} from "../../../src/core/callback";
+import {ResultCallback} from "../../../src/core/resultCallback";
+import {Property} from "../../../src/mapping/property";
+import {PropertyFlags} from "../../../src/mapping/propertyFlags";
 
 describe('AnnotationMappingProvider', () => {
 
@@ -52,6 +57,45 @@ describe('AnnotationMappingProvider', () => {
                     assert.equal(findMapping(results, "C").getProperty("c").field, "c");
                 });
             });
+        });
+
+        describe.only('@id', () => {
+
+            it("sets mapping on field to IdentityMapping", (done) => {
+
+                getIdentityFieldMapping(done, (property) => assert.instanceOf(property.mapping, IdentityMapping));
+            });
+
+            it("sets property as read-only", (done) => {
+
+                getIdentityFieldMapping(done, (property) => assert.isTrue(property.hasFlags(PropertyFlags.ReadOnly)));
+            });
+
+            it("sets field mapping on property to '_id'.", (done) => {
+
+                getIdentityFieldMapping(done, (property) => assert.equal(property.field, "_id"));
+            });
+
+            it("throws error if target property is not on an entity", (done) => {
+
+                processFixture("idOnEmbeddable", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Annotation can only be defined on entities");
+                    done();
+                });
+            });
+
+
+            function getIdentityFieldMapping(done: Callback, callback: (mapping: Property) => void): void {
+
+                processFixture("id", done, (results) => {
+
+                    var classMapping = findMapping(results, "A");
+                    var property = classMapping.getProperty("id");
+                    assert.ok(property, "Unable to get property 'id' on class 'A' in fixture 'id'.");
+                    callback(property);
+                });
+            }
         });
 
         describe('@enumerated', () => {
