@@ -1,4 +1,3 @@
-import {Lookup} from "../core/lookup";
 import {MappingError} from "./mappingError";
 import {ObjectMapping} from "./objectMapping";
 import {MappingRegistry} from "./mappingRegistry";
@@ -14,7 +13,7 @@ export class ClassMapping extends ObjectMapping {
 
     private _baseClass: ClassMapping;
     private _subclasses: ClassMapping[];
-    private _discriminatorMap: Lookup<ClassMapping>;
+    private _discriminatorMap: Map<string, ClassMapping>;
     private _registry: MappingRegistry;
 
     inheritanceRoot: ClassMapping;
@@ -141,14 +140,14 @@ export class ClassMapping extends ObjectMapping {
     private _addDiscriminatorMapping(value: string, mapping: ClassMapping): void {
 
         if(!this._discriminatorMap) {
-            this._discriminatorMap = {};
+            this._discriminatorMap = new Map();
         }
 
-        if(this._discriminatorMap[value]) {
+        if(this._discriminatorMap.has(value)) {
             throw new Error("There is already a class in this inheritance hierarchy with a discriminator value of '" + value + "'.");
         }
 
-        this._discriminatorMap[value] = mapping;
+        this._discriminatorMap.set(value, mapping);
     }
 
     private _ensureRegistry(): MappingRegistry {
@@ -196,7 +195,7 @@ export class ClassMapping extends ObjectMapping {
     private _getMappingForDocument(document: any): ClassMapping {
 
         var discriminatorValue = this.getDocumentDiscriminator(document);
-        return discriminatorValue === undefined ? this : this.inheritanceRoot._discriminatorMap[discriminatorValue]
+        return discriminatorValue === undefined ? this : this.inheritanceRoot._discriminatorMap.get(discriminatorValue);
     }
 
     protected readClass(context: ReadContext, value: any): any {

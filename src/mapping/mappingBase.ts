@@ -6,7 +6,6 @@ import {PropertyFlags} from "./propertyFlags";
 import {InternalSession} from "../internalSession";
 import {ResultCallback} from "../core/resultCallback";
 import {ResolveContext} from "./resolveContext";
-import {Lookup} from "../core/lookup";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {InternalMapping} from "./internalMapping";
@@ -17,7 +16,7 @@ export abstract class MappingBase implements InternalMapping {
 
     id: number;
 
-    private _resolveCache: Lookup<ResolveContext>;
+    private _resolveCache: Map<string, ResolveContext>;
 
     constructor(public flags: MappingFlags) {
         this.id = nextMappingId++;
@@ -59,22 +58,24 @@ export abstract class MappingBase implements InternalMapping {
         callback(new Error("Mapping does not support inverse relationships."));
     }
 
-    resolve(pathOrContext: any): any {
+    resolve(pathOrContext: string | ResolveContext): ResolveContext {
 
         var context: ResolveContext,
-            cache = this._resolveCache;
+            path: string;
 
         if(typeof pathOrContext === "string") {
-            if(!cache) {
-                cache = this._resolveCache = {};
+            path  = pathOrContext;
+
+            if(!this._resolveCache) {
+                this._resolveCache = new Map();
             }
             else {
-                var context = cache[pathOrContext];
+                var context = this._resolveCache.get(path);
                 if (context) {
                     return context;
                 }
             }
-            context = new ResolveContext(pathOrContext);
+            context = new ResolveContext(path);
         }
         else {
             context = pathOrContext;
@@ -82,9 +83,11 @@ export abstract class MappingBase implements InternalMapping {
 
         this.resolveCore(context);
 
-        if(cache) {
-            return cache[pathOrContext] = context
+        if(path) {
+            this._resolveCache.set(path, context);
         }
+
+        return context;
     }
 
     protected resolveCore(context: ResolveContext): void {

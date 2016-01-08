@@ -1,4 +1,3 @@
-import {Lookup} from "../core/lookup";
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
 import {PropertyFlags} from "./propertyFlags";
@@ -17,8 +16,8 @@ import {InternalMapping} from "./internalMapping";
 export class ObjectMapping extends MappingBase {
 
     properties: Property[] = [];
-    private _propertiesByName: Lookup<Property> = {};
-    private _propertiesByField: Lookup<Property> = {};
+    private _propertiesByName: Map<string, Property> = new Map();
+    private _propertiesByField: Map<string, Property> = new Map();
 
     constructor() {
         super(MappingFlags.Object | MappingFlags.Embeddable);
@@ -35,10 +34,10 @@ export class ObjectMapping extends MappingBase {
             throw new Error(error);
         }
 
-        this._propertiesByName[property.name] = property;
+        this._propertiesByName.set(property.name, property);
 
         if(property.field) {
-            this._propertiesByField[property.field] = property;
+            this._propertiesByField.set(property.field, property);
         }
 
         this.properties.push(property);
@@ -60,11 +59,11 @@ export class ObjectMapping extends MappingBase {
             return "Property must define a 'field' mapping if the property is not ignored.";
         }
 
-        if (Lookup.hasProperty(this._propertiesByName, property.name)) {
+        if (this._propertiesByName.has(property.name)) {
             return "There is already a mapped property with the name '" + property.name + "'.";
         }
 
-        if (Lookup.hasProperty(this._propertiesByField, property.field)) {
+        if (this._propertiesByField.has(property.field)) {
             return "There is already a mapped property for field '" + property.field + "'.";
         }
     }
@@ -75,12 +74,12 @@ export class ObjectMapping extends MappingBase {
             throw new Error("Missing required argument 'name'.");
         }
 
-        return Lookup.getProperty(this._propertiesByName, name);
+        return this._propertiesByName.get(name);
     }
 
     getPropertyForField(field: string): Property {
 
-        return Lookup.getProperty(this._propertiesByField, field);
+        return this._propertiesByField.get(field);
     }
 
     getProperties(flags?: PropertyFlags): Property[] {

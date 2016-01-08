@@ -12,7 +12,6 @@ import {Index} from "../index";
 import {IndexOptions} from "../indexOptions";
 import {PropertyFlags} from "../propertyFlags";
 import {ChangeTrackingType} from "../changeTrackingType";
-import {Lookup} from "../../core/lookup";
 import {EnumType} from "../enumType";
 import {Mapping} from "../mapping";
 import {MappingFlags} from "../mappingFlags";

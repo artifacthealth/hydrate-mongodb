@@ -20,7 +20,6 @@ import {Result} from "./core/result";
 import {Persister} from "./persister";
 import {Command} from "./core/command";
 import {Changes} from "./mapping/changes";
-import {Lookup} from "./core/lookup";
 import {QueryDefinition} from "./query/queryDefinition";
 import {QueryKind} from "./query/queryKind";
 import {IteratorCallback} from "./core/iteratorCallback";
@@ -822,7 +821,7 @@ class FindQueue {
 
     private _persister: PersisterImpl;
     private _ids: any[];
-    private _callbacks: Lookup<ResultCallback<any>>;
+    private _callbacks: Map<string, ResultCallback<any>>;
 
     constructor(persister: PersisterImpl) {
         this._persister = persister;
@@ -832,19 +831,19 @@ class FindQueue {
         if(!this._ids) {
             // this is the first entry in the queue so create the queue and schedule processing on the next tick
             this._ids = [];
-            this._callbacks = {};
+            this._callbacks = new Map();
             process.nextTick(() => this._process());
         }
 
         var key = id.toString();
-        var existingCallback = this._callbacks[key];
+        var existingCallback = this._callbacks.get(key);
         if(existingCallback === undefined) {
             this._ids.push(id);
-            this._callbacks[key] = callback;
+            this._callbacks.set(key, callback);
         }
         else {
             // this id is already in the queue so chain the callbacks
-            this._callbacks[key] = CallbackUtil.chain(callback, existingCallback);
+            this._callbacks.set(key, CallbackUtil.chain(callback, existingCallback));
         }
     }
 
@@ -860,7 +859,7 @@ class FindQueue {
         // check for simple case of only a single find in the queue
         if(ids.length == 1) {
             var id = ids[0],
-                callback = callbacks[id.toString()];
+                callback = callbacks.get(id.toString());
 
             if(typeof id === "string") {
                 id = this._persister.identity.fromString(id);
@@ -886,25 +885,18 @@ class FindQueue {
                     var entity = entities[i];
 
                     var id = entity["_id"].toString(),
-                        callback = callbacks[id];
+                        callback = callbacks.get(id);
 
                     callback(null, entity);
-                    // mark the callback as called
-                    callbacks[id] = undefined;
+                    // remove called callback
+                    callbacks.delete(id);
                 }
             }
 
             // TODO: add test to make sure callbacks are called if document cannot be found
 
             // pass error message to any callbacks that have not been called yet
-            for (var id in callbacks) {
-                if (callbacks.hasOwnProperty(id)) {
-                    var callback = callbacks[id];
-                    if(callback) {
-                        callback(err || new Error("Unable to find document with identifier '" + id + "'."));
-                    }
-                }
-            }
+            callbacks.forEach((callback, id) => callback(err || new Error("Unable to find document with identifier '" + id + "'.")));
         });
     }
 }

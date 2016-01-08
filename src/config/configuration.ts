@@ -14,7 +14,6 @@ import {MappingFlags} from "../mapping/mappingFlags";
 import {SessionFactory} from "../sessionFactory";
 import {SessionFactoryImpl} from "../sessionFactoryImpl";
 import {IdentityGenerator} from "../id/identityGenerator";
-import {Lookup} from "../core/lookup";
 import {EntityMapping} from "../mapping/entityMapping";
 import {NamingStrategy} from "./namingStrategy";
 import {ObjectIdGenerator} from "../id/objectIdGenerator";
@@ -125,7 +124,7 @@ export class Configuration {
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
         var collections: Table<mongodb.Collection> = [];
-        var names: Lookup<boolean> = {};
+        var namesSeen: Map<string, boolean> = new Map();
 
         async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
 
@@ -140,10 +139,10 @@ export class Configuration {
 
             // make sure db/collection is not mapped to some other type.
             var key = [(mapping.databaseName || localConnection.databaseName), "/", mapping.collectionName].join("");
-            if (Lookup.hasProperty(names, key)) {
+            if (namesSeen.has(key)) {
                 return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
             }
-            names[key] = true;
+            namesSeen.set(key, true);
 
             // change current database if a databaseName was specified in the mapping
             if(mapping.databaseName && mapping.databaseName !== localConnection.databaseName) {

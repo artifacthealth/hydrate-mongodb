@@ -5,7 +5,6 @@ import * as model from "./fixtures/model";
 import * as path from "path";
 import * as glob from "glob";
 import * as async from "async";
-import {Lookup} from "../src/core/lookup";
 import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {Configuration} from "../src/config/configuration";
@@ -18,7 +17,7 @@ import {ClassMapping} from "../src/mapping/classMapping";
 import {absolutePath, hasExtension} from "../src/core/fileUtil";
 import {ResultCallback} from "../src/core/resultCallback";
 
-var registryCache: Lookup<MappingRegistry> = {};
+var registryCache: Map<string, MappingRegistry> = new Map();
 
 export function createFactory(files: string, callback: (err: Error, result?: MockSessionFactory) => void): void;
 export function createFactory(files: string[], callback: (err: Error, result?: MockSessionFactory) => void): void;
@@ -32,7 +31,7 @@ export function createFactory(files: any, callback: (err: Error, result?: MockSe
 
     key = files.join(",");
 
-    var registry = registryCache[key];
+    var registry = registryCache.get(key);
     if(registry) {
         return callback(null, new MockSessionFactory(registry));
     }
@@ -51,7 +50,7 @@ export function createFactory(files: any, callback: (err: Error, result?: MockSe
             var registry = new MappingRegistry();
             registry.addMappings(<ClassMapping[]>mappings);
 
-            registryCache[key] = registry; // cache result
+            registryCache.set(key, registry); // cache result
 
             callback(null, new MockSessionFactory(registry));
         });

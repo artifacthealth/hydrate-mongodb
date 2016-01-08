@@ -15,6 +15,7 @@ export class EnumMapping extends MappingBase {
 
     private _values: Table<string> = [];
 
+    // TODO: switch members to Map when for-of loop is supported (need granular targeting in TypeScript)
     constructor(public members: Lookup<number>) {
         super(MappingFlags.Enum);
 

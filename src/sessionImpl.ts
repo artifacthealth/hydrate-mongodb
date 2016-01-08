@@ -7,7 +7,6 @@ import {Callback} from "./core/callback";
 import {ChangeTrackingType} from "./mapping/changeTrackingType";
 import {Constructor} from "./core/constructor";
 import {IteratorCallback} from "./core/iteratorCallback";
-import {Lookup} from "./core/lookup";
 import {PropertyFlags} from "./mapping/propertyFlags";
 import {ResultCallback} from "./core/resultCallback";
 import {InternalSession} from "./internalSession";
@@ -119,7 +118,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     /**
      * Hash table containing all objects by id associated with the session.
      */
-    private _objectLinksById: Lookup<ObjectLinks> = {};
+    private _objectLinksById: Map<string, ObjectLinks> = new Map();
 
     /**
      * List of all ObjectLinks associated with the session.
@@ -244,7 +243,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
         var id = obj["_id"];
         if(id) {
-            var links = this._objectLinksById[id.toString()];
+            var links = this._objectLinksById.get(id.toString());
             if(links && links.state == ObjectState.Managed) {
                 return true;
             }
@@ -299,7 +298,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             throw new Error("Missing required argument 'id'.");
         }
 
-        var links = this._objectLinksById[id.toString()];
+        var links = this._objectLinksById.get(id.toString());
         if (links) {
             switch(links.state) {
                 case ObjectState.Removed:
@@ -802,7 +801,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }
 
         // clear all object links
-        this._objectLinksById = {};
+        this._objectLinksById = new Map();
         this._objectLinks = [];
         // clear scheduled operations
         this._scheduleHead = this._scheduleTail = null
@@ -814,7 +813,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
         var id = obj["_id"];
         if (id) {
-            var links = this._objectLinksById[id.toString()];
+            var links = this._objectLinksById.get(id.toString());
             if (!links || links.object !== obj) {
                 // If we have an id but no links then the object must be detached since we assume that we manage
                 // the assignment of the identifier.
@@ -834,7 +833,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }
 
         var id = _id.toString();
-        if(this._objectLinksById[id]) {
+        if(this._objectLinksById.has(id)) {
             throw new Error("Session already contains an entity with identifier '" + id + "'.");
         }
 
@@ -846,14 +845,14 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             index: this._objectLinks.length
         }
 
-        this._objectLinksById[id] = links;
+        this._objectLinksById.set(id, links);
         this._objectLinks.push(links);
         return links;
     }
 
     private _unlinkObject(links: ObjectLinks): void {
 
-        this._objectLinksById[links.object["_id"].toString()] = undefined;
+        this._objectLinksById.delete(links.object["_id"].toString());
         this._objectLinks[links.index] = undefined;
 
         this._cleanupUnlinkedObject(links);
