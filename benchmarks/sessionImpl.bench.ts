@@ -44,11 +44,8 @@ suite("SessionImpl", () => {
         });
         */
 
-        var mapping = new AnnotationMappingProvider();
-        mapping.addFile("build/tests/fixtures/cat.js");
-
         var config = new Configuration();
-        config.addMapping(mapping);
+        config.addMapping(new AnnotationMappingProvider(Cat));
 
         mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
 
