@@ -16,7 +16,7 @@ export class MockDb implements Db {
     }
 
     db(dbName: string): Db {
-        return new MockDb(name);
+        return new MockDb(dbName);
     }
 
     open(callback: (err : Error, db : Db) => void ): void {

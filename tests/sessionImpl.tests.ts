@@ -494,7 +494,7 @@ describe('SessionImpl', () => {
             refresh((entity, done) => {
                 // modify object before refresh to make sure that after refresh the object is no longer considered dirty
                 entity.name = "Mittens";
-                setTimeout(done);
+                setTimeout(done, 0);
             }, (err, entity, session, persister) => {
                 if(err) return done(err);
 

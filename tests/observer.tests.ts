@@ -90,7 +90,7 @@ describe('Observer', () => {
             setTimeout(() => {
                 assert.equal(called, 1, "Observer did not stop watching the object after the first change");
                 done();
-            });
+            }, 0);
         }, 0);
     });
 
