@@ -59,7 +59,7 @@ describe('AnnotationMappingProvider', () => {
             });
         });
 
-        describe.only('@id', () => {
+        describe('@id', () => {
 
             it("sets mapping on field to IdentityMapping", (done) => {
 
