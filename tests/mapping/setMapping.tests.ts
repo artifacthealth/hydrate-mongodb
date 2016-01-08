@@ -63,7 +63,7 @@ describe('SetMapping', () => {
         });
     });
 
-    describe.only('fetch', () => {
+    describe('fetch', () => {
 
         it('retrieves references in set', (done) => {
 
@@ -72,7 +72,7 @@ describe('SetMapping', () => {
             var registry = new MappingRegistry();
             var setMapping = <SetMapping>mapping.getProperty("a").mapping;
             var elementMapping = <EntityMapping>setMapping.elementMapping;
-            registry.addMappings([mapping]);
+            registry.addMappings([mapping, elementMapping]);
 
             // create fetched entity
             var generator = new ObjectIdGenerator();
