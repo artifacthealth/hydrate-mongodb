@@ -91,7 +91,7 @@ module.exports = function(grunt) {
                         src: [
                             "typings/**/*.d.ts"
                         ],
-                        dest: "build"
+                        dest: "build/"
                     }
                 ]
             },

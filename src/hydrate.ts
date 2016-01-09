@@ -1,6 +1,3 @@
-/// <reference path="../typings/lib.core.es6.d.ts" />
-/// <reference path="../typings/intl.d.ts" />
-/// <reference path="../typings/console.d.ts" />
 /// <reference path="../typings/node.d.ts" />
 
 import {Reference} from "./reference";

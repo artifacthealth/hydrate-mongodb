@@ -23,6 +23,8 @@ import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
 import {ReadContext} from "../src/mapping/readContext";
 import {ClassMapping} from "../src/mapping/classMapping";
 
+var test = new Map<string, number>();
+
 describe('Temp', () => {
 
     it.skip('test against mongodb', (done) => {

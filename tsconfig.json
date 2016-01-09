@@ -3,7 +3,7 @@
         "outDir": "build/",
         "target": "es6",
         "noImplicitAny": true,
-        "declaration": false,
+        "declaration": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "noLib": true,
