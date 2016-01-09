@@ -3,7 +3,7 @@ import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
 
 @Entity()
 @ChangeTracking(ChangeTrackingType.DeferredExplicit)
-export default class Dog {
+export class Dog {
 
     @Field()
     name: string;

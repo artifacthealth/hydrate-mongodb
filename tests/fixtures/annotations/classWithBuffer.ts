@@ -3,7 +3,7 @@
 import { Entity, Field } from "../../../src/mapping/providers/decorators";
 
 @Entity()
-export default class ClassWithBuffer {
+export class ClassWithBuffer {
 
     @Field()
     data: Buffer;

@@ -23,9 +23,9 @@ import {Callback} from "../src/core/callback";
 import {Reference} from "../src/reference";
 
 // Fixtures
-import Cat from "./fixtures/cat";
-import Kitten from "./fixtures/kitten";
-import Dog from "./fixtures/dog";
+import {Cat} from "./fixtures/cat";
+import {Kitten} from "./fixtures/kitten";
+import {Dog} from "./fixtures/dog";
 import * as cascade from "./fixtures/cascade";
 
 describe('SessionImpl', () => {

@@ -1,4 +1,4 @@
-export default class AnonymousType {
+export class AnonymousType {
 
     anonymous: {
         a: string;

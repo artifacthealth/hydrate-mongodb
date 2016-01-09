@@ -124,8 +124,9 @@ function makeDecorator(annotationCtr: Constructor<any>) {
 
     return function DecoratorFactory(...args: any[]) {
 
-        var annotationInstance = Object.create(annotationCtr.prototype);
-        annotationCtr.apply(annotationInstance, args);
+        //var annotationInstance = Object.create(annotationCtr.prototype);
+        ///annotationCtr.apply(annotationInstance, args);
+        var annotationInstance = new annotationCtr(...args);
 
         return function Decorator(target: Object, propertyName?: string): void {
 

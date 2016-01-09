@@ -146,10 +146,11 @@ export class TupleMapping extends MappingBase {
             context.setError("Cannot resolve positional operator for Tuple.");
             return;
         }
-        else {
+
+        var index: number;
+        if((index = parseInt(property)) === index) {
             // check if it's an array index
-            var index = parseInt(property);
-            if(index !== index || index < 0 || index >= this.elementMappings.length) {
+            if(index < 0 || index >= this.elementMappings.length) {
                 context.setError("Index out of range for Tuple.");
                 return;
             }
@@ -159,9 +160,9 @@ export class TupleMapping extends MappingBase {
                 return; // reached end of path
             }
             elementMapping.resolve(context);
-            return;
         }
-
-        context.setError("Expected index for Tuple.");
+        else {
+            context.setError("Expected index for Tuple.");
+        }
     }
 }

@@ -1,9 +1,12 @@
+/// <reference path="../typings/lib.core.es6.d.ts" />
+/// <reference path="../typings/intl.d.ts" />
+/// <reference path="../typings/console.d.ts" />
+/// <reference path="../typings/node.d.ts" />
 /// <reference path="../typings/glob.d.ts" />
 /// <reference path="../typings/async.d.ts" />
 
 import * as model from "./fixtures/model";
 import * as path from "path";
-import * as glob from "glob";
 import * as async from "async";
 import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
@@ -16,6 +19,8 @@ import {Mapping} from "../src/mapping/mapping";
 import {ClassMapping} from "../src/mapping/classMapping";
 import {absolutePath, hasExtension} from "../src/core/fileUtil";
 import {ResultCallback} from "../src/core/resultCallback";
+
+var glob = require("glob");
 
 var registryCache: Map<string, MappingRegistry> = new Map();
 

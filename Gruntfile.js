@@ -33,7 +33,7 @@ module.exports = function(grunt) {
 
         typescript: {
             options: {
-                target: "es5",
+                target: "es6",
                 module: "commonjs",
                 sourceMap: true,
                 declaration: true,

@@ -175,7 +175,6 @@ class Builder {
                     return null;
                 }
                 return this._context.getType(<Constructor<any>>annotation.target);
-                break;
             }
         }
 

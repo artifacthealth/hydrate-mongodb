@@ -3,7 +3,7 @@ import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
 
 @Entity()
 @ChangeTracking(ChangeTrackingType.Observe)
-export default class Cat {
+export class Cat {
 
     @Field()
     name: string;

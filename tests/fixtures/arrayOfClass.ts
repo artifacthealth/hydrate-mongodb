@@ -1,8 +1,7 @@
-import ClassSimple from "./classSimple";
+import {ClassSimple} from "./classSimple";
 
-interface ArrayOfClass {
+export interface ArrayOfClass {
 
     array: ClassSimple[];
 }
 
-export default ArrayOfClass;

@@ -7,7 +7,7 @@ import { Session } from "../src/session";
 import { Configuration } from "../src/config/configuration";
 import { AnnotationMappingProvider } from "../src/mapping/providers/annotationMappingProvider";
 import { SessionFactory } from "../src/sessionFactory";
-import Cat from "../tests/fixtures/cat";
+import { Cat } from "../tests/fixtures/cat";
 import * as helpers from "../tests/helpers";
 import { SessionFactoryImpl } from "../src/sessionFactoryImpl";
 import { Persister } from "../src/persister";

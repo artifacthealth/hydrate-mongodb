@@ -1,7 +1,7 @@
 import { Entity, Field } from "../../src/mapping/providers/decorators";
 
 @Entity()
-export default class ClassSimple {
+export class ClassSimple {
 
     @Field()
     a: string;
@@ -19,6 +19,6 @@ export default class ClassSimple {
 }
 
 @Entity()
-class ClassSimple2 extends ClassSimple {
+export class ClassSimple2 extends ClassSimple {
 
 }

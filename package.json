@@ -26,8 +26,10 @@
     "reflect-metadata": "^0.1.2"
   },
   "devDependencies": {
+    "babel-preset-node5": "^10.2.0",
     "chai": "^1.9.2",
-    "glob": "^6.0.3",
+    "del": "^2.2.0",
+    "glob": "^6.0.4",
     "grunt": "^0.4.5",
     "grunt-baseline": "^0.1.7",
     "grunt-contrib-clean": "^0.6.0",
@@ -39,8 +41,14 @@
     "grunt-shell": "^1.1.1",
     "grunt-ts-clean": "^0.2.0",
     "grunt-typescript": "0.8.0",
+    "gulp": "^3.9.0",
+    "gulp-babel": "^6.1.1",
+    "gulp-mocha": "^2.2.0",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-typescript": "^2.10.0",
     "mocha": "^2.3.4",
-    "source-map-support": "^0.4.0"
+    "source-map-support": "^0.4.0",
+    "typescript": "^1.7.5"
   },
   "keywords": [
     "odm",
