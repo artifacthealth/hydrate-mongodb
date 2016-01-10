@@ -17,7 +17,9 @@ export class BufferMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
-        if(!value || !value._bsontype || value._bsontype != "Binary") {
+        if(value == null) return null;
+
+        if(!value._bsontype || value._bsontype != "Binary") {
             context.addError("Expected Binary.");
             return;
         }
@@ -26,7 +28,9 @@ export class BufferMapping extends MappingBase {
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
 
-        if(!value || !Buffer.isBuffer(value)) {
+        if(value == null) return null;
+
+        if(!Buffer.isBuffer(value)) {
             errors.push({ message: "Expected Buffer.", path: path, value: value });
             return;
         }

@@ -13,6 +13,8 @@ export class BooleanMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if(typeof value !== "boolean") {
             context.addError("Expected boolean.");
             return;
@@ -21,6 +23,8 @@ export class BooleanMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         if(typeof value !== "boolean") {
             errors.push({ message: "Expected boolean.", path: path, value: value });

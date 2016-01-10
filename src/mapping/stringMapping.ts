@@ -12,6 +12,8 @@ export class StringMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if(typeof value !== "string") {
             context.addError("Expected string.");
             return;
@@ -20,6 +22,8 @@ export class StringMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         if(typeof value !== "string") {
             errors.push({ message: "Expected string.", path: path, value: value });

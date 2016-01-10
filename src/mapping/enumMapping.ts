@@ -30,6 +30,8 @@ export class EnumMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if(typeof value === "number") {
             return value;
         }
@@ -61,6 +63,8 @@ export class EnumMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         if(typeof value !== "number") {
             errors.push({ message: "Expected enum value to be a number.", path: path, value: value });

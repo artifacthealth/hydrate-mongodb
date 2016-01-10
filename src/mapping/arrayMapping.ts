@@ -22,6 +22,8 @@ export class ArrayMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if (!Array.isArray(value)) {
             context.addError("Expected array.");
             return;
@@ -32,18 +34,7 @@ export class ArrayMapping extends MappingBase {
             mapping = this.elementMapping;
 
         for (var i = 0, l = value.length; i < l; i++) {
-            var item = value[i];
-
-            // treat undefined values as null
-            if (item === undefined) {
-                item = null;
-            }
-            if (item === null) {
-                result[i] = null;
-            }
-            else {
-                result[i] = mapping.read(context, item);
-            }
+            result[i] = mapping.read(context, value[i]);
         }
 
         // if there is an observer in the context, then watch this array for changes.
@@ -56,6 +47,8 @@ export class ArrayMapping extends MappingBase {
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
 
+        if(value == null) return null;
+
         if (!Array.isArray(value)) {
             errors.push({message: "Expected array.", path: path, value: value});
         }
@@ -64,18 +57,7 @@ export class ArrayMapping extends MappingBase {
             mapping = this.elementMapping;
 
         for (var i = 0, l = value.length; i < l; i++) {
-            var item = value[i];
-
-            // treat undefined values as null
-            if (item === undefined) {
-                item = null;
-            }
-            if (item === null) {
-                item = null;
-            }
-            else {
-                result[i] = mapping.write(item, path, errors, visited);
-            }
+            result[i] = mapping.write(value[i], path, errors, visited);
         }
 
         return result;

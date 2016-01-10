@@ -12,6 +12,8 @@ export class NumberMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if(typeof value !== "number") {
             context.addError("Expected number.");
             return;
@@ -20,6 +22,8 @@ export class NumberMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         if(typeof value !== "number") {
             errors.push({ message: "Expected number.", path: path, value: value });

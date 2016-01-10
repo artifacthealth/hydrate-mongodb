@@ -14,6 +14,8 @@ export class RegExpMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if(!(value instanceof RegExp)) {
             context.addError("Expected RegExp.");
             return;
@@ -22,6 +24,8 @@ export class RegExpMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         if(!(value instanceof RegExp)) {
             errors.push({ message: "Expected RegExp.", path: path, value: value });

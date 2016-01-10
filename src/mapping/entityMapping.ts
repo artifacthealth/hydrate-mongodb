@@ -86,6 +86,8 @@ export class EntityMapping extends ClassMapping {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         var id: any;
 
         // if this is not the top level, the value should be the id
@@ -120,6 +122,8 @@ export class EntityMapping extends ClassMapping {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         var id: any;
 

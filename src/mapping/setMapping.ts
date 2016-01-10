@@ -24,6 +24,8 @@ export class SetMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if (!Array.isArray(value)) {
             context.addError("Expected array.");
             return;
@@ -60,6 +62,8 @@ export class SetMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         if (!isSet(value)) {
             errors.push({message: "Expected Set.", path: path, value: value});

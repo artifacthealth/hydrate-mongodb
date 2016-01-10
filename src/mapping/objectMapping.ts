@@ -108,7 +108,7 @@ export class ObjectMapping extends MappingBase {
 
     protected readObject(context: ReadContext, obj: any, value: any, checkRemoved: boolean): any {
 
-        if(value === null || value === undefined) {
+        if(value == null) {
             return null;
         }
 
@@ -172,11 +172,12 @@ export class ObjectMapping extends MappingBase {
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
 
-
         return this.writeObject({}, value, path, errors, visited);
     }
 
     protected writeObject(document: any, value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         var base = path ? path + "." : "",
             properties = this.properties,

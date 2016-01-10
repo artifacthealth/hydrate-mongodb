@@ -169,6 +169,8 @@ export class ClassMapping extends ObjectMapping {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         var mapping = this.inheritanceRoot.getMapping(context, value);
         if (mapping) {
             return mapping.readClass(context, value);
@@ -204,6 +206,8 @@ export class ClassMapping extends ObjectMapping {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
         // does not exist, default to current mapping.

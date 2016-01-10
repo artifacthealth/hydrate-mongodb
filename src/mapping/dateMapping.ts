@@ -13,6 +13,8 @@ export class DateMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if(!(value instanceof Date)) {
             context.addError("Expected Date.");
             return;
@@ -21,6 +23,8 @@ export class DateMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         if(!(value instanceof Date)) {
             errors.push({ message: "Expected Date.", path: path, value: value });

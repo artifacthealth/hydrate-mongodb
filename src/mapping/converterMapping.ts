@@ -15,6 +15,8 @@ export class ConverterMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         var result = this.converter.convertToObjectProperty(value);
 
         if (result === undefined) {
@@ -25,6 +27,8 @@ export class ConverterMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         var result = this.converter.convertToDocumentField(value);
 

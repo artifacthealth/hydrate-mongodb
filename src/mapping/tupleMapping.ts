@@ -19,6 +19,8 @@ export class TupleMapping extends MappingBase {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         if(!Array.isArray(value)) {
             context.addError("Expected tuple.");
             return;
@@ -47,6 +49,8 @@ export class TupleMapping extends MappingBase {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         if(!Array.isArray(value)) {
             errors.push({ message: "Expected tuple.", path: path, value: value });

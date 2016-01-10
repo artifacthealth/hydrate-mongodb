@@ -15,6 +15,8 @@ export class IdentityMapping extends VirtualMapping {
 
     read(context: ReadContext, value: any): any {
 
+        if(value == null) return null;
+
         // We don't bother validating the identity, other than that there is one, because the identity is validated by
         // the EntityMapping.
         if(value == null) {
@@ -26,6 +28,8 @@ export class IdentityMapping extends VirtualMapping {
     }
 
     write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+
+        if(value == null) return null;
 
         // do nothing
     }
