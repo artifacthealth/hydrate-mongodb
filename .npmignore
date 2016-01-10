@@ -6,7 +6,8 @@
 /src
 /tests
 /typings
-/Gruntfile.js
+/gulpfile.js
+/tsconfig.json
 /baseline.json
 /.gitignore
 /hydrate.iml
