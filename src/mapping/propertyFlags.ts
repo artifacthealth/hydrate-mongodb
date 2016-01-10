@@ -11,10 +11,9 @@ export const enum PropertyFlags {
     Nullable = 0x00000080,
     OrphanRemoval = 0x00000100,
     ReadOnly = 0x00000200,
-
     All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | ReadOnly,
 
     // walk flags
-    WalkEntities = 0x00000200,
-    Dereference = 0x00000400
+    WalkEntities = 0x00001000,
+    Dereference = 0x00002000
 }
