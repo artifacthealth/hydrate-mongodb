@@ -5,7 +5,7 @@ import {assert} from "chai";
 import * as helpers from "../helpers";
 import * as model from "../fixtures/model";
 
-import {SetMapping} from "../../src/mapping/setMapping";
+import {IterableMapping} from "../../src/mapping/iterableMapping";
 import {EntityMapping} from "../../src/mapping/entityMapping";
 import {ObjectIdGenerator} from "../../src/id/objectIdGenerator";
 import {ReadContext} from "../../src/mapping/readContext";
@@ -16,45 +16,54 @@ import {MockSessionFactory} from "../mockSessionFactory";
 import {Property} from "../../src/mapping/property";
 import {Reference} from "../../src/reference";
 
-describe('SetMapping', () => {
+describe('IterableMapping', () => {
 
     describe('read', () => {
 
         it('passes through null values in array', () => {
 
-            var mapping = createMapping();
+            var mapping = createSetMapping();
             var context = new ReadContext(null);
 
             var result = mapping.read(context, [null]);
 
-            assertEqual(result, new Set([null]));
+            assertIterablesEqual(result, new Set([null]));
         });
 
         it('transforms undefined values to null values', () => {
 
-            var mapping = createMapping();
+            var mapping = createSetMapping();
             var context = new ReadContext(null);
 
             var result = mapping.read(context, [undefined]);
 
-            assertEqual(result, new Set([null]));
+            assertIterablesEqual(result, new Set([null]));
         });
 
-        it('converts array to Set and drops duplicates', () => {
+        it('converts array to iterable', () => {
 
-            var mapping = createMapping();
+            var mapping = createSetMapping();
             var context = new ReadContext(null);
 
             var result = mapping.read(context, [1, 1, 2, 2, 10, 12]);
-            assertEqual(result, new Set([1, 2, 10, 12]));
+            assertIterablesEqual(result, new Set([1, 2, 10, 12]));
+        });
+
+        it('preserves order', () => {
+
+            var mapping = createCustomIterableMapping();
+            var context = new ReadContext(null);
+
+            var result = mapping.read(context, [1, 1, 2, 2, 10, 12]);
+            assertIterablesEqual(result, [1, 1, 2, 2, 10, 12]);
         });
     });
 
     describe('write', () => {
 
-        it('converts Set to array in document', () => {
+        it('converts iterable to array in document', () => {
 
-            var mapping = createMapping();
+            var mapping = createSetMapping();
 
             var errors: MappingError[] = [];
             var result = mapping.write(new Set([1, 2, 10, 12]), "", errors, []);
@@ -65,12 +74,12 @@ describe('SetMapping', () => {
 
     describe('fetch', () => {
 
-        it('retrieves references in set', (done) => {
+        it('retrieves references in iterable', (done) => {
 
             // setup mapping registry
             var mapping = createEntityMapping();
             var registry = new MappingRegistry();
-            var setMapping = <SetMapping>mapping.getProperty("a").mapping;
+            var setMapping = <IterableMapping>mapping.getProperty("a").mapping;
             var elementMapping = <EntityMapping>setMapping.elementMapping;
             registry.addMappings([mapping, elementMapping]);
 
@@ -106,25 +115,50 @@ describe('SetMapping', () => {
     });
 });
 
-function assertEqual(actual: Set<any>, expected: Set<any>, message?: string): void {
+function assertIterablesEqual<T>(actual: Iterable<T>, expected: Iterable<T>, message?: string): void {
 
     assert.deepEqual(toArray(actual), toArray(expected), message);
 }
 
-function toArray<T>(value: Set<T>): T[] {
+class A {
 
-    if(!value) return <any>value;
-
-    var result: T[] = [];
-
-    value.forEach((item) => result.push((item)));
-
-    return result;
 }
 
-function createMapping(): SetMapping {
+class B {
 
-    return new SetMapping(new NumberMapping());
+}
+
+class CustomIterable implements Iterable<number>{
+
+    private _arr: any[];
+
+    constructor(iterable: any[]) {
+
+        this._arr = toArray(iterable);
+    }
+
+    [Symbol.iterator](): Iterator<any> {
+
+        var nextIndex = 0;
+
+        return {
+            next: () => {
+                return nextIndex < this._arr.length ?
+                {value: this._arr[nextIndex++], done: false} :
+                {done: true};
+            }
+        }
+    }
+}
+
+function createSetMapping(): IterableMapping {
+
+    return new IterableMapping(Set, new NumberMapping());
+}
+
+function createCustomIterableMapping(): IterableMapping {
+
+    return new IterableMapping(CustomIterable, new NumberMapping());
 }
 
 function createEntityMapping(): EntityMapping {
@@ -134,7 +168,7 @@ function createEntityMapping(): EntityMapping {
     elementMapping.inheritanceRoot = elementMapping;
     elementMapping.classConstructor = B;
 
-    var setMapping = new SetMapping(elementMapping);
+    var setMapping = new IterableMapping(Set, elementMapping);
 
     var entityMapping = new EntityMapping();
     entityMapping.name = "A";
@@ -147,10 +181,15 @@ function createEntityMapping(): EntityMapping {
     return entityMapping;
 }
 
-class A {
+function toArray<T>(value: Iterable<T>): T[] {
 
-}
+    if(!value) return [];
 
-class B {
+    var result: T[] = [];
 
+    for(let item of value) {
+        result.push(item);
+    }
+
+    return result;
 }

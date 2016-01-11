@@ -1,5 +1,5 @@
 import * as async from "async";
-import {mapSet} from "../core/async";
+import {mapIterable} from "../core/async";
 import {InternalMapping} from "./internalMapping";
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
@@ -14,12 +14,26 @@ import {ResolveContext} from "./resolveContext";
 import {TupleMapping} from "./tupleMapping";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
-import {isSet} from "../core/collectionUtil"
+import {Constructor} from "../core/constructor";
 
-export class SetMapping extends MappingBase {
+/**
+ * Mapping for an iterable. The constructor passed to this mapping must take a single argument, an iterable, used to
+ * constructor the iterable. Also, optionally, the prototype can include a 'size' property that indicates the size of
+ * the iterable collection.
+ */
+// TODO: Combine Array and Iterable mappings? Note that array has a couple special cases including determining nested depth in query documents and that the Array constructor does not accept an iterable to construct it.
+export class IterableMapping extends MappingBase {
 
-    constructor(public elementMapping: InternalMapping) {
-        super(MappingFlags.Set);
+    constructor(public iterableConstructor: Constructor<any>, public elementMapping: InternalMapping) {
+        super(MappingFlags.Iterable);
+
+        if(!iterableConstructor) {
+            throw new Error("Missing required argument 'iterableConstructor");
+        }
+
+        if(!iterableConstructor.name) {
+            throw new Error("Iterable constructor must have a name.");
+        }
     }
 
     read(context: ReadContext, value: any): any {
@@ -50,8 +64,7 @@ export class SetMapping extends MappingBase {
             }
         }
 
-        // If the element mapping is an entity then just leave the result as an array until it is fetched
-        var result = new Set(arr);
+        var result = new this.iterableConstructor(arr);
 
         // if there is an observer in the context, then watch this array for changes.
         if(context.observer) {
@@ -65,15 +78,15 @@ export class SetMapping extends MappingBase {
 
         if(value == null) return null;
 
-        if (!isSet(value)) {
-            errors.push({message: "Expected Set.", path: path, value: value});
+        if (!this._isIterable(value)) {
+            errors.push({message: `Expected instance of ${this.iterableConstructor.name}.`, path: path, value: value});
         }
 
         var result = new Array(value.length),
             mapping = this.elementMapping,
             i = 0;
 
-        value.forEach((item: any) => {
+        for(let item of value) {
             // treat undefined values as null
             if (item === undefined) {
                 item = null;
@@ -84,20 +97,20 @@ export class SetMapping extends MappingBase {
             else {
                 result[i++] = mapping.write(item, path, errors, visited);
             }
-        });
+        }
 
         return result;
     }
 
     watch(value: any, observer: Observer, visited: any[]): void {
 
-        if(!value || !isSet(value)) return;
+        if(!this._isIterable(value)) return;
 
         observer.watch(value);
 
-        value.forEach((item: any) => {
+        for(let item of value) {
             this.elementMapping.watch(item, observer, visited);
-        });
+        }
     }
 
     areEqual(documentValue1: any, documentValue2: any): boolean {
@@ -123,38 +136,26 @@ export class SetMapping extends MappingBase {
 
     walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
-        if (!isSet(value)) {
+        if (!this._isIterable(value)) {
             return;
         }
 
         var mapping = this.elementMapping;
-        value.forEach((item: any) => {
+        for(let item of value) {
             mapping.walk(session, item, flags, entities, embedded, references);
-        });
+        }
     }
 
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
-        if((!Array.isArray(value) && !isSet(value)) || value.length === 0 || value.size === 0) {
+        if((!Array.isArray(value) && !this._isIterable(value)) || value.length === 0 || value.size === 0) {
             return callback(null, value);
         }
 
-        var mapping = this.elementMapping;
-
-        // If value is an array then use the normal async.map and convert to a set at the end. Otherwise, the value is
-        // a set so use the map set function.
-        if(Array.isArray(value)) {
-            async.map(value, (item, done) => mapping.fetch(session, parentEntity, item, path, depth, done), (err, result) => {
-                if (err) return callback(err);
-                callback(null, new Set(result));
-            });
-        }
-        else {
-            mapSet(value, (item, done) => mapping.fetch(session, parentEntity, item, path, depth, done), (err, result) => {
-                if(err) return callback(err);
-                callback(null, result);
-            });
-        }
+        mapIterable(value, (item, done) => this.elementMapping.fetch(session, parentEntity, item, path, depth, done), (err, result) => {
+            if(err) return callback(err);
+            callback(null, new this.iterableConstructor(result));
+        });
     }
 
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
@@ -173,11 +174,17 @@ export class SetMapping extends MappingBase {
         });
     }
 
+    private _isIterable(value: any): boolean {
+
+        return value != null && value instanceof <any>this.iterableConstructor;
+    }
+
     protected resolveCore(context: ResolveContext): void {
 
-        var property = context.currentProperty;
+        var property = context.currentProperty,
+            index: number;
 
-        if(property == "$") {
+        if(property == "$" || ((index = parseInt(property)) === index)) {
             // this is the positional operator or an index
             if(context.resolveProperty(this.elementMapping, property)) {
                 return; // reached end of path

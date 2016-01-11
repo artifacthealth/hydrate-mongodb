@@ -77,6 +77,7 @@ export class AnnotationMappingProvider implements MappingProvider {
 class Builder {
 
     private _context: MappingBuilderContext;
+    private _seenTypes = new Set<any>();
 
     constructor(config: Configuration) {
 
@@ -140,9 +141,11 @@ class Builder {
 
     private _findTypes(type: Type): void {
 
-        if(!type || type.isCollection || this._context.hasBuilder(type)) {
+        if(!type || this._seenTypes.has(type)) {
             return;
         }
+
+        this._seenTypes.add(type);
 
         // process mappings for any base type first
         if(type.baseType) {

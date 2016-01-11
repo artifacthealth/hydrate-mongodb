@@ -127,43 +127,51 @@ export class ObjectMappingBuilder extends MappingBuilder {
             return this._createEnumMapping(propertyType, symbol.getAnnotations(EnumeratedAnnotation)[0]);
         }
 
-        if(propertyType.isCollection) {
-            var referencedAnnotation = symbol.getAnnotations(ReferenceManyAnnotation)[0];
-            if(referencedAnnotation) {
-                if(!referencedAnnotation.target) {
-                    this.context.addError("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class .");
-                    return;
-                }
-
-                var mapping = this._getMapping(referencedAnnotation.target);
-                if(!mapping) return;
-
-                if(!(mapping.flags & MappingFlags.Entity)) {
-                    this.context.addError("Target of @ReferenceMany annotation must be an Entity.");
-                    return;
-                }
-
-                return this._createCollectionMapping(propertyType, mapping);
+        var referencedAnnotation = symbol.getAnnotations(ReferenceManyAnnotation)[0];
+        if(referencedAnnotation) {
+            if(!referencedAnnotation.target) {
+                this.context.addError("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class .");
+                return;
             }
 
-            var embeddedAnnotation = symbol.getAnnotations(EmbedManyAnnotation)[0];
-            if(embeddedAnnotation) {
-                if(!embeddedAnnotation.target) {
-                    this.context.addError("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class.");
-                    return;
-                }
+            var mapping = this._getMapping(referencedAnnotation.target);
+            if(!mapping) return;
 
-                var mapping = this._getMapping(embeddedAnnotation.target);
-                if(!mapping) return;
-
-                if(!(mapping.flags & (MappingFlags.Embeddable | MappingFlags.Boolean | MappingFlags.String | MappingFlags.Number | MappingFlags.Enum | MappingFlags.RegExp | MappingFlags.Date | MappingFlags.Buffer))) {
-                    this.context.addError("Target of @EmbedMany annotation must be a built-in type or a class annotated with @Embeddable.");
-                    return;
-                }
-
-                return this._createCollectionMapping(propertyType, mapping);
+            if(!(mapping.flags & MappingFlags.Entity)) {
+                this.context.addError("Target of @ReferenceMany annotation must be an Entity.");
+                return;
             }
 
+            if(!propertyType.isIterable) {
+                this.context.addError("Properties annotated @ReferenceMany must have a type that is iterable.");
+            }
+
+            return this._createCollectionMapping(propertyType, mapping);
+        }
+
+        var embeddedAnnotation = symbol.getAnnotations(EmbedManyAnnotation)[0];
+        if(embeddedAnnotation) {
+            if(!embeddedAnnotation.target) {
+                this.context.addError("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class.");
+                return;
+            }
+
+            var mapping = this._getMapping(embeddedAnnotation.target);
+            if(!mapping) return;
+
+            if(!(mapping.flags & (MappingFlags.Embeddable | MappingFlags.Boolean | MappingFlags.String | MappingFlags.Number | MappingFlags.Enum | MappingFlags.RegExp | MappingFlags.Date | MappingFlags.Buffer))) {
+                this.context.addError("Target of @EmbedMany annotation must be a built-in type or a class annotated with @Embeddable.");
+                return;
+            }
+
+            if(!propertyType.isIterable) {
+                this.context.addError("Properties annotated @EmbedMany must have a type that is iterable.");
+            }
+
+            return this._createCollectionMapping(propertyType, mapping);
+        }
+
+        if(propertyType.isArray) {
             this.context.addError("Properties with array types must be annotated with @ReferenceMany or @EmbedMany.");
             return;
         }
@@ -177,9 +185,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
             return Mapping.createArrayMapping(mapping);
         }
 
-        if(propertyType.isSet) {
-            return Mapping.createSetMapping(mapping);
-        }
+        return Mapping.createIterableMapping(propertyType.ctr, mapping);
     }
 
     private _getPropertyType(symbol: Symbol): Type {

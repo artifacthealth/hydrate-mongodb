@@ -2,6 +2,7 @@ import {getClassAnnotations, hasClassAnnotation, getPropertyNames, getBaseType} 
 import {Constructor} from "./constructor";
 import {Symbol} from "./symbol";
 import {ReflectContext} from "./reflectContext";
+import {isIterableConstructor} from "./collectionUtil";
 
 export class Type {
 
@@ -66,8 +67,8 @@ export class Type {
         return this.ctr.name == "Set";
     }
 
-    get isCollection(): boolean {
-        return this.isArray || this.isSet;
+    get isIterable(): boolean {
+        return isIterableConstructor(this.ctr);
     }
 }
 

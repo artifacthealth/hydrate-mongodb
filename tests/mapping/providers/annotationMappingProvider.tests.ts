@@ -15,7 +15,7 @@ import * as ConverterFixture from "../../fixtures/annotations/converter";
 //import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
 import {requireFiles} from "../../helpers";
-import {SetMapping} from "../../../src/mapping/setMapping";
+import {IterableMapping} from "../../../src/mapping/iterableMapping";
 import {IdentityMapping} from "../../../src/mapping/identityMapping";
 import {Callback} from "../../../src/core/callback";
 import {ResultCallback} from "../../../src/core/resultCallback";
@@ -257,11 +257,11 @@ describe('AnnotationMappingProvider', () => {
             });
             */
 
-            it('creates SetMapping if field has a Set type', (done) => {
+            it('creates IterableMapping if field has an iterable type', (done) => {
 
                 processFixture("set", done, (results) => {
 
-                    assert.instanceOf((<any>findMapping(results, "A").getProperty("field2").mapping), SetMapping);
+                    assert.instanceOf((<any>findMapping(results, "A").getProperty("field2").mapping), IterableMapping);
                 });
             });
 

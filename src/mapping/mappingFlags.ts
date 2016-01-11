@@ -15,9 +15,6 @@ export const enum MappingFlags {
     InheritanceRoot     = 0x00001000,
     Converter           = 0x00002000,
     Buffer              = 0x00004000,
-    Set                 = 0x00008000,
-    Map                 = 0x00010000,
-    Virtual             = 0x00020000,
-
-    ArrayLike = Array | Tuple | Set
+    Iterable            = 0x00008000,
+    Virtual             = 0x00010000
 }
