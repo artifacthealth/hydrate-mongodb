@@ -12,7 +12,7 @@ import {EntityMapping} from "../../../src/mapping/entityMapping";
 import {EnumType} from "../../../src/mapping/enumType";
 import {PropertyConverter} from "../../../src/mapping/propertyConverter";
 import * as ConverterFixture from "../../fixtures/annotations/converter";
-//import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference";
+import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference1";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
 import {requireFiles} from "../../helpers";
 import {IterableMapping} from "../../../src/mapping/iterableMapping";
@@ -228,11 +228,9 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
 
-            /*
-            // Disabled because emitDecoratorMetadata breaks the script when compiled with ES6
-            it.skip("can handle circular references by specifying target as class name", (done) => {
+            it("can handle circular references by specifying target as class name", (done) => {
 
-                processFixture("circularReference", done, (results) => {
+                processFixture("circularReference1", done, (results) => {
 
                     assert.lengthOf(results, 2);
                     results.forEach(x => assert.instanceOf(x, EntityMapping));
@@ -243,7 +241,6 @@ describe('AnnotationMappingProvider', () => {
                     assert.equal((<any>findMapping(results, "B").getProperty("a").mapping).classConstructor, CircularReferenceFixture.A);
                 });
             });
-            */
 
             /*
              // Disabled because emitDecoratorMetadata breaks the script when compiled with ES6

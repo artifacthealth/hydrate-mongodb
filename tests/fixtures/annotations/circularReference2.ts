@@ -1,12 +1,6 @@
 import { Entity, Collection, Field, ReferenceOne } from "../../../src/mapping/providers/decorators";
 import { CascadeFlags } from "../../../src/mapping/cascadeFlags"
-
-@Entity()
-export class A {
-
-    @ReferenceOne("B")
-    b: B;
-}
+import { A } from "./circularReference1";
 
 @Entity()
 export class B {
