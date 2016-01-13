@@ -25,13 +25,21 @@ import {BufferMapping} from "./bufferMapping";
 import {IterableMapping} from "./iterableMapping";
 import {Constructor} from "../core/constructor";
 
+/**
+ * Represents a data mapping.
+ */
 export interface Mapping {
-    id: number;
+    /**
+     * Readonly flags that describe the mapping. This value is assigned internally and should not be modified.
+     */
     flags: MappingFlags;
 }
 
 export namespace Mapping {
 
+    /**
+     * Map of enumeration members where the key is the name and the value is the numeric value of the enum member.
+     */
     export interface EnumMembers {
 
         [name: string]: number;
@@ -171,17 +179,36 @@ export namespace Mapping {
          */
         identity: IdentityGenerator;
 
+        /**
+         * The change tracking to use for this entity. If not specified, the change tracking type specified in the
+         * Configuration is used.
+         */
         changeTracking: ChangeTrackingType;
 
+        /**
+         * Indicates if this entity should use optimistic locking. Default is true.
+         */
         versioned: boolean;
+
+        /**
+         * The name of the database document field to use to store the version of the entity. If not specified the
+         * value from the Configuration is used.
+         */
         versionField: string;
 
-        lockable: boolean;
-        lockField: string;
-
+        /**
+         * Adds a specification for an index that should be created on the collection. The index is only created if
+         * creation of indexes is enabled.
+         * @param index The index specification.
+         */
         addIndex(index: Index): void;
     }
 
+    /**
+     * Creates a property for an object mapping.
+     * @param name The name of the property on the object.
+     * @param mapping The mapping for the property type.
+     */
     export function createProperty(name: string, mapping: Mapping): Property {
         if(!name) {
             throw new Error("Missing required argument 'name'.");
@@ -192,6 +219,10 @@ export namespace Mapping {
         return new PropertyImpl(name, <InternalMapping>mapping);
     }
 
+    /**
+     * Create a mapping for an array.
+     * @param elementMapping The mapping for the array element.
+     */
     export function createArrayMapping(elementMapping: Mapping): Mapping {
         if(!elementMapping) {
             throw new Error("Missing required argument 'elementMapping'.");
@@ -199,6 +230,11 @@ export namespace Mapping {
         return new ArrayMapping(<InternalMapping>elementMapping);
     }
 
+    /**
+     * Creates a mapping for an iterable class.
+     * @param ctr The constructor for the iterable class.
+     * @param elementMapping The mapping for the iterable element.
+     */
     export function createIterableMapping(ctr: Constructor<any>, elementMapping: Mapping): Mapping {
         if(!elementMapping) {
             throw new Error("Missing required argument 'elementMapping'.");

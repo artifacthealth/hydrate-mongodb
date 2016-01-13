@@ -33,9 +33,6 @@ export class EntityMapping extends ClassMapping {
     versioned: boolean;
     versionField: string;
 
-    lockable: boolean;
-    lockField: string;
-
     constructor(baseClass?: EntityMapping) {
         super(baseClass);
 
