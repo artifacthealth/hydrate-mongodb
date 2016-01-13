@@ -6,7 +6,6 @@ import {Constructor} from "../../core/constructor";
 import {MappingBuilder} from "./mappingBuilder";
 import {Mapping} from "../mapping";
 import {MappingFlags} from "../mappingFlags";
-import {ClassMapping} from "../classMapping";
 
 export class MappingBuilderContext {
 
@@ -36,7 +35,7 @@ export class MappingBuilderContext {
             mappedType.populate();
 
             if(mappedType.mapping.flags & MappingFlags.Class) {
-                classMappings.push(<ClassMapping>mappedType.mapping);
+                classMappings.push(<Mapping.ClassMapping>mappedType.mapping);
             }
         });
 

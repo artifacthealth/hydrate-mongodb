@@ -20,7 +20,6 @@ export class ClassMapping extends ObjectMapping {
 
     name: string;
     discriminatorField: string;
-    discriminatorValue: string;
     classConstructor: Function;
 
     /**
@@ -49,12 +48,19 @@ export class ClassMapping extends ObjectMapping {
         }
     }
 
+    private _discriminatorValue: string;
+
+    get discriminatorValue(): string {
+        return this._discriminatorValue;
+    }
+
+
     setDiscriminatorValue(value: string): void {
 
         if(typeof value !== "string") {
             throw new Error("Expected string for discriminator value.");
         }
-        this.discriminatorValue = value;
+        this._discriminatorValue = value;
         this.inheritanceRoot._addDiscriminatorMapping(value, this);
     }
 
@@ -87,14 +93,14 @@ export class ClassMapping extends ObjectMapping {
 
     setDocumentDiscriminator(obj: any): void {
 
-        if(this.discriminatorValue === undefined) {
+        if(this._discriminatorValue === undefined) {
             this.setDocumentDiscriminator = <any>(function() { /*noop*/ });
             return;
         }
 
         // TODO: escape discriminatorField and discriminatorValue
-        this.setDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = \"" + this.discriminatorValue + "\""));
-        obj[this.inheritanceRoot.discriminatorField] = this.discriminatorValue;
+        this.setDocumentDiscriminator = <any>(new Function("o", "o['" + this.inheritanceRoot.discriminatorField + "'] = \"" + this._discriminatorValue + "\""));
+        obj[this.inheritanceRoot.discriminatorField] = this._discriminatorValue;
     }
 
     getDocumentDiscriminator(obj: any): string {
@@ -106,14 +112,14 @@ export class ClassMapping extends ObjectMapping {
 
     private _getDescendantDiscriminators(discriminators: string[]): void {
 
-        if (this.discriminatorValue) {
-            discriminators.push(this.discriminatorValue);
+        if (this._discriminatorValue) {
+            discriminators.push(this._discriminatorValue);
         }
 
         var subclasses = this._subclasses;
         if (subclasses) {
             for (var i = 0; i < subclasses.length; i++) {
-                var discriminatorValue = subclasses[i].discriminatorValue;
+                var discriminatorValue = subclasses[i]._discriminatorValue;
                 if(discriminatorValue) {
                     discriminators.push(discriminatorValue);
                 }

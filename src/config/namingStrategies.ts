@@ -2,6 +2,9 @@
 
 import * as changeCase from "change-case";
 
+/**
+ * Built-in naming strategies available field names, collection names, and type discriminators.
+ */
 export namespace NamingStrategies {
     /**
      * The name is passed through as-is.

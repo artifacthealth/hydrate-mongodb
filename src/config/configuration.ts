@@ -21,6 +21,9 @@ import {ClassMapping} from "../mapping/classMapping";
 import {EnumType} from "../mapping/enumType";
 import {PropertyConverter} from "../mapping/propertyConverter";
 
+/**
+ * Specifies default settings data mappings used to create the SessionFactory.
+ */
 export class Configuration {
 
     /**
