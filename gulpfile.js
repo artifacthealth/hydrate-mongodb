@@ -12,6 +12,7 @@ var dts = require("dts-concat");
 var runSequence = require("run-sequence");
 var Baseline = require("baseline");
 var typedoc = require("gulp-typedoc");
+var istanbul = require("gulp-istanbul");
 
 var tsProject = ts.createProject('./tsconfig.json', {
     typescript: require("typescript")
@@ -97,10 +98,27 @@ gulp.task('docs', function() {
         target: 'es6',
         mode: 'file',
         entryPoint: 'hydrate',
-        out: 'docs',
+        out: 'build/docs',
         name: "Hydrate",
         includeDeclarations: true,
         excludeExternals: true,
         plugin: ['comment', 'decorator']
     }));
+});
+
+gulp.task('pre-coverage', function () {
+    return gulp.src(['build/src/**/*.js'])
+        // Covering files
+        .pipe(istanbul())
+        // Force `require` to return covered files
+        .pipe(istanbul.hookRequire());
+});
+
+gulp.task('coverage', ['pre-coverage'], function () {
+    return gulp.src(['build/tests/**/*.tests.js'])
+        .pipe(mocha())
+        // Creating the reports after tests ran
+        .pipe(istanbul.writeReports("build/coverage"))
+        // Enforce a coverage of at least 90%
+        .pipe(istanbul.enforceThresholds({ thresholds: { global: 90 } }));
 });
