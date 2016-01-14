@@ -11,6 +11,7 @@ var merge = require("merge2");
 var dts = require("dts-concat");
 var runSequence = require("run-sequence");
 var Baseline = require("baseline");
+var typedoc = require("gulp-typedoc");
 
 var tsProject = ts.createProject('./tsconfig.json', {
     typescript: require("typescript")
@@ -90,4 +91,16 @@ gulp.task('bench', function(done) {
     baseline.files = [ "build/benchmarks/sessionImpl.bench.js" ];
     baseline.run(done);
 });
-// TODO: strip source map comment when creating lib
+
+gulp.task('docs', function() {
+    return gulp.src("lib/hydrate.d.ts").pipe(typedoc({
+        target: 'es6',
+        mode: 'file',
+        entryPoint: 'hydrate',
+        out: 'docs',
+        name: "Hydrate",
+        includeDeclarations: true,
+        excludeExternals: true,
+        plugin: ['comment', 'decorator']
+    }));
+});
