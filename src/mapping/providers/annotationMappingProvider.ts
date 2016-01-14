@@ -13,7 +13,7 @@ import {IndexOptions} from "../indexOptions";
 import {PropertyFlags} from "../propertyFlags";
 import {ChangeTrackingType} from "../changeTrackingType";
 import {EnumType} from "../enumType";
-import {Mapping} from "../mapping";
+import {MappingModel} from "../mappingModel";
 import {MappingFlags} from "../mappingFlags";
 import {Configuration} from "../../config/configuration";
 import {ReflectContext} from "../../core/reflectContext";
@@ -60,7 +60,7 @@ export class AnnotationMappingProvider implements MappingProvider {
     // TODO: any special mapping for enumerations? allowing changing persisted value, etc.
     // TODO: have a plan for supporting all these data types: http://docs.mongodb.org/manual/reference/bson-types/
 
-    getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void {
+    getMapping(config: Configuration, callback: ResultCallback<MappingModel.ClassMapping[]>): void {
 
         var builder = new Builder(config);
         var mappings = builder.build(this._modules);
@@ -84,15 +84,15 @@ class Builder {
         this._context = new MappingBuilderContext(config);
     }
 
-    build(modules: Object[]): Mapping.ClassMapping[] {
+    build(modules: Object[]): MappingModel.ClassMapping[] {
 
         // create global mappings
-        this._addGlobalMapping("String", Mapping.createStringMapping());
-        this._addGlobalMapping("Number", Mapping.createNumberMapping());
-        this._addGlobalMapping("Boolean", Mapping.createBooleanMapping());
-        this._addGlobalMapping("Date", Mapping.createDateMapping());
-        this._addGlobalMapping("RegExp", Mapping.createRegExpMapping());
-        this._addGlobalMapping("Buffer", Mapping.createBufferMapping());
+        this._addGlobalMapping("String", MappingModel.createStringMapping());
+        this._addGlobalMapping("Number", MappingModel.createNumberMapping());
+        this._addGlobalMapping("Boolean", MappingModel.createBooleanMapping());
+        this._addGlobalMapping("Date", MappingModel.createDateMapping());
+        this._addGlobalMapping("RegExp", MappingModel.createRegExpMapping());
+        this._addGlobalMapping("Buffer", MappingModel.createBufferMapping());
 
         for(let module of modules) {
             this._processModule(module);
@@ -109,7 +109,7 @@ class Builder {
         return "Unable to build type mappings:\n" + this._context.errors.join("\n");
     }
 
-    private _addGlobalMapping(name: string, mapping: Mapping): void {
+    private _addGlobalMapping(name: string, mapping: MappingModel.Mapping): void {
 
         var ctr = (<any>global)[name];
         if(!ctr) {

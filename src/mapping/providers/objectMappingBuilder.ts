@@ -1,6 +1,6 @@
 import {MappingBuilder} from "./mappingBuilder";
 import {Configuration} from "../../config/configuration";
-import {Mapping} from "../mapping";
+import {MappingModel} from "../mappingModel";
 import {
     ConverterAnnotation,
     IndexAnnotation,
@@ -29,7 +29,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
     private _processType(type: Type): void {
 
-        var mapping = <Mapping.ObjectMapping>this.mapping;
+        var mapping = <MappingModel.ObjectMapping>this.mapping;
 
         for(var symbol of type.properties) {
 
@@ -54,14 +54,14 @@ export class ObjectMappingBuilder extends MappingBuilder {
         }
     }
 
-    private _createProperty(symbol: Symbol): Mapping.Property {
+    private _createProperty(symbol: Symbol): MappingModel.Property {
 
         var propertyMapping = this._createPropertyMapping(symbol);
         if(!propertyMapping) {
             return null;
         }
 
-        var property = Mapping.createProperty(symbol.name, propertyMapping);
+        var property = MappingModel.createProperty(symbol.name, propertyMapping);
 
         // process all property annotations
         var annotations = symbol.getAnnotations(),
@@ -103,7 +103,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
             for (var i = 0, l = indexAnnotations.length; i < l; i++) {
                 var indexAnnotation = this.context.currentAnnotation = indexAnnotations[i];
                 // TODO: what if it's not an object mapping? somehow this needs to be moved to the EntityMappingBuilder
-                this._addPropertyIndex(<Mapping.EntityMapping>this.mapping, property, indexAnnotation);
+                this._addPropertyIndex(<MappingModel.EntityMapping>this.mapping, property, indexAnnotation);
             }
         }
         this.context.currentAnnotation = null;
@@ -111,7 +111,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         return property;
     }
 
-    private _createPropertyMapping(symbol: Symbol): Mapping {
+    private _createPropertyMapping(symbol: Symbol): MappingModel.Mapping {
 
         if(symbol.hasAnnotation(ConverterAnnotation)) {
             return symbol.getAnnotations(ConverterAnnotation)[0].createMapping(this.context);
@@ -179,13 +179,13 @@ export class ObjectMappingBuilder extends MappingBuilder {
         return this._getMapping(propertyType);
     }
 
-    private _createCollectionMapping(propertyType: Type, mapping: Mapping): Mapping {
+    private _createCollectionMapping(propertyType: Type, mapping: MappingModel.Mapping): MappingModel.Mapping {
 
         if(propertyType.isArray) {
-            return Mapping.createArrayMapping(mapping);
+            return MappingModel.createArrayMapping(mapping);
         }
 
-        return Mapping.createIterableMapping(propertyType.ctr, mapping);
+        return MappingModel.createIterableMapping(propertyType.ctr, mapping);
     }
 
     private _getPropertyType(symbol: Symbol): Type {
@@ -212,7 +212,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         return symbol.type;
     }
 
-    private _createEnumMapping(type: Type, annotation: EnumeratedAnnotation): Mapping {
+    private _createEnumMapping(type: Type, annotation: EnumeratedAnnotation): MappingModel.Mapping {
 
         if(!type.isNumber) {
             this.context.addError("Cannot use @Enumerated annotation on a non-numeric field.");
@@ -228,13 +228,13 @@ export class ObjectMappingBuilder extends MappingBuilder {
             }
         }
 
-        var enumMapping = Mapping.createEnumMapping(members);
+        var enumMapping = MappingModel.createEnumMapping(members);
         enumMapping.type = EnumType.String;
 
         return enumMapping;
     }
 
-    private _getMapping(target: Type | Constructor<any> | string): Mapping {
+    private _getMapping(target: Type | Constructor<any> | string): MappingModel.Mapping {
 
         var type: Type;
 
@@ -253,7 +253,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         this.context.addError("Unable to determine mapping for '" + type.name + "'.");
     }
 
-    private _setReferenced(property: Mapping.Property, annotation: ReferenceManyAnnotation): void {
+    private _setReferenced(property: MappingModel.Property, annotation: ReferenceManyAnnotation): void {
 
         if(annotation.inverseOf) {
             // TODO: validate inverse relationship
@@ -266,7 +266,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         }
     }
 
-    private _setField(property: Mapping.Property, annotation: FieldAnnotation): void {
+    private _setField(property: MappingModel.Property, annotation: FieldAnnotation): void {
 
         if(annotation.name) {
             property.field = annotation.name;
@@ -276,7 +276,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         }
     }
 
-    private _setIdentity(property: Mapping.Property): void {
+    private _setIdentity(property: MappingModel.Property): void {
 
         if(!this._assertEntityMapping(this.mapping)) return;
 
@@ -285,7 +285,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         property.mapping = new IdentityMapping();
     }
 
-    private _addPropertyIndex(mapping: Mapping.EntityMapping, property: Mapping.Property, value: IndexAnnotation): void {
+    private _addPropertyIndex(mapping: MappingModel.EntityMapping, property: MappingModel.Property, value: IndexAnnotation): void {
 
         // TODO: allow indexes in embedded types and map to containing root type
         if(!this._assertEntityMapping(mapping)) return;
@@ -316,7 +316,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
     }
 
     // TODO: Fix where this goes
-    protected _assertEntityMapping(mapping: Mapping): boolean {
+    protected _assertEntityMapping(mapping: MappingModel.Mapping): boolean {
 
         if(!(mapping.flags & MappingFlags.Entity)) {
             this.context.addError("Annotation can only be defined on entities.");
@@ -326,7 +326,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
     }
 
     // TODO: code should be shared with entity mapping
-    protected _addIndex(mapping: Mapping.EntityMapping, value: Index): void {
+    protected _addIndex(mapping: MappingModel.EntityMapping, value: Index): void {
 
         // TODO: allow indexes in embedded types and map to containing root type
         if(this._assertEntityMapping(mapping)) {

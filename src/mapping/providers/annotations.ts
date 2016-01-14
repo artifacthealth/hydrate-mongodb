@@ -5,7 +5,7 @@ import {ChangeTrackingType} from "../changeTrackingType";
 import {EnumType} from "../enumType";
 import {CascadeFlags} from "../cascadeFlags";
 import {Constructor, ParameterlessConstructor} from "../../core/constructor";
-import {Mapping} from "../mapping";
+import {MappingModel} from "../mappingModel";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
 import {Type} from "../../core/type";
@@ -34,13 +34,13 @@ export class EntityAnnotation implements MappingBuilderAnnotation {
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
-        var parentMapping = <Mapping.EntityMapping>getParentMapping(context, type);
+        var parentMapping = <MappingModel.EntityMapping>getParentMapping(context, type);
         if(parentMapping && (parentMapping.flags & MappingFlags.Entity) == 0) {
             context.addError("Parent of mapping for '" + type.name + "' must be an entity mapping.");
             return;
         }
 
-        return new EntityMappingBuilder(context, type, Mapping.createEntityMapping((parentMapping)));
+        return new EntityMappingBuilder(context, type, MappingModel.createEntityMapping((parentMapping)));
     }
 
     toString(): string {
@@ -58,7 +58,7 @@ export class EmbeddableAnnotation implements MappingBuilderAnnotation {
             return;
         }
 
-        return new ClassMappingBuilder(context, type, Mapping.createClassMapping(parentMapping));
+        return new ClassMappingBuilder(context, type, MappingModel.createClassMapping(parentMapping));
     }
 
     toString(): string {
@@ -98,14 +98,14 @@ export class ConverterAnnotation implements MappingBuilderAnnotation {
         return new MappingBuilder(context, type, this.createMapping(context));
     }
 
-    createMapping(context: MappingBuilderContext): Mapping {
+    createMapping(context: MappingBuilderContext): MappingModel.Mapping {
 
         if(this.converter) {
-            return Mapping.createConverterMapping(this.converter);
+            return MappingModel.createConverterMapping(this.converter);
         }
 
         if(this.converterCtr) {
-            return Mapping.createConverterMapping(new this.converterCtr());
+            return MappingModel.createConverterMapping(new this.converterCtr());
         }
 
         if(!this.converterName) {
@@ -119,7 +119,7 @@ export class ConverterAnnotation implements MappingBuilderAnnotation {
             return;
         }
 
-        return Mapping.createConverterMapping(converter);
+        return MappingModel.createConverterMapping(converter);
     }
 }
 
@@ -339,13 +339,13 @@ export class EnumeratedAnnotation {
     }
 }
 
-function getParentMapping(context: MappingBuilderContext, type: Type): Mapping.ClassMapping {
+function getParentMapping(context: MappingBuilderContext, type: Type): MappingModel.ClassMapping {
 
     var baseType = type.baseType;
     if(baseType) {
         var builder = context.getBuilder(baseType);
         if(builder) {
-            return <Mapping.ClassMapping>builder.mapping;
+            return <MappingModel.ClassMapping>builder.mapping;
         }
     }
 }

@@ -4,7 +4,7 @@ import {Symbol} from "../../core/symbol";
 import {ReflectContext} from "../../core/reflectContext";
 import {Constructor} from "../../core/constructor";
 import {MappingBuilder} from "./mappingBuilder";
-import {Mapping} from "../mapping";
+import {MappingModel} from "../mappingModel";
 import {MappingFlags} from "../mappingFlags";
 
 export class MappingBuilderContext {
@@ -25,9 +25,9 @@ export class MappingBuilderContext {
         this._reflect = new ReflectContext();
     }
 
-    populateMappings(): Mapping.ClassMapping[] {
+    populateMappings(): MappingModel.ClassMapping[] {
 
-        var classMappings: Mapping.ClassMapping[] = [];
+        var classMappings: MappingModel.ClassMapping[] = [];
 
         this._builders.forEach(mappedType => {
 
@@ -35,7 +35,7 @@ export class MappingBuilderContext {
             mappedType.populate();
 
             if(mappedType.mapping.flags & MappingFlags.Class) {
-                classMappings.push(<Mapping.ClassMapping>mappedType.mapping);
+                classMappings.push(<MappingModel.ClassMapping>mappedType.mapping);
             }
         });
 

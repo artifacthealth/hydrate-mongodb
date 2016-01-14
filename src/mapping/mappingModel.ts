@@ -25,17 +25,19 @@ import {BufferMapping} from "./bufferMapping";
 import {IterableMapping} from "./iterableMapping";
 import {Constructor} from "../core/constructor";
 
-/**
- * Represents a data mapping.
- */
-export interface Mapping {
-    /**
-     * Readonly flags that describe the mapping. This value is assigned internally and should not be modified.
-     */
-    flags: MappingFlags;
-}
 
-export namespace Mapping {
+
+export namespace MappingModel {
+
+    /**
+     * Represents a data mapping.
+     */
+    export interface Mapping {
+        /**
+         * Readonly flags that describe the mapping. This value is assigned internally and should not be modified.
+         */
+        flags: MappingFlags;
+    }
 
     /**
      * Map of enumeration members where the key is the name and the value is the numeric value of the enum member.

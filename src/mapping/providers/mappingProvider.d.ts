@@ -1,6 +1,6 @@
 import {ResultCallback} from "../../core/resultCallback";
 import {Configuration} from "../../config/configuration";
-import {Mapping} from "../mapping";
+import {MappingModel} from "../mappingModel";
 
 /**
  * Provides data mappings to the Configuration.
@@ -12,5 +12,5 @@ export interface MappingProvider {
      * @param config The configuration to use for the mappings.
      * @param callback Called with a list of ClassMappings.
      */
-    getMapping(config: Configuration, callback: ResultCallback<Mapping.ClassMapping[]>): void;
+    getMapping(config: Configuration, callback: ResultCallback<MappingModel.ClassMapping[]>): void;
 }

@@ -1,5 +1,5 @@
 import {ObjectMappingBuilder} from "./objectMappingBuilder";
-import {Mapping} from "../mapping";
+import {MappingModel} from "../mappingModel";
 import {
     EntityAnnotation,
     EmbeddableAnnotation,
@@ -12,7 +12,7 @@ export class ClassMappingBuilder extends ObjectMappingBuilder {
 
     protected populateCore(): void {
 
-        var mapping = <Mapping.ClassMapping>this.mapping;
+        var mapping = <MappingModel.ClassMapping>this.mapping;
 
         mapping.name = this.type.name;
         mapping.classConstructor = <any>this.type.ctr;
@@ -49,7 +49,7 @@ export class ClassMappingBuilder extends ObjectMappingBuilder {
         super.populateCore()
     }
 
-    private _setDiscriminatorField(mapping: Mapping.ClassMapping, annotation: DiscriminatorFieldAnnotation): void {
+    private _setDiscriminatorField(mapping: MappingModel.ClassMapping, annotation: DiscriminatorFieldAnnotation): void {
 
         if(this._assertRootClassMapping(mapping)) {
             if(!annotation.name) {
@@ -60,7 +60,7 @@ export class ClassMappingBuilder extends ObjectMappingBuilder {
         }
     }
 
-    private _setDiscriminatorValue(mapping: Mapping.ClassMapping, annotation: DiscriminatorValueAnnotation): void {
+    private _setDiscriminatorValue(mapping: MappingModel.ClassMapping, annotation: DiscriminatorValueAnnotation): void {
 
         if(this._assertClassMapping(mapping)) {
             if(!annotation.value) {
@@ -77,7 +77,7 @@ export class ClassMappingBuilder extends ObjectMappingBuilder {
         }
     }
 
-    private _assertClassMapping(mapping: Mapping): boolean {
+    private _assertClassMapping(mapping: MappingModel.Mapping): boolean {
 
         if(!(mapping.flags & MappingFlags.Class)) {
             this.context.addError("Annotation can only be defined on class mappings.");
@@ -86,11 +86,11 @@ export class ClassMappingBuilder extends ObjectMappingBuilder {
         return true;
     }
 
-    protected _assertRootClassMapping(mapping: Mapping): boolean {
+    protected _assertRootClassMapping(mapping: MappingModel.Mapping): boolean {
 
         if(!this._assertClassMapping(mapping)) return false;
 
-        var classMapping = <Mapping.ClassMapping>mapping;
+        var classMapping = <MappingModel.ClassMapping>mapping;
         if(!(classMapping.flags & MappingFlags.InheritanceRoot)) {
             this.context.addError("Annotation can only be defined on classes that are the root of a mapped inheritance hierarchy.");
         }

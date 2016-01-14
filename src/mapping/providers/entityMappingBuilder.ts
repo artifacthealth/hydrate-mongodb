@@ -1,5 +1,5 @@
 import {ClassMappingBuilder} from "./classMappingBuilder";
-import {Mapping} from "../mapping";
+import {MappingModel} from "../mappingModel";
 import {
     EntityAnnotation,
     CollectionAnnotation,
@@ -15,7 +15,7 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
 
     protected populateCore(): void {
 
-        var mapping = <Mapping.EntityMapping>this.mapping;
+        var mapping = <MappingModel.EntityMapping>this.mapping;
 
         // get type level annotations
         var annotations = this.type.getAnnotations();
@@ -68,7 +68,7 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
         }
     }
 
-    private _setCollection(mapping: Mapping.EntityMapping, value: CollectionAnnotation): void {
+    private _setCollection(mapping: MappingModel.EntityMapping, value: CollectionAnnotation): void {
 
         if(this._assertRootEntityMapping(mapping)) {
 
@@ -85,7 +85,7 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
         }
     }
 
-    private _setVersioned(mapping: Mapping.EntityMapping, annotation: VersionedAnnotation): void {
+    private _setVersioned(mapping: MappingModel.EntityMapping, annotation: VersionedAnnotation): void {
 
         if(this._assertRootEntityMapping(mapping)) {
 
@@ -93,7 +93,7 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
         }
     }
 
-    private _setVersionField(mapping: Mapping.EntityMapping, annotation: VersionFieldAnnotation): void {
+    private _setVersionField(mapping: MappingModel.EntityMapping, annotation: VersionFieldAnnotation): void {
 
         if(this._assertRootEntityMapping(mapping)) {
 
@@ -102,7 +102,7 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
         }
     }
 
-    private _setChangeTracking(mapping: Mapping.EntityMapping, annotation: ChangeTrackingAnnotation): void {
+    private _setChangeTracking(mapping: MappingModel.EntityMapping, annotation: ChangeTrackingAnnotation): void {
 
         if(this._assertRootEntityMapping(mapping)) {
 
@@ -110,7 +110,7 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
         }
     }
 
-    private _assertRootEntityMapping(mapping: Mapping): boolean {
+    private _assertRootEntityMapping(mapping: MappingModel.Mapping): boolean {
 
         if(!this._assertEntityMapping(mapping)) return false;
 

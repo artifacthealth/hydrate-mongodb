@@ -15,7 +15,7 @@ import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
 import {PersisterImpl} from "../src/persisterImpl";
 import {MockCollection} from "./driver/mockCollection";
 import {MockSessionFactory} from "./mockSessionFactory";
-import {Mapping} from "../src/mapping/mapping";
+import {MappingModel} from "../src/mapping/mappingModel";
 import {ClassMapping} from "../src/mapping/classMapping";
 import {absolutePath, hasExtension} from "../src/core/fileUtil";
 import {ResultCallback} from "../src/core/resultCallback";

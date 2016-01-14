@@ -30,7 +30,6 @@ import {CollectionOptions} from "../collectionOptions";
 import {IndexOptions} from "../indexOptions";
 import {ChangeTrackingType} from "../changeTrackingType";
 import {CascadeFlags} from "../cascadeFlags";
-import {Mapping} from "../mapping";
 
 export interface EntityDecoratorFactory {
     (): ClassDecorator;
