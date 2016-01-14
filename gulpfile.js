@@ -90,7 +90,10 @@ gulp.task('bench', function(done) {
     baseline.useColors = true;
     baseline.baselinePath = "baseline.json";
     baseline.files = [ "build/benchmarks/sessionImpl.bench.js" ];
-    baseline.run(done);
+    baseline.run((err, slower) => {
+        done(err);
+        process.exit(slower);
+    });
 });
 
 gulp.task('docs', function() {
