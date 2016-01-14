@@ -14,7 +14,7 @@ import {PropertyConverter} from "../../../src/mapping/propertyConverter";
 import * as ConverterFixture from "../../fixtures/annotations/converter";
 import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference1";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
-import {requireFiles} from "../../helpers";
+import {requireFiles, findMapping} from "../../helpers";
 import {IterableMapping} from "../../../src/mapping/iterableMapping";
 import {IdentityMapping} from "../../../src/mapping/identityMapping";
 import {Callback} from "../../../src/core/callback";
@@ -414,18 +414,6 @@ describe('AnnotationMappingProvider', () => {
         });
     });
 });
-
-function findMapping(mappings: EntityMapping[], name: string): EntityMapping {
-
-    for(var i = 0, l = mappings.length; i < l; i++) {
-        var mapping = mappings[i];
-        if(mapping.name === name) {
-            return mapping;
-        }
-    }
-
-    throw new Error("Could not find mapping with name '" + name + "'.");
-}
 
 function processFixture(file: string, done: (err?: Error) => void, callback?: (results: EntityMapping[]) => void): void {
 

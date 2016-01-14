@@ -8,7 +8,7 @@ import {Constructor} from "../src/core/constructor";
 
 export class MockSessionFactory extends SessionFactoryImpl {
 
-    constructor(mappingRegistry: MappingRegistry) {
+    constructor(public mappingRegistry: MappingRegistry) {
         super(null, mappingRegistry);
     }
 

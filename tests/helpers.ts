@@ -19,6 +19,7 @@ import {MappingModel} from "../src/mapping/mappingModel";
 import {ClassMapping} from "../src/mapping/classMapping";
 import {absolutePath, hasExtension} from "../src/core/fileUtil";
 import {ResultCallback} from "../src/core/resultCallback";
+import {EntityMapping} from "../src/mapping/entityMapping";
 
 var glob = require("glob");
 
@@ -74,9 +75,9 @@ export function createPerson(): model.Person {
     return person;
 }
 
-export function createPersister(collection: MockCollection, callback: (err: Error, persister?: PersisterImpl) => void): void;
-export function createPersister(collection: MockCollection, ctr: Function, callback: (err: Error, persister?: PersisterImpl) => void): void;
-export function createPersister(collection: MockCollection, ctrOrCallback: any, callback?: (err: Error, persister?: PersisterImpl) => void): void {
+export function createPersister(collection: MockCollection, callback: (err: Error, persister?: PersisterImpl, factory?: MockSessionFactory) => void): void;
+export function createPersister(collection: MockCollection, ctr: Function, callback: (err: Error, persister?: PersisterImpl, factory?: MockSessionFactory) => void): void;
+export function createPersister(collection: MockCollection, ctrOrCallback: any, callback?: (err: Error, persister?: PersisterImpl, factory?: MockSessionFactory) => void): void {
 
     var ctr: any;
 
@@ -91,7 +92,7 @@ export function createPersister(collection: MockCollection, ctrOrCallback: any, 
     createFactory("model", (err, factory) => {
         if (err) return callback(err);
         var session = factory.createSession();
-        callback(null, new PersisterImpl(session, factory.getMappingForConstructor(ctr), collection));
+        callback(null, new PersisterImpl(session, factory.getMappingForConstructor(ctr), collection), factory);
     });
 }
 
@@ -125,4 +126,16 @@ export function requireFiles(filePaths: string[], callback: ResultCallback<Objec
         if(err) return callback(err);
         callback(null, modules);
     });
+}
+
+export function findMapping(mappings: EntityMapping[], name: string): EntityMapping {
+
+    for(var i = 0, l = mappings.length; i < l; i++) {
+        var mapping = mappings[i];
+        if(mapping.name === name) {
+            return mapping;
+        }
+    }
+
+    throw new Error("Could not find mapping with name '" + name + "'.");
 }

@@ -17,6 +17,50 @@ import {Batch} from "../src/batch";
 describe('PersisterImpl', () => {
 
     describe('dirtyCheck', () => {
+
+        it('adds replace operation to batch if document has changed', (done) => {
+
+            runDirtyCheck({
+                _id: helpers.generateId()
+            }, true, done);
+        });
+
+        it('does nothing if document has not changed', (done) => {
+
+            runDirtyCheck({
+                name: "Bob",
+                _id: helpers.generateId(),
+                __t: "Party",
+                __v: 1
+            }, false, done);
+        });
+
+        function runDirtyCheck(originalDocument: any, updated: boolean, done: Callback): void {
+
+            var party = new model.Party("Bob");
+            (<any>party)["_id"] = originalDocument._id;
+            var collection = new MockCollection();
+            var batch = new Batch();
+
+            helpers.createPersister(collection, model.Party, (err, persister) => {
+                if (err) return done(err);
+
+                var result = persister.dirtyCheck(batch, party, originalDocument);
+                if(result.error) return done(result.error);
+
+                if(!updated) {
+                    assert.isUndefined(collection.bulk);
+                }
+                else {
+                    assert.equal(collection.bulk.findDocuments.length, 1);
+                    assert.equal(collection.bulk.findDocuments[0]._id, originalDocument._id);
+                    assert.equal(collection.bulk.replaceOneDocuments.length, 1);
+                    assert.equal(collection.bulk.replaceOneDocuments[0], result.value);
+                }
+
+                done();
+            });
+        }
     });
 
     describe('addInsert', () => {
@@ -41,6 +85,26 @@ describe('PersisterImpl', () => {
     });
 
     describe('addRemove', () => {
+
+        it('adds remove operation to batch with correct id', (done) => {
+
+            var party = new model.Party("Bob");
+            var id = (<any>party)["_id"] = helpers.generateId();
+            var collection = new MockCollection();
+            var batch = new Batch();
+
+            helpers.createPersister(collection, model.Party, (err, persister) => {
+                if (err) return done(err);
+
+                persister.addRemove(batch, party);
+
+                assert.equal(collection.bulk.findDocuments.length, 1);
+                assert.equal(collection.bulk.findDocuments[0]._id, id);
+                assert.equal(collection.bulk.removeOneCalled, 1);
+
+                done();
+            });
+        });
     });
 
     describe('refresh', () => {

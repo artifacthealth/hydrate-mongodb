@@ -9,6 +9,7 @@ export class MockCollection implements mongodb.Collection {
 
     collectionName: string;
     hint: any;
+    bulk: MockBulk;
 
     constructor(public contents?: any[], name?: string) {
 
@@ -151,6 +152,6 @@ export class MockCollection implements mongodb.Collection {
 
     initializeUnorderedBulkOp(): mongodb.UnorderedBulkOperation {
 
-        return new MockBulk();
+        return this.bulk = new MockBulk();
     }
 }
