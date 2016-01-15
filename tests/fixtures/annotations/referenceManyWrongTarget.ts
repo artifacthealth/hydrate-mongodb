@@ -1,4 +1,4 @@
-import { Entity, ReferenceMany } from "../../../src/mapping/providers/decorators";
+import { Entity, ElementType } from "../../../src/mapping/providers/decorators";
 
 @Entity()
 export class A {
@@ -8,6 +8,6 @@ export class A {
 @Entity()
 export class B {
 
-    @ReferenceMany(String)
+    @ElementType(String)
     a: B[];
 }

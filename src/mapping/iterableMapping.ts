@@ -21,7 +21,7 @@ import {Constructor} from "../core/constructor";
  * constructor the iterable. Also, optionally, the prototype can include a 'size' property that indicates the size of
  * the iterable collection.
  */
-// TODO: Combine Array and Iterable mappings? Note that array has a couple special cases including determining nested depth in query documents and that the Array constructor does not accept an iterable to construct it.
+// TODO: Combine Array and Iterable mappings? Note that array has a couple special cases including determining nested depth in query documents and that the Array constructor does not accept an iterable to construct it. Also, performance of for loop seems better than for-of loop.
 export class IterableMapping extends MappingBase {
 
     constructor(public iterableConstructor: Constructor<any>, public elementMapping: InternalMapping) {

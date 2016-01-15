@@ -217,16 +217,7 @@ describe('AnnotationMappingProvider', () => {
             });
         });
 
-        describe('@referenceMany', () => {
-
-            it("throws error if target is not an entity", (done) => {
-
-                processFixture("referenceManyWrongTarget", (err) => {
-                    assert.ok(err);
-                    assert.include(err.message, "Target of @ReferenceMany annotation must be an Entity");
-                    done();
-                });
-            });
+        describe('@elementType', () => {
 
             it("can handle circular references by specifying target as class name", (done) => {
 
@@ -262,30 +253,6 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
 
-        });
-
-        describe('@embedMany', () => {
-
-            it("throws error if target is not a built-in type or embeddable", (done) => {
-
-                processFixture("embedManyWrongTarget", (err) => {
-                    assert.ok(err);
-                    assert.include(err.message, "Target of @EmbedMany annotation must be a built-in type or a class annotated with @Embeddable");
-                    done();
-                });
-            });
-
-            /*
-             // Disabled because emitDecoratorMetadata breaks the script when compiled with ES6
-            it("throws error if target cannot be found", (done) => {
-
-                processFixture("embedManyCantGetType", (err) => {
-                    assert.ok(err);
-                    assert.include(err.message, "Unable to determine type of target");
-                    done();
-                });
-            });
-            */
         });
 
         describe("@cascade", () => {

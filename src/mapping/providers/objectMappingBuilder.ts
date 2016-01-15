@@ -4,10 +4,11 @@ import {MappingModel} from "../mappingModel";
 import {
     ConverterAnnotation,
     IndexAnnotation,
-    ReferenceManyAnnotation,
-    ReferenceOneAnnotation,
-    EmbedManyAnnotation,
-    EmbedOneAnnotation,
+    InverseOfAnnotation,
+    CascadeAnnotation,
+    TypeAnnotation,
+    ElementTypeAnnotation,
+    MapKeyAnnotation,
     FieldAnnotation,
     EnumeratedAnnotation
 } from "./annotations";
@@ -71,12 +72,11 @@ export class ObjectMappingBuilder extends MappingBuilder {
             var annotation = this.context.currentAnnotation = annotations[i];
 
             switch (annotation.constructor.name) {
-
-                case "ReferenceManyAnnotation":
-                    this._setReferenced(property, <ReferenceManyAnnotation>annotation);
+                case "CascadeAnnotation":
+                    this._setCascade(property, <CascadeAnnotation>annotation);
                     break;
-                case "ReferenceOneAnnotation":
-                    this._setReferenced(property, <ReferenceOneAnnotation>annotation);
+                case "InverseOfAnnotation":
+                    this._setInverseOf(property, <InverseOfAnnotation>annotation);
                     break;
                 case "FieldAnnotation":
                     this._setField(property, <FieldAnnotation>annotation);
@@ -119,7 +119,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
         var propertyType = this._getPropertyType(symbol);
         if(!propertyType) {
-            this.context.addError("Unable to determine type of property. This may be because of a circular reference or the type is used before it is defined. Try adding @EmbedOne or @ReferenceOne annotation with the name of the class as the target.");
+            this.context.addError("Unable to determine type of property. This may be because of a circular reference or the type is used before it is defined. Try adding the @Type decorator with the name of the class as the target.");
             return;
         }
 
@@ -127,52 +127,25 @@ export class ObjectMappingBuilder extends MappingBuilder {
             return this._createEnumMapping(propertyType, symbol.getAnnotations(EnumeratedAnnotation)[0]);
         }
 
-        var referencedAnnotation = symbol.getAnnotations(ReferenceManyAnnotation)[0];
-        if(referencedAnnotation) {
-            if(!referencedAnnotation.target) {
+        var elementTypeAnnotation = symbol.getAnnotations(ElementTypeAnnotation)[0];
+        if(elementTypeAnnotation) {
+            if(!elementTypeAnnotation.target) {
                 this.context.addError("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class .");
                 return;
             }
 
-            var mapping = this._getMapping(referencedAnnotation.target);
+            var mapping = this._getMapping(elementTypeAnnotation.target);
             if(!mapping) return;
 
-            if(!(mapping.flags & MappingFlags.Entity)) {
-                this.context.addError("Target of @ReferenceMany annotation must be an Entity.");
-                return;
-            }
-
             if(!propertyType.isIterable) {
-                this.context.addError("Properties annotated @ReferenceMany must have a type that is iterable.");
-            }
-
-            return this._createCollectionMapping(propertyType, mapping);
-        }
-
-        var embeddedAnnotation = symbol.getAnnotations(EmbedManyAnnotation)[0];
-        if(embeddedAnnotation) {
-            if(!embeddedAnnotation.target) {
-                this.context.addError("Unable to determine type of target. This may be because of a circular reference or the type is used before it is defined. Try changing target to name of class.");
-                return;
-            }
-
-            var mapping = this._getMapping(embeddedAnnotation.target);
-            if(!mapping) return;
-
-            if(!(mapping.flags & (MappingFlags.Embeddable | MappingFlags.Boolean | MappingFlags.String | MappingFlags.Number | MappingFlags.Enum | MappingFlags.RegExp | MappingFlags.Date | MappingFlags.Buffer))) {
-                this.context.addError("Target of @EmbedMany annotation must be a built-in type or a class annotated with @Embeddable.");
-                return;
-            }
-
-            if(!propertyType.isIterable) {
-                this.context.addError("Properties annotated @EmbedMany must have a type that is iterable.");
+                this.context.addError("Properties annotated @ElementType must have a type that is iterable.");
             }
 
             return this._createCollectionMapping(propertyType, mapping);
         }
 
         if(propertyType.isArray) {
-            this.context.addError("Properties with array types must be annotated with @ReferenceMany or @EmbedMany.");
+            this.context.addError("Properties with array types must be annotated with @ElementType to indicate the type of the array element.");
             return;
         }
 
@@ -193,15 +166,9 @@ export class ObjectMappingBuilder extends MappingBuilder {
         // Check to see if type is specified by an annotation
         var target: Constructor<any> | string;
 
-        var referencedAnnotation = symbol.getAnnotations(ReferenceOneAnnotation)[0];
-        if(referencedAnnotation) {
-            target = referencedAnnotation.target;
-        }
-        else {
-            var embeddedAnnotation = symbol.getAnnotations(EmbedOneAnnotation)[0];
-            if (embeddedAnnotation) {
-                target = embeddedAnnotation.target;
-            }
+        var typeAnnotation = symbol.getAnnotations(TypeAnnotation)[0];
+        if(typeAnnotation) {
+            target = typeAnnotation.target;
         }
 
         if(target) {
@@ -253,17 +220,16 @@ export class ObjectMappingBuilder extends MappingBuilder {
         this.context.addError("Unable to determine mapping for '" + type.name + "'.");
     }
 
-    private _setReferenced(property: MappingModel.Property, annotation: ReferenceManyAnnotation): void {
+    private _setInverseOf(property: MappingModel.Property, annotation: InverseOfAnnotation): void {
 
-        if(annotation.inverseOf) {
-            // TODO: validate inverse relationship
-            property.inverseOf = annotation.inverseOf;
-            property.setFlags(PropertyFlags.InverseSide);
-        }
+        // TODO: validate inverse relationship
+        property.inverseOf = annotation.propertyName;
+        property.setFlags(PropertyFlags.InverseSide);
+    }
 
-        if(annotation.cascade) {
-            property.setFlags(annotation.cascade & PropertyFlags.CascadeAll);
-        }
+    private _setCascade(property: MappingModel.Property, annotation: CascadeAnnotation): void {
+
+        property.setFlags(annotation.flags & PropertyFlags.CascadeAll);
     }
 
     private _setField(property: MappingModel.Property, annotation: FieldAnnotation): void {

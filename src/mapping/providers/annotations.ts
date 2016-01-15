@@ -252,61 +252,58 @@ export class DiscriminatorValueAnnotation {
     }
 }
 
-export class ReferencedAnnotation implements TargetClassAnnotation {
+export class InverseOfAnnotation {
 
-    target: Constructor<any> | string;
-    inverseOf: string;
-    cascade: CascadeFlags;
+    constructor(public propertyName: string) {
 
-    constructor(target: Constructor<any> | string);
-    constructor(args?: { target?: Constructor<any> | string, inverseOf?: string, cascade?: CascadeFlags });
-    constructor(args?: any) {
-
-        if(args) {
-            if (typeof args === "function" || typeof args === "string") {
-                this.target = args;
-            }
-            else {
-                this.target = args.target;
-                this.inverseOf = args.inverseOf;
-                this.cascade = args.cascade;
-            }
-        }
     }
-}
-
-export class ReferenceOneAnnotation extends ReferencedAnnotation {
 
     toString(): string {
-        return "@ReferenceOne";
+        return "@InverseOf";
     }
 }
 
-export class ReferenceManyAnnotation extends ReferencedAnnotation {
+export class CascadeAnnotation {
+
+    constructor(public flags: CascadeFlags) {
+
+    }
 
     toString(): string {
-        return "@ReferenceMany";
+        return "@Cascade";
     }
 }
 
-export class EmbeddedAnnotation implements TargetClassAnnotation {
+export class TypeAnnotation implements TargetClassAnnotation {
 
     constructor(public target: Constructor<any> | string) {
 
     }
-}
-
-export class EmbedOneAnnotation extends EmbeddedAnnotation {
 
     toString(): string {
-        return "@EmbedOne";
+        return "@Type";
     }
 }
 
-export class EmbedManyAnnotation extends EmbeddedAnnotation {
+export class ElementTypeAnnotation implements TargetClassAnnotation{
+
+    constructor(public target: Constructor<any> | string) {
+
+    }
 
     toString(): string {
-        return "@EmbedMany";
+        return "@ElementType";
+    }
+}
+
+export class MapKeyAnnotation {
+
+    constructor(public propertyName: string) {
+
+    }
+
+    toString(): string {
+        return "@MapKey";
     }
 }
 

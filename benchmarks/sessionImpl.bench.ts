@@ -155,3 +155,31 @@ class DummyPersister implements Persister {
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {
     }
 }
+
+suite("for-of", function() {
+
+    var n = 100000;
+    var list = new Array(n);
+    for(var i = 0; i < n; i++) {
+        list[i] = i;
+    }
+
+    test("for", function() {
+
+        var x = 0;
+        for(var i = 0; i < n; i++) {
+            x += list[i];
+        }
+        if(x != 4999950000) throw new Error('wrong count');
+    });
+
+    test("for-of", function() {
+
+        var x = 0;
+        for(var i of list) {
+            x += i;
+        }
+        if(x != 4999950000) throw new Error('wrong count');
+    });
+
+});

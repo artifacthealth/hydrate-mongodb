@@ -1,6 +1,6 @@
 /// <reference path="../../typings/node.d.ts" />
 
-import { Entity, Embeddable, Field, ChangeTracking, Converter, ReferenceOne, ReferenceMany, Enumerated, EmbedOne, EmbedMany, Versioned } from "../../src/mapping/providers/decorators";
+import { Entity, Embeddable, Field, ChangeTracking, Converter, Enumerated, Type, ElementType, Versioned, Cascade, InverseOf } from "../../src/mapping/providers/decorators";
 import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
 import {CascadeFlags} from "../../src/mapping/cascadeFlags";
 import {EnumType} from "../../src/mapping/enumType";
@@ -190,7 +190,7 @@ export class Person extends Party {
     @Field()
     age: number;
 
-    @EmbedMany(String)
+    @ElementType(String)
     aliases: string[];
 
     //test: Set;
@@ -205,7 +205,7 @@ export class Person extends Party {
     @Field()
     address: Address;
 
-    @EmbedMany(Phone)
+    @ElementType(Phone)
     phones: Phone[];
 
     @Field()
@@ -217,10 +217,13 @@ export class Person extends Party {
     @Field()
     workPhone: WorkPhone;
 
-    @ReferenceMany({ target: Person, cascade: CascadeFlags.Save | CascadeFlags.Remove })
+    @ElementType(Person)
+    @Cascade(CascadeFlags.Save | CascadeFlags.Remove)
     parents: Person[];
 
-    @ReferenceMany({ target: Person, inverseOf: "parents", cascade: CascadeFlags.Save | CascadeFlags.Remove })
+    @ElementType(Person)
+    @InverseOf("parents")
+    @Cascade(CascadeFlags.Save | CascadeFlags.Remove)
     children: Person[];
 
     // TODO: how to handle

@@ -1,4 +1,4 @@
-import { Entity, Field, ReferenceMany, EmbedMany, ChangeTracking, Embeddable } from "../../../src/mapping/providers/decorators";
+import { Entity, Field, ElementType, ChangeTracking, Embeddable } from "../../../src/mapping/providers/decorators";
 
 @Entity()
 export class A {
@@ -6,7 +6,7 @@ export class A {
     @Field()
     field1: string;
 
-    @EmbedMany(B)
+    @ElementType(B)
     field2: B[] = [];
 }
 

@@ -1,4 +1,4 @@
-///<reference path="../../../typings/reflect-metadata.d.ts"/>
+    ///<reference path="../../../typings/reflect-metadata.d.ts"/>
 
 import "reflect-metadata";
 
@@ -16,10 +16,11 @@ import {
     ChangeTrackingAnnotation,
     DiscriminatorFieldAnnotation,
     DiscriminatorValueAnnotation,
-    ReferenceManyAnnotation,
-    ReferenceOneAnnotation,
-    EmbedManyAnnotation,
-    EmbedOneAnnotation,
+    CascadeAnnotation,
+    InverseOfAnnotation,
+    TypeAnnotation,
+    ElementTypeAnnotation,
+    MapKeyAnnotation,
     FieldAnnotation,
     EnumeratedAnnotation,
     IdAnnotation
@@ -101,6 +102,31 @@ export interface EnumeratedDecoratorFactory {
     (members: Object): PropertyDecorator;
 }
 
+export interface InverseOfDecoratorFactory {
+
+    (propertyName: string): PropertyDecorator;
+}
+
+export interface CascadeDecoratorFactory {
+
+    (flags: CascadeFlags): PropertyDecorator;
+}
+
+export interface TypeDecoratorFactory {
+
+    (target: Constructor<any> | string): PropertyDecorator;
+}
+
+export interface ElementTypeDecoratorFactory {
+
+    (target: Constructor<any> | string): PropertyDecorator;
+}
+
+export interface MapKeyDecoratorFactory {
+
+    (propertyName: string): PropertyDecorator;
+}
+
 export var Entity = <EntityDecoratorFactory>makeDecorator(EntityAnnotation);
 export var Embeddable = <EmbeddableDecoratorFactory>makeDecorator(EmbeddableAnnotation);
 export var Converter = <ConverterDecoratorFactory>makeDecorator(ConverterAnnotation);
@@ -113,10 +139,11 @@ export var DiscriminatorField = <DiscriminatorFieldDecoratorFactory>makeDecorato
 export var DiscriminatorValue = <DiscriminatorValueDecoratorFactory>makeDecorator(DiscriminatorValueAnnotation);
 export var Field = <FieldDecoratorFactory>makeDecorator(FieldAnnotation);
 export var Enumerated = <EnumeratedDecoratorFactory>makeDecorator(EnumeratedAnnotation);
-export var ReferenceMany = <ReferenceManyDecoratorFactory>makeDecorator(ReferenceManyAnnotation);
-export var ReferenceOne = <ReferenceOneDecoratorFactory>makeDecorator(ReferenceOneAnnotation);
-export var EmbedMany = <EmbeddedDecoratorFactory>makeDecorator(EmbedManyAnnotation);
-export var EmbedOne = <EmbeddedDecoratorFactory>makeDecorator(EmbedOneAnnotation);
+export var Cascade = <CascadeDecoratorFactory>makeDecorator(CascadeAnnotation);
+export var InverseOf = <InverseOfDecoratorFactory>makeDecorator(InverseOfAnnotation);
+export var Type = <TypeDecoratorFactory>makeDecorator(TypeAnnotation);
+export var ElementType = <ElementTypeDecoratorFactory>makeDecorator(ElementTypeAnnotation);
+export var MapKey = <MapKeyDecoratorFactory>makeDecorator(MapKeyAnnotation);
 export var Id = <IdAnnotationFactory>makeDecorator(IdAnnotation);
 
 function makeDecorator(annotationCtr: Constructor<any>) {
