@@ -10,6 +10,36 @@ import {ClassMapping} from "../../src/mapping/classMapping";
 
 describe('MappingRegistry', () => {
 
+    describe('addMapping', () => {
+
+        it('throws error if mapping does not have a classConstructor', () => {
+
+            assert.throws(() => {
+                var registry = new MappingRegistry();
+                registry.addMapping(new EntityMapping());
+
+            }, Error, "Class mapping is missing classConstructor.");
+        });
+
+        it('throws error if classConstructor for mapping is already mapped', () => {
+
+            var registry = new MappingRegistry();
+
+            var mapping1 = new EntityMapping();
+            mapping1.classConstructor = model.Party;
+
+            var mapping2 = new EntityMapping();
+            mapping2.classConstructor = model.Party;
+
+            registry.addMapping(mapping1);
+
+            assert.throws(() => {
+                registry.addMapping(mapping2);
+
+            }, Error, "Mapping 'Party' has already been registered.");
+        });
+    });
+
     describe('getMappingForObject', () => {
 
         it('returns the mapping for the specified object', () => {

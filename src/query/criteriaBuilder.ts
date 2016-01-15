@@ -92,9 +92,9 @@ export class CriteriaBuilder {
                     if(key == "_id") {
                         // special case for identity field
                         if(typeof value === "string") {
-                            preparedValue = this.mapping.identity.fromString(value);
+                            preparedValue = (<EntityMapping>this.mapping.inheritanceRoot).identity.fromString(value);
                         }
-                        if(value == null) {
+                        if(value == null || preparedValue == null) {
                             this.error = new Error("Missing or invalid identifier for '_id'.");
                             return null;                            
                         }

@@ -104,9 +104,6 @@ export class Party {
     @Field({ name: "name" })
     protected _name: string;
 
-    //@Field()
-    //test: Set<number>;
-
     get name(): string {
         return this._name;
     }
@@ -183,6 +180,9 @@ export class Person extends Party {
 
     @Field()
     personName: PersonName;
+
+    @ElementType(String)
+    additionalNames: PersonName[];
 
     @Field()
     birthDate: Date;

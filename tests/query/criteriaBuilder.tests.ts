@@ -1,7 +1,9 @@
 /// <reference path="../../typings/mocha.d.ts"/>
 /// <reference path="../../typings/chai.d.ts"/>
 /// <reference path="../../typings/async.d.ts" />
+/// <reference path="../../typings/mongodb.d.ts" />
 
+import {ObjectID} from "mongodb";
 import {assert} from "chai";
 import * as async from "async";
 import * as helpers from "../helpers";
@@ -44,6 +46,86 @@ describe('CriteriaBuilder', () => {
 
         var person = helpers.createPerson();
         assertCriteria(done, { person: person }, {  person: (<any>person)._id }, model.User);
+    });
+
+    it('returns error if value of $and operation is not an array', (done) => {
+
+        assertError(done, { $and: true }, "operator should be an array", model.User);
+    });
+
+    it('returns error if value of $or operation is not an array', (done) => {
+
+        assertError(done, { $and: true }, "operator should be an array", model.User);
+    });
+
+    it('returns error if value of $nor operation is not an array', (done) => {
+
+        assertError(done, { $and: true }, "operator should be an array", model.User);
+    });
+
+    it('returns error if $text operator is used inside of an $elemMatch', (done) => {
+
+        assertError(done,  { additionalNames: { $elemMatch: { $text: { $search: 'test' } } } }, "is not allowed in $elemMatch", model.Person);
+    });
+
+    it('returns error if $where operator is used inside of an $elemMatch', (done) => {
+
+        assertError(done,  { additionalNames: { $elemMatch: { $where: "this.first == this.last" } } }, "is not allowed in $elemMatch", model.Person);
+    });
+
+    it('returns error if invalid top-level operator is used', (done) => {
+
+        assertError(done,  { $foo: true }, "Unknown top-level operator '$foo'.", model.Person);
+    });
+
+    it('translates string to valid identity if _id field is used in query', (done) => {
+
+        assertCriteria(done, { _id: "565b1dd7dbd1e1815aa5ab4d" }, { "__t": "Person", _id: new ObjectID("565b1dd7dbd1e1815aa5ab4d") });
+    });
+
+    it('returns error if string passed as _id is not a valid identifier', (done) => {
+
+        assertError(done,  { _id: "foo" }, "Missing or invalid identifier", model.Person);
+    });
+
+    it('returns error if null value is passed as id', (done) => {
+
+        assertError(done,  { _id: null }, "Missing or invalid identifier", model.Person);
+    });
+
+    it('returns error if field path does not exist', (done) => {
+
+        assertError(done,  { "foo": "bar" }, "Undefined property for class", model.Person);
+    });
+
+    it('returns error if missing expected query expression', (done) => {
+
+        assertError(done,  { "gender": { $not: null } }, "Missing value for operator '$not'.", model.Person);
+    });
+
+    it('returns error if non-query key is mixed with query expression', (done) => {
+
+        assertError(done,  { "username": { $not: "Bob", "test": "Bob" } }, "Unexpected value 'test' in query expression.", model.User);
+    });
+
+    it('returns error if unknown query operator is used', (done) => {
+
+        assertError(done,  { "username": { $test: 'Bob' } }, "Unknown query operator '$test'.", model.User);
+    });
+
+    it('returns error if array is not provided for $in operator', (done) => {
+
+        assertError(done,  { "username": { $in: 'Bob' } }, "Expected array for '$in' operator.", model.User);
+    });
+
+    it('returns error if array is not provided for $nin operator', (done) => {
+
+        assertError(done,  { "username": { $nin: 'Bob' } }, "Expected array for '$nin' operator.", model.User);
+    });
+
+    it('returns error if array is not provided for $all operator', (done) => {
+
+        assertError(done,  { "username": { $all: 'Bob' } }, "Expected array for '$all' operator.", model.User);
     });
 
     it('translates property names to field names when specifying equality match on fields in embedded documents', (done) => {
@@ -187,6 +269,19 @@ function assertCriteria(done: Callback, originalCriteria: QueryDocument, expecte
             return done(builder.error);
         }
         assert.deepEqual(result, expectedCriteria);
+        done();
+    });
+}
+
+function assertError(done: Callback, originalCriteria: QueryDocument, message: string, ctr?: Constructor<any>): void {
+
+    helpers.createFactory("model", (err, factory) => {
+        if (err) return done(err);
+
+        var builder = new CriteriaBuilder(factory.getMappingForConstructor(ctr || model.Person))
+        var result = builder.build(originalCriteria);
+        assert.instanceOf(builder.error, Error, "Expected error");
+        assert.include(builder.error.message, message);
         done();
     });
 }

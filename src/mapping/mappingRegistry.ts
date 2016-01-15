@@ -19,7 +19,7 @@ export class MappingRegistry {
         }
 
         if(this._mappings.has(mapping.classConstructor)) {
-            throw new Error("Mapping '" + mapping.name + "' has already been registered.");
+            throw new Error("Mapping '" + mapping.classConstructor.name + "' has already been registered.");
         }
 
         this._mappings.set(mapping.classConstructor, mapping);
