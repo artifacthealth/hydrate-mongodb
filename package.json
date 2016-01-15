@@ -22,7 +22,7 @@
   "dependencies": {
     "async": "^0.9.0",
     "change-case": "^2.2.0",
-    "mongodb": "^2.0.42",
+    "mongodb": "^2.1.4",
     "reflect-metadata": "^0.1.2"
   },
   "devDependencies": {
