@@ -41,4 +41,15 @@ export namespace NamingStrategies {
 
         return changeCase.snakeCase(name);
     }
+
+    /**
+     * The name is a lowercase string.
+     * @param name The name.
+     */
+    export function LowerCase(name: string): string {
+
+        if(!name || typeof name !== "string") return name;
+
+        return name.toLowerCase();
+    }
 }
