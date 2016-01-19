@@ -24,5 +24,4 @@ export interface Session extends EventEmitter {
     wait(callback?: Callback): void;
     close(callback?: Callback): void;
     contains(obj: Object): boolean;
-    getId(obj: Object): any;
 }

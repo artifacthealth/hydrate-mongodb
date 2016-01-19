@@ -225,17 +225,6 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     }
 
     /**
-     * Gets the database identifier for an entity.
-     * @param obj The entity.
-     */
-    getId(obj: any): any {
-
-        if(obj) {
-            return obj["_id"];
-        }
-    }
-
-    /**
      * Determines whether an entity is managed by this session.
      * @param entity The entity to check.
      */

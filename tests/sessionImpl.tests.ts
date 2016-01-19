@@ -827,47 +827,6 @@ describe('SessionImpl', () => {
         });
     });
 
-    describe('getId', () => {
-
-        it('returns the identifier of the object', (done) => {
-
-            helpers.createFactory("model", (err, factory) => {
-                if (err) return done(err);
-
-                var session = factory.createSession();
-                var id = "identifier value";
-                var entity = createEntity(id);
-
-                assert.equal(session.getId({_id: id}), id);
-                done();
-            });
-        });
-
-        it('returns undefined if the object passed in is null', (done) => {
-
-            helpers.createFactory("model", (err, factory) => {
-                if (err) return done(err);
-
-                var session = factory.createSession();
-
-                assert.isUndefined(session.getId(null));
-                done();
-            });
-        });
-
-        it('returns undefined if the object passed in is undefined', (done) => {
-
-            helpers.createFactory("model", (err, factory) => {
-                if (err) return done(err);
-
-                var session = factory.createSession();
-
-                assert.isUndefined(session.getId(undefined));
-                done();
-            });
-        });
-    });
-
     describe('contains', () => {
 
     });
@@ -954,9 +913,7 @@ describe('SessionImpl', () => {
                 var session = factory.createSession();
                 var ref = session.getReference(Kitten, new ObjectIdGenerator().generate().toString());
 
-                var id = session.getId(ref);
-
-                assert.instanceOf(id, ObjectID);
+                assert.instanceOf((<any>ref)._id, ObjectID);
                 done();
             });
         });

@@ -1,4 +1,4 @@
-    ///<reference path="../../../typings/reflect-metadata.d.ts"/>
+///<reference path="../../../typings/reflect-metadata.d.ts"/>
 
 import "reflect-metadata";
 

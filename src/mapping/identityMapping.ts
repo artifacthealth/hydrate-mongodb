@@ -11,6 +11,8 @@ import {IdentityGenerator} from "../id/identityGenerator";
 //      between are write to a query document and a write to a persistent document. We don't do that right now.
 //  2. Perhaps instead of a mapper we use a converter and the IdAnnotation causes a converter to be added to the property
 //      and the read-only flag set.
+//  3. When the object is saved to the session, the _id value is set but we need to set the value for the property
+//     annotated with @Id() as well.
 export class IdentityMapping extends VirtualMapping {
 
     read(context: ReadContext, value: any): any {
