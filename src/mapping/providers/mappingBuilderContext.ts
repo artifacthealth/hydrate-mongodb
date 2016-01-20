@@ -1,7 +1,5 @@
 import {Configuration} from "../../config/configuration";
-import {Type} from "../../core/type";
-import {Symbol} from "../../core/symbol";
-import {ReflectContext} from "../../core/reflectContext";
+import {Type, Property, ReflectContext} from "reflect-helper";
 import {Constructor} from "../../core/constructor";
 import {MappingBuilder} from "./mappingBuilder";
 import {MappingModel} from "../mappingModel";
@@ -13,7 +11,7 @@ export class MappingBuilderContext {
     errors: string[] = [];
 
     currentType: Type;
-    currentProperty: Symbol;
+    currentProperty: Property;
     currentAnnotation: any;
 
     private _builders: Map<Type, MappingBuilder> = new Map();

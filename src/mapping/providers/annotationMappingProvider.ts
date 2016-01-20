@@ -3,7 +3,6 @@
 
 import * as async from "async";
 import * as path from "path";
-import * as ReflectUtil from "../../core/reflectUtil";
 import {absolutePath, hasExtension} from "../../core/fileUtil";
 import {ResultCallback} from "../../core/resultCallback";
 import {MappingRegistry} from "../mappingRegistry";
@@ -16,9 +15,7 @@ import {EnumType} from "../enumType";
 import {MappingModel} from "../mappingModel";
 import {MappingFlags} from "../mappingFlags";
 import {Configuration} from "../../config/configuration";
-import {ReflectContext} from "../../core/reflectContext";
-import {Type} from "../../core/type";
-import {Symbol} from "../../core/symbol";
+import {ReflectContext, Type, Property} from "reflect-helper";
 import {MappingBuilderAnnotation,TargetClassAnnotation} from "./annotations";
 import {Constructor} from "../../core/constructor";
 import {MappingBuilderContext} from "./mappingBuilderContext";
@@ -169,7 +166,7 @@ class Builder {
         }
     }
 
-    private _getPropertyTypeToScan(property: Symbol): Type {
+    private _getPropertyTypeToScan(property: Property): Type {
 
         for(let annotation of <TargetClassAnnotation[]>property.getAnnotations()) {
             if(annotation.target) {

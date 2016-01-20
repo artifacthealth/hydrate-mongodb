@@ -1,5 +1,5 @@
 import {MappingModel} from "../mappingModel";
-import {Type} from "../../core/type";
+import {Type} from "reflect-helper";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 
 export class MappingBuilder {

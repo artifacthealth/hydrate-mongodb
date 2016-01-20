@@ -14,8 +14,7 @@ import {
 } from "./annotations";
 import {PropertyFlags} from "../propertyFlags";
 import {MappingFlags} from "../mappingFlags";
-import {Type} from "../../core/type";
-import {Symbol} from "../../core/symbol";
+import {Type, Property} from "reflect-helper";
 import {Constructor} from "../../core/constructor";
 import {EnumType} from "../enumType";
 import {Index} from "../index";
@@ -55,7 +54,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         }
     }
 
-    private _createProperty(symbol: Symbol): MappingModel.Property {
+    private _createProperty(symbol: Property): MappingModel.Property {
 
         var propertyMapping = this._createPropertyMapping(symbol);
         if(!propertyMapping) {
@@ -111,7 +110,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         return property;
     }
 
-    private _createPropertyMapping(symbol: Symbol): MappingModel.Mapping {
+    private _createPropertyMapping(symbol: Property): MappingModel.Mapping {
 
         if(symbol.hasAnnotation(ConverterAnnotation)) {
             return symbol.getAnnotations(ConverterAnnotation)[0].createMapping(this.context);
@@ -161,7 +160,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         return MappingModel.createIterableMapping(propertyType.ctr, mapping);
     }
 
-    private _getPropertyType(symbol: Symbol): Type {
+    private _getPropertyType(symbol: Property): Type {
 
         // Check to see if type is specified by an annotation
         var target: Constructor<any> | string;

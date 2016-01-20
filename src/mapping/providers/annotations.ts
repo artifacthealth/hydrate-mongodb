@@ -8,7 +8,7 @@ import {Constructor, ParameterlessConstructor} from "../../core/constructor";
 import {MappingModel} from "../mappingModel";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
-import {Type} from "../../core/type";
+import {Type} from "reflect-helper";
 import {MappingFlags} from "../mappingFlags";
 import {EntityMappingBuilder} from "./entityMappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";

@@ -7,6 +7,6 @@
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "noLib": true,
-        "noExternalResolve": true
+        "moduleResolution": "node"
     }
 }

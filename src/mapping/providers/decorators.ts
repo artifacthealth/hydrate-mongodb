@@ -1,9 +1,5 @@
-///<reference path="../../../typings/reflect-metadata.d.ts"/>
-
-import "reflect-metadata";
-
+import {makeDecorator} from "reflect-helper";
 import {Constructor, ParameterlessConstructor} from "../../core/constructor";
-import * as ReflectUtil from "../../core/reflectUtil";
 
 import {
     EntityAnnotation,
@@ -146,23 +142,4 @@ export var ElementType = <ElementTypeDecoratorFactory>makeDecorator(ElementTypeA
 export var MapKey = <MapKeyDecoratorFactory>makeDecorator(MapKeyAnnotation);
 export var Id = <IdAnnotationFactory>makeDecorator(IdAnnotation);
 
-function makeDecorator(annotationCtr: Constructor<any>) {
-
-    return function DecoratorFactory(...args: any[]) {
-
-        //var annotationInstance = Object.create(annotationCtr.prototype);
-        ///annotationCtr.apply(annotationInstance, args);
-        var annotationInstance = new annotationCtr(...args);
-
-        return function Decorator(target: Object, propertyName?: string): void {
-
-            if(propertyName) {
-                ReflectUtil.addAnnotation(annotationInstance, target.constructor, propertyName);
-            }
-            else {
-                ReflectUtil.addAnnotation(annotationInstance, target, propertyName);
-            }
-        }
-    }
-}
 
