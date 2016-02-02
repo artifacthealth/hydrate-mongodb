@@ -18,6 +18,8 @@ import {ResultCallback} from "../core/resultCallback";
 import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
+import {Property} from "./property";
+import {WriteContext} from "./writeContext";
 
 export class EntityMapping extends ClassMapping {
 
@@ -33,12 +35,29 @@ export class EntityMapping extends ClassMapping {
     versioned: boolean;
     versionField: string;
 
+    /**
+     * The property that maps the identity field, if defined.
+     */
+    identityProperty: Property;
+
     constructor(baseClass?: EntityMapping) {
         super(baseClass);
 
         this.flags &= ~MappingFlags.Embeddable;
         this.flags |= MappingFlags.Entity;
     }
+
+    /*
+    addProperty(property: Property): Property {
+
+        var property = super.addProperty(property);
+
+        if(property.field == "_id") {
+       //     this.identityProperty = property;
+        }
+
+        return property;
+    }*/
 
     setDocumentVersion(obj: any, version: number): void {
 
@@ -118,7 +137,7 @@ export class EntityMapping extends ClassMapping {
         return obj;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
@@ -132,22 +151,22 @@ export class EntityMapping extends ClassMapping {
         // TODO: Use session.getId?
         // retrieve the id from the object
         if(!(id = value["_id"])) {
-            errors.push({ message: "Missing identifier.", path: (path ? path + "." : "") + "_id", value: value });
+            context.addError("Missing identifier.", (context.path ? context.path + "." : "") + "_id");
             return;
         }
 
         if(!(<EntityMapping>this.inheritanceRoot).identity.validate(id)) {
-            errors.push({ message: "'" + id.toString() + "' is not a valid identifier.", path: (path ? path + "." : "") + "_id", value: id });
+            context.addError("'" + id.toString() + "' is not a valid identifier.", (context.path ? context.path + "." : "") + "_id");
             return;
         }
 
         // if this is not the top level then just return a reference
-        if(path) {
+        if(context.path) {
             // TODO: decide when to save reference as a DBRef
             return id;
         }
 
-        var document = super.write(value, path, errors, visited);
+        var document = super.write(context, value);
         if(document) {
             document["_id"] = id;
         }

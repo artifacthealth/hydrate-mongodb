@@ -34,7 +34,7 @@ MongoDB [bulk write operations](https://docs.mongodb.org/v3.0/core/bulk-write-op
 changes with the database, which can result in significant performance gains.
 
 ####Extensibility
-Hydrate provides numerous opportunities for extensibilty.
+Hydrate provides numerous opportunities for extensibility.
 
 ## Installation
 

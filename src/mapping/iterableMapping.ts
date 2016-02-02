@@ -15,6 +15,7 @@ import {TupleMapping} from "./tupleMapping";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {Constructor} from "../core/constructor";
+import {WriteContext} from "./writeContext";
 
 /**
  * Mapping for an iterable. The constructor passed to this mapping must take a single argument, an iterable, used to
@@ -74,12 +75,13 @@ export class IterableMapping extends MappingBase {
         return result;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         if (!this._isIterable(value)) {
-            errors.push({message: `Expected instance of ${this.iterableConstructor.name}.`, path: path, value: value});
+            context.addError(`Expected instance of ${this.iterableConstructor.name}.`);
+            return;
         }
 
         var result = new Array(value.length),
@@ -95,7 +97,7 @@ export class IterableMapping extends MappingBase {
                 item = null;
             }
             else {
-                result[i++] = mapping.write(item, path, errors, visited);
+                result[i++] = mapping.write(context, item);
             }
         }
 

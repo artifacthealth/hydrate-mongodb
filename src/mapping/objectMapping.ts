@@ -12,6 +12,7 @@ import {ClassMapping} from "./classMapping";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {InternalMapping} from "./internalMapping";
+import {WriteContext} from "./writeContext";
 
 export class ObjectMapping extends MappingBase {
 
@@ -170,25 +171,26 @@ export class ObjectMapping extends MappingBase {
         return obj;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
-        return this.writeObject({}, value, path, errors, visited);
+        return this.writeObject(context, {}, value);
     }
 
-    protected writeObject(document: any, value: any, path: string, errors: MappingError[], visited: any[]): any {
+    protected writeObject(context: WriteContext, document: any, value: any): any {
 
         if(value == null) return null;
 
-        var base = path ? path + "." : "",
+        var base = context.path ? context.path + "." : "",
             properties = this.properties,
             fieldValue: any;
 
+        // TODO: Use Set for visited?
         if(this.flags & MappingFlags.Embeddable) {
-            if (visited.indexOf(value) !== -1) {
-                errors.push({message: "Recursive reference of embedded object is not allowed.", path: path, value: value});
+            if (context.visited.indexOf(value) !== -1) {
+                context.addError("Recursive reference of embedded object is not allowed.");
                 return;
             }
-            visited.push(value);
+            context.visited.push(value);
         }
 
         for (var i = 0, l = properties.length; i < l; i++) {
@@ -213,12 +215,15 @@ export class ObjectMapping extends MappingBase {
                 fieldValue = null;
             }
             else {
-                fieldValue = property.mapping.write(propertyValue, base + property.name, errors, visited);
+                var savedPath = context.path;
+                context.path = base + property.name;
+                fieldValue = property.mapping.write(context, propertyValue);
+                context.path = savedPath;
             }
             property.setFieldValue(document, fieldValue);
         }
 
-        visited.pop();
+        context.visited.pop();
 
         return document;
     }

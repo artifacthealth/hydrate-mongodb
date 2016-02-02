@@ -7,6 +7,7 @@ import {Changes} from "./changes";
 import {InternalSession} from "../internalSession";
 import {ReadContext} from "./readContext";
 import {EnumType} from "./enumType";
+import {WriteContext} from "./writeContext";
 
 export class EnumMapping extends MappingBase {
 
@@ -62,12 +63,12 @@ export class EnumMapping extends MappingBase {
         context.addError("Enum value must be a string or number.");
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         if(typeof value !== "number") {
-            errors.push({ message: "Expected enum value to be a number.", path: path, value: value });
+            context.addError("Expected enum value to be a number.");
             return;
         }
 
@@ -77,20 +78,16 @@ export class EnumMapping extends MappingBase {
             case EnumType.String:
                 var name = this._values[value];
                 if (!name) {
-                    errors.push({
-                        message: "Could not find enum member name for value '" + value + "'.",
-                        path: path,
-                        value: value
-                    });
+                    context.addError("Could not find enum member name for value '" + value + "'.");
                     return;
                 }
                 return name;
             default:
                 if(this.type == null) {
-                    errors.push({message: "Enum type not specified." + this.type, path: path, value: value});
+                    context.addError("Enum type not specified." + this.type);
                 }
                 else {
-                    errors.push({message: "Unknown enum type '" + this.type + "'.", path: path, value: value});
+                    context.addError("Unknown enum type '" + this.type + "'.");
                 }
                 return;
         }

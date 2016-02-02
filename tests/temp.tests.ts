@@ -22,6 +22,7 @@ import {Configuration} from "../src/config/configuration";
 import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
 import {ReadContext} from "../src/mapping/readContext";
 import {ClassMapping} from "../src/mapping/classMapping";
+import {WriteContext} from "../src/mapping/writeContext";
 
 var test = new Map<string, number>();
 
@@ -251,9 +252,8 @@ describe('Temp', () => {
             var elapsed = process.hrtime(start);
             console.log("Created " + j + " objects in " + elapsed[0] + "s, " + (elapsed[1]/1000000).toFixed(3) + "ms");
 
-            var errors: any[] = [];
-            var visited: any[] = [];
-            var document = mapping.write(person, "", errors, visited);
+            var writeContext = new WriteContext();
+            var document = mapping.write(writeContext, person);
             var context = new ReadContext(session);
             var obj = mapping.read(context, document);
             // obj.parents = obj.parents.reverse();

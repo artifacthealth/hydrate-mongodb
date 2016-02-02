@@ -4,6 +4,7 @@ import {MappingFlags} from "./mappingFlags";
 import {Changes} from "./changes";
 import {InternalSession} from "../internalSession";
 import {ReadContext} from "./readContext";
+import {WriteContext} from "./writeContext";
 
 export class BooleanMapping extends MappingBase {
 
@@ -22,12 +23,12 @@ export class BooleanMapping extends MappingBase {
         return value;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         if(typeof value !== "boolean") {
-            errors.push({ message: "Expected boolean.", path: path, value: value });
+            context.addError("Expected boolean.");
             return;
         }
         return value;

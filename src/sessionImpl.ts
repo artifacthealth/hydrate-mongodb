@@ -22,6 +22,7 @@ import {QueryBuilderImpl} from "./query/queryBuilderImpl";
 import {FindOneQuery} from "./query/findOneQuery";
 import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
+import {ReadContext} from "./mapping/readContext";
 
 /**
  * The state of an object.
@@ -424,7 +425,11 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 var persister = this.getPersister(mapping);
 
                 // we haven't seen this object before
-                obj["_id"] = persister.identity.generate();
+                if(!this._setIdentity(persister, obj, mapping, callback)) {
+                    // error while setting identity
+                    return;
+                }
+
                 links = this._linkObject(obj, persister);
                 this._scheduleOperation(links, ScheduledOperation.Insert);
             }
@@ -457,6 +462,24 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }
 
         callback();
+    }
+
+    private _setIdentity(persister: Persister, obj: any, mapping: EntityMapping, callback: Callback): boolean  {
+
+        var id = obj["_id"] = persister.identity.generate();
+
+        if(mapping.identityProperty) {
+
+            var context = new ReadContext(this);
+            var value = mapping.identityProperty.mapping.read(context, id);
+            if (context.hasErrors) {
+                callback(new Error(`Unable to set identity property: ${context.getErrorMessage()}`));
+                return false;
+            }
+            mapping.identityProperty.setPropertyValue(obj, value);
+        }
+
+        return true;
     }
 
     private _makeDirty(links: ObjectLinks): void {

@@ -9,6 +9,7 @@ import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {InternalMapping} from "./internalMapping";
+import {WriteContext} from "./writeContext";
 
 var nextMappingId = 1;
 
@@ -24,7 +25,7 @@ export abstract class MappingBase implements InternalMapping {
 
     abstract read(context: ReadContext, value: any): any;
 
-    abstract write(value: any, path: string, errors: MappingError[], visited: any[]): any;
+    abstract write(context: WriteContext, value: any): any;
 
     watch(value: any, observer: Observer, visited: any[]): void {
 

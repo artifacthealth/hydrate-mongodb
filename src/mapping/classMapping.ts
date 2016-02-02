@@ -8,6 +8,7 @@ import {PropertyFlags} from "./propertyFlags";
 import {InternalSession} from "../internalSession";
 import {ResultCallback} from "../core/resultCallback";
 import {ReadContext} from "./readContext";
+import {WriteContext} from "./writeContext";
 
 export class ClassMapping extends ObjectMapping {
 
@@ -211,17 +212,17 @@ export class ClassMapping extends ObjectMapping {
         return this.readObject(context, Object.create(this.classConstructor.prototype), value, /*checkRemoved*/ false);
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
         // does not exist, default to current mapping.
         var mapping = this._ensureRegistry().getMappingForObject(value);
-        return (mapping || this).writeClass(value, path, errors, visited, !!mapping);
+        return (mapping || this).writeClass(context, value, !!mapping);
     }
 
-    protected writeClass(value: any, path: string, errors: MappingError[], visited: any[], mappedConstructor: boolean): any {
+    protected writeClass(context: WriteContext, value: any, mappedConstructor: boolean): any {
 
         var document: any = {};
 
@@ -233,7 +234,7 @@ export class ClassMapping extends ObjectMapping {
             this.setQueryDocumentDiscriminator(document);
         }
 
-        return this.writeObject(document, value, path, errors, visited);
+        return this.writeObject(context, document, value);
     }
 
     areEqual(documentValue1: any, documentValue2: any): boolean {

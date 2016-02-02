@@ -3,6 +3,7 @@ import {MappingBase} from "./mappingBase";
 import {MappingFlags} from "./mappingFlags";
 import {InternalSession} from "../internalSession";
 import {ReadContext} from "./readContext";
+import {WriteContext} from "./writeContext";
 
 export class StringMapping extends MappingBase {
 
@@ -21,12 +22,12 @@ export class StringMapping extends MappingBase {
         return value;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         if(typeof value !== "string") {
-            errors.push({ message: "Expected string.", path: path, value: value });
+            context.addError("Expected string.");
             return;
         }
         return value;

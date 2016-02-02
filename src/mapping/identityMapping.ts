@@ -4,6 +4,7 @@ import {MappingFlags} from "./mappingFlags";
 import {InternalSession} from "../internalSession";
 import {ReadContext} from "./readContext";
 import {IdentityGenerator} from "../id/identityGenerator";
+import {WriteContext} from "./writeContext";
 
 // TODO: Not sure I like how this is implemented. A few thoughts:
 //  1. If we want to allow queries against these types of fields then we need to implement write so the query document
@@ -29,7 +30,7 @@ export class IdentityMapping extends VirtualMapping {
         return value.toString();
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 

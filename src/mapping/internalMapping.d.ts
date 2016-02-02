@@ -9,13 +9,14 @@ import {ResultCallback} from "../core/resultCallback";
 import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
+import {WriteContext} from "./writeContext";
 
 export interface InternalMapping {
 
     id: number;
     flags: MappingFlags;
     read(context: ReadContext, value: any): any;
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any;
+    write(context: WriteContext, value: any): any;
     areEqual(documentValue1: any, documentValue2: any): boolean;
     resolve(path: string): ResolveContext;
     resolve(context: ResolveContext): void;

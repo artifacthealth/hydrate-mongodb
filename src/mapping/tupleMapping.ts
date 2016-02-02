@@ -10,6 +10,7 @@ import {ResultCallback} from "../core/resultCallback";
 import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
+import {WriteContext} from "./writeContext";
 
 export class TupleMapping extends MappingBase {
 
@@ -48,18 +49,18 @@ export class TupleMapping extends MappingBase {
         return result;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         if(!Array.isArray(value)) {
-            errors.push({ message: "Expected tuple.", path: path, value: value });
+            context.addError("Expected tuple.");
             return;
         }
 
         var mappings = this.elementMappings;
         if(value.length != mappings.length) {
-            errors.push({ message: "Expected " + mappings.length + " elements in tuple but source had " + value.length + ".", path: path, value: value });
+            context.addError(`Expected ${mappings.length} elements in tuple but source had ${value.length}.`);
             return;
         }
 
@@ -67,7 +68,10 @@ export class TupleMapping extends MappingBase {
 
         var result = new Array(value.length);
         for (var i = 0, l = mappings.length; i < l; i++) {
-            result[i] = mappings[i].write(value[i], path + "." + i, errors, visited);
+            var savedPath = context.path;
+            context.path += "." + i;
+            result[i] = mappings[i].write(context, value[i]);
+            context.path = savedPath;
         }
 
         return result;

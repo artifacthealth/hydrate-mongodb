@@ -8,6 +8,7 @@ import {MappingError} from "./mappingError";
 import {MappingFlags} from "./mappingFlags";
 import {InternalSession} from "../internalSession";
 import {ReadContext} from "./readContext";
+import {WriteContext} from "./writeContext";
 
 export class BufferMapping extends MappingBase {
 
@@ -26,12 +27,12 @@ export class BufferMapping extends MappingBase {
         return (<Binary>value).value(true);
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         if(!Buffer.isBuffer(value)) {
-            errors.push({ message: "Expected Buffer.", path: path, value: value });
+            context.addError("Expected Buffer.");
             return;
         }
 

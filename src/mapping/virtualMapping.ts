@@ -3,6 +3,7 @@ import {MappingBase} from "./mappingBase";
 import {MappingFlags} from "./mappingFlags";
 import {InternalSession} from "../internalSession";
 import {ReadContext} from "./readContext";
+import {WriteContext} from "./writeContext";
 
 export abstract class VirtualMapping extends MappingBase {
 
@@ -12,7 +13,7 @@ export abstract class VirtualMapping extends MappingBase {
 
     abstract read(context: ReadContext, value: any): any;
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         // Virtual values are not persisted
     }

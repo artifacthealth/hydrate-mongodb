@@ -3,6 +3,7 @@ import {MappingError} from "./mappingError";
 import {MappingFlags} from "./mappingFlags";
 import {InternalSession} from "../internalSession";
 import {ReadContext} from "./readContext";
+import {WriteContext} from "./writeContext";
 
 export class NumberMapping extends MappingBase {
 
@@ -21,12 +22,12 @@ export class NumberMapping extends MappingBase {
         return value;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         if(typeof value !== "number") {
-            errors.push({ message: "Expected number.", path: path, value: value });
+            context.addError("Expected number.");
             return;
         }
         return value;

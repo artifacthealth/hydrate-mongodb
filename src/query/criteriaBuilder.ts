@@ -6,6 +6,7 @@ import {ArrayMapping} from "../mapping/arrayMapping";
 import {InternalMapping} from "../mapping/internalMapping";
 import {MappingError} from "../mapping/mappingError";
 import {EntityMapping} from "../mapping/entityMapping";
+import {WriteContext} from "../mapping/writeContext";
 
 /**
  * Class that builds a database query document.
@@ -238,10 +239,10 @@ export class CriteriaBuilder {
             return RegExpUtil.clone(value);
         }
 
-        var errors: MappingError[] = [];
-        var preparedValue = mapping.write(value, path, errors, []);
-        if(errors.length > 0) {
-            this.error = new Error("Bad value: " + MappingError.createErrorMessage(errors));
+        var context = new WriteContext(path);
+        var preparedValue = mapping.write(context, value);
+        if(context.hasErrors) {
+            this.error = new Error(`Bad value: ${context.getErrorMessage()}`);
             return null;
         }
         return preparedValue;

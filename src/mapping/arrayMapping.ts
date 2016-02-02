@@ -13,6 +13,7 @@ import {ResolveContext} from "./resolveContext";
 import {TupleMapping} from "./tupleMapping";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
+import {WriteContext} from "./writeContext";
 
 export class ArrayMapping extends MappingBase {
 
@@ -45,19 +46,20 @@ export class ArrayMapping extends MappingBase {
         return result;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         if (!Array.isArray(value)) {
-            errors.push({message: "Expected array.", path: path, value: value});
+            context.addError("Expected array.");
+            return;
         }
 
         var result = new Array(value.length),
             mapping = this.elementMapping;
 
         for (var i = 0, l = value.length; i < l; i++) {
-            result[i] = mapping.write(value[i], path, errors, visited);
+            result[i] = mapping.write(context, value[i]);
         }
 
         return result;

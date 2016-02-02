@@ -30,6 +30,7 @@ import {ResolveContext} from "./mapping/resolveContext";
 import {ReadContext} from "./mapping/readContext";
 import {Observer} from "./observer";
 import {OrderDocument} from "./query/orderDocument";
+import {WriteContext} from "./mapping/writeContext";
 
 interface FindOneQuery {
 
@@ -102,10 +103,10 @@ export class PersisterImpl implements Persister {
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object> {
 
-        var errors: MappingError[] = [];
-        var document = this._mapping.write(entity, "", errors, []);
-        if(errors.length > 0) {
-            return new Result(new Error("Error serializing document:\n" + MappingError.createErrorMessage(errors)));
+        var context = new WriteContext();
+        var document = this._mapping.write(context, entity);
+        if(context.hasErrors) {
+            return new Result(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
         }
 
         if(!this._mapping.areDocumentsEqual(originalDocument, document)) {
@@ -126,10 +127,10 @@ export class PersisterImpl implements Persister {
 
     addInsert(batch: Batch, entity: Object): Result<Object> {
 
-        var errors: MappingError[] = [];
-        var document = this._mapping.write(entity, "", errors, []);
-        if(errors.length > 0) {
-            return new Result(new Error("Error serializing document:\n" + MappingError.createErrorMessage(errors)));
+        var context = new WriteContext();
+        var document = this._mapping.write(context, entity);
+        if(context.hasErrors) {
+            return new Result(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
         }
 
         // add version field if versioned

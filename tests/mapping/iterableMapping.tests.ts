@@ -15,6 +15,7 @@ import {MappingRegistry} from "../../src/mapping/mappingRegistry";
 import {MockSessionFactory} from "../mockSessionFactory";
 import {Property} from "../../src/mapping/property";
 import {Reference} from "../../src/reference";
+import {WriteContext} from "../../src/mapping/writeContext";
 
 describe('IterableMapping', () => {
 
@@ -65,9 +66,11 @@ describe('IterableMapping', () => {
 
             var mapping = createSetMapping();
 
-            var errors: MappingError[] = [];
-            var result = mapping.write(new Set([1, 2, 10, 12]), "", errors, []);
-            assert.deepEqual(errors, []);
+            var context = new WriteContext();
+            var result = mapping.write(context, new Set([1, 2, 10, 12]));
+            if(context.hasErrors) {
+                throw new Error(context.getErrorMessage());
+            }
             assert.deepEqual(result, [1, 2, 10, 12]);
         });
     });

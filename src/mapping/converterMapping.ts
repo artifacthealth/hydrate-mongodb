@@ -6,6 +6,7 @@ import {Changes} from "./changes";
 import {InternalSession} from "../internalSession";
 import {ReadContext} from "./readContext";
 import {PropertyConverter} from "./propertyConverter";
+import {WriteContext} from "./writeContext";
 
 export class ConverterMapping extends MappingBase {
 
@@ -26,18 +27,14 @@ export class ConverterMapping extends MappingBase {
         return result;
     }
 
-    write(value: any, path: string, errors: MappingError[], visited: any[]): any {
+    write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
 
         var result = this.converter.convertToDocumentField(value);
 
         if (result === undefined) {
-            errors.push({
-                message: "Unable to convert '" + value + "' to document field.",
-                path: path,
-                value: value
-            });
+            context.addError("Unable to convert '" + value + "' to document field.");
         }
 
         return result;

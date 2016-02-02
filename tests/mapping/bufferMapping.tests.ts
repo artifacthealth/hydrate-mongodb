@@ -8,6 +8,7 @@ import * as async from "async";
 import {assert} from "chai";
 import {BufferMapping} from "../../src/mapping/bufferMapping";
 import {ReadContext} from "../../src/mapping/readContext";
+import {WriteContext} from "../../src/mapping/writeContext";
 
 describe('BufferMapping', () => {
 
@@ -31,7 +32,11 @@ describe('BufferMapping', () => {
             var mapping = new BufferMapping();
 
             var testValue = "test";
-            var result = mapping.write(new Buffer(testValue), "", [], []).value();
+            var context = new WriteContext();
+            var result = mapping.write(context, new Buffer(testValue)).value();
+            if(context.hasErrors) {
+                throw new Error(context.getErrorMessage());
+            }
 
             assert.equal(result, testValue);
         });
