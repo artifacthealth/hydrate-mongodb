@@ -91,7 +91,8 @@ export interface EmbeddedDecoratorFactory {
 }
 
 export interface FieldDecoratorFactory {
-    (args?: { name?: string, nullable?: boolean }): PropertyDecorator;
+    (name?: string): PropertyDecorator;
+    (args: { name?: string, nullable?: boolean }): PropertyDecorator;
 }
 
 export interface EnumeratedDecoratorFactory {

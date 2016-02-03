@@ -312,11 +312,18 @@ export class FieldAnnotation {
     name: string;
     nullable: boolean;
 
-    constructor(args?: { name?: string, nullable?: boolean }) {
+    constructor(name?: string);
+    constructor(args: { name?: string, nullable?: boolean });
+    constructor(args?: any) {
 
         if(args) {
-            this.name = args.name;
-            this.nullable = args.nullable;
+            if(typeof args === "string") {
+                this.name = args;
+            }
+            else {
+                this.name = args.name;
+                this.nullable = args.nullable;
+            }
         }
     }
 
