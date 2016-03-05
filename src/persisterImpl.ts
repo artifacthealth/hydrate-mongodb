@@ -870,7 +870,7 @@ class FindQueue {
             }
             else {
                 if(!this._persister.identity.validate(id)) {
-                    return callback(new Error(`'${id}' is not a valid valid identifier.`))
+                    return callback(new Error(`'${id}' is not a valid identifier.`))
                 }
             }
 
