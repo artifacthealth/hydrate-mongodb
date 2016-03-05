@@ -868,6 +868,11 @@ class FindQueue {
                     return callback(new Error(`Unable to convert string '${id}' to valid identifier.`))
                 }
             }
+            else {
+                if(!this._persister.identity.validate(id)) {
+                    return callback(new Error(`'${id}' is not a valid valid identifier.`))
+                }
+            }
 
             this._persister.findOne({ _id:  id }, (err, entity) => {
                 if(err) return callback(err);
