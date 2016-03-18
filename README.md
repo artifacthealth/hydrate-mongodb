@@ -1,39 +1,39 @@
 # Hydrate
 **An Object/Document Mapping (ODM) framework for Node.js and MongodDB**
 
-Hydrate is built on top of the [native MongoDB driver](https://github.com/mongodb/node-mongodb-native),
-providing a means for developers to map classes in Node.js that contain business logic to documents stored in a MongoDB 
+Hydrate provides a means for developers to map classes in Node.js, that contain business logic, to documents stored in a MongoDB 
 database. Developers can work normally with objects and classes, and Hydrate takes care of the onerous details such as 
 serializing classes to documents, validation, mapping of class inheritance, optimistic locking, fetching of references 
-between database collections, change tracking, and managing of persistence through bulk operations.  
+between database collections, change tracking, and managing of persistence through bulk operations. Hydrate is built on
+top of the [native MongoDB driver](https://github.com/mongodb/node-mongodb-native).  
 
-####Idiomatic Javascript
+#### Idiomatic Javascript
 Hydrate has no requirements for how persistent classes are declared. Developers can work with 
 standard JavasScript idioms, such as constructor functions and ES6 classes. Furthermore, no 
 base class is required for creating persistent classes. 
 
-####TypeScript support
+#### TypeScript support
 [TypeScript](http://www.typescriptlang.org/) is a superset of JavaScript that includes type information and compiles 
 to regular JavaScript. If you choose to use TypeScript in your projects, this type information can be used by
 Hydrate to create the mappings between your classes and the MongoDB documents, reducing duplicate
 work. However, TypeScript is not required and you can use Hydrate with plain JavaScript. 
 
-####Decorator support
+#### Decorator support
 Decorators are a method of annotating classes and properties in JavaScript at design time. There is currently a [proposal](https://github.com/wycats/javascript-decorators/)
 to include decorators as a standard part of JavaScript in ES7. In the meantime, several popular transpilers including 
 [Babel](https://babeljs.io/) and TypeScript make decorators available for use now. Hydrate gives developers the option
 to leverages decorators as simple means to describe persistent classes.  
 
-####Familiar API
+#### Familiar API
 Hydrate uses a session-based approach to the persistence API similar to [Hibernate ORM](http://hibernate.org/orm/). Developers 
 familiar with this approach should feel at home with Hydrate. Furthermore, Hydrate's query API is kept as similar as possible
 to the MongoDB native Node.js driver.
 
-####High performance
+#### High performance
 MongoDB [bulk write operations](https://docs.mongodb.org/v3.0/core/bulk-write-operations/) are used to synchronize 
 changes with the database, which can result in significant performance gains.
 
-####Extensibility
+#### Extensibility
 Hydrate provides numerous opportunities for extensibility.
 
 ## Installation

@@ -1,4 +1,4 @@
-import {IdentityGenerator} from "../../src/id/identityGenerator";
+import {IdentityGenerator} from "../../src/config/configuration";
 
 export class MockIdentityGenerator implements IdentityGenerator {
 

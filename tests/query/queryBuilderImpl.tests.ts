@@ -1,17 +1,12 @@
-/// <reference path="../../typings/mocha.d.ts"/>
-/// <reference path="../../typings/chai.d.ts"/>
-/// <reference path="../../typings/async.d.ts" />
-
 import {assert} from "chai";
 import * as async from "async";
 import * as helpers from "../helpers";
 import * as model from "../fixtures/model";
 import {QueryDefinition} from "../../src/query/queryDefinition";
 import {QueryKind} from "../../src/query/queryKind";
-import {QueryBuilderImpl} from "../../src/query/queryBuilderImpl";
-import {ResultCallback} from "../../src/core/resultCallback";
+import {QueryBuilderImpl, QueryDocument} from "../../src/query/queryBuilderImpl";
+import {ResultCallback} from "../../src/core/callback";
 import {Callback} from "../../src/core/callback";
-import {QueryDocument} from "../../src/query/queryDocument";
 
 
 describe('QueryBuilderImpl', () => {

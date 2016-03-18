@@ -1,6 +1,3 @@
-/// <reference path="../../typings/mocha.d.ts"/>
-/// <reference path="../../typings/chai.d.ts"/>
-
 import {assert} from "chai";
 import * as RegExpUtil from "../../src/core/regExpUtil";
 

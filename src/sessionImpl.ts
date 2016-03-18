@@ -1,25 +1,19 @@
-/// <reference path="../typings/async.d.ts" />
-/// <reference path="../typings/node.d.ts" />
-
 import * as async from "async";
 import {EventEmitter} from "events";
 import {Callback} from "./core/callback";
 import {ChangeTrackingType} from "./mapping/changeTrackingType";
 import {Constructor} from "./core/constructor";
-import {IteratorCallback} from "./core/iteratorCallback";
-import {PropertyFlags} from "./mapping/propertyFlags";
-import {ResultCallback} from "./core/resultCallback";
-import {InternalSession} from "./internalSession";
-import {InternalSessionFactory} from "./internalSessionFactory";
+import {IteratorCallback} from "./core/callback";
+import {MappingModel} from "./mapping/mappingModel";
+import {ResultCallback} from "./core/callback";
+import {InternalSessionFactory} from "./sessionFactoryImpl";
 import {TaskQueue} from "./taskQueue";
-import {Persister} from "./persister";
+import {Persister} from "./persisterImpl";
 import {Batch} from "./batch";
 import {Reference} from "./reference";
 import {Table} from "./core/table";
 import {EntityMapping} from "./mapping/entityMapping";
-import {QueryBuilder} from "./query/queryBuilder";
-import {QueryBuilderImpl} from "./query/queryBuilderImpl";
-import {FindOneQuery} from "./query/findOneQuery";
+import {QueryBuilder, QueryBuilderImpl, FindOneQuery} from "./query/queryBuilderImpl";
 import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
 import {ReadContext} from "./mapping/readContext";
@@ -106,9 +100,47 @@ var cachedDetachedLinks: ObjectLinks = {
     flags: ObjectFlags.None
 }
 
+export interface Session extends EventEmitter {
+
+    save(obj: Object, callback?: Callback): void;
+    remove(obj: Object, callback?: Callback): void;
+    detach(obj: Object, callback?: Callback): void;
+    refresh(obj: Object, callback: Callback): void;
+    flush(callback?: Callback): void;
+    clear(callback?: Callback): void;
+    find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T>;
+    getReference<T>(ctr: Constructor<T>, id: any): T;
+    fetch<T>(obj: T, callback?: ResultCallback<T>): void;
+    fetch<T>(obj: T, path: string, callback?: ResultCallback<T>): void;
+    fetch<T>(obj: T, paths: string[], callback?: ResultCallback<T>): void;
+    query<T>(ctr: Constructor<T>): QueryBuilder<T>;
+    wait(callback?: Callback): void;
+    close(callback?: Callback): void;
+    contains(obj: Object): boolean;
+}
+
+/**
+ * @hidden
+ */
+export interface InternalSession extends Session {
+
+    factory: InternalSessionFactory;
+
+    getObject(id: any): any;
+    registerManaged(persister: Persister, entity: Object, document: any): void;
+    notifyRemoved(entity: Object): void;
+    getPersister(mapping: EntityMapping): Persister;
+    getReferenceInternal(mapping: EntityMapping, id: any): any;
+    fetchInternal(entity: Object, paths: string[], callback: ResultCallback<any>): void;
+    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void;
+}
+
 // TODO: review all errors and decide if they are operational or programmer errors. For example, what about mapping errors?
 // TODO: decide where it makes sense to use WeakMap, Promise, Set, WeakSet which is now a native part of Node 12
 // TODO: raise events on UnitOfWork
+/**
+ * @hidden
+ */
 export class SessionImpl extends EventEmitter implements InternalSession {
 
     /**
@@ -401,7 +433,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             return callback(new Error("Reference passed to save"));
         }
 
-        this._findReferencedEntities(obj, PropertyFlags.CascadeSave, (err, entities) => {
+        this._findReferencedEntities(obj, MappingModel.PropertyFlags.CascadeSave, (err, entities) => {
             if(err) return callback(err);
             this._saveEntities(entities, callback);
         });
@@ -522,7 +554,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         Reference.fetch(this, obj, (err, entity) => {
             if(err) return callback(err);
 
-            this._findReferencedEntities(entity, PropertyFlags.CascadeRemove | PropertyFlags.Dereference, (err, entities) => {
+            this._findReferencedEntities(entity, MappingModel.PropertyFlags.CascadeRemove | MappingModel.PropertyFlags.Dereference, (err, entities) => {
                 if (err) return callback(err);
                 this._removeEntities(entities, callback);
             });
@@ -579,7 +611,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             return callback(new Error("Reference passed to detach"));
         }
 
-        this._findReferencedEntities(obj, PropertyFlags.CascadeDetach, (err, entities) => {
+        this._findReferencedEntities(obj, MappingModel.PropertyFlags.CascadeDetach, (err, entities) => {
             if(err) return callback(err);
             this._detachEntities(entities, callback);
         });
@@ -605,7 +637,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             return callback(new Error("Reference passed to refresh"));
         }
 
-        this._findReferencedEntities(obj, PropertyFlags.CascadeRefresh, (err, entities) => {
+        this._findReferencedEntities(obj, MappingModel.PropertyFlags.CascadeRefresh, (err, entities) => {
             if(err) return callback(err);
             this._refreshEntities(entities, callback);
         });
@@ -928,7 +960,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         delete links.object["_id"];
     }
 
-    private _findReferencedEntities(obj: any, flags: PropertyFlags, callback: ResultCallback<any[]>): void {
+    private _findReferencedEntities(obj: any, flags: MappingModel.PropertyFlags, callback: ResultCallback<any[]>): void {
 
         var mapping = this.factory.getMappingForObject(obj);
         if (!mapping) {
@@ -945,10 +977,10 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         });
     }
 
-    private _walk(mapping: EntityMapping, entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+    private _walk(mapping: EntityMapping, entity: any, flags: MappingModel.PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
 
         var references: Reference[] = [];
-        mapping.walk(this, entity, flags | PropertyFlags.WalkEntities, entities, embedded, references);
+        mapping.walk(this, entity, flags | MappingModel.PropertyFlags.WalkEntities, entities, embedded, references);
 
         async.each(references, (reference: Reference, done: (err?: Error) => void) => {
 
@@ -959,3 +991,4 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }, callback);
     }
 }
+

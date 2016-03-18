@@ -1,14 +1,9 @@
-/// <reference path="../typings/mocha.d.ts"/>
-/// <reference path="../typings/chai.d.ts"/>
-/// <reference path="../src/core/observe.d.ts" />
-
 import {assert} from "chai";
 import * as helpers from "./helpers";
 import * as model from "./fixtures/model";
-
 import {Observer} from "../src/observer";
 import {Reference} from "../src/reference";
-import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
+import {ObjectIdGenerator} from "../src/config/objectIdGenerator";
 
 describe('Observer', () => {
 

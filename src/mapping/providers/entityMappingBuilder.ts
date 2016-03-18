@@ -8,9 +8,11 @@ import {
     VersionedAnnotation,
     ChangeTrackingAnnotation
 } from "./annotations";
-import {MappingFlags} from "../mappingFlags";
 import {Index} from "../index";
 
+/**
+ * @hidden
+ */
 export class EntityMappingBuilder extends ClassMappingBuilder {
 
     protected populateCore(): void {
@@ -44,7 +46,7 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
         super.populateCore();
 
         // add default values
-        if (mapping.flags & MappingFlags.InheritanceRoot) {
+        if (mapping.flags & MappingModel.MappingFlags.InheritanceRoot) {
 
             if(mapping.versioned == null) {
                 mapping.versioned = this.context.config.versioned;

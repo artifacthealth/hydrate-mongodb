@@ -1,5 +1,8 @@
 import {InternalMapping} from "./internalMapping";
 
+/**
+ * @hidden
+ */
 export class ResolveContext {
 
     resolvedPath: string;

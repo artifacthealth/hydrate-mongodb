@@ -9,22 +9,19 @@ import {ObjectMapping as ObjectMappingImpl} from "./objectMapping";
 import {RegExpMapping} from "./regExpMapping";
 import {StringMapping} from "./stringMapping";
 import {TupleMapping} from "./tupleMapping";
-import {MappingFlags} from "./mappingFlags";
 import {InternalMapping} from "./internalMapping";
-import {PropertyFlags} from "./propertyFlags";
 import {Property as PropertyImpl} from "./property";
 import {Index} from "./index";
 import {IndexOptions} from "./indexOptions";
 import {CollectionOptions} from "./collectionOptions";
 import {ChangeTrackingType} from "./changeTrackingType";
-import {IdentityGenerator} from "../id/identityGenerator";
+import {IdentityGenerator} from "../config/configuration";
 import {EnumType} from "./enumType";
 import {PropertyConverter} from "./propertyConverter";
 import {ConverterMapping} from "./converterMapping";
 import {BufferMapping} from "./bufferMapping";
-import {IterableMapping} from "./iterableMapping";
 import {Constructor} from "../core/constructor";
-
+import {IdentityMapping} from "./identityMapping";
 
 
 export namespace MappingModel {
@@ -84,6 +81,116 @@ export namespace MappingModel {
     }
 
     /**
+     * Flags that indicate the type of [[Mapping]].
+     */
+    export const enum MappingFlags {
+
+        Array               = 0x00000001,
+        Boolean             = 0x00000002,
+        Class               = 0x00000004,
+        Date                = 0x00000008,
+        Enum                = 0x00000010,
+        Number              = 0x00000020,
+        Object              = 0x00000040,
+        RegExp              = 0x00000080,
+        String              = 0x00000100,
+        Tuple               = 0x00000200,
+        Entity              = 0x00000400,
+        Embeddable          = 0x00000800,
+        InheritanceRoot     = 0x00001000,
+        Converter           = 0x00002000,
+        Buffer              = 0x00004000,
+        Iterable            = 0x00008000,
+        Virtual             = 0x00010000
+    }
+
+    /**
+     * Flags for a [[Property]] mapping.
+     */
+    export const enum PropertyFlags {
+
+        /**
+         * No flags.
+         */
+        None = 0,
+
+        /**
+         * Indicates that the property is ignored.
+         */
+        Ignored = 0x00000001,
+
+        /**
+         * Save operations should be cascaded to this property.
+         */
+        CascadeSave = 0x00000002,
+
+        /**
+         * Remove operations should be cascaded to this property.
+         */
+        CascadeRemove = 0x00000004,
+
+        /**
+         * Detach operations should be cascaded to this property.
+         */
+        CascadeDetach = 0x00000008,
+
+        /**
+         * Refresh operations should be cascaded to this property.
+         */
+        CascadeRefresh = 0x00000010,
+
+        /**
+         * Merge operations should be cascaded to this property.
+         */
+        CascadeMerge = 0x00000020,
+
+        /**
+         * All operations should be cascaded to this property.
+         */
+        CascadeAll = CascadeSave | CascadeRemove | CascadeDetach | CascadeRefresh | CascadeMerge,
+
+        /**
+         * All operations should be cascaded to this property.
+         */
+        InverseSide = 0x00000040,
+
+        /**
+         * Indicates that null values should be saved for this property. By default a property is removed from the object
+         * when saved if it has a value of `null` or `undefined`.
+         */
+        Nullable = 0x00000080,
+
+        /**
+         * Not currently supported.
+         * @hidden
+         */
+        OrphanRemoval = 0x00000100,
+
+        /**
+         * Indicates the property is read-only.
+         */
+        ReadOnly = 0x00000200,
+
+        /**
+         * All non-walk flags.
+         * @hidden
+         */
+        All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | ReadOnly,
+
+        /**
+         * Indicates that refererences to entities should be walked.
+         * @hidden
+         */
+        WalkEntities = 0x00001000,
+
+        /**
+         * Indicates that reference found during a walk operation should be fetched.
+         * @hidden
+         */
+        Dereference = 0x00002000
+    }
+
+    /**
      * Represents the mappings from a document to an anonymous object type.
      */
     export interface ObjectMapping extends Mapping {
@@ -138,15 +245,6 @@ export namespace MappingModel {
          * @param value The value to use for the discriminator for this class.
          */
         setDiscriminatorValue(value: string): void;
-    }
-
-    /**
-     * Represents the mapping for an enumeration.
-     */
-    export interface EnumMapping extends Mapping {
-
-        ignoreCase: boolean;
-        type: EnumType;
     }
 
     /**
@@ -233,18 +331,6 @@ export namespace MappingModel {
     }
 
     /**
-     * Creates a mapping for an iterable class.
-     * @param ctr The constructor for the iterable class.
-     * @param elementMapping The mapping for the iterable element.
-     */
-    export function createIterableMapping(ctr: Constructor<any>, elementMapping: Mapping): Mapping {
-        if(!elementMapping) {
-            throw new Error("Missing required argument 'elementMapping'.");
-        }
-        return new IterableMapping(<any>ctr, <InternalMapping>elementMapping);
-    }
-
-    /**
      * Creates a mapping for a boolean.
      */
     export function createBooleanMapping(): Mapping {
@@ -278,11 +364,18 @@ export namespace MappingModel {
      * Creates a mapping for an enumeration.
      * @param members The members to include in the enumeration mapping.
      */
-    export function createEnumMapping(members: EnumMembers): EnumMapping {
+    export function createEnumMapping(members: EnumMembers, ignoreCase?: boolean): Mapping {
         if(!members) {
             throw new Error("Missing required argument 'members'.");
         }
-        return new EnumMappingImpl(members);
+        return new EnumMappingImpl(members, ignoreCase);
+    }
+
+    /**
+     * Creates a mapping to the document identity.
+     */
+    export function createIdentityMapping(): Mapping {
+        return new IdentityMapping();
     }
 
     /**

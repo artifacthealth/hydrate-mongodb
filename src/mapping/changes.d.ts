@@ -1,7 +1,5 @@
-import {Lookup} from "../core/lookup";
-
 export interface Changes {
 
-    $set?: Lookup<any>;
-    $unset?: Lookup<any>;
+    $set?: { [name: string]: any };
+    $unset?: { [name: string]: any };
 }

@@ -28,119 +28,65 @@ import {IndexOptions} from "../indexOptions";
 import {ChangeTrackingType} from "../changeTrackingType";
 import {CascadeFlags} from "../cascadeFlags";
 
-export interface EntityDecoratorFactory {
-    (): ClassDecorator;
-}
+export declare function Entity(): ClassDecorator;
 
-export interface EmbeddableDecoratorFactory {
-    (): ClassDecorator;
-}
+export declare function Embeddable(): ClassDecorator;
 
-export interface ConverterDecoratorFactory {
-    (converter: string | PropertyConverter | ParameterlessConstructor<PropertyConverter>): ClassDecorator & PropertyDecorator;
-}
+export declare function Converter(converter: string | PropertyConverter | ParameterlessConstructor<PropertyConverter>): ClassDecorator & PropertyDecorator;
 
-export interface CollectionDecoratorFactory {
-    (name: string): ClassDecorator;
-    (args?: { name?: string; db?: string, options?: CollectionOptions; }): ClassDecorator;
-}
+export declare function Collection(name: string): ClassDecorator;
+export declare function Collection(args?: { name?: string; db?: string, options?: CollectionOptions; }): ClassDecorator;
 
-export interface IdAnnotationFactory {
-    (): PropertyDecorator;
-}
+export declare function Id(): PropertyDecorator;
 
-export interface IndexDecoratorFactory {
-    (args: { keys: [string, number][]; options?: IndexOptions;}): ClassDecorator;
-    (args?: { order?: number; options?: IndexOptions;}): PropertyDecorator;
-}
+export declare function Index(args: { keys: [string, number][]; options?: IndexOptions;}): ClassDecorator;
+export declare function Index(args?: { order?: number; options?: IndexOptions;}): PropertyDecorator;
 
-export interface VersionFieldDecoratorFactory {
-    (name: string): ClassDecorator;
+export declare function VersionField(name: string): ClassDecorator;
 
-}
+export declare function Versioned(enabled?: boolean): ClassDecorator;
 
-export interface VersionedDecoratorFactory {
-    (enabled?: boolean): ClassDecorator;
-}
+export declare function ChangeTracking(type: ChangeTrackingType): ClassDecorator;
 
-export interface ChangeTrackingDecoratorFactory {
-    (type: ChangeTrackingType): ClassDecorator;
+export declare function DiscriminatorField(name: string): ClassDecorator;
 
-}
+export declare function DiscriminatorValue(value: string): ClassDecorator;
 
-export interface DiscriminatorFieldDecoratorFactory {
-    (name: string): ClassDecorator;
-}
+export declare function Field(name?: string): PropertyDecorator;
+export declare function Field(args: { name?: string, nullable?: boolean }): PropertyDecorator;
 
-export interface DiscriminatorValueDecoratorFactory {
-    (value: string): ClassDecorator;
-}
+export declare function Enumerated(members: Object): PropertyDecorator;
 
-export interface ReferenceManyDecoratorFactory {
-    (type: Constructor<any> | string): PropertyDecorator;
-    (args: { target: Constructor<any> | string, inverseOf?: string, cascade?: CascadeFlags }): PropertyDecorator;
-}
+export declare function InverseOf(propertyName: string): PropertyDecorator;
 
-export interface ReferenceOneDecoratorFactory {
-    (type: Constructor<any> | string): PropertyDecorator;
-    (args: { target?: Constructor<any> | string, inverseOf?: string, cascade?: CascadeFlags }): PropertyDecorator;
-}
+export declare function  Cascade(flags: CascadeFlags): PropertyDecorator;
 
-export interface EmbeddedDecoratorFactory {
-    (type: Constructor<any> | string): PropertyDecorator;
-}
+export declare function Type(target: Constructor<any> | string): PropertyDecorator;
 
-export interface FieldDecoratorFactory {
-    (name?: string): PropertyDecorator;
-    (args: { name?: string, nullable?: boolean }): PropertyDecorator;
-}
+export declare function ElementType(target: Constructor<any> | string): PropertyDecorator;
 
-export interface EnumeratedDecoratorFactory {
-    (members: Object): PropertyDecorator;
-}
+/**
+ * @hidden
+ */
+export declare function MapKey(propertyName: string): PropertyDecorator;
 
-export interface InverseOfDecoratorFactory {
-
-    (propertyName: string): PropertyDecorator;
-}
-
-export interface CascadeDecoratorFactory {
-
-    (flags: CascadeFlags): PropertyDecorator;
-}
-
-export interface TypeDecoratorFactory {
-
-    (target: Constructor<any> | string): PropertyDecorator;
-}
-
-export interface ElementTypeDecoratorFactory {
-
-    (target: Constructor<any> | string): PropertyDecorator;
-}
-
-export interface MapKeyDecoratorFactory {
-
-    (propertyName: string): PropertyDecorator;
-}
-
-export var Entity = <EntityDecoratorFactory>makeDecorator(EntityAnnotation);
-export var Embeddable = <EmbeddableDecoratorFactory>makeDecorator(EmbeddableAnnotation);
-export var Converter = <ConverterDecoratorFactory>makeDecorator(ConverterAnnotation);
-export var Collection = <CollectionDecoratorFactory>makeDecorator(CollectionAnnotation);
-export var Index = <IndexDecoratorFactory>makeDecorator(IndexAnnotation);
-export var VersionField = <VersionFieldDecoratorFactory>makeDecorator(VersionFieldAnnotation);
-export var Versioned = <VersionedDecoratorFactory>makeDecorator(VersionedAnnotation);
-export var ChangeTracking = <ChangeTrackingDecoratorFactory>makeDecorator(ChangeTrackingAnnotation);
-export var DiscriminatorField = <DiscriminatorFieldDecoratorFactory>makeDecorator(DiscriminatorFieldAnnotation);
-export var DiscriminatorValue = <DiscriminatorValueDecoratorFactory>makeDecorator(DiscriminatorValueAnnotation);
-export var Field = <FieldDecoratorFactory>makeDecorator(FieldAnnotation);
-export var Enumerated = <EnumeratedDecoratorFactory>makeDecorator(EnumeratedAnnotation);
-export var Cascade = <CascadeDecoratorFactory>makeDecorator(CascadeAnnotation);
-export var InverseOf = <InverseOfDecoratorFactory>makeDecorator(InverseOfAnnotation);
-export var Type = <TypeDecoratorFactory>makeDecorator(TypeAnnotation);
-export var ElementType = <ElementTypeDecoratorFactory>makeDecorator(ElementTypeAnnotation);
-export var MapKey = <MapKeyDecoratorFactory>makeDecorator(MapKeyAnnotation);
-export var Id = <IdAnnotationFactory>makeDecorator(IdAnnotation);
+exports.Entity = makeDecorator(EntityAnnotation);
+exports.Embeddable = makeDecorator(EmbeddableAnnotation);
+exports.Converter = makeDecorator(ConverterAnnotation);
+exports.Collection = makeDecorator(CollectionAnnotation);
+exports.Index = makeDecorator(IndexAnnotation);
+exports.VersionField = makeDecorator(VersionFieldAnnotation);
+exports.Versioned = makeDecorator(VersionedAnnotation);
+exports.ChangeTracking = makeDecorator(ChangeTrackingAnnotation);
+exports.DiscriminatorField = makeDecorator(DiscriminatorFieldAnnotation);
+exports.DiscriminatorValue = makeDecorator(DiscriminatorValueAnnotation);
+exports.Field = makeDecorator(FieldAnnotation);
+exports.Enumerated = makeDecorator(EnumeratedAnnotation);
+exports.Cascade = makeDecorator(CascadeAnnotation);
+exports.InverseOf = makeDecorator(InverseOfAnnotation);
+exports.Type = makeDecorator(TypeAnnotation);
+exports.ElementType = makeDecorator(ElementTypeAnnotation);
+exports.MapKey = makeDecorator(MapKeyAnnotation);
+exports.Id = makeDecorator(IdAnnotation);
 
 

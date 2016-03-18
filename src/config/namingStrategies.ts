@@ -1,6 +1,9 @@
-/// <reference path="../../typings/change-case.d.ts" />
-
 import * as changeCase from "change-case";
+
+export interface NamingStrategy {
+
+    (name: string): string;
+}
 
 /**
  * Built-in naming strategies available field names, collection names, and type discriminators.

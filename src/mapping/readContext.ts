@@ -1,7 +1,10 @@
-import {MappingError} from "./mappingError";
-import {InternalSession} from "../internalSession";
+import {MappingError, createErrorMessage} from "./mappingError";
+import {InternalSession} from "../sessionImpl";
 import {Observer} from "../observer";
 
+/**
+ * @hidden
+ */
 export class ReadContext {
 
     /**
@@ -47,6 +50,6 @@ export class ReadContext {
      * Gets a string summarizing all errors in the context.
      */
     getErrorMessage(): string {
-        return MappingError.createErrorMessage(this.errors);
+        return createErrorMessage(this.errors);
     }
 }

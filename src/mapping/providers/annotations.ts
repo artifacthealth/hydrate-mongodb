@@ -9,20 +9,28 @@ import {MappingModel} from "../mappingModel";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
 import {Type} from "reflect-helper";
-import {MappingFlags} from "../mappingFlags";
 import {EntityMappingBuilder} from "./entityMappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";
 
+/**
+ * @hidden
+ */
 export interface MappingBuilderAnnotation {
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder;
 }
 
+/**
+ * @hidden
+ */
 export interface TargetClassAnnotation {
 
     target: Constructor<any> | string;
 }
 
+/**
+ * @hidden
+ */
 export class IdAnnotation {
 
     toString(): string {
@@ -30,12 +38,15 @@ export class IdAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class EntityAnnotation implements MappingBuilderAnnotation {
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
         var parentMapping = <MappingModel.EntityMapping>getParentMapping(context, type);
-        if(parentMapping && (parentMapping.flags & MappingFlags.Entity) == 0) {
+        if(parentMapping && (parentMapping.flags & MappingModel.MappingFlags.Entity) == 0) {
             context.addError("Parent of mapping for '" + type.name + "' must be an entity mapping.");
             return;
         }
@@ -48,12 +59,15 @@ export class EntityAnnotation implements MappingBuilderAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class EmbeddableAnnotation implements MappingBuilderAnnotation {
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
         var parentMapping = getParentMapping(context, type);
-        if(parentMapping && (parentMapping.flags & MappingFlags.Embeddable) == 0) {
+        if(parentMapping && (parentMapping.flags & MappingModel.MappingFlags.Embeddable) == 0) {
             context.addError("Parent of mapping for '" + type.name + "' must be an embeddable mapping.");
             return;
         }
@@ -66,6 +80,9 @@ export class EmbeddableAnnotation implements MappingBuilderAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class ConverterAnnotation implements MappingBuilderAnnotation {
 
     converter: PropertyConverter;
@@ -123,6 +140,9 @@ export class ConverterAnnotation implements MappingBuilderAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class CollectionAnnotation {
 
     /**
@@ -160,6 +180,9 @@ export class CollectionAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class IndexAnnotation {
 
     /**
@@ -193,6 +216,9 @@ export class IndexAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class VersionFieldAnnotation {
 
     /**
@@ -208,6 +234,9 @@ export class VersionFieldAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class VersionedAnnotation {
 
     /**
@@ -223,6 +252,9 @@ export class VersionedAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class ChangeTrackingAnnotation {
 
     constructor(public type: ChangeTrackingType) {
@@ -230,6 +262,9 @@ export class ChangeTrackingAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class DiscriminatorFieldAnnotation {
 
     constructor(public name: string) {
@@ -241,6 +276,9 @@ export class DiscriminatorFieldAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class DiscriminatorValueAnnotation {
 
     constructor(public value: string) {
@@ -252,6 +290,9 @@ export class DiscriminatorValueAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class InverseOfAnnotation {
 
     constructor(public propertyName: string) {
@@ -263,6 +304,9 @@ export class InverseOfAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class CascadeAnnotation {
 
     constructor(public flags: CascadeFlags) {
@@ -274,6 +318,9 @@ export class CascadeAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class TypeAnnotation implements TargetClassAnnotation {
 
     constructor(public target: Constructor<any> | string) {
@@ -285,6 +332,9 @@ export class TypeAnnotation implements TargetClassAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class ElementTypeAnnotation implements TargetClassAnnotation{
 
     constructor(public target: Constructor<any> | string) {
@@ -296,6 +346,9 @@ export class ElementTypeAnnotation implements TargetClassAnnotation{
     }
 }
 
+/**
+ * @hidden
+ */
 export class MapKeyAnnotation {
 
     constructor(public propertyName: string) {
@@ -307,6 +360,9 @@ export class MapKeyAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class FieldAnnotation {
 
     name: string;
@@ -332,6 +388,9 @@ export class FieldAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 export class EnumeratedAnnotation {
 
     constructor(public members: Object) {
@@ -343,6 +402,9 @@ export class EnumeratedAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
 function getParentMapping(context: MappingBuilderContext, type: Type): MappingModel.ClassMapping {
 
     var baseType = type.baseType;

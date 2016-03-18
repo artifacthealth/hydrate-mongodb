@@ -1,26 +1,25 @@
-/// <reference path="../../typings/async.d.ts" />
-
 import * as async from "async";
-
-import {IdentityGenerator} from "../id/identityGenerator";
+import {IdentityGenerator} from "../config/configuration";
 import {MappingError} from "./mappingError";
 import {ClassMapping} from "./classMapping";
 import {ChangeTrackingType} from "./changeTrackingType";
 import {Index} from "./index";
 import {CollectionOptions} from "./collectionOptions";
 import {MappingRegistry} from "./mappingRegistry";
-import {MappingFlags} from "./mappingFlags";
+import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
 import {Reference} from "../reference";
-import {PropertyFlags} from "./propertyFlags";
-import {InternalSession} from "../internalSession";
-import {ResultCallback} from "../core/resultCallback";
+import {InternalSession} from "../sessionImpl";
+import {ResultCallback} from "../core/callback";
 import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {Property} from "./property";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class EntityMapping extends ClassMapping {
 
     collectionName: string;
@@ -43,8 +42,8 @@ export class EntityMapping extends ClassMapping {
     constructor(baseClass?: EntityMapping) {
         super(baseClass);
 
-        this.flags &= ~MappingFlags.Embeddable;
-        this.flags |= MappingFlags.Entity;
+        this.flags &= ~MappingModel.MappingFlags.Embeddable;
+        this.flags |= MappingModel.MappingFlags.Entity;
     }
 
     /*
@@ -203,7 +202,7 @@ export class EntityMapping extends ClassMapping {
         return (<EntityMapping>this.inheritanceRoot).identity.areEqual(id1, id2)
     }
 
-    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: MappingModel.PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (!value || typeof value !== "object") return;
 
@@ -214,7 +213,7 @@ export class EntityMapping extends ClassMapping {
                 value = entity;
             }
             else {
-                if(flags & PropertyFlags.Dereference) {
+                if(flags & MappingModel.PropertyFlags.Dereference) {
                     // store reference to resolve later
                     references.push(value);
                 }
@@ -226,7 +225,7 @@ export class EntityMapping extends ClassMapping {
         entities.push(value);
 
         // If this isn't the first entity, only continue if we have the WalkEntities flag
-        if((this.flags & PropertyFlags.WalkEntities) == 0 && entities.length > 1) return;
+        if((this.flags & MappingModel.PropertyFlags.WalkEntities) == 0 && entities.length > 1) return;
 
         super.walk(session, value, flags, entities, embedded, references);
     }

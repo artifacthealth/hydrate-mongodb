@@ -1,9 +1,10 @@
-/// <reference path="../typings/node.d.ts" />
-
 import {EventEmitter} from "events";
-import {ResultCallback} from "./core/resultCallback";
+import {ResultCallback} from "./core/callback";
 import {Table} from "./core/table";
 
+/**
+ * @hidden
+ */
 interface Task {
 
     operation: number;
@@ -14,6 +15,9 @@ interface Task {
     next?: Task;
 }
 
+/**
+ * @hidden
+ */
 export class TaskQueue extends EventEmitter {
 
     private _execute: (operation: number, arg: any, callback: ResultCallback<any>) => void;

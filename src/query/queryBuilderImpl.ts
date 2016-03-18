@@ -1,21 +1,94 @@
 import {Callback} from "../core/callback";
-import {ResultCallback} from "../core/resultCallback";
-import {IteratorCallback} from "../core/iteratorCallback";
+import {ResultCallback} from "../core/callback";
+import {IteratorCallback} from "../core/callback";
 
-import {InternalSession} from "../internalSession";
-import {Persister} from "../persister";
+import {InternalSession} from "../sessionImpl";
+import {Persister} from "../persisterImpl";
 import {QueryDefinition} from "./queryDefinition";
 import {QueryKind} from "./queryKind";
 
-import {QueryBuilder} from "./queryBuilder";
-import {FindOneAndRemoveQuery} from "./findOneAndRemoveQuery";
-import {FindOneAndUpdateQuery} from "./findOneAndUpdateQuery";
-import {FindOneQuery} from "./findOneQuery";
-import {FindQuery} from "./findQuery";
-import {CountQuery} from "./countQuery";
-import {QueryDocument} from "./queryDocument";
 import {Constructor} from "../core/constructor"
 
+export interface QueryBuilder<T> {
+    findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
+    findAll(criteria: QueryDocument, callback?: ResultCallback<T[]>): FindQuery<T>;
+    findOne(callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOne(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<T>;
+    findOneAndRemove(callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    removeAll(callback?: ResultCallback<number>): void;
+    removeAll(criteria: QueryDocument, callback?: ResultCallback<number>): void;
+    removeOne(callback?: ResultCallback<number>): void;
+    removeOne(criteria: QueryDocument, callback?: ResultCallback<number>): void;
+    updateAll(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    updateAll(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    updateOne(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    updateOne(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    distinct(key: string, callback: ResultCallback<any[]>): void;
+    distinct(key: string, criteria: QueryDocument, callback: ResultCallback<any[]>): void;
+    count(callback?: ResultCallback<number>): CountQuery;
+    count(criteria: QueryDocument, callback?: ResultCallback<number>): CountQuery;
+}
+
+export interface QueryDocument {
+
+    [name: string]: any;
+}
+
+export interface Query<T> {
+
+    execute(callback: ResultCallback<T>): void;
+}
+
+export interface CountQuery extends Query<number> {
+
+    limit(value: number, callback?: ResultCallback<number>): CountQuery;
+    skip(value: number, callback?: ResultCallback<number>): CountQuery;
+}
+
+export interface FindOneAndRemoveQuery<T> extends Query<T> {
+
+    sort(field: string, direction: number, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    sort(fields: [string, number][], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    fetch(path: string, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    fetch(paths: string[], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+}
+
+export interface FindOneAndUpdateQuery<T> extends Query<T> {
+
+    sort(field: string, direction: number, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    sort(fields: [string, number][], callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    fetch(path: string, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    fetch(paths: string[], callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    returnUpdated(callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+}
+
+export interface FindOneQuery<T> extends Query<T> {
+
+    fetch(path: string, callback?: ResultCallback<T>): FindOneQuery<T>;
+    fetch(paths: string[], callback?: ResultCallback<T>): FindOneQuery<T>;
+}
+
+export interface FindQuery<T> extends Query<T[]> {
+
+    sort(field: string, direction: number, callback?: ResultCallback<T[]>): FindQuery<T>;
+    sort(fields: [string, number][], callback?: ResultCallback<T[]>): FindQuery<T>;
+    fetch(path: string, callback?: ResultCallback<T[]>): FindQuery<T>;
+    fetch(paths: string[], callback?: ResultCallback<T[]>): FindQuery<T>;
+    limit(value: number, callback?: ResultCallback<T[]>): FindQuery<T>;
+    skip(value: number, callback?: ResultCallback<T[]>): FindQuery<T>;
+    batchSize(value: number): FindQuery<T>;
+    each(iterator: IteratorCallback<T>, callback: Callback): void;
+    eachSeries(iterator: IteratorCallback<T>, callback: Callback): void;
+}
+
+
+/**
+ * @hidden
+ */
 export class QueryBuilderImpl implements QueryBuilder<Object> {
 
     private _session: InternalSession;

@@ -1,17 +1,20 @@
 import {Table} from "../core/table";
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
-import {MappingFlags} from "./mappingFlags";
+import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
-import {InternalSession} from "../internalSession";
+import {InternalSession} from "../sessionImpl";
 import {ReadContext} from "./readContext";
 import {PropertyConverter} from "./propertyConverter";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class ConverterMapping extends MappingBase {
 
     constructor(public converter: PropertyConverter) {
-        super(MappingFlags.Converter);
+        super(MappingModel.MappingFlags.Converter);
     }
 
     read(context: ReadContext, value: any): any {

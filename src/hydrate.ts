@@ -1,10 +1,7 @@
-/// <reference path="../typings/node.d.ts" />
-
 import {Reference} from "./reference";
-
 export {NamingStrategies} from "./config/namingStrategies";
 export {Configuration} from "./config/configuration";
-export {ObjectIdGenerator} from "./id/objectIdGenerator";
+export {ObjectIdGenerator} from "./config/objectIdGenerator";
 export {AnnotationMappingProvider} from "./mapping/providers/annotationMappingProvider";
 export * from "./mapping/providers/decorators";
 

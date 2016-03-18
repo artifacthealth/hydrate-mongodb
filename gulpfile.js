@@ -4,8 +4,7 @@ require("source-map-support").install();
 var gulp = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
 var ts = require('gulp-typescript');
-var babel = require('gulp-babel');
-var del = require('del')
+var del = require('del');
 var mocha = require("gulp-mocha");
 var merge = require("merge2");
 var dts = require("dts-concat");
@@ -31,11 +30,7 @@ gulp.task('build', ['clean'], function() {
 
     return merge([
         tsResult.dts.pipe(gulp.dest('build')),
-        tsResult.js.pipe(babel({
-                presets: [ 'babel-preset-node5' ],
-                plugins: [ "transform-es2015-classes" ]
-            }))
-            .pipe(gulp.dest('build'))
+        tsResult.js.pipe(gulp.dest('build'))
     ]);
 });
 
@@ -45,10 +40,6 @@ gulp.task('debug', ['clean'], function() {
     return gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'])
         .pipe(sourcemaps.init())
         .pipe(ts(tsProject))
-        .pipe(babel({
-            presets: [ 'babel-preset-node5' ],
-            plugins: [ "transform-es2015-classes" ]
-        }))
         .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: process.cwd() }))
         .pipe(gulp.dest('build'));
 });
@@ -59,23 +50,10 @@ gulp.task('clean', function() {
     return del(['build', 'lib']);
 });
 
-gulp.task('lib', ['copy-dts'], function(done) {
+gulp.task('lib', function(done) {
 
-    var stream = gulp.src(['build/src/**/*.js' ])
+    return gulp.src(['build/src/**/*.js', "build/src/**/*.d.ts", "src/**/*.d.ts", "package.json", "*.txt", "*.md" ])
         .pipe(gulp.dest('lib'));
-
-    stream.on('end', function() {
-        dts.concat({
-            name: 'hydrate',
-            main: 'build/src/hydrate.d.ts',
-            outDir: 'lib/'
-        }, done);
-    });
-});
-
-gulp.task('copy-dts', function() {
-    return gulp.src(['typings/**/*.d.ts', 'src/**/*.d.ts' ], { base: './' })
-        .pipe(gulp.dest('build'));
 });
 
 gulp.task('test', function() {
@@ -97,16 +75,25 @@ gulp.task('bench', function(done) {
 });
 
 gulp.task('docs', function() {
-    return gulp.src("lib/hydrate.d.ts").pipe(typedoc({
-        target: 'es6',
-        mode: 'file',
-        entryPoint: 'hydrate',
+    return gulp.src(['typings/**/*.ts', 'src/**/*.ts']).pipe(typedoc({
+        target: 'es5',
+        module: "commonjs",
         out: 'build/docs',
-        name: "Hydrate",
-        includeDeclarations: true,
+        mode: "file",
+        name: "hydrate",
+        entryPoint: "hydrate",
+        umlFormat: "svg",
+        includeDeclarations: false,
         excludeExternals: true,
-        plugin: ['comment', 'decorator']
+        excludeNotExported: true,
+        plugin: ['comment']
     }));
+});
+
+gulp.task('release-docs', function(done) {
+
+    return gulp.src(['build/docs/**/*.*' ])
+        .pipe(gulp.dest('docs'));
 });
 
 gulp.task('pre-coverage', function () {

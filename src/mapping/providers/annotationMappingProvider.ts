@@ -1,19 +1,14 @@
-/// <reference path="../../../typings/async.d.ts" />
-/// <reference path="../../../typings/node.d.ts" />
-
 import * as async from "async";
 import * as path from "path";
 import {absolutePath, hasExtension} from "../../core/fileUtil";
-import {ResultCallback} from "../../core/resultCallback";
+import {ResultCallback} from "../../core/callback";
 import {MappingRegistry} from "../mappingRegistry";
 import {MappingProvider} from "./mappingProvider";
 import {Index} from "../index";
 import {IndexOptions} from "../indexOptions";
-import {PropertyFlags} from "../propertyFlags";
 import {ChangeTrackingType} from "../changeTrackingType";
 import {EnumType} from "../enumType";
 import {MappingModel} from "../mappingModel";
-import {MappingFlags} from "../mappingFlags";
 import {Configuration} from "../../config/configuration";
 import {ReflectContext, Type, Property} from "reflect-helper";
 import {MappingBuilderAnnotation,TargetClassAnnotation} from "./annotations";
@@ -25,6 +20,9 @@ import {EntityMappingBuilder} from "./entityMappingBuilder";
 
 export class AnnotationMappingProvider implements MappingProvider {
 
+    /**
+     * @hidden
+     */
     private _modules: Object[] = [];
 
     constructor(modules?: Object | Object[]) {

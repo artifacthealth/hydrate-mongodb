@@ -1,12 +1,9 @@
-/// <reference path="../../typings/mocha.d.ts"/>
-/// <reference path="../../typings/chai.d.ts"/>
-
 import {assert} from "chai";
 import * as helpers from "../helpers";
 import * as model from "../fixtures/model";
 import {ObjectMapping} from "../../src/mapping/objectMapping";
 import {Property} from "../../src/mapping/property";
-import {PropertyFlags} from "../../src/mapping/propertyFlags";
+import {MappingModel} from "../../src/mapping/mappingModel";
 
 describe('ObjectMapping', () => {
 
@@ -28,7 +25,7 @@ describe('ObjectMapping', () => {
 
             // Add without filed but with ignore flag - no error
             var property2 = new Property("blah", new ObjectMapping());
-            property2.setFlags(PropertyFlags.Ignored);
+            property2.setFlags(MappingModel.PropertyFlags.Ignored);
             mapping.addProperty(property2);
         });
     });

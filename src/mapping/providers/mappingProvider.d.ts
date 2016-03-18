@@ -1,4 +1,4 @@
-import {ResultCallback} from "../../core/resultCallback";
+import {ResultCallback} from "../../core/callback";
 import {Configuration} from "../../config/configuration";
 import {MappingModel} from "../mappingModel";
 

@@ -1,16 +1,19 @@
 import * as RegExpUtil from "../core/regExpUtil";
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
-import {MappingFlags} from "./mappingFlags";
+import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
-import {InternalSession} from "../internalSession";
+import {InternalSession} from "../sessionImpl";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class RegExpMapping extends MappingBase {
 
     constructor() {
-        super(MappingFlags.RegExp);
+        super(MappingModel.MappingFlags.RegExp);
     }
 
     read(context: ReadContext, value: any): any {

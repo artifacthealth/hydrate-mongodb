@@ -1,5 +1,3 @@
-/// <reference path="../../typings/mongodb.d.ts" />
-
 import * as mongodb from "mongodb";
 
 export class MockBulk implements mongodb.UnorderedBulkOperation {

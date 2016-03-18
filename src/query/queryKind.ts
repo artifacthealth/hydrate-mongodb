@@ -1,3 +1,6 @@
+/**
+ * @hidden
+ */
 export const enum QueryKind {
 
     FindAll             = 0x00000001,

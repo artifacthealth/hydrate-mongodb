@@ -1,7 +1,8 @@
-/// <reference path="./core/observe.d.ts" />
-
 import {Reference} from "./reference";
 
+/**
+ * @hidden
+ */
 export class Observer {
 
     private _watching: any[] = [];

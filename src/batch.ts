@@ -1,10 +1,11 @@
-/// <reference path="../typings/async.d.ts" />
-
 import * as async from "async";
 import {Table} from "./core/table";
 import {Callback} from "./core/callback";
 import {Command} from "./core/command";
 
+/**
+ * @hidden
+ */
 export class Batch implements Command {
 
     private _commandTable: Table<Command> = [];

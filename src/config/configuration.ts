@@ -1,22 +1,15 @@
-/// <reference path="../../typings/async.d.ts" />
-/// <reference path="../../typings/mongodb.d.ts" />
-
 import * as async from "async";
 import * as mongodb from "mongodb";
-
-import {NamingStrategies} from "./namingStrategies";
-import {ResultCallback} from "../core/resultCallback";
+import {NamingStrategy, NamingStrategies} from "./namingStrategies";
+import {ResultCallback} from "../core/callback";
 import {MappingProvider} from "../mapping/providers/mappingProvider";
 import {MappingRegistry} from "../mapping/mappingRegistry";
 import {ChangeTrackingType} from "../mapping/changeTrackingType";
 import {Table} from "../core/table";
-import {MappingFlags} from "../mapping/mappingFlags";
-import {SessionFactory} from "../sessionFactory";
-import {SessionFactoryImpl} from "../sessionFactoryImpl";
-import {IdentityGenerator} from "../id/identityGenerator";
+import {MappingModel} from "../mapping/mappingModel";
+import {SessionFactory, SessionFactoryImpl} from "../sessionFactoryImpl";
 import {EntityMapping} from "../mapping/entityMapping";
-import {NamingStrategy} from "./namingStrategy";
-import {ObjectIdGenerator} from "../id/objectIdGenerator";
+import {ObjectIdGenerator} from "./objectIdGenerator";
 import {ClassMapping} from "../mapping/classMapping";
 import {EnumType} from "../mapping/enumType";
 import {PropertyConverter} from "../mapping/propertyConverter";
@@ -76,7 +69,9 @@ export class Configuration {
      */
     propertyConverters: { [name: string]: PropertyConverter } = {};
 
-
+    /**
+     * @hidden
+     */
     private _mappings: MappingProvider[] = [];
 
     /**
@@ -122,6 +117,9 @@ export class Configuration {
         });
     }
 
+    /**
+     * @hidden
+     */
     private _buildCollections(connection: mongodb.Db, registry: MappingRegistry, callback: ResultCallback<Table<mongodb.Collection>>): void {
 
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
@@ -133,7 +131,7 @@ export class Configuration {
 
             var localConnection = connection;
 
-            if(!(mapping.flags & MappingFlags.InheritanceRoot)) return done();
+            if(!(mapping.flags & MappingModel.MappingFlags.InheritanceRoot)) return done();
 
             // make sure we have a collection name
             if (!mapping.collectionName) {
@@ -186,4 +184,15 @@ export class Configuration {
             callback(null, collections);
         });
     }
+}
+
+export interface IdentityGenerator {
+
+    generate(): any;
+    fromString(text: string): any;
+    validate(value: any): boolean;
+    areEqual(first: any, second: any): boolean;
+
+    // TODO: serialize and deserialize methods on IdentityGenerator? e.g. Perhaps UUID is a class when assigned to an
+    // entity but is serialized to a string when stored in the database.
 }

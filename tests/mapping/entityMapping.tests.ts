@@ -1,11 +1,8 @@
-/// <reference path="../../typings/mocha.d.ts"/>
-/// <reference path="../../typings/chai.d.ts"/>
-
 import {assert} from "chai";
 import * as helpers from "../helpers";
 import * as model from "../fixtures/model";
 import {EntityMapping} from "../../src/mapping/entityMapping";
-import {ObjectIdGenerator} from "../../src/id/objectIdGenerator";
+import {ObjectIdGenerator} from "../../src/config/objectIdGenerator";
 
 describe('EntityMapping', () => {
 

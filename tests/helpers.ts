@@ -1,24 +1,17 @@
-/// <reference path="../typings/lib.core.es6.d.ts" />
-/// <reference path="../typings/intl.d.ts" />
-/// <reference path="../typings/console.d.ts" />
-/// <reference path="../typings/node.d.ts" />
-/// <reference path="../typings/glob.d.ts" />
-/// <reference path="../typings/async.d.ts" />
-
 import * as model from "./fixtures/model";
 import * as path from "path";
 import * as async from "async";
 import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {Configuration} from "../src/config/configuration";
-import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
+import {ObjectIdGenerator} from "../src/config/objectIdGenerator";
 import {PersisterImpl} from "../src/persisterImpl";
 import {MockCollection} from "./driver/mockCollection";
 import {MockSessionFactory} from "./mockSessionFactory";
 import {MappingModel} from "../src/mapping/mappingModel";
 import {ClassMapping} from "../src/mapping/classMapping";
 import {absolutePath, hasExtension} from "../src/core/fileUtil";
-import {ResultCallback} from "../src/core/resultCallback";
+import {ResultCallback} from "../src/core/callback";
 import {EntityMapping} from "../src/mapping/entityMapping";
 
 var glob = require("glob");

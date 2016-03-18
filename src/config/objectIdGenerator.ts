@@ -1,7 +1,5 @@
-/// <reference path="../../typings/mongodb.d.ts" />
-
 import {ObjectID} from "mongodb";
-import {IdentityGenerator} from "./identityGenerator";
+import {IdentityGenerator} from "./configuration";
 
 export class ObjectIdGenerator implements IdentityGenerator {
 

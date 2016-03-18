@@ -1,14 +1,17 @@
 import {MappingError} from "./mappingError";
 import {MappingBase} from "./mappingBase";
-import {MappingFlags} from "./mappingFlags";
-import {InternalSession} from "../internalSession";
+import {MappingModel} from "./mappingModel";
+import {InternalSession} from "../sessionImpl";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class StringMapping extends MappingBase {
 
     constructor() {
-        super(MappingFlags.String);
+        super(MappingModel.MappingFlags.String);
     }
 
     read(context: ReadContext, value: any): any {

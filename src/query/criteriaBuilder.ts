@@ -1,7 +1,7 @@
 import * as RegExpUtil from "../core/regExpUtil";
-import {QueryDocument} from "./queryDocument";
+import {QueryDocument} from "./queryBuilderImpl";
 import {ResolveContext} from "../mapping/resolveContext";
-import {MappingFlags} from "../mapping/mappingFlags";
+import {MappingModel} from "../mapping/mappingModel";
 import {ArrayMapping} from "../mapping/arrayMapping";
 import {InternalMapping} from "../mapping/internalMapping";
 import {MappingError} from "../mapping/mappingError";
@@ -10,6 +10,7 @@ import {WriteContext} from "../mapping/writeContext";
 
 /**
  * Class that builds a database query document.
+ * @hidden
  */
 export class CriteriaBuilder {
 
@@ -112,7 +113,7 @@ export class CriteriaBuilder {
                         if(this.isQueryExpression(value)) {
                             // Need to prepare the query expression
 
-                            if(resolvedMapping.flags & MappingFlags.Array) {
+                            if(resolvedMapping.flags & MappingModel.MappingFlags.Array) {
                                 // if this is an array mapping then any query operators apply to the element mapping
                                 resolvedMapping = (<ArrayMapping>resolvedMapping).elementMapping;
                             }
@@ -121,7 +122,7 @@ export class CriteriaBuilder {
                         else {
                             // Doesn't have any query operators so just write the value
 
-                            if(resolvedMapping.flags & MappingFlags.Array) {
+                            if(resolvedMapping.flags & MappingModel.MappingFlags.Array) {
                                 // If the mapping is an array we need to figure out if we are going to use the array
                                 // mapping or the element mapping. When querying against arrays you can pass a single
                                 // element that will match if that element is in the array OR you can pass an array and
@@ -235,7 +236,7 @@ export class CriteriaBuilder {
     protected prepareQueryValue(path: string, value: any, mapping: InternalMapping): any {
 
         // Regular expressions are allowed in place of strings
-        if((mapping.flags & MappingFlags.String) && (value instanceof RegExp)) {
+        if((mapping.flags & MappingModel.MappingFlags.String) && (value instanceof RegExp)) {
             return RegExpUtil.clone(value);
         }
 

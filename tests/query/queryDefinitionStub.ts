@@ -1,9 +1,9 @@
-import {InternalSession} from "../../src/internalSession";
+import {InternalSession} from "../../src/sessionImpl";
 import {QueryDefinition} from "../../src/query/queryDefinition";
-import {IteratorCallback} from "../../src/core/iteratorCallback";
-import {QueryDocument} from "../../src/query/queryDocument";
+import {IteratorCallback} from "../../src/core/callback";
+import {QueryDocument} from "../../src/query/queryBuilderImpl";
 import {QueryKind} from "../../src/query/queryKind";
-import {ResultCallback} from "../../src/core/resultCallback";
+import {ResultCallback} from "../../src/core/callback";
 
 export class QueryDefinitionStub implements QueryDefinition {
 

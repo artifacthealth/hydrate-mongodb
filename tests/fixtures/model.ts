@@ -1,5 +1,3 @@
-/// <reference path="../../typings/node.d.ts" />
-
 import { Entity, Embeddable, Field, ChangeTracking, Converter, Enumerated, Type, ElementType, Versioned, Cascade, InverseOf } from "../../src/mapping/providers/decorators";
 import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
 import {CascadeFlags} from "../../src/mapping/cascadeFlags";

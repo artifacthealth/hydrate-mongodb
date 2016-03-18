@@ -1,14 +1,17 @@
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
-import {MappingFlags} from "./mappingFlags";
-import {InternalSession} from "../internalSession";
+import {MappingModel} from "./mappingModel";
+import {InternalSession} from "../sessionImpl";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class NumberMapping extends MappingBase {
 
     constructor() {
-        super(MappingFlags.Number);
+        super(MappingModel.MappingFlags.Number);
     }
 
     read(context: ReadContext, value: any): any {

@@ -1,7 +1,4 @@
-/// <reference path="../../typings/mongodb.d.ts" />
-
 import { Db, Cursor, Collection, MongoCollectionOptions, CollectionCreateOptions, IndexOptions } from "mongodb";
-
 import {MockCursor} from "./mockCursor";
 import {MockBulk} from "./mockBulk";
 import {MockCollection} from "./mockCollection";

@@ -1,6 +1,3 @@
-/// <reference path="../../typings/mongodb.d.ts" />
-/// <reference path="../../typings/async.d.ts" />
-
 import * as mongodb from "mongodb";
 import * as async from "async";
 

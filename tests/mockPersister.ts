@@ -1,11 +1,11 @@
 import * as model from "./fixtures/model";
-import {Persister} from "../src/persister";
-import {ResultCallback} from "../src/core/resultCallback";
-import {InternalSession} from "../src/internalSession";
-import {PropertyFlags} from "../src/mapping/propertyFlags";
+import {Persister} from "../src/persisterImpl";
+import {ResultCallback} from "../src/core/callback";
+import {InternalSession} from "../src/sessionImpl";
+import {MappingModel} from "../src/mapping/mappingModel";
 import {Batch} from "../src/batch";
 import {ChangeTrackingType} from "../src/mapping/changeTrackingType";
-import {IdentityGenerator} from "../src/id/identityGenerator";
+import {IdentityGenerator} from "../src/config/configuration";
 import {EntityMapping} from "../src/mapping/entityMapping";
 import {MockIdentityGenerator} from "./id/mockIdentityGenerator";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
@@ -118,7 +118,7 @@ export class MockPersister implements Persister {
 
     }
 
-    walk(entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+    walk(entity: any, flags: MappingModel.PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
         if(entities.indexOf(entity) == -1) {
             entities.push(entity);
         }

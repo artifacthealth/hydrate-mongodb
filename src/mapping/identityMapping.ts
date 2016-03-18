@@ -1,9 +1,8 @@
 import {MappingError} from "./mappingError";
 import {VirtualMapping} from "./virtualMapping";
-import {MappingFlags} from "./mappingFlags";
-import {InternalSession} from "../internalSession";
+import {InternalSession} from "../sessionImpl";
 import {ReadContext} from "./readContext";
-import {IdentityGenerator} from "../id/identityGenerator";
+import {IdentityGenerator} from "../config/configuration";
 import {WriteContext} from "./writeContext";
 
 // TODO: Not sure I like how this is implemented. A few thoughts:
@@ -14,6 +13,9 @@ import {WriteContext} from "./writeContext";
 //      and the read-only flag set.
 //  3. When the object is saved to the session, the _id value is set but we need to set the value for the property
 //     annotated with @Id() as well.
+/**
+ * @hidden
+ */
 export class IdentityMapping extends VirtualMapping {
 
     read(context: ReadContext, value: any): any {

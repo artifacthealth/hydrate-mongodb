@@ -1,29 +1,22 @@
-/// <reference path="../typings/async.d.ts" />
-/// <reference path="../typings/node.d.ts" />
-/// <reference path="../typings/mongodb.d.ts" />
-
-//import {Readable} from "stream";
 import * as mongodb from "mongodb";
-import * as CallbackUtil from "./core/callbackUtil";
+import * as CallbackUtil from "./core/callback";
 import * as async from "async";
 import {EntityMapping} from "./mapping/entityMapping";
-import {ResultCallback} from "./core/resultCallback";
-import {InternalSession} from "./internalSession";
+import {ResultCallback} from "./core/callback";
+import {InternalSession} from "./sessionImpl";
 import {ChangeTrackingType} from "./mapping/changeTrackingType";
-import {IdentityGenerator} from "./id/identityGenerator";
+import {IdentityGenerator} from "./config/configuration";
 import {Batch} from "./batch";
 import {Callback} from "./core/callback";
 import {MappingError} from "./mapping/mappingError";
 import {Reference} from "./reference";
-import {PropertyFlags} from "./mapping/propertyFlags";
 import {Result} from "./core/result";
-import {Persister} from "./persister";
 import {Command} from "./core/command";
 import {Changes} from "./mapping/changes";
 import {QueryDefinition} from "./query/queryDefinition";
 import {QueryKind} from "./query/queryKind";
-import {IteratorCallback} from "./core/iteratorCallback";
-import {QueryDocument} from "./query/queryDocument";
+import {IteratorCallback} from "./core/callback";
+import {QueryDocument} from "./query/queryBuilderImpl";
 import {CriteriaBuilder} from "./query/criteriaBuilder";
 import {UpdateDocumentBuilder} from "./query/updateDocumentBuilder";
 import {ResolveContext} from "./mapping/resolveContext";
@@ -76,6 +69,32 @@ interface CountOptions {
     skip: number;
 }
 
+
+/**
+ * @hidden
+ */
+export interface Persister {
+
+    changeTracking: ChangeTrackingType;
+    identity: IdentityGenerator;
+
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object>;
+    addInsert(batch: Batch, entity: Object): Result<Object>;
+    addRemove(batch: Batch, entity: Object): void;
+
+    fetch(entity: Object, path: string, callback: Callback): void;
+    refresh(entity: Object, callback: ResultCallback<Object>): void;
+    watch(value: any, observer: Observer): void;
+    executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void;
+
+    findOneById(id: any, callback: ResultCallback<any>): void;
+    findInverseOf(entity: Object, path: string, callback: ResultCallback<Object[]>): void;
+    findOneInverseOf(entity: Object, path: string, callback: ResultCallback<Object>): void;
+}
+
+/**
+ * @hidden
+ */
 export class PersisterImpl implements Persister {
 
     changeTracking: ChangeTrackingType;

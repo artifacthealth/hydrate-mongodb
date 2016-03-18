@@ -1,6 +1,6 @@
-import {QueryDocument} from "./queryDocument";
+import {QueryDocument} from "./queryBuilderImpl";
 import {ResolveContext} from "../mapping/resolveContext";
-import {MappingFlags} from "../mapping/mappingFlags";
+import {MappingModel} from "../mapping/mappingModel";
 import {ArrayMapping} from "../mapping/arrayMapping";
 import {InternalMapping} from "../mapping/internalMapping";
 import {MappingError} from "../mapping/mappingError";
@@ -9,6 +9,9 @@ import {ObjectMapping} from "../mapping/objectMapping";
 import {ClassMapping} from "../mapping/classMapping";
 import {EntityMapping} from "../mapping/entityMapping";
 
+/**
+ * @hidden
+ */
 export class UpdateDocumentBuilder extends CriteriaBuilder {
 
     build(updateDocument: QueryDocument): QueryDocument {
@@ -105,7 +108,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
     }
 
     private _isArray(operator: string, mapping: InternalMapping): boolean {
-        if(!(mapping.flags & MappingFlags.Array)) {
+        if(!(mapping.flags & MappingModel.MappingFlags.Array)) {
             this.error = new Error("Operator '" + operator + "' only applies to properties that have an array type.");
             return false;
         }
@@ -156,7 +159,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
 
     private _prepareSortSpecification(sortSpecification: any, mapping: InternalMapping): any {
 
-        if(mapping.flags & MappingFlags.Embeddable) {
+        if(mapping.flags & MappingModel.MappingFlags.Embeddable) {
             if(typeof sortSpecification !== "object") {
                 this.error = new Error("Value of $sort must be an object if sorting an array of embedded documents.");
             }
@@ -168,7 +171,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
 
                     var property = (<ObjectMapping>mapping).getProperty(field);
                     if (property === undefined) {
-                        if(mapping.flags & MappingFlags.Class) {
+                        if(mapping.flags & MappingModel.MappingFlags.Class) {
                             this.error = new Error("Unknown property '" + field + "' for class '" + (<ClassMapping>mapping).name +"' in $sort.");
                         }
                         else {

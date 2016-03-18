@@ -1,26 +1,21 @@
-/// <reference path="../typings/baseline.d.ts" />
-/// <reference path="../typings/mongodb.d.ts" />
-
 import * as mongodb from "mongodb";
-
-import { Session } from "../src/session";
+import { Session } from "../src/sessionImpl";
 import { Configuration } from "../src/config/configuration";
 import { AnnotationMappingProvider } from "../src/mapping/providers/annotationMappingProvider";
-import { SessionFactory } from "../src/sessionFactory";
 import { Cat } from "../tests/fixtures/cat";
 import * as helpers from "../tests/helpers";
-import { SessionFactoryImpl } from "../src/sessionFactoryImpl";
-import { Persister } from "../src/persister";
+import { SessionFactory, SessionFactoryImpl } from "../src/sessionFactoryImpl";
+import { Persister } from "../src/persisterImpl";
 import { ChangeTrackingType } from "../src/mapping/changeTrackingType";
-import { IdentityGenerator } from "../src/id/identityGenerator";
+import { IdentityGenerator } from "../src/config/configuration";
 import { Batch } from "../src/batch";
 import { Result } from "../src/core/result";
-import { PropertyFlags } from "../src/mapping/propertyFlags";
+import { MappingModel } from "../src/mapping/mappingModel";
 import { MappingRegistry } from "../src/mapping/mappingRegistry";
-import { ResultCallback } from "../src/core/resultCallback";
+import { ResultCallback } from "../src/core/callback";
 import { EntityMapping } from "../src/mapping/entityMapping";
 import { QueryDefinition } from "../src/query/queryDefinition";
-import { InternalSession } from "../src/internalSession";
+import { InternalSession } from "../src/sessionImpl";
 import { Observer } from "../src/observer";
 
 suite("SessionImpl", () => {
@@ -149,7 +144,7 @@ class DummyPersister implements Persister {
 
     }
 
-    walk(entity: any, flags: PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
+    walk(entity: any, flags: MappingModel.PropertyFlags,  entities: any[], embedded: any[], callback: Callback): void {
     }
 
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {

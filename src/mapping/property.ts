@@ -1,7 +1,10 @@
 import {InternalMapping} from "./internalMapping";
-import {PropertyFlags} from "./propertyFlags";
+import {MappingModel} from "./mappingModel";
 
-export class Property {
+/**
+ * @hidden
+ */
+export class Property implements MappingModel.Property {
 
     /**
      * The name of the property.
@@ -11,7 +14,7 @@ export class Property {
     /**
      * The property flags.
      */
-    flags: PropertyFlags;
+    flags: MappingModel.PropertyFlags;
 
     /**
      * The name of the database document field.
@@ -39,7 +42,7 @@ export class Property {
         this.mapping = mapping;
     }
 
-    setFlags(flags: PropertyFlags): void {
+    setFlags(flags: MappingModel.PropertyFlags): void {
 
         if(this.flags === undefined) {
             this.flags = flags;
@@ -49,7 +52,7 @@ export class Property {
         }
     }
 
-    hasFlags(flags: PropertyFlags): boolean {
+    hasFlags(flags: MappingModel.PropertyFlags): boolean {
 
         return this.flags != undefined && ((this.flags & flags) === flags);
     }

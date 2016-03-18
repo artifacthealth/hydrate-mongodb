@@ -1,8 +1,3 @@
-/// <reference path="../../typings/mocha.d.ts"/>
-/// <reference path="../../typings/chai.d.ts"/>
-/// <reference path="../../typings/async.d.ts" />
-/// <reference path="../../typings/mongodb.d.ts" />
-
 import {ObjectID} from "mongodb";
 import {assert} from "chai";
 import * as async from "async";
@@ -11,7 +6,7 @@ import * as model from "../fixtures/model";
 import {Constructor} from "../../src/core/constructor";
 import {Callback} from "../../src/core/callback";
 import {CriteriaBuilder} from "../../src/query/criteriaBuilder";
-import {QueryDocument} from "../../src/query/queryDocument";
+import {QueryDocument} from "../../src/query/queryBuilderImpl";
 
 describe('CriteriaBuilder', () => {
 

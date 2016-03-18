@@ -1,15 +1,17 @@
 import {MappingError} from "./mappingError";
 import {ObjectMapping} from "./objectMapping";
 import {MappingRegistry} from "./mappingRegistry";
-import {MappingFlags} from "./mappingFlags";
 import {Changes} from "./changes";
 import {Reference} from "../reference";
-import {PropertyFlags} from "./propertyFlags";
-import {InternalSession} from "../internalSession";
-import {ResultCallback} from "../core/resultCallback";
+import {MappingModel} from "./mappingModel";
+import {InternalSession} from "../sessionImpl";
+import {ResultCallback} from "../core/callback";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class ClassMapping extends ObjectMapping {
 
     private _baseClass: ClassMapping;
@@ -31,11 +33,11 @@ export class ClassMapping extends ObjectMapping {
     constructor(baseClass?: ClassMapping) {
         super();
 
-        this.flags |= MappingFlags.Class;
+        this.flags |= MappingModel.MappingFlags.Class;
 
         this._baseClass = baseClass;
         if(!baseClass) {
-            this.flags |= MappingFlags.InheritanceRoot;
+            this.flags |= MappingModel.MappingFlags.InheritanceRoot;
             this.inheritanceRoot = this;
         }
         else {
@@ -258,14 +260,14 @@ export class ClassMapping extends ObjectMapping {
         return super.areEqual(documentValue1, documentValue2);
     }
 
-    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: MappingModel.PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (!value || typeof value !== "object") return;
 
         return (this._ensureRegistry().getMappingForObject(value) || this)._walk(session, value, flags, entities, embedded, references);
     }
 
-    private _walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    private _walk(session: InternalSession, value: any, flags: MappingModel.PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
         super.walk(session, value, flags, entities, embedded, references);
     }
 

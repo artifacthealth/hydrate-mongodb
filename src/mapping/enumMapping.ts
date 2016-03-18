@@ -1,24 +1,28 @@
 import {Table} from "../core/table";
-import {Lookup} from "../core/lookup";
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
-import {MappingFlags} from "./mappingFlags";
+import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
-import {InternalSession} from "../internalSession";
+import {InternalSession} from "../sessionImpl";
 import {ReadContext} from "./readContext";
 import {EnumType} from "./enumType";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class EnumMapping extends MappingBase {
 
-    ignoreCase = false;
-    type = EnumType.Ordinal;
+    ignoreCase: boolean;
+    type = EnumType.String;
 
     private _values: Table<string> = [];
 
     // TODO: switch members to Map when for-of loop is supported (need granular targeting in TypeScript)
-    constructor(public members: Lookup<number>) {
-        super(MappingFlags.Enum);
+    constructor(public members: MappingModel.EnumMembers, ignoreCase?: boolean) {
+        super(MappingModel.MappingFlags.Enum);
+
+        this.ignoreCase = ignoreCase || false;
 
         // create map from value to name
         for(var name in members) {

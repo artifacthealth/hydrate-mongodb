@@ -2,6 +2,9 @@ import {MappingModel} from "../mappingModel";
 import {Type} from "reflect-helper";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 
+/**
+ * @hidden
+ */
 export class MappingBuilder {
 
     type: Type;

@@ -1,7 +1,10 @@
-import {InternalSession} from "./internalSession";
+import {InternalSession} from "./sessionImpl";
 import {EntityMapping} from "./mapping/entityMapping";
-import {ResultCallback} from "./core/resultCallback";
+import {ResultCallback} from "./core/callback";
 
+/**
+ * @hidden
+ */
 export class Reference {
 
     /**

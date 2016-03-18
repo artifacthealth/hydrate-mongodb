@@ -2,12 +2,11 @@ import * as async from "async";
 import {InternalMapping} from "./internalMapping";
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
-import {MappingFlags} from "./mappingFlags";
 import {Changes} from "./changes";
 import {Reference} from "../reference";
-import {PropertyFlags} from "./propertyFlags";
-import {InternalSession} from "../internalSession";
-import {ResultCallback} from "../core/resultCallback";
+import {MappingModel} from "./mappingModel";
+import {InternalSession} from "../sessionImpl";
+import {ResultCallback} from "../core/callback";
 import {EntityMapping} from "./entityMapping";
 import {ResolveContext} from "./resolveContext";
 import {TupleMapping} from "./tupleMapping";
@@ -15,10 +14,13 @@ import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class ArrayMapping extends MappingBase {
 
     constructor(public elementMapping: InternalMapping) {
-        super(MappingFlags.Array);
+        super(MappingModel.MappingFlags.Array);
     }
 
     read(context: ReadContext, value: any): any {
@@ -97,7 +99,7 @@ export class ArrayMapping extends MappingBase {
     }
 
 
-    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: MappingModel.PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (!Array.isArray(value)) {
             return;
@@ -128,7 +130,7 @@ export class ArrayMapping extends MappingBase {
             return callback(new Error("Parent entity required to resolve inverse relationship."));
         }
 
-        if(!(this.elementMapping.flags & MappingFlags.Entity)) {
+        if(!(this.elementMapping.flags & MappingModel.MappingFlags.Entity)) {
             return callback(new Error("Element mapping must be an entity to resolve inverse relationship."));
         }
 
@@ -167,10 +169,10 @@ export class ArrayMapping extends MappingBase {
 
     private _findNestedDepth(depth: number, mapping: InternalMapping): number {
 
-        if(mapping.flags & MappingFlags.Array) {
+        if(mapping.flags & MappingModel.MappingFlags.Array) {
             return this._findNestedDepth(depth + 1, (<ArrayMapping>mapping).elementMapping);
         }
-        else if (mapping.flags & MappingFlags.Tuple) {
+        else if (mapping.flags & MappingModel.MappingFlags.Tuple) {
             var elementMappings = (<TupleMapping>mapping).elementMappings;
             for(var i = 0, l = elementMappings.length; i < l; i++) {
                 depth = Math.max(depth, this._findNestedDepth(depth + 1, elementMappings[i]));

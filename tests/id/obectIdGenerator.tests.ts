@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {ObjectIdGenerator} from "../../src/id/objectIdGenerator";
+import {ObjectIdGenerator} from "../../src/config/objectIdGenerator";
 import {ObjectID} from "mongodb";
 
 describe('ObjectIdGenerator', () => {

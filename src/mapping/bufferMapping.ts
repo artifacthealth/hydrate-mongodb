@@ -1,19 +1,18 @@
-/// <reference path="../../typings/node.d.ts" />
-/// <reference path="../../typings/mongodb.d.ts" />
-
 import {Binary} from "mongodb";
-
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
-import {MappingFlags} from "./mappingFlags";
-import {InternalSession} from "../internalSession";
+import {MappingModel} from "./mappingModel";
+import {InternalSession} from "../sessionImpl";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class BufferMapping extends MappingBase {
 
     constructor() {
-        super(MappingFlags.Buffer);
+        super(MappingModel.MappingFlags.Buffer);
     }
 
     read(context: ReadContext, value: any): any {

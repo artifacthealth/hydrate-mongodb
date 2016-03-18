@@ -1,11 +1,8 @@
-/// <reference path="../../../typings/mocha.d.ts"/>
-/// <reference path="../../../typings/chai.d.ts"/>
-
 import {assert} from "chai";
 import {AnnotationMappingProvider} from "../../../src/mapping/providers/annotationMappingProvider";
 import {Configuration} from "../../../src/config/Configuration";
 import {MappingRegistry} from "../../../src/mapping/mappingRegistry";
-import {MappingFlags} from "../../../src/mapping/mappingFlags";
+import {MappingModel} from "../../../src/mapping/mappingModel";
 import {EnumMapping} from "../../../src/mapping/enumMapping";
 import {ClassMapping} from "../../../src/mapping/classMapping";
 import {EntityMapping} from "../../../src/mapping/entityMapping";
@@ -15,12 +12,10 @@ import * as ConverterFixture from "../../fixtures/annotations/converter";
 import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference1";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
 import {requireFiles, findMapping} from "../../helpers";
-import {IterableMapping} from "../../../src/mapping/iterableMapping";
 import {IdentityMapping} from "../../../src/mapping/identityMapping";
 import {Callback} from "../../../src/core/callback";
-import {ResultCallback} from "../../../src/core/resultCallback";
+import {ResultCallback} from "../../../src/core/callback";
 import {Property} from "../../../src/mapping/property";
-import {PropertyFlags} from "../../../src/mapping/propertyFlags";
 
 describe('AnnotationMappingProvider', () => {
 
@@ -34,7 +29,7 @@ describe('AnnotationMappingProvider', () => {
                 var classMapping = findMapping(results, "ClassWithBuffer");
                 var property = classMapping.getProperty("data");
                 assert.isTrue(property != null, "Could not find property 'data'");
-                assert.isTrue((property.mapping.flags & MappingFlags.Buffer) === MappingFlags.Buffer);
+                assert.isTrue((property.mapping.flags & MappingModel.MappingFlags.Buffer) === MappingModel.MappingFlags.Buffer);
             });
         });
     });
@@ -68,7 +63,7 @@ describe('AnnotationMappingProvider', () => {
 
             it("sets property as read-only", (done) => {
 
-                getIdentityFieldMapping(done, (property) => assert.isTrue(property.hasFlags(PropertyFlags.ReadOnly)));
+                getIdentityFieldMapping(done, (property) => assert.isTrue(property.hasFlags(MappingModel.PropertyFlags.ReadOnly)));
             });
 
             it("sets field mapping on property to '_id'.", (done) => {
@@ -244,15 +239,6 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
             */
-
-            it('creates IterableMapping if field has an iterable type', (done) => {
-
-                processFixture("set", done, (results) => {
-
-                    assert.instanceOf((<any>findMapping(results, "A").getProperty("field2").mapping), IterableMapping);
-                });
-            });
-
         });
 
         describe("@cascade", () => {
@@ -399,7 +385,7 @@ function processFixtureWithConfiguration(file: string, config: Configuration, do
             if(err) return done(err);
 
             if(callback) {
-                callback(<EntityMapping[]>mappings.filter((x) => (x.flags & MappingFlags.Entity) !== 0));
+                callback(<EntityMapping[]>mappings.filter((x) => (x.flags & MappingModel.MappingFlags.Entity) !== 0));
             }
             done();
         });

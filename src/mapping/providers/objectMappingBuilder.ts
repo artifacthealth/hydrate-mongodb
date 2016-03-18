@@ -1,5 +1,5 @@
-import {MappingBuilder} from "./mappingBuilder";
 import {Configuration} from "../../config/configuration";
+import {MappingBuilder} from "./mappingBuilder";
 import {MappingModel} from "../mappingModel";
 import {
     ConverterAnnotation,
@@ -12,14 +12,14 @@ import {
     FieldAnnotation,
     EnumeratedAnnotation
 } from "./annotations";
-import {PropertyFlags} from "../propertyFlags";
-import {MappingFlags} from "../mappingFlags";
 import {Type, Property} from "reflect-helper";
 import {Constructor} from "../../core/constructor";
 import {EnumType} from "../enumType";
 import {Index} from "../index";
-import {IdentityMapping} from "../identityMapping";
 
+/**
+ * @hidden
+ */
 export class ObjectMappingBuilder extends MappingBuilder {
 
     protected populateCore(): void {
@@ -93,7 +93,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
         this.context.currentAnnotation = null;
 
         // add default values
-        if(!property.field && !(property.flags & PropertyFlags.Ignored)) {
+        if(!property.field && !(property.flags & MappingModel.PropertyFlags.Ignored)) {
             property.field = this.context.config.fieldNamingStrategy(property.name);
         }
 
@@ -157,7 +157,8 @@ export class ObjectMappingBuilder extends MappingBuilder {
             return MappingModel.createArrayMapping(mapping);
         }
 
-        return MappingModel.createIterableMapping(propertyType.ctr, mapping);
+        this.context.addError("Collections other than 'Array' are not currently supported.");
+        return null;
     }
 
     private _getPropertyType(symbol: Property): Type {
@@ -195,7 +196,6 @@ export class ObjectMappingBuilder extends MappingBuilder {
         }
 
         var enumMapping = MappingModel.createEnumMapping(members);
-        enumMapping.type = EnumType.String;
 
         return enumMapping;
     }
@@ -223,12 +223,12 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
         // TODO: validate inverse relationship
         property.inverseOf = annotation.propertyName;
-        property.setFlags(PropertyFlags.InverseSide);
+        property.setFlags(MappingModel.PropertyFlags.InverseSide);
     }
 
     private _setCascade(property: MappingModel.Property, annotation: CascadeAnnotation): void {
 
-        property.setFlags(annotation.flags & PropertyFlags.CascadeAll);
+        property.setFlags(annotation.flags & MappingModel.PropertyFlags.CascadeAll);
     }
 
     private _setField(property: MappingModel.Property, annotation: FieldAnnotation): void {
@@ -237,7 +237,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
             property.field = annotation.name;
         }
         if(annotation.nullable) {
-            property.setFlags(PropertyFlags.Nullable);
+            property.setFlags(MappingModel.PropertyFlags.Nullable);
         }
     }
 
@@ -245,9 +245,9 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
         if(!this._assertEntityMapping(this.mapping)) return;
 
-        property.setFlags(PropertyFlags.ReadOnly);
+        property.setFlags(MappingModel.PropertyFlags.ReadOnly);
         property.field = "_id";
-        property.mapping = new IdentityMapping();
+        property.mapping = MappingModel.createIdentityMapping();
     }
 
     private _addPropertyIndex(mapping: MappingModel.EntityMapping, property: MappingModel.Property, value: IndexAnnotation): void {
@@ -283,7 +283,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
     // TODO: Fix where this goes
     protected _assertEntityMapping(mapping: MappingModel.Mapping): boolean {
 
-        if(!(mapping.flags & MappingFlags.Entity)) {
+        if(!(mapping.flags & MappingModel.MappingFlags.Entity)) {
             this.context.addError("Annotation can only be defined on entities.");
             return false;
         }

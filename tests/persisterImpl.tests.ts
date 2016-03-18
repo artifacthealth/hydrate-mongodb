@@ -1,8 +1,3 @@
-/// <reference path="../typings/mocha.d.ts"/>
-/// <reference path="../typings/chai.d.ts"/>
-/// <reference path="../typings/async.d.ts" />
-/// <reference path="../typings/mongodb.d.ts" />
-
 import {assert} from "chai";
 import * as async from "async";
 import * as helpers from "./helpers";

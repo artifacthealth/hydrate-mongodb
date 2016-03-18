@@ -1,10 +1,9 @@
 import {MappingError} from "./mappingError";
-import {MappingFlags} from "./mappingFlags";
+import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
 import {Reference} from "../reference";
-import {PropertyFlags} from "./propertyFlags";
-import {InternalSession} from "../internalSession";
-import {ResultCallback} from "../core/resultCallback";
+import {InternalSession} from "../sessionImpl";
+import {ResultCallback} from "../core/callback";
 import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
@@ -13,13 +12,16 @@ import {WriteContext} from "./writeContext";
 
 var nextMappingId = 1;
 
+/**
+ * @hidden
+ */
 export abstract class MappingBase implements InternalMapping {
 
     id: number;
 
     private _resolveCache: Map<string, ResolveContext>;
 
-    constructor(public flags: MappingFlags) {
+    constructor(public flags: MappingModel.MappingFlags) {
         this.id = nextMappingId++;
     }
 
@@ -31,7 +33,7 @@ export abstract class MappingBase implements InternalMapping {
 
     }
 
-    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: MappingModel.PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
     }
 

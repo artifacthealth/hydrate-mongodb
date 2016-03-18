@@ -1,7 +1,3 @@
-/// <reference path="../../typings/mocha.d.ts"/>
-/// <reference path="../../typings/chai.d.ts"/>
-/// <reference path="../../typings/async.d.ts" />
-
 import {assert} from "chai";
 import * as async from "async";
 import * as helpers from "../helpers";
@@ -9,7 +5,7 @@ import * as model from "../fixtures/model";
 import {Constructor} from "../../src/core/constructor";
 import {Callback} from "../../src/core/callback";
 import {UpdateDocumentBuilder} from "../../src/query/updateDocumentBuilder";
-import {QueryDocument} from "../../src/query/queryDocument";
+import {QueryDocument} from "../../src/query/queryBuilderImpl";
 
 describe('UpdateDocumentBuilder', () => {
 

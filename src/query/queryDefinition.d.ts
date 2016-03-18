@@ -1,9 +1,12 @@
-import {ResultCallback} from "../core/resultCallback";
-import {IteratorCallback} from "../core/iteratorCallback";
+import {ResultCallback} from "../core/callback";
+import {IteratorCallback} from "../core/callback";
 import {QueryKind} from "./queryKind";
-import {QueryDocument} from "./queryDocument";
+import {QueryDocument} from "./queryBuilderImpl";
 import {OrderDocument} from "./orderDocument";
 
+/**
+ * @hidden
+ */
 export interface QueryDefinition {
 
     kind: QueryKind;

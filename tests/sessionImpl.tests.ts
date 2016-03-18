@@ -1,23 +1,17 @@
-/// <reference path="../typings/mongodb.d.ts" />
-/// <reference path="../typings/mocha.d.ts"/>
-/// <reference path="../typings/chai.d.ts"/>
-/// <reference path="../typings/async.d.ts" />
-
 import {assert} from "chai";
 import {ObjectID} from "mongodb";
 import * as async from "async";
 import * as helpers from "./helpers";
 import * as model from "./fixtures/model";
 import {Configuration} from "../src/config/configuration";
-import {SessionFactory} from "../src/sessionFactory";
-import {SessionFactoryImpl} from "../src/sessionFactoryImpl";
+import {SessionFactory, SessionFactoryImpl} from "../src/sessionFactoryImpl";
 import {SessionImpl} from "../src/sessionImpl";
-import {InternalSession} from "../src/internalSession";
+import {InternalSession} from "../src/sessionImpl";
 import {EntityMapping} from "../src/mapping/entityMapping";
 import {MockPersister} from "./mockPersister";
 import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
-import {ObjectIdGenerator} from "../src/id/objectIdGenerator";
+import {ObjectIdGenerator} from "../src/config/objectIdGenerator";
 import {QueryKind} from "../src/query/queryKind";
 import {Callback} from "../src/core/callback";
 import {Reference} from "../src/reference";

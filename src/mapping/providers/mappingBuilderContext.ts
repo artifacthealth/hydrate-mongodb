@@ -3,8 +3,10 @@ import {Type, Property, ReflectContext} from "reflect-helper";
 import {Constructor} from "../../core/constructor";
 import {MappingBuilder} from "./mappingBuilder";
 import {MappingModel} from "../mappingModel";
-import {MappingFlags} from "../mappingFlags";
 
+/**
+ * @hidden
+ */
 export class MappingBuilderContext {
 
     config: Configuration;
@@ -32,7 +34,7 @@ export class MappingBuilderContext {
             this.currentType = mappedType.type;
             mappedType.populate();
 
-            if(mappedType.mapping.flags & MappingFlags.Class) {
+            if(mappedType.mapping.flags & MappingModel.MappingFlags.Class) {
                 classMappings.push(<MappingModel.ClassMapping>mappedType.mapping);
             }
         });

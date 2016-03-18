@@ -7,12 +7,10 @@
  * Released under the MIT license
  */
 
-import {Callback} from "./callback";
-import {ResultCallback} from "./resultCallback";
-
 /**
  * Returns a new callback that will raise an error if called more than once.
  * @param callback The original callback
+ * @hidden
  */
 export function onlyOnce<T>(callback: Callback): Callback {
     var called = false;
@@ -27,10 +25,26 @@ export function onlyOnce<T>(callback: Callback): Callback {
  * Returns a new callback that first calls 'callback' then calls 'next'.
  * @param callback The first callback to call
  * @param next The next callback to call
+ * @hidden
  */
 export function chain<T>(callback: ResultCallback<T>, next: ResultCallback<T>): ResultCallback<T> {
     return (err: Error, result: any) => {
         callback(err, result);
         next(err, result);
     }
+}
+
+export interface Callback {
+
+    (err?: Error): void;
+}
+
+export interface ResultCallback<T> {
+
+    (err: Error, result?: T): void;
+}
+
+export interface IteratorCallback<T> {
+
+    (item: T, callback: Callback): any;
 }

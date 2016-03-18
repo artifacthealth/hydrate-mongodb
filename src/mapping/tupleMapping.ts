@@ -1,21 +1,23 @@
 import {InternalMapping} from "./internalMapping";
 import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
-import {MappingFlags} from "./mappingFlags";
+import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
 import {Reference} from "../reference";
-import {PropertyFlags} from "./propertyFlags";
-import {InternalSession} from "../internalSession";
-import {ResultCallback} from "../core/resultCallback";
+import {InternalSession} from "../sessionImpl";
+import {ResultCallback} from "../core/callback";
 import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {WriteContext} from "./writeContext";
 
+/**
+ * @hidden
+ */
 export class TupleMapping extends MappingBase {
 
     constructor(public elementMappings: InternalMapping[]) {
-        super(MappingFlags.Tuple);
+        super(MappingModel.MappingFlags.Tuple);
     }
 
     read(context: ReadContext, value: any): any {
@@ -113,7 +115,7 @@ export class TupleMapping extends MappingBase {
     }
 
 
-    walk(session: InternalSession, value: any, flags: PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
+    walk(session: InternalSession, value: any, flags: MappingModel.PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void {
 
         if (!Array.isArray(value)) {
             return;

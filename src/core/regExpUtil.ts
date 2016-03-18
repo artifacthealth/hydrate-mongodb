@@ -1,3 +1,8 @@
+/**
+ * Clones a regular expression.
+ * @param source The source regular expression
+ * @hidden
+ */
 export function clone(source: RegExp): RegExp {
 
     var flags: string[] = [];

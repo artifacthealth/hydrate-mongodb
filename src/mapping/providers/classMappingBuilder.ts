@@ -6,8 +6,10 @@ import {
     DiscriminatorFieldAnnotation,
     DiscriminatorValueAnnotation,
 } from "./annotations";
-import {MappingFlags} from "../mappingFlags";
 
+/**
+ * @hidden
+ */
 export class ClassMappingBuilder extends ObjectMappingBuilder {
 
     protected populateCore(): void {
@@ -35,7 +37,7 @@ export class ClassMappingBuilder extends ObjectMappingBuilder {
         this.context.currentAnnotation = null;
 
         // add default values
-        if (mapping.flags & MappingFlags.InheritanceRoot) {
+        if (mapping.flags & MappingModel.MappingFlags.InheritanceRoot) {
             if (!mapping.discriminatorField) {
                 mapping.discriminatorField = this.context.config.discriminatorField;
             }
@@ -79,7 +81,7 @@ export class ClassMappingBuilder extends ObjectMappingBuilder {
 
     private _assertClassMapping(mapping: MappingModel.Mapping): boolean {
 
-        if(!(mapping.flags & MappingFlags.Class)) {
+        if(!(mapping.flags & MappingModel.MappingFlags.Class)) {
             this.context.addError("Annotation can only be defined on class mappings.");
             return false;
         }
@@ -91,7 +93,7 @@ export class ClassMappingBuilder extends ObjectMappingBuilder {
         if(!this._assertClassMapping(mapping)) return false;
 
         var classMapping = <MappingModel.ClassMapping>mapping;
-        if(!(classMapping.flags & MappingFlags.InheritanceRoot)) {
+        if(!(classMapping.flags & MappingModel.MappingFlags.InheritanceRoot)) {
             this.context.addError("Annotation can only be defined on classes that are the root of a mapped inheritance hierarchy.");
         }
         return true;

@@ -1,8 +1,11 @@
 import {ClassMapping} from "./classMapping";
 import {EntityMapping} from "./entityMapping";
 import {Constructor} from "../core/constructor";
-import {MappingFlags} from "./mappingFlags";
+import {MappingModel} from "./mappingModel";
 
+/**
+ * @hidden
+ */
 export class MappingRegistry {
 
     private _mappings: Map<Function, ClassMapping> = new Map();
@@ -31,7 +34,7 @@ export class MappingRegistry {
 
         this._mappings.forEach((mapping) => {
 
-            if((mapping.flags & MappingFlags.Entity) != 0) {
+            if((mapping.flags & MappingModel.MappingFlags.Entity) != 0) {
                 entities.push(<EntityMapping>mapping);
             }
         });
