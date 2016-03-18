@@ -22,11 +22,11 @@ import {
     IdAnnotation
 } from "./annotations";
 
-import {PropertyConverter} from "../propertyConverter";
+import {PropertyConverter} from "../mappingModel";
 import {CollectionOptions} from "../collectionOptions";
 import {IndexOptions} from "../indexOptions";
-import {ChangeTrackingType} from "../changeTrackingType";
-import {CascadeFlags} from "../cascadeFlags";
+import {ChangeTrackingType} from "../mappingModel";
+import {CascadeFlags} from "../mappingModel";
 
 export declare function Entity(): ClassDecorator;
 

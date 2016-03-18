@@ -1,8 +1,8 @@
 import { Entity, Embeddable, Field, ChangeTracking, Converter, Enumerated, Type, ElementType, Versioned, Cascade, InverseOf } from "../../src/mapping/providers/decorators";
-import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
-import {CascadeFlags} from "../../src/mapping/cascadeFlags";
+import {ChangeTrackingType} from "../../src/mapping/mappingModel";
+import {CascadeFlags} from "../../src/mapping/mappingModel";
 import {EnumType} from "../../src/mapping/enumType";
-import {PropertyConverter} from "../../src/mapping/propertyConverter";
+import {PropertyConverter} from "../../src/mapping/mappingModel";
 
 export class PhoneTypeConverter implements PropertyConverter {
 

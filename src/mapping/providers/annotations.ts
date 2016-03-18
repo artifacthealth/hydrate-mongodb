@@ -1,9 +1,9 @@
-import {PropertyConverter} from "../propertyConverter";
+import {PropertyConverter} from "../mappingModel";
 import {CollectionOptions} from "../collectionOptions";
 import {IndexOptions} from "../indexOptions";
-import {ChangeTrackingType} from "../changeTrackingType";
+import {ChangeTrackingType} from "../mappingModel";
 import {EnumType} from "../enumType";
-import {CascadeFlags} from "../cascadeFlags";
+import {CascadeFlags} from "../mappingModel";
 import {Constructor, ParameterlessConstructor} from "../../core/constructor";
 import {MappingModel} from "../mappingModel";
 import {MappingBuilderContext} from "./mappingBuilderContext";

@@ -1,5 +1,5 @@
 import { Entity, Type, ElementType, Cascade, Field } from "../../src/mapping/providers/decorators";
-import {CascadeFlags} from "../../src/mapping/cascadeFlags";
+import {CascadeFlags} from "../../src/mapping/mappingModel";
 
 @Entity()
 export class SaveTest {

@@ -4,7 +4,7 @@ import * as async from "async";
 import {EntityMapping} from "./mapping/entityMapping";
 import {ResultCallback} from "./core/callback";
 import {InternalSession} from "./sessionImpl";
-import {ChangeTrackingType} from "./mapping/changeTrackingType";
+import {ChangeTrackingType} from "./mapping/mappingModel";
 import {IdentityGenerator} from "./config/configuration";
 import {Batch} from "./batch";
 import {Callback} from "./core/callback";

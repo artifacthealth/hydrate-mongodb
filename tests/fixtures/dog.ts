@@ -1,5 +1,5 @@
 import { Entity, Field, ChangeTracking } from "../../src/mapping/providers/decorators";
-import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
+import {ChangeTrackingType} from "../../src/mapping/mappingModel";
 
 @Entity()
 @ChangeTracking(ChangeTrackingType.DeferredExplicit)

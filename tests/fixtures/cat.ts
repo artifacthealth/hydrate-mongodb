@@ -1,5 +1,5 @@
 import { Entity, Field, ChangeTracking } from "../../src/mapping/providers/decorators";
-import {ChangeTrackingType} from "../../src/mapping/changeTrackingType";
+import {ChangeTrackingType} from "../../src/mapping/mappingModel";
 import {Embeddable} from "../../src/mapping/providers/decorators";
 
 @Entity()

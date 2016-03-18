@@ -2,7 +2,7 @@ import * as async from "async";
 import {IdentityGenerator} from "../config/configuration";
 import {MappingError} from "./mappingError";
 import {ClassMapping} from "./classMapping";
-import {ChangeTrackingType} from "./changeTrackingType";
+import {ChangeTrackingType} from "./mappingModel";
 import {Index} from "./index";
 import {CollectionOptions} from "./collectionOptions";
 import {MappingRegistry} from "./mappingRegistry";

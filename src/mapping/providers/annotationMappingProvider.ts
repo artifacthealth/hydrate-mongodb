@@ -6,7 +6,7 @@ import {MappingRegistry} from "../mappingRegistry";
 import {MappingProvider} from "./mappingProvider";
 import {Index} from "../index";
 import {IndexOptions} from "../indexOptions";
-import {ChangeTrackingType} from "../changeTrackingType";
+import {ChangeTrackingType} from "../mappingModel";
 import {EnumType} from "../enumType";
 import {MappingModel} from "../mappingModel";
 import {Configuration} from "../../config/configuration";

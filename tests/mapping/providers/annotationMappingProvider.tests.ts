@@ -7,7 +7,7 @@ import {EnumMapping} from "../../../src/mapping/enumMapping";
 import {ClassMapping} from "../../../src/mapping/classMapping";
 import {EntityMapping} from "../../../src/mapping/entityMapping";
 import {EnumType} from "../../../src/mapping/enumType";
-import {PropertyConverter} from "../../../src/mapping/propertyConverter";
+import {PropertyConverter} from "../../../src/mapping/mappingModel";
 import * as ConverterFixture from "../../fixtures/annotations/converter";
 import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference1";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";

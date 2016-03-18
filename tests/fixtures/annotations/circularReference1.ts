@@ -1,5 +1,5 @@
 import { Entity, Collection, Field, Type } from "../../../src/mapping/providers/decorators";
-import { CascadeFlags } from "../../../src/mapping/cascadeFlags"
+import { CascadeFlags } from "../../../src/mapping/mappingModel"
 import { B } from "./circularReference2";
 
 @Entity()

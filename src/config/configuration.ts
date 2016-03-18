@@ -4,18 +4,16 @@ import {NamingStrategy, NamingStrategies} from "./namingStrategies";
 import {ResultCallback} from "../core/callback";
 import {MappingProvider} from "../mapping/providers/mappingProvider";
 import {MappingRegistry} from "../mapping/mappingRegistry";
-import {ChangeTrackingType} from "../mapping/changeTrackingType";
+import {ChangeTrackingType} from "../mapping/mappingModel";
 import {Table} from "../core/table";
-import {MappingModel} from "../mapping/mappingModel";
+import {MappingModel, PropertyConverter} from "../mapping/mappingModel";
 import {SessionFactory, SessionFactoryImpl} from "../sessionFactoryImpl";
 import {EntityMapping} from "../mapping/entityMapping";
 import {ObjectIdGenerator} from "./objectIdGenerator";
 import {ClassMapping} from "../mapping/classMapping";
-import {EnumType} from "../mapping/enumType";
-import {PropertyConverter} from "../mapping/propertyConverter";
 
 /**
- * Specifies default settings data mappings used to create the SessionFactory.
+ * Specifies default settings used to create the SessionFactory.
  */
 export class Configuration {
 
@@ -43,11 +41,6 @@ export class Configuration {
      * Default change tracking strategy to use.
      */
     changeTracking = ChangeTrackingType.Observe;
-
-    /**
-     * Default enum storage strategy to use.
-     */
-    enumType = EnumType.Ordinal;
 
     /**
      * Naming strategy to use for collection names.
@@ -195,4 +188,10 @@ export interface IdentityGenerator {
 
     // TODO: serialize and deserialize methods on IdentityGenerator? e.g. Perhaps UUID is a class when assigned to an
     // entity but is serialized to a string when stored in the database.
+}
+
+export interface PropertyConverter {
+
+    convertToDocumentField(property: any): any;
+    convertToObjectProperty(field: any): any;
 }

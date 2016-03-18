@@ -5,7 +5,7 @@ import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
 import {InternalSession} from "../sessionImpl";
 import {ReadContext} from "./readContext";
-import {PropertyConverter} from "./propertyConverter";
+import {PropertyConverter} from "../config/configuration";
 import {WriteContext} from "./writeContext";
 
 /**

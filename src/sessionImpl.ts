@@ -1,7 +1,7 @@
 import * as async from "async";
 import {EventEmitter} from "events";
 import {Callback} from "./core/callback";
-import {ChangeTrackingType} from "./mapping/changeTrackingType";
+import {ChangeTrackingType} from "./mapping/mappingModel";
 import {Constructor} from "./core/constructor";
 import {IteratorCallback} from "./core/callback";
 import {MappingModel} from "./mapping/mappingModel";

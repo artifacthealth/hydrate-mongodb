@@ -4,7 +4,7 @@ import {ResultCallback} from "../src/core/callback";
 import {InternalSession} from "../src/sessionImpl";
 import {MappingModel} from "../src/mapping/mappingModel";
 import {Batch} from "../src/batch";
-import {ChangeTrackingType} from "../src/mapping/changeTrackingType";
+import {ChangeTrackingType} from "../src/mapping/mappingModel";
 import {IdentityGenerator} from "../src/config/configuration";
 import {EntityMapping} from "../src/mapping/entityMapping";
 import {MockIdentityGenerator} from "./id/mockIdentityGenerator";

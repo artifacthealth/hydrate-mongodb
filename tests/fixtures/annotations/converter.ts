@@ -1,5 +1,5 @@
 import {Entity, Converter, Field} from "../../../src/mapping/providers/decorators";
-import {PropertyConverter} from "../../../src/mapping/propertyConverter";
+import {PropertyConverter} from "../../../src/mapping/mappingModel";
 
 export enum MyEnum {
 
