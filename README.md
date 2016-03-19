@@ -1,11 +1,14 @@
 # Hydrate
 **An Object/Document Mapping (ODM) framework for Node.js and MongodDB**
 
-Hydrate provides a means for developers to map classes in Node.js, that contain business logic, to documents stored in a MongoDB 
-database. Developers can work normally with objects and classes, and Hydrate takes care of the onerous details such as 
+Hydrate provides a means for developers to map Node.js classes to documents stored in a MongoDB database. Developers can 
+work normally with objects and classes, and Hydrate takes care of the onerous details such as 
 serializing classes to documents, validation, mapping of class inheritance, optimistic locking, fetching of references 
-between database collections, change tracking, and managing of persistence through bulk operations. Hydrate is built on
-top of the [native MongoDB driver](https://github.com/mongodb/node-mongodb-native).  
+between database collections, change tracking, and managing of persistence through bulk operations.
+ 
+**NOTICE: Hydrate is an experimental project and is not recommended for production systems. It is also possible that 
+breaking changes may be introduced in the API until version 1.0.0 is reached.** 
+
 
 #### Idiomatic Javascript
 Hydrate has no requirements for how persistent classes are declared. Developers can work with 
@@ -14,9 +17,9 @@ base class is required for creating persistent classes.
 
 #### TypeScript support
 [TypeScript](http://www.typescriptlang.org/) is a superset of JavaScript that includes type information and compiles 
-to regular JavaScript. If you choose to use TypeScript in your projects, this type information can be used by
-Hydrate to create the mappings between your classes and the MongoDB documents, reducing duplicate
-work. However, TypeScript is not required and you can use Hydrate with plain JavaScript. 
+to regular JavaScript. If you choose to use TypeScript in your projects, this type information can be used to create the 
+mappings between your classes and the MongoDB documents, reducing duplicate work. However, TypeScript is not required 
+and you can use Hydrate with plain JavaScript. 
 
 #### Decorator support
 Decorators are a method of annotating classes and properties in JavaScript at design time. There is currently a [proposal](https://github.com/wycats/javascript-decorators/)
@@ -46,50 +49,96 @@ Once these dependencies are installed, Hydrate can be installed using [npm](http
 $ npm install hydrate-mongodb --save
 ```
 
-## Defining a Model
-This example is adapted from the Mongoose [quick start guide](http://mongoosejs.com/docs/) and helps illustrate some of 
-the differences between Mongoose and Hydrate. **For brevity, the example here is only given in TypeScript but please refer 
-[examples]() for a full example in plain JavaScript.**
+## Getting Started
 
+For brevity, the example here is only given in TypeScript. JavaScript examples coming soon.
+
+### Defining a Model
+
+In this example we'll model a task list. We create a file, `model.ts`, defining entities `Task` and `Person`. We also
+define an enumeration used to indicate the status of a task on the task list.
+
+**model.ts:**
 ```typescript
 import {Entity, Field} from "hydrate-mongodb";
 
+export enum TaskStatus {
+
+    Pending,
+    Completed,
+    Archived
+}
+
 @Entity()
-export class Kitten {
+export class Person {
 
     @Field()
     name: string;
-
+    
     constructor(name: string) {
+
         this.name = name;
     }
+}
 
-    speak(): void {        
-        console.log(this.name ? "Meow name is " + this.name : "I don't have a name");
-    }       
+@Entity()
+export class Task {
+
+    @Field()
+    text: string;
+
+    @Field()
+    status: TaskStatus;
+
+    @Field()
+    created: Date;
+    
+    @Field()
+    assigned: Person;
+
+    constructor(text: string) {
+
+        this.created = new Date();
+        this.status = TaskStatus.Pending;
+        this.text = text;
+    }
+
+    archive(): boolean {
+
+        if(this.status == TaskStatus.Completed) {
+            this.status = TaskStatus.Archived;
+            return true;
+        }
+        return false;
+    }
 }
 ```
 
-## Configuring Hydrate
-Once our model is defined, we need to tell Hydrate about it. We do this by adding the model to a mapping provider, then
-adding the mapping provider to the Hydrate configuration.
 
+### Configuring Hydrate
+
+Once our model is defined, we need to tell Hydrate about it. We do this by adding the model to an 
+[[AnnotationMappingProvider]], then adding the mapping provider to the [[Configuration]].
+
+**server.ts:**
 ```typescript
 import {MongoClient} from "mongodb";
 import {Configuration, AnnotationMappingProvider} from "hydrate-mongodb";
+import * as model from "./model";
 
 var config = new Configuration();
-config.addMapping(new AnnotationMappingProvider(Kitten));
+config.addMapping(new AnnotationMappingProvider(model));
 ```
 
 
-## Connecting to MongoDB
-We use the standard MongoDB native driver to establish a connection to MongoDB. Once the connection is open, we create
-a SessionFactory using the MongoDB connection and the previously defined Hydrate configuration. Typically the 
-SessionFactory is created once at server startup and then used to create Sessions for each connection to the server.
+### Connecting to MongoDB
 
+We use the standard [MongoDB native driver](https://github.com/mongodb/node-mongodb-native) to establish a connection 
+to MongoDB. Once the connection is open, we create a [[SessionFactory]] using the MongoDB connection and the previously 
+defined [[Configuration]]. 
+
+**server.ts (con't):**
 ```typescript
-// server.ts (con't)
 
 MongoClient.connect('mongodb://localhost/mydatabase', (err, db) => {
     if(err) throw err;
@@ -100,20 +149,402 @@ MongoClient.connect('mongodb://localhost/mydatabase', (err, db) => {
 });
 ```
 
-## Working with Persistent Objects
-In order to create a new kitten and save it to the database. We create
+### Creating a Session
+
+Typically the [[SessionFactory]] is created once at server startup and then used to create a [[Session]] for each connection to 
+the server. For example, using a [[Session]] in an [Express](http://expressjs.com/en/guide/routing.html) route might look 
+something like this:
 
 ```typescript
-var session = sessionFactory.createSession();
- 
-var fluffy = new Kitten("Fluffy");
-session.save(fluffy);
-session.flush(); 
+
+app.get('/', function (req, res, next) {
+    
+    var session = sessionFactory.createSession();
+
+    ...
+   
+    session.close(next); 
+}); 
 ```
 
-If at some point in the future we want to find kittens by name, we can query the database as follows:
+Calling [[close]] on the [[Session]] persists any changes to the database and closes the [[Session]]. Call [[flush]] 
+instead to persist any changes without closing the [[Session]].
+
+
+### Working with Persistent Objects
+
+In order to create a new `Task` we instantiate the task and then add it to the [[Session]] by calling [[save]].
+
 ```typescript
-session.query(Kitten).find({ name: /^Fluff/ }, (err, kittens) => {
+var task = new Task("Take out the trash.");
+session.save(task);
+```
+
+To find all tasks that have not yet been completed, we can use the [[query]] method.
+
+```typescript
+session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) => {
     ...
 });
+```
+
+To find a task by identifier we use [[find]].
+
+```typescript
+session.find(Task, id, (err, task) => {
+    ...
+});
+```
+
+Hydrate provides a mechanism to retrieve references between persistent entities. We do this using [[fetch]]. Note that 
+[[fetch]] uses the same [dot notation](https://docs.mongodb.org/manual/core/document/#dot-notation) that MongoDB uses 
+for queries.
+
+For example, say we wanted to fetch the `Person` that a `Task` is assigned to. 
+
+```typescript
+session.find(Task, id).fetch("assigned", (err, task) => {
+    ...
+});
+```
+
+The [[fetch]] method can be used in conjunction with queries as well.
+
+```typescript
+session.query(Task).findAll({ ... }).fetch("assigned", (err, tasks) => {
+    ...
+});
+```
+
+
+## Modeling
+
+In TypeScript, the emitDecoratorMetadata and experimentalDecorators options must be enabled on the compiler.
+
+### Entities
+
+Entities are classes that map to a document in a MongoDB collection. 
+
+```typescript
+@Entity()
+export class Person {
+
+    @Field()
+    name: string;
+    
+    constructor(name: string) {
+
+        this.name = name;
+    }
+}
+```
+
+* The entity must be a class
+* The entity must be decorated with the [[Entity]] decorator
+* The entity is **not** required to have a parameterless constructor, which is different than JPA and Hibernate. This 
+allows for entities to enforce required parameters for construction. When an entity is deserialized from the database,
+the constructor is not called. This means the internal state of an entity must fully represented by it's serialized
+fields.
+* An identifier is assigned to the entity when it is saved. 
+
+
+### Collections
+
+If a name for the collection is not given, an entity is mapped to a collection in MongoDB based on the name of the 
+class. The [[collectionNamingStrategy]] in the [[Configuration]] is used to determine the name of the collection. The 
+default naming strategy is [[CamelCase]]. Alternatively, a name for the collection can be specified using the 
+[[Collection]] decorator. 
+
+```typescript
+@Entity()
+@Collection("people")
+export class Person {
+
+    @Field()
+    name: string;
+    
+    constructor(name: string) {
+
+        this.name = name;
+    }
+}
+```
+
+### Fields
+
+Fields are mapped on an opt-in basis. *Only fields that are decorated are mapped.* The name for the field in the document
+can optionally be specified using the [[Field]] decorator.
+
+```typescript
+@Entity()
+export class User {
+
+    @Field("u")
+    username: string;
+}
+```
+  
+If the name for the field is not specified, the [[fieldNamingStrategy]] on the [[Configuration]] is used to determine
+the name of the field. The default naming strategy is [[CamelCase]].
+
+### Identity
+  
+The [[identityGenerator]] on the [[Configuration]] is used to generate an identifier for an entity. The default identity
+generator is the [[ObjectIdGenerator]]. This is the only generator that ships with Hydrate. Composite identifiers are 
+not supported. Natural identifiers are not supported.
+
+By default the  identifier is not exposed on an entity. The identifier can be retrieved as a string using the 
+[[getIdentifier]] function.
+
+```typescript
+import {getIdentifier} from "hydrate-mongodb";
+
+...
+
+session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) => {
+    ...    
+    var id = getIdentifier(tasks[0]);
+    ...
+});
+```
+
+Alternatively, the identifier can be exposed on an entity as a string using the [[Id]] decorator.
+ 
+```typescript
+@Entity()
+export class User {
+
+    @Id()
+    id: string;
+    
+    @Field()
+    username: string;
+}
+```
+  
+  
+### Embeddables
+  
+Embeddables are classes that map to nested subdocuments within entities, arrays, or other embeddables.
+   
+```typescript
+@Embeddable()
+export class HumanName {
+ 
+    @Field()
+    last: string;
+    
+    @Field()
+    first: string;
+    
+    @Field()
+    name: string;
+    
+    constructor(last: string, first?: string) {
+
+        this.last = last;
+        this.first = first;
+        
+        this.name = last;
+        if(first) {
+            this.name += ", " + first;
+        }
+    }
+}
+
+@Entity()
+export class Person {
+
+    @Field()
+    name: HumanName;
+    
+    constructor(name: HumanName) {
+
+        this.name = name;
+    }
+}
+```  
+
+* The embeddable must be a class
+* The embeddable must be decorated with the [[Embeddable]] decorator
+* Like an entity, an embeddable is **not** required to have a parameterless constructor. When an embeddable is 
+deserialized from the database, the constructor is not called. This means the internal state of an embeddable must fully 
+represented by it's serialized fields.
+
+### Types
+
+When using TypeScript, the type of a field is automatically provided. The following types are supported:
+
+* Number
+* String
+* Boolean
+* Date
+* RegExp
+* Buffer
+* Array
+* Enum
+* Embeddables
+* Entities
+
+
+**Type Decorator**
+
+When a property is an embeddable or a reference to an entity, sometimes the type of the property cannot be determined 
+because of circular references of `import` statements. In this case the [[Type]] decorator should be used with the name 
+of the type.
+
+```typescript
+@Entity()
+export class Person {
+
+    @Type("HumanName")
+    name: HumanName;
+    
+    constructor(name: HumanName) {
+
+        this.name = name;
+    }
+}
+```  
+
+
+**Arrays**
+
+TypeScript does not provide the type of an array element, so the type of the array element must be indicate with the 
+[[ElementType]] decorator.
+
+```typescript
+@Entity()
+export class Organization {
+
+    @ElementType(Address)
+    addresses: Address[];
+}
+```  
+
+This is true for primitive types as well.
+
+```typescript
+@Entity()
+export class Person {
+
+    @ElementType(String)
+    aliases: string[];
+}
+```  
+
+Arrays 
+
+**Enums**
+
+By default enums are serialized as numbers. Use the [[Enumerated]] decorator to serialize enums as strings.
+
+```typescript
+export enum TaskStatus {
+
+    Pending,
+    Completed,
+    Archived
+}
+
+@Entity()
+export class Task {
+
+    @Field()
+    text: string;
+
+    @Enumerated(TaskStatus)
+    status: TaskStatus;
+}
+```
+
+
+### Inheritance
+
+Standard prototypical inheritance is supported for both entities and embeddables.
+
+```typescript
+@Entity()
+class Party {
+    ...
+}
+
+@Entity()
+class Person extends Party {
+    ...
+}
+
+@Entity()
+class Organization extends Party {
+    ...
+}
+```
+
+All entities within an inheritance hierarchy are stored in the same collection. If the [[Collection]] decorator is used,
+it is only valid on the root of an inheritance hierarchy.
+
+
+#### Mapped Superclass
+
+Entities stored in separate collections may share a common superclass that is not mapped to a collection. In the example,
+below `Patient` (stored in `patient` collection) and `Document` (stored in `document` collection) share a common 
+superclass `Asset` that defines the field `owner`.
+
+```typescript
+class Asset {
+
+    @Field()
+    owner: Organization;
+
+    constructor(owner: Organization) {
+        this.owner = owner;
+    }
+}
+
+@Entity()
+class Patient extends Asset {
+    ...
+}
+
+@Entity()
+class Document extends Asset {
+    ...
+}
+```
+
+If `Asset` was decorated with [[Entity]] then `Patient` and `Document` would instead both be stored in a collection 
+called `asset`.
+
+
+#### Discriminators
+
+If an inheritance hierarchy is defined, a discriminator field is added to the serialized document to indicate the type
+when deserializing the entity or embeddable. By default, the [[discriminatorField]] on the [[Configuration]] is used
+to determine the name of the field to store the discriminator. Optionally, the discriminator field can be specified
+on the root of an inheritance hierarchy using the [[DiscriminatorField]] decorator.
+
+```typescript
+@Entity()
+@DiscriminatorField("type")
+class Party {
+    ...
+}
+```
+
+The discriminator value for a class is determined using the [[discriminatorNamingStrategy]] on the [[Configuration]].
+By default, the name of the class is used. The discriminator value can also be specified using the 
+[[DiscriminatorValue]] decorator on a class.
+
+```typescript
+@Entity()
+@DiscriminatorValue("P")
+class Person extends Party {
+    ...
+}
+
+@Entity()
+@DiscriminatorValue("O")
+class Organization extends Party {
+    ...
+}
 ```
