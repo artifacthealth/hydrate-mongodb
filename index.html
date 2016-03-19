@@ -1,0 +1,705 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>hydrate-mongodb</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+	<script src="assets/js/modernizr.js"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.js" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">hydrate-mongodb</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-only-exported" />
+							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="globals.html">Globals</a>
+				</li>
+			</ul>
+			<h1> hydrate-mongodb</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<h1 id="hydrate">Hydrate</h1>
+				<p><strong>An Object/Document Mapping (ODM) framework for Node.js and MongodDB</strong></p>
+				<p>Hydrate provides a means for developers to map Node.js classes to documents stored in a MongoDB database. Developers can
+					work normally with objects and classes, and Hydrate takes care of the onerous details such as
+					serializing classes to documents, validation, mapping of class inheritance, optimistic locking, fetching of references
+				between database collections, change tracking, and managing of persistence through bulk operations.</p>
+				<p><strong>NOTICE: Hydrate is an experimental project and is not recommended for production systems. It is also possible that
+				breaking changes may be introduced in the API until version 1.0.0 is reached.</strong> </p>
+				<h4 id="idiomatic-javascript">Idiomatic Javascript</h4>
+				<p>Hydrate has no requirements for how persistent classes are declared. Developers can work with
+					standard JavasScript idioms, such as constructor functions and ES6 classes. Furthermore, no
+				base class is required for creating persistent classes. </p>
+				<h4 id="typescript-support">TypeScript support</h4>
+				<p><a href="http://www.typescriptlang.org/">TypeScript</a> is a superset of JavaScript that includes type information and compiles
+					to regular JavaScript. If you choose to use TypeScript in your projects, this type information can be used to create the
+					mappings between your classes and the MongoDB documents, reducing duplicate work. However, TypeScript is not required
+				and you can use Hydrate with plain JavaScript. </p>
+				<h4 id="decorator-support">Decorator support</h4>
+				<p>Decorators are a method of annotating classes and properties in JavaScript at design time. There is currently a <a href="https://github.com/wycats/javascript-decorators/">proposal</a>
+					to include decorators as a standard part of JavaScript in ES7. In the meantime, several popular transpilers including
+					<a href="https://babeljs.io/">Babel</a> and TypeScript make decorators available for use now. Hydrate gives developers the option
+				to leverages decorators as simple means to describe persistent classes.  </p>
+				<h4 id="familiar-api">Familiar API</h4>
+				<p>Hydrate uses a session-based approach to the persistence API similar to <a href="http://hibernate.org/orm/">Hibernate ORM</a>. Developers
+					familiar with this approach should feel at home with Hydrate. Furthermore, Hydrate&#39;s query API is kept as similar as possible
+				to the MongoDB native Node.js driver.</p>
+				<h4 id="high-performance">High performance</h4>
+				<p>MongoDB <a href="https://docs.mongodb.org/v3.0/core/bulk-write-operations/">bulk write operations</a> are used to synchronize
+				changes with the database, which can result in significant performance gains.</p>
+				<h4 id="extensibility">Extensibility</h4>
+				<p>Hydrate provides numerous opportunities for extensibility.</p>
+				<h2 id="installation">Installation</h2>
+				<p>Hydrate requires a minimum of <a href="https://www.mongodb.org/downloads#production">MongoDB 2.6</a> and <a href="https://nodejs.org/">Node 4.0</a>.
+				Once these dependencies are installed, Hydrate can be installed using <a href="https://www.npmjs.com/">npm</a>:</p>
+				<pre><code class="lang-sh">$ npm install hydrate-mongodb --save
+</code></pre>
+				<h2 id="getting-started">Getting Started</h2>
+				<p>For brevity, the example here is only given in TypeScript. JavaScript examples coming soon.</p>
+				<h3 id="defining-a-model">Defining a Model</h3>
+				<p>In this example we&#39;ll model a task list. We create a file, <code>model.ts</code>, defining entities <code>Task</code> and <code>Person</code>. We also
+				define an enumeration used to indicate the status of a task on the task list.</p>
+				<p><strong>model.ts:</strong></p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> {Entity, Field} from <span class="hljs-string">"hydrate-mongodb"</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">enum</span> TaskStatus {
+
+    Pending,
+    Completed,
+    Archived
+}
+
+@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
+
+    @Field()
+    name: <span class="hljs-built_in">string</span>;
+
+    <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(name: string) </span>{
+
+        <span class="hljs-keyword">this</span>.name = name;
+    }
+}
+
+@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
+
+    @Field()
+    text: <span class="hljs-built_in">string</span>;
+
+    @Field()
+    status: TaskStatus;
+
+    @Field()
+    created: <span class="hljs-built_in">Date</span>;
+
+    @Field()
+    assigned: Person;
+
+    <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(text: string) </span>{
+
+        <span class="hljs-keyword">this</span>.created = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+        <span class="hljs-keyword">this</span>.status = TaskStatus.Pending;
+        <span class="hljs-keyword">this</span>.text = text;
+    }
+
+    archive(): <span class="hljs-built_in">boolean</span> {
+
+        <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.status == TaskStatus.Completed) {
+            <span class="hljs-keyword">this</span>.status = TaskStatus.Archived;
+            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+        }
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+    }
+}
+</code></pre>
+				<h3 id="configuring-hydrate">Configuring Hydrate</h3>
+				<p>Once our model is defined, we need to tell Hydrate about it. We do this by adding the model to an
+				<a href="classes/annotationmappingprovider.html">AnnotationMappingProvider</a>, then adding the mapping provider to the <a href="classes/configuration.html">Configuration</a>.</p>
+				<p><strong>server.ts:</strong></p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> {MongoClient} from <span class="hljs-string">"mongodb"</span>;
+<span class="hljs-keyword">import</span> {Configuration, AnnotationMappingProvider} from <span class="hljs-string">"hydrate-mongodb"</span>;
+<span class="hljs-keyword">import</span> * as model from <span class="hljs-string">"./model"</span>;
+
+<span class="hljs-keyword">var</span> config = <span class="hljs-keyword">new</span> Configuration();
+config.addMapping(<span class="hljs-keyword">new</span> AnnotationMappingProvider(model));
+</code></pre>
+				<h3 id="connecting-to-mongodb">Connecting to MongoDB</h3>
+				<p>We use the standard <a href="https://github.com/mongodb/node-mongodb-native">MongoDB native driver</a> to establish a connection
+					to MongoDB. Once the connection is open, we create a <a href="interfaces/sessionfactory.html">SessionFactory</a> using the MongoDB connection and the previously
+				defined <a href="classes/configuration.html">Configuration</a>. </p>
+				<p><strong>server.ts (con&#39;t):</strong></p>
+				<pre><code class="lang-typescript">
+MongoClient.connect(<span class="hljs-string">'mongodb://localhost/mydatabase'</span>, (err, db) =&gt; {
+    <span class="hljs-keyword">if</span>(err) <span class="hljs-keyword">throw</span> err;
+
+    config.createSessionFactory(db, (err, sessionFactory) =&gt; {        
+        ...
+    });
+});
+</code></pre>
+				<h3 id="creating-a-session">Creating a Session</h3>
+				<p>Typically the <a href="interfaces/sessionfactory.html">SessionFactory</a> is created once at server startup and then used to create a <a href="interfaces/session.html">Session</a> for each connection to
+					the server. For example, using a <a href="interfaces/session.html">Session</a> in an <a href="http://expressjs.com/en/guide/routing.html">Express</a> route might look
+				something like this:</p>
+				<pre><code class="lang-typescript">
+app.get(<span class="hljs-string">'/'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res, next</span>) </span>{
+
+    <span class="hljs-keyword">var</span> session = sessionFactory.createSession();
+
+    ...
+
+    session.close(next); 
+});
+</code></pre>
+				<p>Calling [[close]] on the <a href="interfaces/session.html">Session</a> persists any changes to the database and closes the <a href="interfaces/session.html">Session</a>. Call <a href="interfaces/session.html#flush">flush</a>
+				instead to persist any changes without closing the <a href="interfaces/session.html">Session</a>.</p>
+				<h3 id="working-with-persistent-objects">Working with Persistent Objects</h3>
+				<p>In order to create a new <code>Task</code> we instantiate the task and then add it to the <a href="interfaces/session.html">Session</a> by calling <a href="interfaces/session.html#save">save</a>.</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">var</span> task = <span class="hljs-keyword">new</span> Task(<span class="hljs-string">"Take out the trash."</span>);
+session.save(task);
+</code></pre>
+				<p>To find all tasks that have not yet been completed, we can use the [[query]] method.</p>
+				<pre><code class="lang-typescript">session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
+    ...
+});
+</code></pre>
+				<p>To find a task by identifier we use <a href="interfaces/session.html#find">find</a>.</p>
+				<pre><code class="lang-typescript">session.find(Task, id, (err, task) =&gt; {
+    ...
+});
+</code></pre>
+				<p>Hydrate provides a mechanism to retrieve references between persistent entities. We do this using [[fetch]]. Note that
+					[[fetch]] uses the same <a href="https://docs.mongodb.org/manual/core/document/#dot-notation">dot notation</a> that MongoDB uses
+				for queries.</p>
+				<p>For example, say we wanted to fetch the <code>Person</code> that a <code>Task</code> is assigned to. </p>
+				<pre><code class="lang-typescript">session.find(Task, id).fetch(<span class="hljs-string">"assigned"</span>, (err, task) =&gt; {
+    ...
+});
+</code></pre>
+				<p>The [[fetch]] method can be used in conjunction with queries as well.</p>
+				<pre><code class="lang-typescript">session.query(Task).findAll({ ... }).fetch(<span class="hljs-string">"assigned"</span>, (err, tasks) =&gt; {
+    ...
+});
+</code></pre>
+				<h2 id="modeling">Modeling</h2>
+				<p>In TypeScript, the emitDecoratorMetadata and experimentalDecorators options must be enabled on the compiler.</p>
+				<h3 id="entities">Entities</h3>
+				<p>Entities are classes that map to a document in a MongoDB collection. </p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
+
+    @Field()
+    name: <span class="hljs-built_in">string</span>;
+
+    <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(name: string) </span>{
+
+        <span class="hljs-keyword">this</span>.name = name;
+    }
+}
+</code></pre>
+				<ul>
+					<li>The entity must be a class</li>
+					<li>The entity must be decorated with the <a href="enums/mappingmodel.mappingflags.html#entity">Entity</a> decorator</li>
+					<li>The entity is <strong>not</strong> required to have a parameterless constructor, which is different than JPA and Hibernate. This
+						allows for entities to enforce required parameters for construction. When an entity is deserialized from the database,
+						the constructor is not called. This means the internal state of an entity must fully represented by it&#39;s serialized
+					fields.</li>
+					<li>An identifier is assigned to the entity when it is saved. </li>
+				</ul>
+				<h3 id="collections">Collections</h3>
+				<p>If a name for the collection is not given, an entity is mapped to a collection in MongoDB based on the name of the
+					class. The <a href="classes/configuration.html#collectionnamingstrategy">collectionNamingStrategy</a> in the <a href="classes/configuration.html">Configuration</a> is used to determine the name of the collection. The
+					default naming strategy is <a href="modules/namingstrategies.html#camelcase">CamelCase</a>. Alternatively, a name for the collection can be specified using the
+				<a href="globals.html#collection">Collection</a> decorator. </p>
+				<pre><code class="lang-typescript">@Entity()
+@Collection(<span class="hljs-string">"people"</span>)
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
+
+    @Field()
+    name: <span class="hljs-built_in">string</span>;
+
+    <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(name: string) </span>{
+
+        <span class="hljs-keyword">this</span>.name = name;
+    }
+}
+</code></pre>
+				<h3 id="fields">Fields</h3>
+				<p>Fields are mapped on an opt-in basis. <em>Only fields that are decorated are mapped.</em> The name for the field in the document
+				can optionally be specified using the <a href="globals.html#field">Field</a> decorator.</p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+    @Field(<span class="hljs-string">"u"</span>)
+    username: <span class="hljs-built_in">string</span>;
+}
+</code></pre>
+				<p>If the name for the field is not specified, the <a href="classes/configuration.html#fieldnamingstrategy">fieldNamingStrategy</a> on the <a href="classes/configuration.html">Configuration</a> is used to determine
+				the name of the field. The default naming strategy is <a href="modules/namingstrategies.html#camelcase">CamelCase</a>.</p>
+				<h3 id="identity">Identity</h3>
+				<p>The <a href="classes/configuration.html#identitygenerator">identityGenerator</a> on the <a href="classes/configuration.html">Configuration</a> is used to generate an identifier for an entity. The default identity
+					generator is the <a href="classes/objectidgenerator.html">ObjectIdGenerator</a>. This is the only generator that ships with Hydrate. Composite identifiers are
+				not supported. Natural identifiers are not supported.</p>
+				<p>By default the  identifier is not exposed on an entity. The identifier can be retrieved as a string using the
+				<a href="globals.html#getidentifier">getIdentifier</a> function.</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> {getIdentifier} from <span class="hljs-string">"hydrate-mongodb"</span>;
+
+...
+
+session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
+    ...    
+    <span class="hljs-keyword">var</span> id = getIdentifier(tasks[<span class="hljs-number">0</span>]);
+    ...
+});
+</code></pre>
+				<p>Alternatively, the identifier can be exposed on an entity as a string using the <a href="globals.html#id">Id</a> decorator.</p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+    @Id()
+    id: <span class="hljs-built_in">string</span>;
+
+    @Field()
+    username: <span class="hljs-built_in">string</span>;
+}
+</code></pre>
+				<h3 id="embeddables">Embeddables</h3>
+				<p>Embeddables are classes that map to nested subdocuments within entities, arrays, or other embeddables.</p>
+				<pre><code class="lang-typescript">@Embeddable()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> HumanName {
+
+    @Field()
+    last: <span class="hljs-built_in">string</span>;
+
+    @Field()
+    first: <span class="hljs-built_in">string</span>;
+
+    @Field()
+    name: <span class="hljs-built_in">string</span>;
+
+    <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(last: string, first?: string) </span>{
+
+        <span class="hljs-keyword">this</span>.last = last;
+        <span class="hljs-keyword">this</span>.first = first;
+
+        <span class="hljs-keyword">this</span>.name = last;
+        <span class="hljs-keyword">if</span>(first) {
+            <span class="hljs-keyword">this</span>.name += <span class="hljs-string">", "</span> + first;
+        }
+    }
+}
+
+@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
+
+    @Field()
+    name: HumanName;
+
+    <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(name: HumanName) </span>{
+
+        <span class="hljs-keyword">this</span>.name = name;
+    }
+}
+</code></pre>
+				<ul>
+					<li>The embeddable must be a class</li>
+					<li>The embeddable must be decorated with the <a href="enums/mappingmodel.mappingflags.html#embeddable">Embeddable</a> decorator</li>
+					<li>Like an entity, an embeddable is <strong>not</strong> required to have a parameterless constructor. When an embeddable is
+						deserialized from the database, the constructor is not called. This means the internal state of an embeddable must fully
+					represented by it&#39;s serialized fields.</li>
+				</ul>
+				<h3 id="types">Types</h3>
+				<p>When using TypeScript, the type of a field is automatically provided. The following types are supported:</p>
+				<ul>
+					<li>Number</li>
+					<li>String</li>
+					<li>Boolean</li>
+					<li>Date</li>
+					<li>RegExp</li>
+					<li>Buffer</li>
+					<li>Array</li>
+					<li>Enum</li>
+					<li>Embeddables</li>
+					<li>Entities</li>
+				</ul>
+				<p><strong>Type Decorator</strong></p>
+				<p>When a property is an embeddable or a reference to an entity, sometimes the type of the property cannot be determined
+					because of circular references of <code>import</code> statements. In this case the <a href="globals.html#type">Type</a> decorator should be used with the name
+				of the type.</p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
+
+    @Type(<span class="hljs-string">"HumanName"</span>)
+    name: HumanName;
+
+    <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(name: HumanName) </span>{
+
+        <span class="hljs-keyword">this</span>.name = name;
+    }
+}
+</code></pre>
+				<p><strong>Arrays</strong></p>
+				<p>TypeScript does not provide the type of an array element, so the type of the array element must be indicate with the
+				<a href="globals.html#elementtype">ElementType</a> decorator.</p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Organization {
+
+    @ElementType(Address)
+    addresses: Address[];
+}
+</code></pre>
+				<p>This is true for primitive types as well.</p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
+
+    @ElementType(<span class="hljs-built_in">String</span>)
+    aliases: <span class="hljs-built_in">string</span>[];
+}
+</code></pre>
+				<p>Arrays </p>
+				<p><strong>Enums</strong></p>
+				<p>By default enums are serialized as numbers. Use the <a href="globals.html#enumerated">Enumerated</a> decorator to serialize enums as strings.</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">export</span> <span class="hljs-keyword">enum</span> TaskStatus {
+
+    Pending,
+    Completed,
+    Archived
+}
+
+@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
+
+    @Field()
+    text: <span class="hljs-built_in">string</span>;
+
+    @Enumerated(TaskStatus)
+    status: TaskStatus;
+}
+</code></pre>
+				<h3 id="inheritance">Inheritance</h3>
+				<p>Standard prototypical inheritance is supported for both entities and embeddables.</p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">class</span> Party {
+    ...
+}
+
+@Entity()
+<span class="hljs-keyword">class</span> Person extends Party {
+    ...
+}
+
+@Entity()
+<span class="hljs-keyword">class</span> Organization extends Party {
+    ...
+}
+</code></pre>
+				<p>All entities within an inheritance hierarchy are stored in the same collection. If the <a href="globals.html#collection">Collection</a> decorator is used,
+				it is only valid on the root of an inheritance hierarchy.</p>
+				<h4 id="mapped-superclass">Mapped Superclass</h4>
+				<p>Entities stored in separate collections may share a common superclass that is not mapped to a collection. In the example,
+					below <code>Patient</code> (stored in <code>patient</code> collection) and <code>Document</code> (stored in <code>document</code> collection) share a common
+				superclass <code>Asset</code> that defines the field <code>owner</code>.</p>
+				<pre><code class="lang-typescript"><span class="hljs-keyword">class</span> Asset {
+
+    @Field()
+    owner: Organization;
+
+    <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(owner: Organization) </span>{
+        <span class="hljs-keyword">this</span>.owner = owner;
+    }
+}
+
+@Entity()
+<span class="hljs-keyword">class</span> Patient extends Asset {
+    ...
+}
+
+@Entity()
+<span class="hljs-keyword">class</span> Document extends Asset {
+    ...
+}
+</code></pre>
+				<p>If <code>Asset</code> was decorated with <a href="enums/mappingmodel.mappingflags.html#entity">Entity</a> then <code>Patient</code> and <code>Document</code> would instead both be stored in a collection
+				called <code>asset</code>.</p>
+				<h4 id="discriminators">Discriminators</h4>
+				<p>If an inheritance hierarchy is defined, a discriminator field is added to the serialized document to indicate the type
+					when deserializing the entity or embeddable. By default, the <a href="interfaces/mappingmodel.classmapping.html#discriminatorfield">discriminatorField</a> on the <a href="classes/configuration.html">Configuration</a> is used
+					to determine the name of the field to store the discriminator. Optionally, the discriminator field can be specified
+				on the root of an inheritance hierarchy using the <a href="globals.html#discriminatorfield">DiscriminatorField</a> decorator.</p>
+				<pre><code class="lang-typescript">@Entity()
+@DiscriminatorField(<span class="hljs-string">"type"</span>)
+<span class="hljs-keyword">class</span> Party {
+    ...
+}
+</code></pre>
+				<p>The discriminator value for a class is determined using the <a href="classes/configuration.html#discriminatornamingstrategy">discriminatorNamingStrategy</a> on the <a href="classes/configuration.html">Configuration</a>.
+					By default, the name of the class is used. The discriminator value can also be specified using the
+				<a href="globals.html#discriminatorvalue">DiscriminatorValue</a> decorator on a class.</p>
+				<pre><code class="lang-typescript">@Entity()
+@DiscriminatorValue(<span class="hljs-string">"P"</span>)
+<span class="hljs-keyword">class</span> Person extends Party {
+    ...
+}
+
+@Entity()
+@DiscriminatorValue(<span class="hljs-string">"O"</span>)
+<span class="hljs-keyword">class</span> Organization extends Party {
+    ...
+}
+</code></pre>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class="globals  ">
+						<a href="globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/mappingmodel.html">Mapping<wbr>Model</a>
+					</li>
+					<li class=" tsd-kind-module">
+						<a href="modules/namingstrategies.html">Naming<wbr>Strategies</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="enums/cascadeflags.html" class="tsd-kind-icon">Cascade<wbr>Flags</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/changetrackingtype.html" class="tsd-kind-icon">Change<wbr>Tracking<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/annotationmappingprovider.html" class="tsd-kind-icon">Annotation<wbr>Mapping<wbr>Provider</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/configuration.html" class="tsd-kind-icon">Configuration</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/objectidgenerator.html" class="tsd-kind-icon">Object<wbr>IdGenerator</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/callback.html" class="tsd-kind-icon">Callback</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/countquery.html" class="tsd-kind-icon">Count<wbr>Query</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/findoneandremovequery.html" class="tsd-kind-icon">Find<wbr>One<wbr>And<wbr>Remove<wbr>Query</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/findoneandupdatequery.html" class="tsd-kind-icon">Find<wbr>One<wbr>And<wbr>Update<wbr>Query</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/findonequery.html" class="tsd-kind-icon">Find<wbr>One<wbr>Query</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/findquery.html" class="tsd-kind-icon">Find<wbr>Query</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/identitygenerator.html" class="tsd-kind-icon">Identity<wbr>Generator</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/iteratorcallback.html" class="tsd-kind-icon">Iterator<wbr>Callback</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/namingstrategy.html" class="tsd-kind-icon">Naming<wbr>Strategy</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/propertyconverter.html" class="tsd-kind-icon">Property<wbr>Converter</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/query.html" class="tsd-kind-icon">Query</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/querybuilder.html" class="tsd-kind-icon">Query<wbr>Builder</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/querydocument.html" class="tsd-kind-icon">Query<wbr>Document</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/resultcallback.html" class="tsd-kind-icon">Result<wbr>Callback</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/session.html" class="tsd-kind-icon">Session</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/sessionfactory.html" class="tsd-kind-icon">Session<wbr>Factory</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#cascade" class="tsd-kind-icon">Cascade</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#changetracking" class="tsd-kind-icon">Change<wbr>Tracking</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#collection" class="tsd-kind-icon">Collection</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#converter" class="tsd-kind-icon">Converter</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#discriminatorfield" class="tsd-kind-icon">Discriminator<wbr>Field</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#discriminatorvalue" class="tsd-kind-icon">Discriminator<wbr>Value</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#elementtype" class="tsd-kind-icon">Element<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#embeddable" class="tsd-kind-icon">Embeddable</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#entity" class="tsd-kind-icon">Entity</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#enumerated" class="tsd-kind-icon">Enumerated</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#field" class="tsd-kind-icon">Field</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#id" class="tsd-kind-icon">Id</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#index" class="tsd-kind-icon">Index</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#inverseof" class="tsd-kind-icon">Inverse<wbr>Of</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#type" class="tsd-kind-icon">Type</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#versionfield" class="tsd-kind-icon">Version<wbr>Field</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#versioned" class="tsd-kind-icon">Versioned</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#areequal" class="tsd-kind-icon">are<wbr>Equal</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#getidentifier" class="tsd-kind-icon">get<wbr>Identifier</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-module"><span class="tsd-kind-icon">Module</span></li>
+				<li class="tsd-kind-object-literal"><span class="tsd-kind-icon">Object literal</span></li>
+				<li class="tsd-kind-variable"><span class="tsd-kind-icon">Variable</span></li>
+				<li class="tsd-kind-function"><span class="tsd-kind-icon">Function</span></li>
+				<li class="tsd-kind-function tsd-has-type-parameter"><span class="tsd-kind-icon">Function with type parameter</span></li>
+				<li class="tsd-kind-index-signature"><span class="tsd-kind-icon">Index signature</span></li>
+				<li class="tsd-kind-type-alias"><span class="tsd-kind-icon">Type alias</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-enum"><span class="tsd-kind-icon">Enumeration</span></li>
+				<li class="tsd-kind-enum-member"><span class="tsd-kind-icon">Enumeration member</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-enum"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-enum"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-interface"><span class="tsd-kind-icon">Interface</span></li>
+				<li class="tsd-kind-interface tsd-has-type-parameter"><span class="tsd-kind-icon">Interface with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-interface"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-interface"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-interface"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-class"><span class="tsd-kind-icon">Class</span></li>
+				<li class="tsd-kind-class tsd-has-type-parameter"><span class="tsd-kind-icon">Class with type parameter</span></li>
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class"><span class="tsd-kind-icon">Accessor</span></li>
+				<li class="tsd-kind-index-signature tsd-parent-kind-class"><span class="tsd-kind-icon">Index signature</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-protected"><span class="tsd-kind-icon">Protected accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+				<li class="tsd-kind-accessor tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private accessor</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static property</span></li>
+				<li class="tsd-kind-call-signature tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="http://typedoc.io" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+<script>if (location.protocol == 'file:') document.write('<script src="assets/js/search.js"><' + '/script>');</script>
+</body>
+</html>
