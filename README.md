@@ -458,7 +458,6 @@ export class Person {
 }
 ```  
 
-Arrays 
 
 **Enums**
 
