@@ -7,7 +7,7 @@ import {Persister} from "../persisterImpl";
 import {QueryDefinition} from "./queryDefinition";
 import {QueryKind} from "./queryKind";
 
-import {Constructor} from "../core/constructor"
+import {Constructor} from "../hydrate"
 
 export interface QueryBuilder<T> {
     findAll(callback?: ResultCallback<T[]>): FindQuery<T>;

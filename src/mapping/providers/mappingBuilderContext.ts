@@ -1,6 +1,6 @@
 import {Configuration} from "../../config/configuration";
 import {Type, Property, ReflectContext} from "reflect-helper";
-import {Constructor} from "../../core/constructor";
+import {Constructor} from "../../hydrate";
 import {MappingBuilder} from "./mappingBuilder";
 import {MappingModel} from "../mappingModel";
 

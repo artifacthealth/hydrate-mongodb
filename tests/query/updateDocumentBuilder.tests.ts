@@ -2,7 +2,7 @@ import {assert} from "chai";
 import * as async from "async";
 import * as helpers from "../helpers";
 import * as model from "../fixtures/model";
-import {Constructor} from "../../src/core/constructor";
+import {Constructor} from "../../src/hydrate";
 import {Callback} from "../../src/core/callback";
 import {UpdateDocumentBuilder} from "../../src/query/updateDocumentBuilder";
 import {QueryDocument} from "../../src/query/queryBuilderImpl";

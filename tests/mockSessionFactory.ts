@@ -4,7 +4,7 @@ import {Persister} from "../src/persisterImpl";
 import {EntityMapping} from "../src/mapping/entityMapping";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {MockPersister} from "./mockPersister";
-import {Constructor} from "../src/core/constructor";
+import {Constructor} from "../src/hydrate";
 
 export class MockSessionFactory extends SessionFactoryImpl {
 

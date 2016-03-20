@@ -1,9 +1,41 @@
 import {Reference} from "./reference";
-export {NamingStrategies} from "./config/namingStrategies";
+
+export {NamingStrategies, NamingStrategy} from "./config/namingStrategies";
+
+export {CascadeFlags, ChangeTrackingType} from "./mapping/mappingModel";
+
 export {Configuration} from "./config/configuration";
 export {ObjectIdGenerator} from "./config/objectIdGenerator";
 export {AnnotationMappingProvider} from "./mapping/providers/annotationMappingProvider";
+
 export * from "./mapping/providers/decorators";
+
+export {Callback, ResultCallback, IteratorCallback} from "./core/callback";
+export {IdentityGenerator, PropertyConverter} from "./config/configuration";
+export {Session} from "./sessionImpl";
+export {SessionFactory} from "./sessionFactoryImpl";
+export {
+    Query,
+    QueryBuilder,
+    CountQuery,
+    FindQuery,
+    FindOneQuery,
+    FindOneAndUpdateQuery,
+    FindOneAndRemoveQuery,
+    QueryDocument
+} from "./query/queryBuilderImpl";
+
+export interface Constructor<T> {
+
+    name?: string;
+    new(...args: any[]): T;
+}
+
+export interface ParameterlessConstructor<T> {
+
+    name?: string;
+    new(): T;
+}
 
 /**
  * Returns true if values are equivalent. Values can be entities or references to entities.

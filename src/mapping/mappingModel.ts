@@ -18,7 +18,7 @@ import {IdentityGenerator} from "../config/configuration";
 import {EnumType} from "./enumType";
 import {ConverterMapping} from "./converterMapping";
 import {BufferMapping} from "./bufferMapping";
-import {Constructor} from "../core/constructor";
+import {Constructor} from "../hydrate";
 import {IdentityMapping} from "./identityMapping";
 
 

@@ -4,7 +4,7 @@ import {IndexOptions} from "../indexOptions";
 import {ChangeTrackingType} from "../mappingModel";
 import {EnumType} from "../enumType";
 import {CascadeFlags} from "../mappingModel";
-import {Constructor, ParameterlessConstructor} from "../../core/constructor";
+import {Constructor, ParameterlessConstructor} from "../../hydrate";
 import {MappingModel} from "../mappingModel";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
