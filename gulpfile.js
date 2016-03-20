@@ -7,7 +7,6 @@ var ts = require('gulp-typescript');
 var del = require('del');
 var mocha = require("gulp-mocha");
 var merge = require("merge2");
-var dts = require("dts-concat");
 var runSequence = require("run-sequence");
 var Baseline = require("baseline");
 var typedoc = require("gulp-typedoc");

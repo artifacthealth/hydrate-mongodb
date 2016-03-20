@@ -26,6 +26,7 @@
     "reflect-helper": "^0.1.3"
   },
   "devDependencies": {
+    "baseline": "^0.3.0",
     "chai": "^1.9.2",
     "del": "^2.2.0",
     "glob": "^6.0.4",
