@@ -92,6 +92,7 @@
 							<h3>Interfaces</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-interface"><a href="interfaces/callback.html" class="tsd-kind-icon">Callback</a></li>
+								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/constructor.html" class="tsd-kind-icon">Constructor</a></li>
 								<li class="tsd-kind-interface"><a href="interfaces/countquery.html" class="tsd-kind-icon">Count<wbr>Query</a></li>
 								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/findoneandremovequery.html" class="tsd-kind-icon">Find<wbr>One<wbr>And<wbr>Remove<wbr>Query</a></li>
 								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/findoneandupdatequery.html" class="tsd-kind-icon">Find<wbr>One<wbr>And<wbr>Update<wbr>Query</a></li>
@@ -100,6 +101,7 @@
 								<li class="tsd-kind-interface"><a href="interfaces/identitygenerator.html" class="tsd-kind-icon">Identity<wbr>Generator</a></li>
 								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/iteratorcallback.html" class="tsd-kind-icon">Iterator<wbr>Callback</a></li>
 								<li class="tsd-kind-interface"><a href="interfaces/namingstrategy.html" class="tsd-kind-icon">Naming<wbr>Strategy</a></li>
+								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/parameterlessconstructor.html" class="tsd-kind-icon">Parameterless<wbr>Constructor</a></li>
 								<li class="tsd-kind-interface"><a href="interfaces/propertyconverter.html" class="tsd-kind-icon">Property<wbr>Converter</a></li>
 								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/query.html" class="tsd-kind-icon">Query</a></li>
 								<li class="tsd-kind-interface tsd-has-type-parameter"><a href="interfaces/querybuilder.html" class="tsd-kind-icon">Query<wbr>Builder</a></li>
@@ -228,7 +230,7 @@
 					<a name="converter" class="tsd-anchor"></a>
 					<h3>Converter</h3>
 					<ul class="tsd-signatures tsd-kind-function">
-						<li class="tsd-signature tsd-kind-icon">Converter<span class="tsd-signature-symbol">(</span>converter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ParameterlessConstructor</span><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">(&lt;TFunction extends Function&gt;(target: TFunction) =&gt; TFunction | void) &amp; ((target: Object, propert...</span></li>
+						<li class="tsd-signature tsd-kind-icon">Converter<span class="tsd-signature-symbol">(</span>converter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">(&lt;TFunction extends Function&gt;(target: TFunction) =&gt; TFunction | void) &amp; ((target: Object, propert...</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -240,7 +242,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>converter: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ParameterlessConstructor</span><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>converter: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">(&lt;TFunction extends Function&gt;(target: TFunction) =&gt; TFunction | void) &amp; ((target: Object, propert...</span></h4>
@@ -297,7 +299,7 @@
 					<a name="elementtype" class="tsd-anchor"></a>
 					<h3>Element<wbr>Type</h3>
 					<ul class="tsd-signatures tsd-kind-function">
-						<li class="tsd-signature tsd-kind-icon">Element<wbr>Type<span class="tsd-signature-symbol">(</span>target<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Constructor</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+						<li class="tsd-signature tsd-kind-icon">Element<wbr>Type<span class="tsd-signature-symbol">(</span>target<span class="tsd-signature-symbol">: </span><a href="interfaces/constructor.html" class="tsd-signature-type">Constructor</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -309,7 +311,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>target: <span class="tsd-signature-type">Constructor</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+									<h5>target: <a href="interfaces/constructor.html" class="tsd-signature-type">Constructor</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
@@ -499,7 +501,7 @@
 					<a name="type" class="tsd-anchor"></a>
 					<h3>Type</h3>
 					<ul class="tsd-signatures tsd-kind-function">
-						<li class="tsd-signature tsd-kind-icon">Type<span class="tsd-signature-symbol">(</span>target<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Constructor</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+						<li class="tsd-signature tsd-kind-icon">Type<span class="tsd-signature-symbol">(</span>target<span class="tsd-signature-symbol">: </span><a href="interfaces/constructor.html" class="tsd-signature-type">Constructor</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -511,7 +513,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>target: <span class="tsd-signature-type">Constructor</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+									<h5>target: <a href="interfaces/constructor.html" class="tsd-signature-type">Constructor</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
@@ -574,7 +576,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/hydrate.ts#L13">hydrate.ts:13</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/index.ts#L45">index.ts:45</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -611,7 +613,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/hydrate.ts#L22">hydrate.ts:22</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/index.ts#L54">index.ts:54</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -665,6 +667,9 @@
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/callback.html" class="tsd-kind-icon">Callback</a>
 					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/constructor.html" class="tsd-kind-icon">Constructor</a>
+					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/countquery.html" class="tsd-kind-icon">Count<wbr>Query</a>
 					</li>
@@ -688,6 +693,9 @@
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/namingstrategy.html" class="tsd-kind-icon">Naming<wbr>Strategy</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/parameterlessconstructor.html" class="tsd-kind-icon">Parameterless<wbr>Constructor</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/propertyconverter.html" class="tsd-kind-icon">Property<wbr>Converter</a>

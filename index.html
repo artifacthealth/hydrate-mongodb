@@ -63,6 +63,7 @@
 	<div class="row">
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
+				<p><a href="https://travis-ci.org/artifacthealth/hydrate-mongodb"><img src="https://travis-ci.org/artifacthealth/hydrate-mongodb.svg?branch=master" alt="Build Status"></a></p>
 				<h1 id="hydrate">Hydrate</h1>
 				<p><strong>An Object/Document Mapping (ODM) framework for Node.js and MongodDB</strong></p>
 				<p>Hydrate provides a means for developers to map Node.js classes to documents stored in a MongoDB database. Developers can
@@ -160,7 +161,8 @@
 </code></pre>
 				<h3 id="configuring-hydrate">Configuring Hydrate</h3>
 				<p>Once our model is defined, we need to tell Hydrate about it. We do this by adding the model to an
-				<a href="classes/annotationmappingprovider.html">AnnotationMappingProvider</a>, then adding the mapping provider to the <a href="classes/configuration.html">Configuration</a>.</p>
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/annotationmappingprovider.html">AnnotationMappingProvider</a>,
+				then adding the mapping provider to the <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a>.</p>
 				<p><strong>server.ts:</strong></p>
 				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> {MongoClient} from <span class="hljs-string">"mongodb"</span>;
 <span class="hljs-keyword">import</span> {Configuration, AnnotationMappingProvider} from <span class="hljs-string">"hydrate-mongodb"</span>;
@@ -171,8 +173,9 @@ config.addMapping(<span class="hljs-keyword">new</span> AnnotationMappingProvide
 </code></pre>
 				<h3 id="connecting-to-mongodb">Connecting to MongoDB</h3>
 				<p>We use the standard <a href="https://github.com/mongodb/node-mongodb-native">MongoDB native driver</a> to establish a connection
-					to MongoDB. Once the connection is open, we create a <a href="interfaces/sessionfactory.html">SessionFactory</a> using the MongoDB connection and the previously
-				defined <a href="classes/configuration.html">Configuration</a>. </p>
+					to MongoDB. Once the connection is open, we create a
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/sessionfactory.html">SessionFactory</a> using the MongoDB connection and the previously
+				defined <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a>. </p>
 				<p><strong>server.ts (con&#39;t):</strong></p>
 				<pre><code class="lang-typescript">
 MongoClient.connect(<span class="hljs-string">'mongodb://localhost/mydatabase'</span>, (err, db) =&gt; {
@@ -184,9 +187,10 @@ MongoClient.connect(<span class="hljs-string">'mongodb://localhost/mydatabase'</
 });
 </code></pre>
 				<h3 id="creating-a-session">Creating a Session</h3>
-				<p>Typically the <a href="interfaces/sessionfactory.html">SessionFactory</a> is created once at server startup and then used to create a <a href="interfaces/session.html">Session</a> for each connection to
-					the server. For example, using a <a href="interfaces/session.html">Session</a> in an <a href="http://expressjs.com/en/guide/routing.html">Express</a> route might look
-				something like this:</p>
+				<p>Typically the <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/sessionfactory.html">SessionFactory</a> is
+					created once at server startup and then used to create a <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a> for each connection to
+					the server. For example, using a <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a>
+				in an <a href="http://expressjs.com/en/guide/routing.html">Express</a> route might look something like this:</p>
 				<pre><code class="lang-typescript">
 app.get(<span class="hljs-string">'/'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> (<span class="hljs-params">req, res, next</span>) </span>{
 
@@ -197,33 +201,43 @@ app.get(<span class="hljs-string">'/'</span>, <span class="hljs-function"><span 
     session.close(next); 
 });
 </code></pre>
-				<p>Calling [[close]] on the <a href="interfaces/session.html">Session</a> persists any changes to the database and closes the <a href="interfaces/session.html">Session</a>. Call <a href="interfaces/session.html#flush">flush</a>
-				instead to persist any changes without closing the <a href="interfaces/session.html">Session</a>.</p>
+				<p>Calling <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#close">close</a>
+					on the <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a> persists
+					any changes to the database and closes the <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a>.
+					Call <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#flush">flush</a>
+				instead to persist any changes without closing the <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a>.</p>
 				<h3 id="working-with-persistent-objects">Working with Persistent Objects</h3>
-				<p>In order to create a new <code>Task</code> we instantiate the task and then add it to the <a href="interfaces/session.html">Session</a> by calling <a href="interfaces/session.html#save">save</a>.</p>
+				<p>In order to create a new <code>Task</code> we instantiate the task and then add it to the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a> by calling
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#save">save</a>.</p>
 				<pre><code class="lang-typescript"><span class="hljs-keyword">var</span> task = <span class="hljs-keyword">new</span> Task(<span class="hljs-string">"Take out the trash."</span>);
 session.save(task);
 </code></pre>
-				<p>To find all tasks that have not yet been completed, we can use the [[query]] method.</p>
+				<p>To find all tasks that have not yet been completed, we can use the
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#query">query</a> method.</p>
 				<pre><code class="lang-typescript">session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     ...
 });
 </code></pre>
-				<p>To find a task by identifier we use <a href="interfaces/session.html#find">find</a>.</p>
+				<p>To find a task by identifier we use <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#find">find</a>.</p>
 				<pre><code class="lang-typescript">session.find(Task, id, (err, task) =&gt; {
     ...
 });
 </code></pre>
-				<p>Hydrate provides a mechanism to retrieve references between persistent entities. We do this using [[fetch]]. Note that
-					[[fetch]] uses the same <a href="https://docs.mongodb.org/manual/core/document/#dot-notation">dot notation</a> that MongoDB uses
+				<p>Hydrate provides a mechanism to retrieve references between persistent entities. We do this using
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#fetch">fetch</a>. Note that
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#fetch">fetch</a>
+					uses the same <a href="https://docs.mongodb.org/manual/core/document/#dot-notation">dot notation</a> that MongoDB uses
 				for queries.</p>
 				<p>For example, say we wanted to fetch the <code>Person</code> that a <code>Task</code> is assigned to. </p>
-				<pre><code class="lang-typescript">session.find(Task, id).fetch(<span class="hljs-string">"assigned"</span>, (err, task) =&gt; {
-    ...
+				<pre><code class="lang-typescript">session.fetch(task, <span class="hljs-string">"assigned"</span>, (err) =&gt; {
+
+    <span class="hljs-built_in">console</span>.log(task.assigned.name); <span class="hljs-comment">// prints the name of the Person</span>
 });
 </code></pre>
-				<p>The [[fetch]] method can be used in conjunction with queries as well.</p>
-				<pre><code class="lang-typescript">session.query(Task).findAll({ ... }).fetch(<span class="hljs-string">"assigned"</span>, (err, tasks) =&gt; {
+				<p>The <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/findonequery.html">fetch</a> method can be used in
+				conjunction with queries as well.</p>
+				<pre><code class="lang-typescript">session.find(Task, id).fetch(<span class="hljs-string">"assigned"</span>, (err, task) =&gt; {
     ...
 });
 </code></pre>
@@ -245,7 +259,7 @@ session.save(task);
 </code></pre>
 				<ul>
 					<li>The entity must be a class</li>
-					<li>The entity must be decorated with the <a href="enums/mappingmodel.mappingflags.html#entity">Entity</a> decorator</li>
+					<li>The entity must be decorated with the <a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#entity">Entity</a> decorator</li>
 					<li>The entity is <strong>not</strong> required to have a parameterless constructor, which is different than JPA and Hibernate. This
 						allows for entities to enforce required parameters for construction. When an entity is deserialized from the database,
 						the constructor is not called. This means the internal state of an entity must fully represented by it&#39;s serialized
@@ -254,9 +268,13 @@ session.save(task);
 				</ul>
 				<h3 id="collections">Collections</h3>
 				<p>If a name for the collection is not given, an entity is mapped to a collection in MongoDB based on the name of the
-					class. The <a href="classes/configuration.html#collectionnamingstrategy">collectionNamingStrategy</a> in the <a href="classes/configuration.html">Configuration</a> is used to determine the name of the collection. The
-					default naming strategy is <a href="modules/namingstrategies.html#camelcase">CamelCase</a>. Alternatively, a name for the collection can be specified using the
-				<a href="globals.html#collection">Collection</a> decorator. </p>
+					class.
+					The <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#collectionnamingstrategy">collectionNamingStrategy</a>
+					in the <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a> is used to determine
+					the name of the collection. The default naming strategy is
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/modules/namingstrategies.html#camelcase">CamelCase</a>. Alternatively,
+					a name for the collection can be specified using the
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#collection">Collection</a> decorator. </p>
 				<pre><code class="lang-typescript">@Entity()
 @Collection(<span class="hljs-string">"people"</span>)
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
@@ -272,7 +290,7 @@ session.save(task);
 </code></pre>
 				<h3 id="fields">Fields</h3>
 				<p>Fields are mapped on an opt-in basis. <em>Only fields that are decorated are mapped.</em> The name for the field in the document
-				can optionally be specified using the <a href="globals.html#field">Field</a> decorator.</p>
+				can optionally be specified using the <a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#field">Field</a> decorator.</p>
 				<pre><code class="lang-typescript">@Entity()
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
 
@@ -280,14 +298,18 @@ session.save(task);
     username: <span class="hljs-built_in">string</span>;
 }
 </code></pre>
-				<p>If the name for the field is not specified, the <a href="classes/configuration.html#fieldnamingstrategy">fieldNamingStrategy</a> on the <a href="classes/configuration.html">Configuration</a> is used to determine
-				the name of the field. The default naming strategy is <a href="modules/namingstrategies.html#camelcase">CamelCase</a>.</p>
+				<p>If the name for the field is not specified, the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#fieldnamingstrategy">fieldNamingStrategy</a>
+					on the <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a> is used to determine
+				the name of the field. The default naming strategy is <a href="https://artifacthealth.github.io/hydrate-mongodb/modules/namingstrategies.html#camelcase">CamelCase</a>.</p>
 				<h3 id="identity">Identity</h3>
-				<p>The <a href="classes/configuration.html#identitygenerator">identityGenerator</a> on the <a href="classes/configuration.html">Configuration</a> is used to generate an identifier for an entity. The default identity
-					generator is the <a href="classes/objectidgenerator.html">ObjectIdGenerator</a>. This is the only generator that ships with Hydrate. Composite identifiers are
-				not supported. Natural identifiers are not supported.</p>
-				<p>By default the  identifier is not exposed on an entity. The identifier can be retrieved as a string using the
-				<a href="globals.html#getidentifier">getIdentifier</a> function.</p>
+				<p>The <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#identitygenerator">identityGenerator</a>
+					on the <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a> is used to generate
+					an identifier for an entity. The default identity generator is the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/objectidgenerator.html">ObjectIdGenerator</a>. This is the only
+				generator that ships with Hydrate. Composite identifiers are not supported. Natural identifiers are not supported.</p>
+				<p>By default the  identifier is not exposed as a public member on an entity. The identifier can be retrieved as a string
+				using the <a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#getidentifier">getIdentifier</a> function.</p>
 				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> {getIdentifier} from <span class="hljs-string">"hydrate-mongodb"</span>;
 
 ...
@@ -298,7 +320,8 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     ...
 });
 </code></pre>
-				<p>Alternatively, the identifier can be exposed on an entity as a string using the <a href="globals.html#id">Id</a> decorator.</p>
+				<p>Alternatively, the identifier can be exposed on an entity as a string using the
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#id">Id</a> decorator.</p>
 				<pre><code class="lang-typescript">@Entity()
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
 
@@ -349,7 +372,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 </code></pre>
 				<ul>
 					<li>The embeddable must be a class</li>
-					<li>The embeddable must be decorated with the <a href="enums/mappingmodel.mappingflags.html#embeddable">Embeddable</a> decorator</li>
+					<li>The embeddable must be decorated with the <a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#embeddable">Embeddable</a> decorator</li>
 					<li>Like an entity, an embeddable is <strong>not</strong> required to have a parameterless constructor. When an embeddable is
 						deserialized from the database, the constructor is not called. This means the internal state of an embeddable must fully
 					represented by it&#39;s serialized fields.</li>
@@ -370,7 +393,8 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 				</ul>
 				<p><strong>Type Decorator</strong></p>
 				<p>When a property is an embeddable or a reference to an entity, sometimes the type of the property cannot be determined
-					because of circular references of <code>import</code> statements. In this case the <a href="globals.html#type">Type</a> decorator should be used with the name
+					because of circular references of <code>import</code> statements. In this case the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#type">Type</a> decorator should be used with the name
 				of the type.</p>
 				<pre><code class="lang-typescript">@Entity()
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
@@ -386,7 +410,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 </code></pre>
 				<p><strong>Arrays</strong></p>
 				<p>TypeScript does not provide the type of an array element, so the type of the array element must be indicate with the
-				<a href="globals.html#elementtype">ElementType</a> decorator.</p>
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#elementtype">ElementType</a> decorator.</p>
 				<pre><code class="lang-typescript">@Entity()
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Organization {
 
@@ -402,9 +426,9 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     aliases: <span class="hljs-built_in">string</span>[];
 }
 </code></pre>
-				<p>Arrays </p>
 				<p><strong>Enums</strong></p>
-				<p>By default enums are serialized as numbers. Use the <a href="globals.html#enumerated">Enumerated</a> decorator to serialize enums as strings.</p>
+				<p>By default enums are serialized as numbers. Use the
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#enumerated">Enumerated</a> decorator to serialize enums as strings.</p>
 				<pre><code class="lang-typescript"><span class="hljs-keyword">export</span> <span class="hljs-keyword">enum</span> TaskStatus {
 
     Pending,
@@ -439,7 +463,8 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     ...
 }
 </code></pre>
-				<p>All entities within an inheritance hierarchy are stored in the same collection. If the <a href="globals.html#collection">Collection</a> decorator is used,
+				<p>All entities within an inheritance hierarchy are stored in the same collection. If the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#collection">Collection</a> decorator is used,
 				it is only valid on the root of an inheritance hierarchy.</p>
 				<h4 id="mapped-superclass">Mapped Superclass</h4>
 				<p>Entities stored in separate collections may share a common superclass that is not mapped to a collection. In the example,
@@ -465,22 +490,27 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     ...
 }
 </code></pre>
-				<p>If <code>Asset</code> was decorated with <a href="enums/mappingmodel.mappingflags.html#entity">Entity</a> then <code>Patient</code> and <code>Document</code> would instead both be stored in a collection
-				called <code>asset</code>.</p>
+				<p>If <code>Asset</code> was decorated with <a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#entity">Entity</a> then <code>Patient</code>
+				and <code>Document</code> would instead both be stored in a collection called <code>asset</code>.</p>
 				<h4 id="discriminators">Discriminators</h4>
 				<p>If an inheritance hierarchy is defined, a discriminator field is added to the serialized document to indicate the type
-					when deserializing the entity or embeddable. By default, the <a href="interfaces/mappingmodel.classmapping.html#discriminatorfield">discriminatorField</a> on the <a href="classes/configuration.html">Configuration</a> is used
+					when deserializing the entity or embeddable. By default, the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#discriminatorfield">discriminatorField</a>
+					on the <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a> is used
 					to determine the name of the field to store the discriminator. Optionally, the discriminator field can be specified
-				on the root of an inheritance hierarchy using the <a href="globals.html#discriminatorfield">DiscriminatorField</a> decorator.</p>
+					on the root of an inheritance hierarchy using the
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#discriminatorfield">DiscriminatorField</a> decorator.</p>
 				<pre><code class="lang-typescript">@Entity()
 @DiscriminatorField(<span class="hljs-string">"type"</span>)
 <span class="hljs-keyword">class</span> Party {
     ...
 }
 </code></pre>
-				<p>The discriminator value for a class is determined using the <a href="classes/configuration.html#discriminatornamingstrategy">discriminatorNamingStrategy</a> on the <a href="classes/configuration.html">Configuration</a>.
+				<p>The discriminator value for a class is determined using the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#discriminatornamingstrategy">discriminatorNamingStrategy</a> on the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a>.
 					By default, the name of the class is used. The discriminator value can also be specified using the
-				<a href="globals.html#discriminatorvalue">DiscriminatorValue</a> decorator on a class.</p>
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#discriminatorvalue">DiscriminatorValue</a> decorator on a class.</p>
 				<pre><code class="lang-typescript">@Entity()
 @DiscriminatorValue(<span class="hljs-string">"P"</span>)
 <span class="hljs-keyword">class</span> Person extends Party {
@@ -529,6 +559,9 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/callback.html" class="tsd-kind-icon">Callback</a>
 					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/constructor.html" class="tsd-kind-icon">Constructor</a>
+					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/countquery.html" class="tsd-kind-icon">Count<wbr>Query</a>
 					</li>
@@ -552,6 +585,9 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/namingstrategy.html" class="tsd-kind-icon">Naming<wbr>Strategy</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-has-type-parameter">
+						<a href="interfaces/parameterlessconstructor.html" class="tsd-kind-icon">Parameterless<wbr>Constructor</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/propertyconverter.html" class="tsd-kind-icon">Property<wbr>Converter</a>
