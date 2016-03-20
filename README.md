@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/artifacthealth/hydrate-mongodb.svg?branch=master)](https://travis-ci.org/artifacthealth/hydrate-mongodb)
+
 # Hydrate
 **An Object/Document Mapping (ODM) framework for Node.js and MongodDB**
 

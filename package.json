@@ -1,14 +1,14 @@
 {
-  "name": "@artifacthealth/hydrate",
-  "description": "An Object Document Mapper (ODM) for the MongoDB database.",
-  "version": "0.2.16",
+  "name": "hydrate-mongodb",
+  "description": "An Object Document Mapper (ODM) for the MongoDB Database.",
+  "version": "0.2.17",
   "author": {
     "name": "Artifact Health, LLC",
     "url": "http://www.artifacthealth.com"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/mgottlieb/hydrate.git"
+    "url": "https://github.com/artifacthealth/hydrate-mongodb"
   },
   "licenses": [
     {
@@ -17,7 +17,7 @@
   ],
   "main": "lib/hydrate.js",
   "scripts": {
-    "test": "grunt"
+    "test": "gulp"
   },
   "dependencies": {
     "async": "^0.9.0",
@@ -44,7 +44,11 @@
   },
   "keywords": [
     "odm",
+    "nosql",
     "typescript",
-    "mongodb"
+    "mongodb",
+    "database",
+    "model",
+    "document"
   ]
 }
