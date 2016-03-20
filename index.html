@@ -213,15 +213,27 @@ app.get(<span class="hljs-string">'/'</span>, <span class="hljs-function"><span 
 				<pre><code class="lang-typescript"><span class="hljs-keyword">var</span> task = <span class="hljs-keyword">new</span> Task(<span class="hljs-string">"Take out the trash."</span>);
 session.save(task);
 </code></pre>
+				<p>To find a task by identifier we use <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#find">find</a>.</p>
+				<pre><code class="lang-typescript">session.find(Task, id, (err, task) =&gt; {
+    ...
+});
+</code></pre>
 				<p>To find all tasks that have not yet been completed, we can use the
 				<a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#query">query</a> method.</p>
 				<pre><code class="lang-typescript">session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     ...
 });
 </code></pre>
-				<p>To find a task by identifier we use <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#find">find</a>.</p>
-				<pre><code class="lang-typescript">session.find(Task, id, (err, task) =&gt; {
+				<p>Below is an example of finding all tasks assigned to a specific person. Note that even though <code>person</code> is an instance
+					of the <code>Person</code> entity which is serialized as an <code>ObjectId</code> in the <code>task</code> collection, there is no need to pass the
+				identifier of the <code>person</code> directly to the query.</p>
+				<pre><code class="lang-typescript">
+session.find(Person, personId, (err, person) =&gt; {
     ...
+
+    session.query(Task).findAll({ assigned: person }, (err, tasks) =&gt; {
+        ...
+    });
 });
 </code></pre>
 				<p>Hydrate provides a mechanism to retrieve references between persistent entities. We do this using
