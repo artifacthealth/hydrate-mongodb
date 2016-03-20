@@ -98,25 +98,117 @@ interface ObjectLinks {
 var cachedDetachedLinks: ObjectLinks = {
     state: ObjectState.Detached,
     flags: ObjectFlags.None
-}
+};
 
-export interface Session extends EventEmitter {
 
+/**
+ *  The primary interface used to interact with the database. The Session is a
+ *  [Unit of Work](http://martinfowler.com/eaaCatalog/unitOfWork.html) that keeps track of changes until they are
+ *  synchronized with the database by calling [[flush]] or [[close]].
+ */
+export interface Session {
+
+    /**
+     * Saves an entity to the Session. If the entity is new then it becomes managed. If the entity is already managed
+     * then it is flagged for dirty check. The entity is not actually saved to the database until the Session is
+     * flushed.
+     * @param obj The entity to save.
+     * @param callback Called after the entity has been added to the Session.
+     */
     save(obj: Object, callback?: Callback): void;
+
+    /**
+     * Removes an entity from the Session. The entity is not actually removed from the database util the Session is
+     * flushed.
+     * @param obj The entity to remove.
+     * @param callback Called after the entity has been removed from the Session.
+     */
     remove(obj: Object, callback?: Callback): void;
+
+    /**
+     * Detaches an entity from the Session making it unmanaged. Any changes to the entity will not be persisted.
+     * @param obj The entity to detach.
+     * @param callback Called after the entity has been detached.
+     */
     detach(obj: Object, callback?: Callback): void;
+
+    /**
+     * Refreshes an entity state from database. Any changes to the entity are discarded.
+     * @param obj The entity to refresh.
+     * @param callback Called after the entity has been refreshed.
+     */
     refresh(obj: Object, callback: Callback): void;
+
+    /**
+     * Synchronizes the Session with the database, writing any changes.
+     * @param callback Called after the changes have been written to the database.
+     */
     flush(callback?: Callback): void;
+
+    /**
+     * Clears the Session, detaching all managed entities.
+     * @param callback Called after the Session has been cleared.
+     */
     clear(callback?: Callback): void;
+
+    /**
+     * Finds an entity by identifier.
+     * @param ctr The constructor for the entity to find.
+     * @param id The identifier for the entity.
+     * @param callback Called with the entity.
+     */
     find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T>;
+
+    /**
+     * Gets a reference to an entity without making a request to the database.
+     * @param ctr The constructor for the entity.
+     * @param id The identifier for the entity.
+     */
     getReference<T>(ctr: Constructor<T>, id: any): T;
+
+    /**
+     * Fetches an entity reference from the database.
+     * @param obj The entity reference to fetch.
+     * @param callback Called with the fetched entity.
+     */
     fetch<T>(obj: T, callback?: ResultCallback<T>): void;
-    fetch<T>(obj: T, path: string, callback?: ResultCallback<T>): void;
-    fetch<T>(obj: T, paths: string[], callback?: ResultCallback<T>): void;
+
+    /**
+     * Fetches entity references at the specified path(s) on the given entity.
+     * @param obj The entity
+     * @param path The path(s) to check. Uses the same
+     * [dot notation](https://docs.mongodb.org/manual/core/document/#dot-notation) that MongoDB uses for queries.
+     * @param callback Called after any entity references have been fetched.
+     */
+    fetch<T>(obj: T, path: string | string[], callback?: ResultCallback<T>): void;
+
     query<T>(ctr: Constructor<T>): QueryBuilder<T>;
+
+    /**
+     * Waits for pending operations on the Session to complete.
+     * @param callback Called after all pending operations on the Session have completed.
+     */
     wait(callback?: Callback): void;
+
+    /**
+     * Flushes any changes to the database and closes the Session. Calling operations on a closed Session will result
+     * in an error.
+     * @param callback Called after the Session has been closed.
+     */
     close(callback?: Callback): void;
+
+    /**
+     * Checks if an entity is contained in the Session.
+     * @param obj The entity to check.
+     */
     contains(obj: Object): boolean;
+
+    /**
+     * Adds an event listener.
+     * @param event The event to listen for.
+     * @param listener The listener function.
+     */
+    on(event: string, listener: Function): EventEmitter;
 }
 
 /**
