@@ -1,7 +1,7 @@
 import {assert} from "chai";
 import * as helpers from "../helpers";
 import * as model from "../fixtures/model";
-import {MappingRegistry} from "../../src/mapping/MappingRegistry";
+import {MappingRegistry} from "../../src/mapping/mappingRegistry";
 import {EntityMapping} from "../../src/mapping/entityMapping";
 import {ClassMapping} from "../../src/mapping/classMapping";
 
