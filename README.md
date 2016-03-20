@@ -190,6 +190,14 @@ var task = new Task("Take out the trash.");
 session.save(task);
 ```
 
+To find a task by identifier we use [find](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#find).
+
+```typescript
+session.find(Task, id, (err, task) => {
+    ...
+});
+```
+
 To find all tasks that have not yet been completed, we can use the 
 [query](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#query) method.
 
@@ -199,12 +207,19 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) => {
 });
 ```
 
-To find a task by identifier we use [find](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#find).
+Below is an example of finding all tasks assigned to a specific person. Note that even though `person` is an instance
+of the `Person` entity which is serialized as an `ObjectId` in the `task` collection, there is no need to pass the 
+identifier of the `person` directly to the query.
 
 ```typescript
-session.find(Task, id, (err, task) => {
+
+session.find(Person, personId, (err, person) => {
     ...
-});
+    
+    session.query(Task).findAll({ assigned: person }, (err, tasks) => {
+        ...
+    });
+});    
 ```
 
 Hydrate provides a mechanism to retrieve references between persistent entities. We do this using 
