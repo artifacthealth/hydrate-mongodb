@@ -1,5 +1,5 @@
 import {makeDecorator} from "reflect-helper";
-import {Constructor, ParameterlessConstructor} from "../../hydrate";
+import {Constructor, ParameterlessConstructor} from "../../index";
 
 import {
     EntityAnnotation,

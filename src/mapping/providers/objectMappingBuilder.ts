@@ -13,7 +13,7 @@ import {
     EnumeratedAnnotation
 } from "./annotations";
 import {Type, Property} from "reflect-helper";
-import {Constructor} from "../../hydrate";
+import {Constructor} from "../../index";
 import {EnumType} from "../enumType";
 import {Index} from "../index";
 

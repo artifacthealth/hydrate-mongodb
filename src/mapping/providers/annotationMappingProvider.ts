@@ -12,7 +12,7 @@ import {MappingModel} from "../mappingModel";
 import {Configuration} from "../../config/configuration";
 import {ReflectContext, Type, Property} from "reflect-helper";
 import {MappingBuilderAnnotation,TargetClassAnnotation} from "./annotations";
-import {Constructor} from "../../hydrate";
+import {Constructor} from "../../index";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";

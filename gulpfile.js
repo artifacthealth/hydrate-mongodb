@@ -80,7 +80,7 @@ gulp.task('docs', function() {
         out: 'build/docs',
         mode: "file",
         name: "hydrate-mongodb",
-        entryPoint: "hydrate",
+        entryPoint: "index",
         umlFormat: "svg",
         includeDeclarations: false,
         excludeExternals: true,

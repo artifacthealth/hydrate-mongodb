@@ -2,7 +2,7 @@ import {Collection} from "mongodb";
 import {Table} from "./core/table";
 import {MappingRegistry} from "./mapping/mappingRegistry";
 import {Session, InternalSession, SessionImpl} from "./session";
-import {Constructor} from "./hydrate";
+import {Constructor} from "./index";
 import {Persister} from "./persister";
 import {PersisterImpl} from "./persister";
 import {MappingModel} from "./mapping/mappingModel";

@@ -9,7 +9,7 @@
  */
 
 import {ResultCallback} from "./callback";
-import {Constructor} from "../hydrate";
+import {Constructor} from "../index";
 
 function only_once<T>(fn: ResultCallback<T>): ResultCallback<T> {
     var called = false;

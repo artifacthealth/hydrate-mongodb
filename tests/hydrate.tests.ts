@@ -14,7 +14,7 @@ import {ObjectIdGenerator} from "../src/config/objectIdGenerator";
 import {QueryKind} from "../src/query/queryKind";
 import {Callback} from "../src/core/callback";
 import {Reference} from "../src/reference";
-import {getIdentifier} from "../src/hydrate";
+import {getIdentifier} from "../src/index";
 
 // Fixtures
 import {Cat} from "./fixtures/cat";

@@ -1,6 +1,6 @@
 import {ClassMapping} from "./classMapping";
 import {EntityMapping} from "./entityMapping";
-import {Constructor} from "../hydrate";
+import {Constructor} from "../index";
 import {MappingModel} from "./mappingModel";
 
 /**
