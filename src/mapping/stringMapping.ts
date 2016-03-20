@@ -1,7 +1,7 @@
 import {MappingError} from "./mappingError";
 import {MappingBase} from "./mappingBase";
 import {MappingModel} from "./mappingModel";
-import {InternalSession} from "../sessionImpl";
+import {InternalSession} from "../session";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 

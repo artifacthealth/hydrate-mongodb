@@ -313,8 +313,8 @@ an identifier for an entity. The default identity generator is the
 [ObjectIdGenerator](https://artifacthealth.github.io/hydrate-mongodb/classes/objectidgenerator.html). This is the only 
 generator that ships with Hydrate. Composite identifiers are not supported. Natural identifiers are not supported.
 
-By default the  identifier is not exposed on an entity. The identifier can be retrieved as a string using the 
-[getIdentifier](https://artifacthealth.github.io/hydrate-mongodb/globals.html#getidentifier) function.
+By default the  identifier is not exposed as a public member on an entity. The identifier can be retrieved as a string 
+using the [getIdentifier](https://artifacthealth.github.io/hydrate-mongodb/globals.html#getidentifier) function.
 
 ```typescript
 import {getIdentifier} from "hydrate-mongodb";

@@ -1,10 +1,10 @@
 import {Collection} from "mongodb";
 import {Table} from "./core/table";
 import {MappingRegistry} from "./mapping/mappingRegistry";
-import {Session, InternalSession, SessionImpl} from "./sessionImpl";
+import {Session, InternalSession, SessionImpl} from "./session";
 import {Constructor} from "./hydrate";
-import {Persister} from "./persisterImpl";
-import {PersisterImpl} from "./persisterImpl";
+import {Persister} from "./persister";
+import {PersisterImpl} from "./persister";
 import {MappingModel} from "./mapping/mappingModel";
 import {EntityMapping} from "./mapping/entityMapping";
 

@@ -1,7 +1,7 @@
 import * as model from "./fixtures/model";
-import {Persister} from "../src/persisterImpl";
+import {Persister} from "../src/persister";
 import {ResultCallback} from "../src/core/callback";
-import {InternalSession} from "../src/sessionImpl";
+import {InternalSession} from "../src/session";
 import {MappingModel} from "../src/mapping/mappingModel";
 import {Batch} from "../src/batch";
 import {ChangeTrackingType} from "../src/mapping/mappingModel";

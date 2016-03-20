@@ -1,4 +1,4 @@
-import {QueryDocument} from "./queryBuilderImpl";
+import {QueryDocument} from "./queryBuilder";
 import {ResolveContext} from "../mapping/resolveContext";
 import {MappingModel} from "../mapping/mappingModel";
 import {ArrayMapping} from "../mapping/arrayMapping";

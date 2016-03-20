@@ -6,7 +6,7 @@ import * as model from "../fixtures/model";
 import {Constructor} from "../../src/hydrate";
 import {Callback} from "../../src/core/callback";
 import {CriteriaBuilder} from "../../src/query/criteriaBuilder";
-import {QueryDocument} from "../../src/query/queryBuilderImpl";
+import {QueryDocument} from "../../src/query/queryBuilder";
 
 describe('CriteriaBuilder', () => {
 

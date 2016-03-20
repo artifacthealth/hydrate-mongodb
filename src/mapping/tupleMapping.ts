@@ -4,7 +4,7 @@ import {MappingError} from "./mappingError";
 import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
 import {Reference} from "../reference";
-import {InternalSession} from "../sessionImpl";
+import {InternalSession} from "../session";
 import {ResultCallback} from "../core/callback";
 import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";

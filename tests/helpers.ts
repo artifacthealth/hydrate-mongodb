@@ -5,7 +5,7 @@ import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMapp
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {Configuration} from "../src/config/configuration";
 import {ObjectIdGenerator} from "../src/config/objectIdGenerator";
-import {PersisterImpl} from "../src/persisterImpl";
+import {PersisterImpl} from "../src/persister";
 import {MockCollection} from "./driver/mockCollection";
 import {MockSessionFactory} from "./mockSessionFactory";
 import {MappingModel} from "../src/mapping/mappingModel";

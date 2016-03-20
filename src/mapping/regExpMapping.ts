@@ -3,7 +3,7 @@ import {MappingBase} from "./mappingBase";
 import {MappingError} from "./mappingError";
 import {MappingModel} from "./mappingModel";
 import {Changes} from "./changes";
-import {InternalSession} from "../sessionImpl";
+import {InternalSession} from "../session";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 

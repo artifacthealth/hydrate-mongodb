@@ -6,14 +6,14 @@ import {Constructor} from "./hydrate";
 import {IteratorCallback} from "./core/callback";
 import {MappingModel} from "./mapping/mappingModel";
 import {ResultCallback} from "./core/callback";
-import {InternalSessionFactory} from "./sessionFactoryImpl";
+import {InternalSessionFactory} from "./sessionFactory";
 import {TaskQueue} from "./taskQueue";
-import {Persister} from "./persisterImpl";
+import {Persister} from "./persister";
 import {Batch} from "./batch";
 import {Reference} from "./reference";
 import {Table} from "./core/table";
 import {EntityMapping} from "./mapping/entityMapping";
-import {QueryBuilder, QueryBuilderImpl, FindOneQuery} from "./query/queryBuilderImpl";
+import {QueryBuilder, QueryBuilderImpl, FindOneQuery} from "./query/queryBuilder";
 import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
 import {ReadContext} from "./mapping/readContext";
@@ -501,14 +501,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         var id = obj["_id"] = persister.identity.generate();
 
         if(mapping.identityProperty) {
-
-            var context = new ReadContext(this);
-            var value = mapping.identityProperty.mapping.read(context, id);
-            if (context.hasErrors) {
-                callback(new Error(`Unable to set identity property: ${context.getErrorMessage()}`));
-                return false;
-            }
-            mapping.identityProperty.setPropertyValue(obj, value);
+            mapping.identityProperty.setPropertyValue(obj, id.toString());
         }
 
         return true;

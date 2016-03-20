@@ -71,11 +71,20 @@ describe('AnnotationMappingProvider', () => {
                 getIdentityFieldMapping(done, (property) => assert.equal(property.field, "_id"));
             });
 
-            it("throws error if target property is not on an entity", (done) => {
+            it("throws error if target class is not on an entity", (done) => {
 
                 processFixture("idOnEmbeddable", (err) => {
                     assert.ok(err);
                     assert.include(err.message, "Annotation can only be defined on entities");
+                    done();
+                });
+            });
+
+            it("throws error if target property is not a string", (done) => {
+
+                processFixture("idOnNumber", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Annotation can only be defined on a property that is of type 'string'.");
                     done();
                 });
             });

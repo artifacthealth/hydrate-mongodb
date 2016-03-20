@@ -86,7 +86,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
                     (indexAnnotations || (indexAnnotations = [])).push(<IndexAnnotation>annotation);
                     break;
                 case "IdAnnotation":
-                    this._setIdentity(property);
+                    this._setIdentity(property, symbol);
                     break;
             }
         }
@@ -241,9 +241,14 @@ export class ObjectMappingBuilder extends MappingBuilder {
         }
     }
 
-    private _setIdentity(property: MappingModel.Property): void {
+    private _setIdentity(property: MappingModel.Property, symbol: Property): void {
 
         if(!this._assertEntityMapping(this.mapping)) return;
+
+        if(symbol.type && !symbol.type.isString) {
+            this.context.addError("Annotation can only be defined on a property that is of type 'string'.");
+            return;
+        }
 
         property.setFlags(MappingModel.PropertyFlags.ReadOnly);
         property.field = "_id";

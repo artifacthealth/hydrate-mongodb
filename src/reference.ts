@@ -1,4 +1,4 @@
-import {InternalSession} from "./sessionImpl";
+import {InternalSession} from "./session";
 import {EntityMapping} from "./mapping/entityMapping";
 import {ResultCallback} from "./core/callback";
 

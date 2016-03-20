@@ -5,7 +5,7 @@ import * as model from "../fixtures/model";
 import {Constructor} from "../../src/hydrate";
 import {Callback} from "../../src/core/callback";
 import {UpdateDocumentBuilder} from "../../src/query/updateDocumentBuilder";
-import {QueryDocument} from "../../src/query/queryBuilderImpl";
+import {QueryDocument} from "../../src/query/queryBuilder";
 
 describe('UpdateDocumentBuilder', () => {
 

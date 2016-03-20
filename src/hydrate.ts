@@ -12,8 +12,8 @@ export * from "./mapping/providers/decorators";
 
 export {Callback, ResultCallback, IteratorCallback} from "./core/callback";
 export {IdentityGenerator, PropertyConverter} from "./config/configuration";
-export {Session} from "./sessionImpl";
-export {SessionFactory} from "./sessionFactoryImpl";
+export {Session} from "./session";
+export {SessionFactory} from "./sessionFactory";
 export {
     Query,
     QueryBuilder,
@@ -23,7 +23,7 @@ export {
     FindOneAndUpdateQuery,
     FindOneAndRemoveQuery,
     QueryDocument
-} from "./query/queryBuilderImpl";
+} from "./query/queryBuilder";
 
 export interface Constructor<T> {
 

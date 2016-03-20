@@ -4,7 +4,7 @@ import * as helpers from "../helpers";
 import * as model from "../fixtures/model";
 import {QueryDefinition} from "../../src/query/queryDefinition";
 import {QueryKind} from "../../src/query/queryKind";
-import {QueryBuilderImpl, QueryDocument} from "../../src/query/queryBuilderImpl";
+import {QueryBuilderImpl, QueryDocument} from "../../src/query/queryBuilder";
 import {ResultCallback} from "../../src/core/callback";
 import {Callback} from "../../src/core/callback";
 

@@ -2,8 +2,8 @@ import {Callback} from "../core/callback";
 import {ResultCallback} from "../core/callback";
 import {IteratorCallback} from "../core/callback";
 
-import {InternalSession} from "../sessionImpl";
-import {Persister} from "../persisterImpl";
+import {InternalSession} from "../session";
+import {Persister} from "../persister";
 import {QueryDefinition} from "./queryDefinition";
 import {QueryKind} from "./queryKind";
 

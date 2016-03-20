@@ -1,7 +1,7 @@
-import {InternalSession} from "../../src/sessionImpl";
+import {InternalSession} from "../../src/session";
 import {QueryDefinition} from "../../src/query/queryDefinition";
 import {IteratorCallback} from "../../src/core/callback";
-import {QueryDocument} from "../../src/query/queryBuilderImpl";
+import {QueryDocument} from "../../src/query/queryBuilder";
 import {QueryKind} from "../../src/query/queryKind";
 import {ResultCallback} from "../../src/core/callback";
 

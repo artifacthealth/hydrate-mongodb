@@ -1,11 +1,11 @@
 import * as mongodb from "mongodb";
-import { Session } from "../src/sessionImpl";
+import { InternalSession, Session } from "../src/session";
 import { Configuration } from "../src/config/configuration";
 import { AnnotationMappingProvider } from "../src/mapping/providers/annotationMappingProvider";
 import { Cat } from "../tests/fixtures/cat";
 import * as helpers from "../tests/helpers";
-import { SessionFactory, SessionFactoryImpl } from "../src/sessionFactoryImpl";
-import { Persister } from "../src/persisterImpl";
+import { SessionFactory, SessionFactoryImpl } from "../src/sessionFactory";
+import { Persister } from "../src/persister";
 import { IdentityGenerator } from "../src/config/configuration";
 import { Batch } from "../src/batch";
 import { Result } from "../src/core/result";
@@ -14,7 +14,6 @@ import { MappingRegistry } from "../src/mapping/mappingRegistry";
 import { ResultCallback } from "../src/core/callback";
 import { EntityMapping } from "../src/mapping/entityMapping";
 import { QueryDefinition } from "../src/query/queryDefinition";
-import { InternalSession } from "../src/sessionImpl";
 import { Observer } from "../src/observer";
 
 suite("SessionImpl", () => {

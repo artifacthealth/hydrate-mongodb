@@ -1,7 +1,7 @@
 import {ResultCallback} from "../core/callback";
 import {IteratorCallback} from "../core/callback";
 import {QueryKind} from "./queryKind";
-import {QueryDocument} from "./queryBuilderImpl";
+import {QueryDocument} from "./queryBuilder";
 import {OrderDocument} from "./orderDocument";
 
 /**

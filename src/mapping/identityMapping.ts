@@ -1,6 +1,6 @@
 import {MappingError} from "./mappingError";
 import {VirtualMapping} from "./virtualMapping";
-import {InternalSession} from "../sessionImpl";
+import {InternalSession} from "../session";
 import {ReadContext} from "./readContext";
 import {IdentityGenerator} from "../config/configuration";
 import {WriteContext} from "./writeContext";

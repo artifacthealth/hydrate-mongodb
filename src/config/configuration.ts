@@ -7,7 +7,7 @@ import {MappingRegistry} from "../mapping/mappingRegistry";
 import {ChangeTrackingType} from "../mapping/mappingModel";
 import {Table} from "../core/table";
 import {MappingModel, PropertyConverter} from "../mapping/mappingModel";
-import {SessionFactory, SessionFactoryImpl} from "../sessionFactoryImpl";
+import {SessionFactory, SessionFactoryImpl} from "../sessionFactory";
 import {EntityMapping} from "../mapping/entityMapping";
 import {ObjectIdGenerator} from "./objectIdGenerator";
 import {ClassMapping} from "../mapping/classMapping";

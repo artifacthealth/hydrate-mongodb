@@ -4,7 +4,7 @@ import {MappingRegistry} from "./mappingRegistry";
 import {Changes} from "./changes";
 import {Reference} from "../reference";
 import {MappingModel} from "./mappingModel";
-import {InternalSession} from "../sessionImpl";
+import {InternalSession} from "../session";
 import {ResultCallback} from "../core/callback";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
