@@ -208,24 +208,25 @@ session.find(Task, id, (err, task) => {
 ```
 
 Hydrate provides a mechanism to retrieve references between persistent entities. We do this using 
-[fetch](https://artifacthealth.github.io/hydrate-mongodb/interfaces/findonequery.html#fetch). Note that 
-[fetch](https://artifacthealth.github.io/hydrate-mongodb/interfaces/findonequery.html#fetch)
+[fetch](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#fetch). Note that 
+[fetch](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html#fetch)
 uses the same [dot notation](https://docs.mongodb.org/manual/core/document/#dot-notation) that MongoDB uses 
 for queries.
 
 For example, say we wanted to fetch the `Person` that a `Task` is assigned to. 
 
 ```typescript
-session.find(Task, id).fetch("assigned", (err, task) => {
-    ...
+session.fetch(task, "assigned", (err) => {
+        
+    console.log(task.assigned.name); // prints the name of the Person
 });
 ```
 
-The [fetch](https://artifacthealth.github.io/hydrate-mongodb/interfaces/findquery.html#fetch) method can be used in 
+The [fetch](https://artifacthealth.github.io/hydrate-mongodb/interfaces/findonequery.html) method can be used in 
 conjunction with queries as well.
 
 ```typescript
-session.query(Task).findAll({ ... }).fetch("assigned", (err, tasks) => {
+session.find(Task, id).fetch("assigned", (err, task) => {
     ...
 });
 ```
