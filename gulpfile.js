@@ -68,7 +68,7 @@ gulp.task('bench', function(done) {
     baseline.useColors = true;
     baseline.baselinePath = "baseline.json";
     baseline.files = [ "build/benchmarks/sessionImpl.bench.js" ];
-    baseline.run((err, slower) => {
+    baseline.run(function(err, slower) {
         done(err);
         process.exit(slower);
     });
