@@ -1,6 +1,6 @@
 import {assert} from "chai";
 import {AnnotationMappingProvider} from "../../../src/mapping/providers/annotationMappingProvider";
-import {Configuration} from "../../../src/config/Configuration";
+import {Configuration} from "../../../src/config/configuration";
 import {MappingRegistry} from "../../../src/mapping/mappingRegistry";
 import {MappingModel} from "../../../src/mapping/mappingModel";
 import {EnumMapping} from "../../../src/mapping/enumMapping";
