@@ -65,6 +65,31 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Describes a type that is able to convert an entity or embeddable property value to a MongoDB document field and back.</p>
+					</div>
+					<h3 id="example">Example</h3>
+					<p>The example below defines a PropertyConverter that converts an instance of a Point class to a string.</p>
+					<pre><code class="lang-typescript"> <span class="hljs-keyword">class</span> PointConverter <span class="hljs-keyword">implements</span> PropertyConverter {
+
+     convertToDocumentField(property: <span class="hljs-built_in">any</span>): <span class="hljs-built_in">any</span> {
+         <span class="hljs-keyword">if</span>(property <span class="hljs-keyword">instanceof</span> Point) {
+             <span class="hljs-keyword">return</span> [property.x, property.y].join(<span class="hljs-string">","</span>);
+         }
+     }
+
+     convertToObjectProperty(field: <span class="hljs-built_in">any</span>): <span class="hljs-built_in">any</span> {
+         <span class="hljs-keyword">if</span>(<span class="hljs-keyword">typeof</span> field === <span class="hljs-string">"string"</span>) {
+             <span class="hljs-keyword">var</span> parts = field.split(<span class="hljs-string">","</span>);
+             <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> Point(parts[<span class="hljs-number">0</span>], parts[<span class="hljs-number">1</span>]);
+        }
+     }
+ }
+</code></pre>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -114,7 +139,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L195">config/configuration.ts:195</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L218">config/configuration.ts:218</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -152,7 +177,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L196">config/configuration.ts:196</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L219">config/configuration.ts:219</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
