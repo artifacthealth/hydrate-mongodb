@@ -161,23 +161,30 @@ export class CollectionAnnotation {
     options: CollectionOptions;
 
     constructor(name: string);
-    constructor(args?: { name?: string; db?: string, options?: CollectionOptions; });
-    constructor(nameOrArgs?: string | { name?: string; db?: string, options?: CollectionOptions; }) {
+    constructor(description?: CollectionDescription);
+    constructor(nameOrDescription?: string | CollectionDescription) {
 
-        if(typeof nameOrArgs === "string") {
-            this.name = nameOrArgs;
+        if(typeof nameOrDescription === "string") {
+            this.name = nameOrDescription;
         }
 
-        if(typeof nameOrArgs === "object") {
-            this.name = nameOrArgs.name;
-            this.db = nameOrArgs.db;
-            this.options = nameOrArgs.options;
+        if(typeof nameOrDescription === "object") {
+            this.name = nameOrDescription.name;
+            this.db = nameOrDescription.db;
+            this.options = nameOrDescription.options;
         }
     }
 
     toString(): string {
         return "@Collection";
     }
+}
+
+export interface CollectionDescription {
+
+    name?: string;
+    db?: string,
+    options?: CollectionOptions;
 }
 
 /**
@@ -200,8 +207,8 @@ export class IndexAnnotation {
      */
     options: IndexOptions;
 
-    constructor(args: { keys: [string, number][]; options?: IndexOptions; });
-    constructor(args?: { order?: number; options?: IndexOptions; });
+    constructor(args: ClassIndexDescription);
+    constructor(args?: PropertyIndexDescription);
     constructor(args?: { keys?: [string, number][]; order?: number, options?: IndexOptions }) {
 
         if(args) {
@@ -215,6 +222,19 @@ export class IndexAnnotation {
         return "@Index";
     }
 }
+
+export interface ClassIndexDescription {
+
+    keys: [string, number][];
+    options?: IndexOptions
+}
+
+export interface PropertyIndexDescription {
+
+    order?: number;
+    options?: IndexOptions
+}
+
 
 /**
  * @hidden
@@ -369,7 +389,7 @@ export class FieldAnnotation {
     nullable: boolean;
 
     constructor(name?: string);
-    constructor(args: { name?: string, nullable?: boolean });
+    constructor(args: FieldDescription);
     constructor(args?: any) {
 
         if(args) {
@@ -386,6 +406,12 @@ export class FieldAnnotation {
     toString(): string {
         return "@Field";
     }
+}
+
+export interface FieldDescription {
+
+    name?: string;
+    nullable?: boolean;
 }
 
 /**

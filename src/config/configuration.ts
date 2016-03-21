@@ -2,7 +2,6 @@ import * as async from "async";
 import * as mongodb from "mongodb";
 import {NamingStrategy, NamingStrategies} from "./namingStrategies";
 import {ResultCallback} from "../core/callback";
-import {MappingProvider} from "../mapping/providers/mappingProvider";
 import {MappingRegistry} from "../mapping/mappingRegistry";
 import {ChangeTrackingType} from "../mapping/mappingModel";
 import {Table} from "../core/table";
@@ -13,7 +12,7 @@ import {ObjectIdGenerator} from "./objectIdGenerator";
 import {ClassMapping} from "../mapping/classMapping";
 
 /**
- * Specifies default settings used to create the SessionFactory.
+ * Specifies default settings used to create the [[SessionFactory]].
  */
 export class Configuration {
 
@@ -190,8 +189,45 @@ export interface IdentityGenerator {
     // entity but is serialized to a string when stored in the database.
 }
 
+/**
+ * Describes a type that is able to convert an entity or embeddable property value to a MongoDB document field and back.
+ *
+ * ### Example
+ *
+ * The example below defines a PropertyConverter that converts an instance of a Point class to a string.
+ * ```typescript
+ *  class PointConverter implements PropertyConverter {
+ *
+ *      convertToDocumentField(property: any): any {
+ *          if(property instanceof Point) {
+ *              return [property.x, property.y].join(",");
+ *          }
+ *      }
+ *
+ *      convertToObjectProperty(field: any): any {
+ *          if(typeof field === "string") {
+ *              var parts = field.split(",");
+ *              return new Point(parts[0], parts[1]);
+ *         }
+ *      }
+ *  }
+ *  ```
+ */
 export interface PropertyConverter {
 
     convertToDocumentField(property: any): any;
     convertToObjectProperty(field: any): any;
+}
+
+/**
+ * Provides data mappings to the Configuration.
+ */
+export interface MappingProvider {
+
+    /**
+     * Gets a list of ClassMappings.
+     * @param config The configuration to use for the mappings.
+     * @param callback Called with a list of ClassMappings.
+     */
+    getMapping(config: Configuration, callback: ResultCallback<MappingModel.ClassMapping[]>): void;
 }
