@@ -769,7 +769,7 @@ class BulkOperationCommand implements Command {
 
         this._mapping = mapping;
         this.collectionName = collection.collectionName,
-        this.operation = collection.initializeUnorderedBulkOp(),
+        this.operation = collection.initializeUnorderedBulkOp();
         this.inserted = this.updated = this.removed = 0;
     }
 
