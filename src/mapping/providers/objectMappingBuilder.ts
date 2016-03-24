@@ -2,6 +2,9 @@ import {Configuration} from "../../config/configuration";
 import {MappingBuilder} from "./mappingBuilder";
 import {MappingModel} from "../mappingModel";
 import {
+    Annotation,
+    ClassAnnotation,
+    PropertyAnnotation,
     ConverterAnnotation,
     IndexAnnotation,
     InverseOfAnnotation,
@@ -17,12 +20,27 @@ import {Constructor} from "../../index";
 import {EnumType} from "../enumType";
 import {Index} from "../index";
 
+
 /**
  * @hidden
  */
 export class ObjectMappingBuilder extends MappingBuilder {
 
     protected populateCore(): void {
+
+        var mapping = <MappingModel.ObjectMapping>this.mapping,
+            annotations = this.type.getAnnotations();
+
+        Annotation.sort(annotations);
+
+        for(var i = 0, l = annotations.length; i < l; i++) {
+            var annotation = this.context.currentAnnotation = annotations[i];
+            if(annotation.processClassAnnotation) {
+                (<ClassAnnotation>annotation).processClassAnnotation(this.context, mapping, annotation);
+            }
+        }
+
+        this.context.currentAnnotation = null;
 
         this._processType(this.type);
     }
@@ -63,46 +81,17 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
         var property = MappingModel.createProperty(symbol.name, propertyMapping);
 
+        // add default field value
+        property.field = this.context.config.fieldNamingStrategy(property.name);
+
         // process all property annotations
-        var annotations = symbol.getAnnotations(),
-            indexAnnotations: IndexAnnotation[];
+        var annotations = symbol.getAnnotations();
+        Annotation.sort(annotations);
 
         for (var i = 0, l = annotations.length; i < l; i++) {
             var annotation = this.context.currentAnnotation = annotations[i];
-
-            switch (annotation.constructor.name) {
-                case "CascadeAnnotation":
-                    this._setCascade(property, <CascadeAnnotation>annotation);
-                    break;
-                case "InverseOfAnnotation":
-                    this._setInverseOf(property, <InverseOfAnnotation>annotation);
-                    break;
-                case "FieldAnnotation":
-                    this._setField(property, <FieldAnnotation>annotation);
-                    break;
-                case "IndexAnnotation":
-                    // queue up index annotations until after all annotations are processed and default mappings
-                    // are applied because we may not know the field name yet.
-                    (indexAnnotations || (indexAnnotations = [])).push(<IndexAnnotation>annotation);
-                    break;
-                case "IdAnnotation":
-                    this._setIdentity(property, symbol);
-                    break;
-            }
-        }
-        this.context.currentAnnotation = null;
-
-        // add default values
-        if(!property.field && !(property.flags & MappingModel.PropertyFlags.Ignored)) {
-            property.field = this.context.config.fieldNamingStrategy(property.name);
-        }
-
-        // after all annotations are processed and default mappings are set, add any property indexes
-        if(indexAnnotations) {
-            for (var i = 0, l = indexAnnotations.length; i < l; i++) {
-                var indexAnnotation = this.context.currentAnnotation = indexAnnotations[i];
-                // TODO: what if it's not an object mapping? somehow this needs to be moved to the EntityMappingBuilder
-                this._addPropertyIndex(<MappingModel.EntityMapping>this.mapping, property, indexAnnotation);
+            if(annotation.processPropertyAnnotation) {
+                (<PropertyAnnotation>annotation).processPropertyAnnotation(this.context, <MappingModel.ObjectMapping>this.mapping, property, symbol, annotation);
             }
         }
         this.context.currentAnnotation = null;
@@ -218,99 +207,4 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
         this.context.addError("Unable to determine mapping for '" + type.name + "'.");
     }
-
-    private _setInverseOf(property: MappingModel.Property, annotation: InverseOfAnnotation): void {
-
-        // TODO: validate inverse relationship
-        property.inverseOf = annotation.propertyName;
-        property.setFlags(MappingModel.PropertyFlags.InverseSide);
-    }
-
-    private _setCascade(property: MappingModel.Property, annotation: CascadeAnnotation): void {
-
-        property.setFlags(annotation.flags & MappingModel.PropertyFlags.CascadeAll);
-    }
-
-    private _setField(property: MappingModel.Property, annotation: FieldAnnotation): void {
-
-        if(annotation.name) {
-            property.field = annotation.name;
-        }
-        if(annotation.nullable) {
-            property.setFlags(MappingModel.PropertyFlags.Nullable);
-        }
-    }
-
-    private _setIdentity(property: MappingModel.Property, symbol: Property): void {
-
-        if(!this._assertEntityMapping(this.mapping)) return;
-
-        if(symbol.type && !symbol.type.isString) {
-            this.context.addError("Annotation can only be defined on a property that is of type 'string'.");
-            return;
-        }
-
-        property.setFlags(MappingModel.PropertyFlags.ReadOnly);
-        property.field = "_id";
-        property.mapping = MappingModel.createIdentityMapping();
-    }
-
-    private _addPropertyIndex(mapping: MappingModel.EntityMapping, property: MappingModel.Property, value: IndexAnnotation): void {
-
-        // TODO: allow indexes in embedded types and map to containing root type
-        if(!this._assertEntityMapping(mapping)) return;
-
-        var keys: [string, number][] = [];
-
-        var order: number;
-        if(value.order !== undefined) {
-            order = value.order;
-            if(order != 1 && order != -1) {
-                this.context.addError("Valid values for property 'order' are 1 or -1.");
-                return;
-            }
-            // TODO: 'order' property should not be passed in options object. When we validate options in the future, this will throw an error.
-            // However, we can't just delete it from the project because then that removes it from the annotation as well and subsequent
-            // processing of the annotation would then not have the order value. Instead we should copy properties from the annotation value
-            // to the index options.
-        }
-        else {
-            order = 1;
-        }
-        keys.push([property.field, order]);
-
-        this._addIndex(mapping, {
-            keys: keys,
-            options: value.options
-        });
-    }
-
-    // TODO: Fix where this goes
-    protected _assertEntityMapping(mapping: MappingModel.Mapping): boolean {
-
-        if(!(mapping.flags & MappingModel.MappingFlags.Entity)) {
-            this.context.addError("Annotation can only be defined on entities.");
-            return false;
-        }
-        return true;
-    }
-
-    // TODO: code should be shared with entity mapping
-    protected _addIndex(mapping: MappingModel.EntityMapping, value: Index): void {
-
-        // TODO: allow indexes in embedded types and map to containing root type
-        if(this._assertEntityMapping(mapping)) {
-
-            if (!value.keys) {
-                this.context.addError("Missing require property 'keys'.");
-                return;
-            }
-
-            // TODO: validate index options
-
-            // TODO: validate index keys
-            mapping.addIndex(value);
-        }
-    }
-
 }

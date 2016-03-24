@@ -99,4 +99,40 @@ export class MappingBuilderContext {
 
         return this._builders.has(type);
     }
+
+    assertClassMapping(mapping: MappingModel.Mapping): boolean {
+
+        if(!(mapping.flags & MappingModel.MappingFlags.Class)) {
+            this.addError("Annotation can only be defined on class mappings.");
+            return false;
+        }
+        return true;
+    }
+
+    assertRootClassMapping(mapping: MappingModel.Mapping): boolean {
+
+        if(!this.assertClassMapping(mapping)) return false;
+
+        var classMapping = <MappingModel.ClassMapping>mapping;
+        if(!(classMapping.flags & MappingModel.MappingFlags.InheritanceRoot)) {
+            this.addError("Annotation can only be defined on classes that are the root of a mapped inheritance hierarchy.");
+        }
+        return true;
+    }
+
+    assertRootEntityMapping(mapping: MappingModel.Mapping): boolean {
+
+        if(!this.assertEntityMapping(mapping)) return false;
+
+        return this.assertRootClassMapping(mapping);
+    }
+
+    assertEntityMapping(mapping: MappingModel.Mapping): boolean {
+
+        if(!(mapping.flags & MappingModel.MappingFlags.Entity)) {
+            this.addError("Annotation can only be defined on entities.");
+            return false;
+        }
+        return true;
+    }
 }

@@ -8,9 +8,53 @@ import {Constructor, ParameterlessConstructor} from "../../index";
 import {MappingModel} from "../mappingModel";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
-import {Type} from "reflect-helper";
+import {Type, Property} from "reflect-helper";
 import {EntityMappingBuilder} from "./entityMappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";
+import {Index} from "../index";
+
+/**
+ * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
+ * @hidden
+ */
+export enum AnnotationPriority {
+
+    High = 100,
+    Medium = 50,
+    Low = 0
+}
+
+/**
+ * @hidden
+ */
+export class Annotation {
+
+    /**
+     * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
+     */
+    priority = AnnotationPriority.Medium;
+
+    static sort(annotations: Annotation[]): void {
+
+        annotations.sort((a, b) => b.priority - a.priority);
+    }
+}
+
+/**
+ * @hidden
+ */
+export interface ClassAnnotation {
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, annotation: Annotation): void;
+}
+
+/**
+ * @hidden
+ */
+export interface PropertyAnnotation {
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: Annotation): void;
+}
 
 /**
  * @hidden
@@ -31,17 +75,31 @@ export interface TargetClassAnnotation {
 /**
  * @hidden
  */
-export class IdAnnotation {
+export class IdAnnotation extends Annotation implements PropertyAnnotation {
 
     toString(): string {
         return "@Id";
+    }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, property: MappingModel.Property, symbol: Property, annotation: IdAnnotation): void {
+
+        if(!context.assertEntityMapping(mapping)) return;
+
+        if(symbol.type && !symbol.type.isString) {
+            context.addError("Annotation can only be defined on a property that is of type 'string'.");
+            return;
+        }
+
+        property.setFlags(MappingModel.PropertyFlags.ReadOnly);
+        property.field = "_id";
+        property.mapping = MappingModel.createIdentityMapping();
     }
 }
 
 /**
  * @hidden
  */
-export class EntityAnnotation implements MappingBuilderAnnotation {
+export class EntityAnnotation extends Annotation implements MappingBuilderAnnotation {
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
@@ -62,7 +120,7 @@ export class EntityAnnotation implements MappingBuilderAnnotation {
 /**
  * @hidden
  */
-export class EmbeddableAnnotation implements MappingBuilderAnnotation {
+export class EmbeddableAnnotation extends Annotation implements MappingBuilderAnnotation {
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
@@ -83,7 +141,7 @@ export class EmbeddableAnnotation implements MappingBuilderAnnotation {
 /**
  * @hidden
  */
-export class ConverterAnnotation implements MappingBuilderAnnotation {
+export class ConverterAnnotation extends Annotation implements MappingBuilderAnnotation {
 
     converter: PropertyConverter;
     converterCtr: ParameterlessConstructor<PropertyConverter>;
@@ -94,6 +152,7 @@ export class ConverterAnnotation implements MappingBuilderAnnotation {
      * @param converter The name, instance, or constructor of the PropertyConverter to apply to the property or class.
      */
     constructor(converter: string | PropertyConverter | ParameterlessConstructor<PropertyConverter>) {
+        super();
 
         if(typeof converter === "string") {
             this.converterName = converter;
@@ -143,7 +202,7 @@ export class ConverterAnnotation implements MappingBuilderAnnotation {
 /**
  * @hidden
  */
-export class CollectionAnnotation {
+export class CollectionAnnotation extends Annotation implements ClassAnnotation {
 
     /**
      * The name of the collection to use.
@@ -163,6 +222,7 @@ export class CollectionAnnotation {
     constructor(name: string);
     constructor(description?: CollectionDescription);
     constructor(nameOrDescription?: string | CollectionDescription) {
+        super();
 
         if(typeof nameOrDescription === "string") {
             this.name = nameOrDescription;
@@ -178,6 +238,23 @@ export class CollectionAnnotation {
     toString(): string {
         return "@Collection";
     }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: CollectionAnnotation): void {
+
+        if(context.assertRootEntityMapping(mapping)) {
+
+            if (annotation.name) {
+                mapping.collectionName = annotation.name;
+            }
+
+            mapping.collectionOptions = annotation.options;
+            // TODO: validate options
+
+            if (annotation.db) {
+                mapping.databaseName = annotation.db;
+            }
+        }
+    }
 }
 
 export interface CollectionDescription {
@@ -190,7 +267,7 @@ export interface CollectionDescription {
 /**
  * @hidden
  */
-export class IndexAnnotation {
+export class IndexAnnotation extends Annotation implements ClassAnnotation, PropertyAnnotation {
 
     /**
      * The index keys as an array of tuples [name, 1|-1] if the annotation is specified on a class.
@@ -207,9 +284,18 @@ export class IndexAnnotation {
      */
     options: IndexOptions;
 
+    /**
+     * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
+     *
+     * We give the IndexAnnotation a low priority because we want it to be processed after the FieldAnnotation since
+     * we'll need ot know the name of the document field for the index if this annotation is on a property.
+     */
+    priority = AnnotationPriority.Low;
+
     constructor(args: ClassIndexDescription);
     constructor(args?: PropertyIndexDescription);
     constructor(args?: { keys?: [string, number][]; order?: number, options?: IndexOptions }) {
+        super();
 
         if(args) {
             this.keys = args.keys;
@@ -220,6 +306,58 @@ export class IndexAnnotation {
 
     toString(): string {
         return "@Index";
+    }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: IndexAnnotation): void {
+
+        this._addIndex(context, mapping, annotation);
+    }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, property: MappingModel.Property, symbol: Property, annotation: IndexAnnotation): void {
+
+        // TODO: allow indexes in embedded types and map to containing root type
+        if(!context.assertEntityMapping(mapping)) return;
+
+        var keys: [string, number][] = [];
+
+        var order: number;
+        if(annotation.order !== undefined) {
+            order = annotation.order;
+            if(order != 1 && order != -1) {
+                context.addError("Valid values for property 'order' are 1 or -1.");
+                return;
+            }
+            // TODO: 'order' property should not be passed in options object. When we validate options in the future, this will throw an error.
+            // However, we can't just delete it from the project because then that removes it from the annotation as well and subsequent
+            // processing of the annotation would then not have the order value. Instead we should copy properties from the annotation value
+            // to the index options.
+        }
+        else {
+            order = 1;
+        }
+        keys.push([property.field, order]);
+
+        this._addIndex(context, mapping, {
+            keys: keys,
+            options: annotation.options
+        });
+    }
+
+    private _addIndex(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, value: Index): void {
+
+        // TODO: allow indexes in embedded types and map to containing root type
+        if(context.assertEntityMapping(mapping)) {
+
+            if (!value.keys) {
+                context.addError("Missing require property 'keys'.");
+                return;
+            }
+
+            // TODO: validate index options
+
+            // TODO: validate index keys
+            mapping.addIndex(value);
+        }
     }
 }
 
@@ -239,111 +377,188 @@ export interface PropertyIndexDescription {
 /**
  * @hidden
  */
-export class VersionFieldAnnotation {
+export class VersionFieldAnnotation extends Annotation implements ClassAnnotation {
 
     /**
      * Constructs a VersionFieldAnnotation object.
      * @param name The name of the document field to use for versioning.
      */
     constructor(public name: string) {
+        super();
 
     }
 
     toString(): string {
         return "@VersionField";
     }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: VersionFieldAnnotation): void {
+
+        if(context.assertRootEntityMapping(mapping)) {
+
+            mapping.versionField = annotation.name;
+            mapping.versioned = true;
+        }
+    }
 }
 
 /**
  * @hidden
  */
-export class VersionedAnnotation {
+export class VersionedAnnotation extends Annotation implements ClassAnnotation {
 
     /**
      * Constructs a VersionedAnnotation object.
      * @param enabled Indicates if versioning is enabled. Default is true.
      */
     constructor(public enabled: boolean = true) {
+        super();
 
     }
 
     toString(): string {
         return "@Versioned";
     }
-}
 
-/**
- * @hidden
- */
-export class ChangeTrackingAnnotation {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: VersionedAnnotation): void {
 
-    constructor(public type: ChangeTrackingType) {
+        if(context.assertRootEntityMapping(mapping)) {
 
+            mapping.versioned = annotation.enabled;
+        }
     }
 }
 
 /**
  * @hidden
  */
-export class DiscriminatorFieldAnnotation {
+export class ChangeTrackingAnnotation extends Annotation implements ClassAnnotation {
+
+    constructor(public type: ChangeTrackingType) {
+        super();
+
+    }
+
+    toString(): string {
+        return "@ChangeTracking";
+    }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: ChangeTrackingAnnotation): void {
+
+        if(context.assertRootEntityMapping(mapping)) {
+
+            mapping.changeTracking = annotation.type;
+        }
+    }
+}
+
+/**
+ * @hidden
+ */
+export class DiscriminatorFieldAnnotation extends Annotation implements ClassAnnotation {
 
     constructor(public name: string) {
+        super();
 
     }
 
     toString(): string {
         return "@DiscriminatorField";
     }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, annotation: DiscriminatorFieldAnnotation): void {
+
+        if(context.assertRootClassMapping(mapping)) {
+            if(!annotation.name) {
+                context.addError("Missing discriminator field name.");
+                return;
+            }
+            mapping.discriminatorField = annotation.name;
+        }
+    }
 }
 
 /**
  * @hidden
  */
-export class DiscriminatorValueAnnotation {
+export class DiscriminatorValueAnnotation extends Annotation  implements ClassAnnotation {
 
     constructor(public value: string) {
+        super();
 
     }
 
     toString(): string {
         return "@DiscriminatorValue";
     }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, annotation: DiscriminatorValueAnnotation): void {
+
+        if(context.assertClassMapping(mapping)) {
+            if(!annotation.value) {
+                context.addError("Missing discriminator value.");
+                return;
+            }
+
+            try {
+                mapping.setDiscriminatorValue(annotation.value);
+            }
+            catch(err) {
+                context.addError(err.message);
+            }
+        }
+    }
 }
 
 /**
  * @hidden
  */
-export class InverseOfAnnotation {
+export class InverseOfAnnotation extends Annotation implements PropertyAnnotation {
 
     constructor(public propertyName: string) {
+        super();
 
     }
 
     toString(): string {
         return "@InverseOf";
     }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: InverseOfAnnotation): void {
+
+        // TODO: validate inverse relationship
+        property.inverseOf = annotation.propertyName;
+        property.setFlags(MappingModel.PropertyFlags.InverseSide);
+    }
 }
 
 /**
  * @hidden
  */
-export class CascadeAnnotation {
+export class CascadeAnnotation extends Annotation implements PropertyAnnotation {
 
     constructor(public flags: CascadeFlags) {
+        super();
 
     }
 
     toString(): string {
         return "@Cascade";
     }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: CascadeAnnotation): void {
+
+        property.setFlags(annotation.flags & MappingModel.PropertyFlags.CascadeAll);
+    }
 }
 
 /**
  * @hidden
  */
-export class TypeAnnotation implements TargetClassAnnotation {
+export class TypeAnnotation extends Annotation implements TargetClassAnnotation {
 
     constructor(public target: Constructor<any> | string) {
+        super();
 
     }
 
@@ -355,9 +570,10 @@ export class TypeAnnotation implements TargetClassAnnotation {
 /**
  * @hidden
  */
-export class ElementTypeAnnotation implements TargetClassAnnotation{
+export class ElementTypeAnnotation extends Annotation implements TargetClassAnnotation {
 
     constructor(public target: Constructor<any> | string) {
+        super();
 
     }
 
@@ -369,9 +585,10 @@ export class ElementTypeAnnotation implements TargetClassAnnotation{
 /**
  * @hidden
  */
-export class MapKeyAnnotation {
+export class MapKeyAnnotation extends Annotation {
 
     constructor(public propertyName: string) {
+        super();
 
     }
 
@@ -383,7 +600,7 @@ export class MapKeyAnnotation {
 /**
  * @hidden
  */
-export class FieldAnnotation {
+export class FieldAnnotation extends Annotation implements PropertyAnnotation {
 
     name: string;
     nullable: boolean;
@@ -391,6 +608,7 @@ export class FieldAnnotation {
     constructor(name?: string);
     constructor(args: FieldDescription);
     constructor(args?: any) {
+        super();
 
         if(args) {
             if(typeof args === "string") {
@@ -405,6 +623,16 @@ export class FieldAnnotation {
 
     toString(): string {
         return "@Field";
+    }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: FieldAnnotation): void {
+
+        if(annotation.name) {
+            property.field = annotation.name;
+        }
+        if(annotation.nullable) {
+            property.setFlags(MappingModel.PropertyFlags.Nullable);
+        }
     }
 }
 
@@ -425,6 +653,126 @@ export class EnumeratedAnnotation {
 
     toString(): string {
         return "@Enumerated";
+    }
+}
+
+/**
+ * @hidden
+ */
+export class LifecycleEventAnnotation extends Annotation implements PropertyAnnotation {
+
+    constructor(public event: MappingModel.LifecycleEvent) {
+        super();
+    }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, property: MappingModel.Property, symbol: Property, annotation: Annotation): void {
+
+        if(!context.assertEntityMapping(mapping)) return;
+
+        if(!symbol.type.isFunction) {
+            context.addError("Annotation is only valid on a class method.");
+            return;
+        }
+
+        mapping.addLifecycleCallback(MappingModel.LifecycleEvent.PrePersist, symbol.parent.ctr.prototype[symbol.name]);
+    }
+}
+
+/**
+ * @hidden
+ */
+export class PrePersistAnnotation extends LifecycleEventAnnotation {
+
+    constructor() {
+        super(MappingModel.LifecycleEvent.PrePersist);
+    }
+
+    toString(): string {
+        return "@PrePersist";
+    }
+}
+
+/**
+ * @hidden
+ */
+export class PostPersistAnnotation extends LifecycleEventAnnotation {
+
+    constructor() {
+        super(MappingModel.LifecycleEvent.PostPersist);
+    }
+
+    toString(): string {
+        return "@PostPersist";
+    }
+}
+
+/**
+ * @hidden
+ */
+export class PostLoadAnnotation extends LifecycleEventAnnotation {
+
+    constructor() {
+        super(MappingModel.LifecycleEvent.PostLoad);
+    }
+
+    toString(): string {
+        return "@PostLoad";
+    }
+}
+
+/**
+ * @hidden
+ */
+export class PreUpdateAnnotation extends LifecycleEventAnnotation {
+
+    constructor() {
+        super(MappingModel.LifecycleEvent.PreUpdate);
+    }
+
+    toString(): string {
+        return "@PreUpdate";
+    }
+}
+
+/**
+ * @hidden
+ */
+export class PostUpdateAnnotation extends LifecycleEventAnnotation {
+
+    constructor() {
+        super(MappingModel.LifecycleEvent.PostUpdate);
+    }
+
+    toString(): string {
+        return "@PostUpdate";
+    }
+}
+
+/**
+ * @hidden
+ */
+export class PreRemoveAnnotation extends LifecycleEventAnnotation {
+
+    constructor() {
+        super(MappingModel.LifecycleEvent.PreRemove);
+    }
+
+    toString(): string {
+        return "@PreRemove";
+    }
+}
+
+/**
+ * @hidden
+ */
+export class PostRemoveAnnotation extends LifecycleEventAnnotation {
+
+    constructor() {
+        super(MappingModel.LifecycleEvent.PostRemove);
+    }
+
+    toString(): string {
+        return "@PostRemove";
     }
 }
 

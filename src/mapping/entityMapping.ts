@@ -16,6 +16,7 @@ import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {Property} from "./property";
 import {WriteContext} from "./writeContext";
+import {PostPersist} from "./providers/decorators";
 
 /**
  * @hidden
@@ -271,5 +272,42 @@ export class EntityMapping extends ClassMapping {
         }
 
         super.resolveCore(context);
+    }
+
+    private _lifecycleCallbacks: { [event: number]: MappingModel.LifecycleCallback[] };
+
+    addLifecycleCallback(event: MappingModel.LifecycleEvent, callback: MappingModel.LifecycleCallback): void {
+
+        if(!this._lifecycleCallbacks) {
+            this._lifecycleCallbacks = [];
+        }
+        var callbacks = this._lifecycleCallbacks[event];
+        if(!callbacks) {
+            callbacks = this._lifecycleCallbacks[event] = [];
+        }
+        callbacks.push(callback);
+    }
+
+    /**
+     * Execute callbacks for a lifecycle event.
+     * @param entity The entity instance to execute callbacks for.
+     * @param event The lifecycle event.
+     * @param callback Called after lifecycle callbacks have executed.
+     */
+    executeLifecycleCallbacks(entity: Object, event: MappingModel.LifecycleEvent, callback: Callback): void {
+
+        if(!this._lifecycleCallbacks) {
+            callback();
+            return;
+        }
+        var callbacks = this._lifecycleCallbacks[event];
+        if(!callbacks) {
+            callback();
+            return;
+        }
+
+        async.eachSeries(callbacks, (item, done) => {
+            item.call(entity, done);
+        }, callback);
     }
 }

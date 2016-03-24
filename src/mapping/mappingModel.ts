@@ -189,6 +189,28 @@ export namespace MappingModel {
     }
 
     /**
+     * A lifecycle event callback.
+     */
+    export interface LifecycleCallback {
+
+        (callback: Callback): void;
+    }
+
+    /**
+     * Lifecycle events.
+     */
+    export const enum LifecycleEvent {
+
+        PrePersist,
+        PostPersist,
+        PostLoad,
+        PreUpdate,
+        PostUpdate,
+        PreRemove,
+        PostRemove
+    }
+
+    /**
      * Represents the mappings from a document to an anonymous object type.
      */
     export interface ObjectMapping extends Mapping {
@@ -208,7 +230,9 @@ export namespace MappingModel {
      */
     export interface ClassMapping extends ObjectMapping {
 
-        // TODO: remove?
+        /**
+         * The name of the class.
+         */
         name: string;
 
         /**
@@ -300,6 +324,13 @@ export namespace MappingModel {
          * @param index The index specification.
          */
         addIndex(index: Index): void;
+
+        /**
+         * Adds a lifecycle callback to the entity mapping.
+         * @param event The lifecycle event.
+         * @param callback The callback.
+         */
+        addLifecycleCallback(event: MappingModel.LifecycleEvent, callback: MappingModel.LifecycleCallback): void;
     }
 
     /**

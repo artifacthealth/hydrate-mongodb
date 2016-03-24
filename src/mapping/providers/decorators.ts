@@ -23,7 +23,14 @@ import {
     FieldDescription,
     CollectionDescription,
     ClassIndexDescription,
-    PropertyIndexDescription
+    PropertyIndexDescription,
+    PrePersistAnnotation,
+    PostPersistAnnotation,
+    PostLoadAnnotation,
+    PreUpdateAnnotation,
+    PostUpdateAnnotation,
+    PreRemoveAnnotation,
+    PostRemoveAnnotation
 } from "./annotations";
 
 import {PropertyConverter} from "../mappingModel";
@@ -66,7 +73,8 @@ export declare function Embeddable(): ClassDecorator;
  * Specifies the property converter to use.
  *
  * See [[PropertyConverter]] for more information on creating property converts. The Converter decorator can be used at
- * the class or property level.
+ * the class or property level. The decorator accepts an instance of a PropertyConverter, the parameterless constructor
+ * for a PropertyConverter, or a string for a named PropertyConverter.
  *
  * ### Example
  *
@@ -78,6 +86,15 @@ export declare function Embeddable(): ClassDecorator;
  *
  *     x: number;
  *     y: number;
+ *  }
+ * ```
+ *
+ * The example below defines the property converter as an instance of the converter. Passing an instance of the
+ * converter to the decorator allows for options to be passed to the converter.
+ * ```typescript
+ *  @Converter(new EnumerationConverter(IdentifierType))
+ *  export class IdentifierType extends Enumeration {
+ *      ...
  *  }
  * ```
  *
@@ -430,7 +447,7 @@ export declare function InverseOf(propertyName: string): PropertyDecorator;
 export declare function Cascade(flags: CascadeFlags): PropertyDecorator;
 
 /**
- * Specified the type of a property.
+ * Specifies the type of a property.
  *
  * It is generally not necessary to explicitly indicate the type of a property.
  * However, when a property is an embeddable or a reference to an entity, sometimes the type of the property cannot be
@@ -474,6 +491,55 @@ export declare function ElementType(target: Constructor<any> | string): Property
  */
 export declare function MapKey(propertyName: string): PropertyDecorator;
 
+/**
+ * Specifies a callback to be called before a new entity is saved to the database.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class User {
+ *
+ *      @PrePersist()
+ *      private _onPrePersist(callback: Callback): void {
+ *          ...
+ *      }
+ *  }
+ * ```
+ */
+export declare function PrePersist(): PropertyDecorator;
+
+/**
+ * Specifies a callback to be called after a new entity is saved to the database.
+ */
+export declare function PostPersist(): PropertyDecorator;
+
+/**
+ * Specifies a callback to be called after an entity is loaded from the database.
+ */
+export declare function PostLoad(): PropertyDecorator;
+
+/**
+ * Specifies a callback to be called before modifications to an entity are saved to the database.
+ */
+export declare function PreUpdate(): PropertyDecorator;
+
+/**
+ * Specifies a callback to be called after modifications to an entity are saved to the database.
+ */
+export declare function PostUpdate(): PropertyDecorator;
+
+/**
+ * Specifies a callback to be called before an entity is deleted from the database.
+ */
+export declare function PreRemove(): PropertyDecorator;
+
+/**
+ * Specifies a callback to be called after an entity is deleted from the database.
+ */
+export declare function PostRemove(): PropertyDecorator;
+
+
 exports.Entity = makeDecorator(EntityAnnotation);
 exports.Embeddable = makeDecorator(EmbeddableAnnotation);
 exports.Converter = makeDecorator(ConverterAnnotation);
@@ -492,5 +558,12 @@ exports.Type = makeDecorator(TypeAnnotation);
 exports.ElementType = makeDecorator(ElementTypeAnnotation);
 exports.MapKey = makeDecorator(MapKeyAnnotation);
 exports.Id = makeDecorator(IdAnnotation);
+exports.PrePersist = makeDecorator(PrePersistAnnotation);
+exports.PostPersist = makeDecorator(PostPersistAnnotation);
+exports.PostLoad = makeDecorator(PostLoadAnnotation);
+exports.PreUpdate = makeDecorator(PreUpdateAnnotation);
+exports.PostUpdate = makeDecorator(PostUpdateAnnotation);
+exports.PreRemove = makeDecorator(PreRemoveAnnotation);
+exports.PostRemove = makeDecorator(PostRemoveAnnotation);
 
 
