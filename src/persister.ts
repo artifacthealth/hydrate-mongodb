@@ -1,6 +1,6 @@
 import * as mongodb from "mongodb";
-import * as CallbackUtil from "./core/callback";
 import * as async from "async";
+import {onlyOnce, chain} from "./core/callback";
 import {EntityMapping} from "./mapping/entityMapping";
 import {ResultCallback} from "./core/callback";
 import {InternalSession} from "./session";
@@ -443,7 +443,7 @@ export class PersisterImpl implements Persister {
             }
 
             // pass the entity to the iterator, and wait for done to be called
-            iterator(result.value, CallbackUtil.onlyOnce(done));
+            iterator(result.value, onlyOnce(done));
         }
 
         function done(err: Error) {
@@ -863,7 +863,7 @@ class FindQueue {
         }
         else {
             // this id is already in the queue so chain the callbacks
-            this._callbacks.set(key, CallbackUtil.chain(callback, existingCallback));
+            this._callbacks.set(key, chain(callback, existingCallback));
         }
     }
 
