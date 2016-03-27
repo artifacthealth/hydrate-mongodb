@@ -1,5 +1,5 @@
 import {Configuration} from "../../config/configuration";
-import {Type, Property, ReflectContext} from "reflect-helper";
+import {Type, Property, ReflectContext, Method} from "reflect-helper";
 import {Constructor} from "../../index";
 import {MappingBuilder} from "./mappingBuilder";
 import {MappingModel} from "../mappingModel";
@@ -14,6 +14,7 @@ export class MappingBuilderContext {
 
     currentType: Type;
     currentProperty: Property;
+    currentMethod: Method;
     currentAnnotation: any;
 
     private _builders: Map<Type, MappingBuilder> = new Map();
@@ -50,7 +51,11 @@ export class MappingBuilderContext {
             message = `Invalid annotation ${this.currentAnnotation.toString()}: ${message}`;
         }
 
-        if(this.currentProperty) {
+        if(this.currentMethod) {
+
+            message = `Error processing method '${this.currentMethod.name}' on type '${this.currentProperty.parent.name}': ${message}`;
+        }
+        else if(this.currentProperty) {
 
             message = `Error processing property '${this.currentProperty.name}' on type '${this.currentProperty.parent.name}': ${message}`;
         }

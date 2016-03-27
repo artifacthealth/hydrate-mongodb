@@ -11,11 +11,16 @@ import {PropertyConverter} from "../../../src/mapping/mappingModel";
 import * as ConverterFixture from "../../fixtures/annotations/converter";
 import * as CircularReferenceFixture from "../../fixtures/annotations/circularReference1";
 import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOnClass";
+import * as LifecycleFixture from "../../fixtures/annotations/lifecycle";
 import {requireFiles, findMapping} from "../../helpers";
 import {IdentityMapping} from "../../../src/mapping/identityMapping";
 import {Callback} from "../../../src/core/callback";
 import {ResultCallback} from "../../../src/core/callback";
 import {Property} from "../../../src/mapping/property";
+
+function noop() {
+
+}
 
 describe('AnnotationMappingProvider', () => {
 
@@ -371,6 +376,41 @@ describe('AnnotationMappingProvider', () => {
                     assert.ok(err);
                     assert.include(err.message, "Unknown converter 'Blah'");
                     done();
+                });
+            });
+        });
+
+        describe('@postLoad', () => {
+
+            it("adds method to lifecycle callbacks", (done) => {
+
+                processFixture("lifecycle", noop, (results) => {
+
+                    var mapping = findMapping(results, "A");
+
+                    var a = new LifecycleFixture.A();
+                    mapping.executeLifecycleCallbacks(a, MappingModel.LifecycleEvent.PostLoad, (err) => {
+                        if(err) return done(err);
+                        assert.equal(a.loadACalled, 1);
+                        done();
+                    });
+                });
+            });
+
+            it("adds callback for base type to list of lifecycle methods before derived type callback", (done) => {
+
+                processFixture("lifecycle", noop, (results) => {
+
+                    var mapping = findMapping(results, "B");
+
+                    var b = new LifecycleFixture.B();
+                    mapping.executeLifecycleCallbacks(b, MappingModel.LifecycleEvent.PostLoad, (err) => {
+                        if(err) return done(err);
+                        assert.equal(b.loadACalled, 1);
+                        assert.equal(b.loadBCalled, 1);
+                        assert.isTrue(b.loadAOrder < b.loadBOrder, "Expected callback for A to be called before callback for B.");
+                        done();
+                    });
                 });
             });
         });

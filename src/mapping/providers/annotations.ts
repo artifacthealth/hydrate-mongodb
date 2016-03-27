@@ -8,7 +8,7 @@ import {Constructor, ParameterlessConstructor} from "../../index";
 import {MappingModel} from "../mappingModel";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
-import {Type, Property} from "reflect-helper";
+import {Type, Property, Method} from "reflect-helper";
 import {EntityMappingBuilder} from "./entityMappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";
 import {Index} from "../index";
@@ -54,6 +54,14 @@ export interface ClassAnnotation {
 export interface PropertyAnnotation {
 
     processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: Annotation): void;
+}
+
+/**
+ * @hidden
+ */
+export interface MethodAnnotation {
+
+    processMethodAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, method: Method, annotation: Annotation): void;
 }
 
 /**
@@ -659,22 +667,17 @@ export class EnumeratedAnnotation {
 /**
  * @hidden
  */
-export class LifecycleEventAnnotation extends Annotation implements PropertyAnnotation {
+export class LifecycleEventAnnotation extends Annotation implements MethodAnnotation {
 
     constructor(public event: MappingModel.LifecycleEvent) {
         super();
     }
 
-    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, property: MappingModel.Property, symbol: Property, annotation: Annotation): void {
+    processMethodAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, method: Method, annotation: Annotation): void {
 
         if(!context.assertEntityMapping(mapping)) return;
 
-        if(!symbol.type.isFunction) {
-            context.addError("Annotation is only valid on a class method.");
-            return;
-        }
-
-        mapping.addLifecycleCallback(MappingModel.LifecycleEvent.PrePersist, symbol.parent.ctr.prototype[symbol.name]);
+        mapping.addLifecycleCallback(this.event, method.parent.ctr.prototype[method.name]);
     }
 }
 

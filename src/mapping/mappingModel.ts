@@ -330,7 +330,7 @@ export namespace MappingModel {
          * @param event The lifecycle event.
          * @param callback The callback.
          */
-        addLifecycleCallback(event: MappingModel.LifecycleEvent, callback: MappingModel.LifecycleCallback): void;
+        addLifecycleCallback(event: LifecycleEvent, callback: LifecycleCallback): void;
     }
 
     /**

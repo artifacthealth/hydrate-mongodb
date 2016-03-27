@@ -19,6 +19,7 @@ import {Type, Property} from "reflect-helper";
 import {Constructor} from "../../index";
 import {EnumType} from "../enumType";
 import {Index} from "../index";
+import {MethodAnnotation} from "./annotations";
 
 
 /**
@@ -49,6 +50,12 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
         var mapping = <MappingModel.ObjectMapping>this.mapping;
 
+        // The mapping should hold properties from base types as well so process those types
+        if(type.baseType) {
+            this._processType(type.baseType);
+        }
+
+        // process properties
         for(var symbol of type.properties) {
 
             this.context.currentProperty = symbol;
@@ -63,13 +70,28 @@ export class ObjectMappingBuilder extends MappingBuilder {
                 mapping.addProperty(property);
             }
         }
-
         this.context.currentProperty = null;
 
-        // The mapping should hold properties from base types as well so process those types
-        if(type.baseType) {
-            this._processType(type.baseType);
+        // process any method annotations
+        for(var method of type.methods) {
+
+            this.context.currentMethod = method;
+
+            var annotations = method.getAnnotations();
+            if(Array.isArray(annotations)) {
+                Annotation.sort(annotations);
+
+                for (var i = 0, l = annotations.length; i < l; i++) {
+                    var annotation = this.context.currentAnnotation = annotations[i];
+                    if (annotation.processMethodAnnotation) {
+                        (<MethodAnnotation>annotation).processMethodAnnotation(this.context, <MappingModel.ObjectMapping>this.mapping, method, annotation);
+                    }
+                }
+            }
+
+            this.context.currentAnnotation = null;
         }
+        this.context.currentMethod = null;
     }
 
     private _createProperty(symbol: Property): MappingModel.Property {
@@ -86,15 +108,17 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
         // process all property annotations
         var annotations = symbol.getAnnotations();
-        Annotation.sort(annotations);
+        if(Array.isArray(annotations)) {
+            Annotation.sort(annotations);
 
-        for (var i = 0, l = annotations.length; i < l; i++) {
-            var annotation = this.context.currentAnnotation = annotations[i];
-            if(annotation.processPropertyAnnotation) {
-                (<PropertyAnnotation>annotation).processPropertyAnnotation(this.context, <MappingModel.ObjectMapping>this.mapping, property, symbol, annotation);
+            for (var i = 0, l = annotations.length; i < l; i++) {
+                var annotation = this.context.currentAnnotation = annotations[i];
+                if (annotation.processPropertyAnnotation) {
+                    (<PropertyAnnotation>annotation).processPropertyAnnotation(this.context, <MappingModel.ObjectMapping>this.mapping, property, symbol, annotation);
+                }
             }
+            this.context.currentAnnotation = null;
         }
-        this.context.currentAnnotation = null;
 
         return property;
     }

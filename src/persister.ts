@@ -8,8 +8,6 @@ import {ChangeTrackingType} from "./mapping/mappingModel";
 import {IdentityGenerator} from "./config/configuration";
 import {Batch} from "./batch";
 import {Callback} from "./core/callback";
-import {MappingError} from "./mapping/mappingError";
-import {Reference} from "./reference";
 import {Result} from "./core/result";
 import {Command} from "./core/command";
 import {Changes} from "./mapping/changes";
@@ -19,11 +17,11 @@ import {IteratorCallback} from "./core/callback";
 import {QueryDocument} from "./query/queryBuilder";
 import {CriteriaBuilder} from "./query/criteriaBuilder";
 import {UpdateDocumentBuilder} from "./query/updateDocumentBuilder";
-import {ResolveContext} from "./mapping/resolveContext";
 import {ReadContext} from "./mapping/readContext";
 import {Observer} from "./observer";
 import {OrderDocument} from "./query/orderDocument";
 import {WriteContext} from "./mapping/writeContext";
+import {MappingModel} from "./mapping/mappingModel";
 
 interface FindOneQuery {
 
@@ -107,6 +105,7 @@ export class PersisterImpl implements Persister {
     private _session: InternalSession;
     private _criteriaBuilder: CriteriaBuilder;
     private _updateDocumentBuilder: UpdateDocumentBuilder;
+    private _hasPostLoad: boolean;
 
     constructor(session: InternalSession, mapping: EntityMapping, collection: mongodb.Collection) {
 
@@ -118,6 +117,7 @@ export class PersisterImpl implements Persister {
         this.changeTracking = inheritanceRoot.changeTracking;
         this.identity = inheritanceRoot.identity;
         this._versioned = inheritanceRoot.versioned;
+        this._hasPostLoad = mapping.hasLifecycleCallbacks(MappingModel.LifecycleEvent.PostLoad);
     }
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object> {
@@ -267,8 +267,7 @@ export class PersisterImpl implements Persister {
 
         this._collection.findOne(criteria, (err, document) => {
             if (err) return callback(err);
-            var result = this._loadOne(document);
-            callback(result.error, result.value);
+            this._loadOne(document, callback);
         });
     }
 
@@ -279,12 +278,40 @@ export class PersisterImpl implements Persister {
 
     private _findAll(query: FindAllQuery, callback: ResultCallback<any[]>): void {
 
-        this._prepareFind(query).toArray((err, documents) => {
-            if(err) return callback(err);
+        var cursor = this._prepareFind(query),
+            self = this,
+            entities: any[] = [];
 
-            var result = this._loadAll(documents);
-            callback(result.error, result.value);
-        });
+        next();
+
+        function next(err?: Error) {
+            if (err) return error(err);
+
+            cursor.nextObject((err: Error, item: any) => {
+                if (err) return error(err);
+
+                // null item indicates the cursor is finished
+                if (item == null) {
+                    return callback(null, entities);
+                }
+
+                self._loadOne(item, (err, value) => {
+                    if(err) return error(err);
+
+                    // Filter any null values from the result because null means the object is scheduled for removal
+                    if(value !== null) {
+                        entities.push(value);
+                    }
+                    next();
+                });
+            });
+        }
+
+        function error(err: Error) {
+            cursor.close(null); // close the cursor since it may not be exhausted
+            callback(err);
+            callback = <Callback>function () {}; // if called for error, make sure it can't be called again
+        }
     }
 
     executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
@@ -294,7 +321,7 @@ export class PersisterImpl implements Persister {
         // map query criteria if it's defined
         if(query.criteria) {
             query.criteria = (this._criteriaBuilder || (this._criteriaBuilder = new CriteriaBuilder(this._mapping)))
-                                .build(query.criteria);
+                .build(query.criteria);
 
             // check if we got any error during build
             if(this._criteriaBuilder.error) {
@@ -305,7 +332,7 @@ export class PersisterImpl implements Persister {
         // map update document if it's defined
         if(query.updateDocument) {
             query.updateDocument = (this._updateDocumentBuilder || (this._updateDocumentBuilder = new UpdateDocumentBuilder(this._mapping)))
-                                        .build(query.updateDocument);
+                .build(query.updateDocument);
 
             // check if we got any error during build
             if(this._updateDocumentBuilder.error) {
@@ -437,13 +464,18 @@ export class PersisterImpl implements Persister {
             started++;
 
             // convert the document to an entity
-            var result = self._loadOne(item);
-            if(result.error) {
-                return error(result.error);
-            }
+            self._loadOne(item, (err, value) => {
+                if(err) return error(err);
 
-            // pass the entity to the iterator, and wait for done to be called
-            iterator(result.value, onlyOnce(done));
+                // Filter any null values from the result because null means the object is scheduled for removal
+                if(value === null) {
+                    done(null);
+                }
+                else {
+                    // pass the entity to the iterator, and wait for done to be called
+                    iterator(value, onlyOnce(done));
+                }
+            });
         }
 
         function done(err: Error) {
@@ -483,12 +515,17 @@ export class PersisterImpl implements Persister {
                     return callback();
                 }
 
-                var result = self._loadOne(item);
-                if(result.error) {
-                    return error(result.error);
-                }
+                self._loadOne(item, (err, value) => {
+                    if(err) return error(err);
 
-                iterator(result.value, next);
+                    // Filter any null values from the result because null means the object is scheduled for removal
+                    if(value === null) {
+                        next();
+                    }
+                    else {
+                        iterator(value, next);
+                    }
+                });
             });
         })();
 
@@ -541,47 +578,51 @@ export class PersisterImpl implements Persister {
                 // We check to see if the entity is already in the session so we know if we need to refresh the
                 // entity or not.
                 var alreadyLoaded = true;
+                handleCallback();
             }
             else {
                 // If the entity is not in the session, then it will be loaded and added to the session as managed.
                 // The state may be changed to Removed below.
-                var result = this._loadOne(document);
-                if (result.error) {
-                    return callback(result.error);
-                }
-                entity = result.value;
+                this._loadOne(document, (err, value) => {
+                    if(err) return callback(err);
+                    entity = value;
+                    handleCallback();
+                });
             }
 
-            // If the entity is not pending deletion, then see if we need to refresh the entity from the updated
-            // document or notify the session that the entity is now removed.
+            var self = this;
+            function handleCallback() {
+                // If the entity is not pending deletion, then see if we need to refresh the entity from the updated
+                // document or notify the session that the entity is now removed.
 
-            // Note that if the entity is pending deletion in the session then the callback will be called with null
-            // for the result. This is a little funny but seems most consistent with other methods such as findOne.
-            if(entity) {
-                if (options.remove) {
-                    // If entity was removed then notify the session that the entity has been removed from the
-                    // database. Note that the remove operation is not cascaded.
-                    this._session.notifyRemoved(result.value);
+                // Note that if the entity is pending deletion in the session then the callback will be called with null
+                // for the result. This is a little funny but seems most consistent with other methods such as findOne.
+                if (entity) {
+                    if (options.remove) {
+                        // If entity was removed then notify the session that the entity has been removed from the
+                        // database. Note that the remove operation is not cascaded.
+                        self._session.notifyRemoved(entity);
+                    }
+                    else if (options.new && alreadyLoaded) {
+                        // If findAndModify returned the updated document and the entity was already part of the session
+                        // before findAndModify was executed, then refresh the entity from the returned document. Note
+                        // that the refresh operation is not cascaded.
+                        self._refreshFromDocument(entity, document, (err: Error) => {
+                            if (err) return callback(err);
+                            callback(null, entity);
+                        });
+                        return;
+                    }
                 }
-                else if (options.new && alreadyLoaded) {
-                    // If findAndModify returned the updated document and the entity was already part of the session
-                    // before findAndModify was executed, then refresh the entity from the returned document. Note
-                    // that the refresh operation is not cascaded.
-                    this._refreshFromDocument(entity, document, (err: Error) => {
-                        if(err) return callback(err);
-                        callback(null, entity);
-                    });
-                    return;
-                }
+
+                // Note that if the updated document is not returned, the old version of the entity will remain or be
+                // loaded into the session. If the entity is saved then an error will occur because the version will
+                // not match. This is most consistent with an entity being modified from outside of the session, which
+                // is essentially what is happening if findOneAndUpdate is called without returning the new document. If a
+                // user wants to see the old version of the document and then make changes, they can always call refresh
+                // after findOneAndUpdate.
+                callback(null, entity);
             }
-
-            // Note that if the updated document is not returned, the old version of the entity will remain or be
-            // loaded into the session. If the entity is saved then an error will occur because the version will
-            // not match. This is most consistent with an entity being modified from outside of the session, which
-            // is essentially what is happening if findOneAndUpdate is called without returning the new document. If a
-            // user wants to see the old version of the document and then make changes, they can always call refresh
-            // after findOneAndUpdate.
-            callback(null, entity);
         });
     }
 
@@ -695,29 +736,7 @@ export class PersisterImpl implements Persister {
         }
     }
 
-    private _loadAll(documents: any[]): Result<Object[]> {
-
-        if(!documents || documents.length == 0) {
-            return new Result(null, []);
-        }
-
-        var entities = new Array(documents.length);
-        var j = 0;
-        for(var i = 0, l = documents.length; i < l; i++) {
-            var result = this._loadOne(documents[i]);
-            if(result.error) {
-                return new Result(result.error, null);
-            }
-            // Filter any null values from the result because null means the object is scheduled for removal
-            if(result.value !== null) {
-                entities[j++] = result.value;
-            }
-        }
-        entities.length = j;
-        return new Result(null, entities);
-    }
-
-    private _loadOne(document: any): Result<Object> {
+    private _loadOne(document: any, callback: ResultCallback<Object>): void {
 
         var entity: any;
 
@@ -733,14 +752,22 @@ export class PersisterImpl implements Persister {
                 var context = new ReadContext(this._session);
                 entity = this._mapping.read(context, document);
                 if (context.hasErrors) {
-                    return new Result(new Error("Error deserializing document:\n" + context.getErrorMessage()));
+                    return callback(new Error("Error deserializing document:\n" + context.getErrorMessage()));
                 }
 
                 this._session.registerManaged(this, entity, document);
             }
         }
 
-        return new Result(null, entity);
+        if(this._hasPostLoad) {
+            this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostLoad, (err) => {
+                if(err) return callback(err);
+                callback(null, entity);
+            });
+        }
+        else {
+            callback(null, entity);
+        }
     }
 
     private _getCommand(batch: Batch): BulkOperationCommand {
@@ -769,7 +796,7 @@ class BulkOperationCommand implements Command {
 
         this._mapping = mapping;
         this.collectionName = collection.collectionName,
-        this.operation = collection.initializeUnorderedBulkOp();
+            this.operation = collection.initializeUnorderedBulkOp();
         this.inserted = this.updated = this.removed = 0;
     }
 
@@ -925,39 +952,41 @@ class FindQueue {
         });
     }
 }
+
 /*
-class QueryStream extends Readable {
+ class QueryStream extends Readable {
 
-    private _cursor: Cursor;
+     private _cursor: Cursor;
 
-    constructor(persister: PersisterImpl, cursor: Cursor) {
-        super({ readableObjectMode : true });
-        this._cursor = cursor;
-    }
+     constructor(persister: PersisterImpl, cursor: Cursor) {
+         super({readableObjectMode: true});
+         this._cursor = cursor;
+     }
 
-    _read(): void {
+     _read(): void {
 
-        this._cursor.nextObject((err: Error, item: any) => {
-            if (err) return error(err);
+         this._cursor.nextObject((err: Error, item: any) => {
+             if (err) return error(err);
 
-            if (item == null) {
-                // end of cursor
-                this.push(null);
-                return;
-            }
+             if (item == null) {
+                 // end of cursor
+                 this.push(null);
+                 return;
+             }
 
-            var result = self._loadOne(item);
-            if(result.error) {
-                return error(result.error);
-            }
+             var result = self._loadOne(item);
+             if (result.error) {
+                 return error(result.error);
+             }
 
-            this.push(result.value);
-        });
+             this.push(result.value);
+         });
 
-        function error(err: Error) {
-            this._cursor.close();  // close the cursor since it may not be exhausted
-            this.emit('error', err);
-        }
-    }
-}
+         function error(err: Error) {
+             this._cursor.close();  // close the cursor since it may not be exhausted
+             this.emit('error', err);
+         }
+     }
+ }
+
 */

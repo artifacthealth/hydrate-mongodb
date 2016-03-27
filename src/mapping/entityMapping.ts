@@ -288,6 +288,11 @@ export class EntityMapping extends ClassMapping {
         callbacks.push(callback);
     }
 
+    hasLifecycleCallbacks(event: MappingModel.LifecycleEvent): boolean {
+
+        return this._lifecycleCallbacks != null && this._lifecycleCallbacks[event] != null;
+    }
+
     /**
      * Execute callbacks for a lifecycle event.
      * @param entity The entity instance to execute callbacks for.

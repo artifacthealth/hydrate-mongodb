@@ -7,6 +7,9 @@ Hydrate provides a means for developers to map Node.js classes to documents stor
 work normally with objects and classes, and Hydrate takes care of the onerous details such as 
 serializing classes to documents, validation, mapping of class inheritance, optimistic locking, fetching of references 
 between database collections, change tracking, and managing of persistence through bulk operations.
+
+Hydrate is inspired by other projects including [JPA](https://en.wikipedia.org/wiki/Java_Persistence_API), 
+[Hibernate](http://hibernate.org/orm/), and [Doctrine](http://doctrine-orm.readthedocs.org/projects/doctrine-mongodb-odm/en/latest/).
  
 **NOTICE: Hydrate is an experimental project and is not recommended for production systems. It is also possible that 
 breaking changes may be introduced in the API until version 1.0.0 is reached.** 

@@ -1,4 +1,5 @@
 import * as mongodb from "mongodb";
+import * as async from "async";
 import { InternalSession, Session } from "../src/session";
 import { Configuration } from "../src/config/configuration";
 import { AnnotationMappingProvider } from "../src/mapping/providers/annotationMappingProvider";
@@ -59,6 +60,8 @@ suite("SessionImpl", () => {
     beforeEach(() => {
         i = 0;
     });
+
+
 
     test("save x 1000", (done) => {
         for(var j = 0; j < 1000; j++) {
@@ -148,31 +151,3 @@ class DummyPersister implements Persister {
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void {
     }
 }
-
-suite("for-of", function() {
-
-    var n = 100000;
-    var list = new Array(n);
-    for(var i = 0; i < n; i++) {
-        list[i] = i;
-    }
-
-    test("for", function() {
-
-        var x = 0;
-        for(var i = 0; i < n; i++) {
-            x += list[i];
-        }
-        if(x != 4999950000) throw new Error('wrong count');
-    });
-
-    test("for-of", function() {
-
-        var x = 0;
-        for(var i of list) {
-            x += i;
-        }
-        if(x != 4999950000) throw new Error('wrong count');
-    });
-
-});
