@@ -76,9 +76,9 @@ export interface Persister {
     changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
 
-    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object>;
-    addInsert(batch: Batch, entity: Object): Result<Object>;
-    addRemove(batch: Batch, entity: Object): void;
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void;
+    addInsert(batch: Batch, entity: Object, callback: ResultCallback<Object>): void;
+    addRemove(batch: Batch, entity: Object, callback: Callback): void;
 
     fetch(entity: Object, path: string, callback: Callback): void;
     refresh(entity: Object, callback: ResultCallback<Object>): void;
@@ -120,12 +120,12 @@ export class PersisterImpl implements Persister {
         this._hasPostLoad = mapping.hasLifecycleCallbacks(MappingModel.LifecycleEvent.PostLoad);
     }
 
-    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Result<Object> {
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void {
 
         var context = new WriteContext();
         var document = this._mapping.write(context, entity);
         if(context.hasErrors) {
-            return new Result(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
+            return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
         }
 
         if(!this._mapping.areDocumentsEqual(originalDocument, document)) {
@@ -141,15 +141,15 @@ export class PersisterImpl implements Persister {
             this._getCommand(batch).addReplace(document, version);
         }
 
-        return new Result(null, document);
+        callback(null, document);
     }
 
-    addInsert(batch: Batch, entity: Object): Result<Object> {
+    addInsert(batch: Batch, entity: Object, callback: ResultCallback<Object>): void {
 
         var context = new WriteContext();
         var document = this._mapping.write(context, entity);
         if(context.hasErrors) {
-            return new Result(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
+            return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
         }
 
         // add version field if versioned
@@ -158,12 +158,13 @@ export class PersisterImpl implements Persister {
         }
 
         this._getCommand(batch).addInsert(document);
-        return new Result(null, document);
+        callback(null, document);
     }
 
-    addRemove(batch: Batch, entity: any): void {
+    addRemove(batch: Batch, entity: any, callback: Callback): void {
 
         this._getCommand(batch).addRemove(entity["_id"]);
+        callback();
     }
 
     /**

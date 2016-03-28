@@ -38,36 +38,37 @@ export class MockPersister implements Persister {
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
-    dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any> {
+    dirtyCheck(batch: Batch, entity: any, originalDocument: any, callback: ResultCallback<Object>): void {
         this.dirtyCheckCalled++;
         if (!this.wasDirtyChecked(entity)) {
             this.dirtyChecked.push(entity);
         }
 
-        return new Result(null, originalDocument);
+        callback(null, originalDocument);
     }
 
     wasDirtyChecked(entity: any): boolean {
         return this.dirtyChecked.indexOf(entity) !== -1;
     }
 
-    addInsert(batch: Batch, entity: any): Result<any> {
+    addInsert(batch: Batch, entity: any, callback: ResultCallback<Object>): void{
         this.insertCalled++;
         if (!this.wasInserted(entity)) {
             this.inserted.push(entity);
         }
-        return new Result(null, {});
+        callback(null, {});
     }
 
     wasInserted(entity: any): boolean {
         return this.inserted.indexOf(entity) !== -1;
     }
 
-    addRemove(batch: Batch, entity: any): void {
+    addRemove(batch: Batch, entity: any, callback: Callback): void {
         this.removeCalled++;
         if (!this.wasRemoved(entity)) {
             this.removed.push(entity);
         }
+        callback();
     }
 
     wasRemoved(entity: any): boolean {

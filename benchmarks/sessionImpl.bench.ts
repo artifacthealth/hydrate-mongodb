@@ -42,6 +42,7 @@ suite("SessionImpl", () => {
         config.addMapping(new AnnotationMappingProvider(Cat));
 
         mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
+            if(err) return done(err);
 
             config.createSessionFactory(connection, (err: Error, sessionFactory: SessionFactory) => {
                 if (err) return done(err);

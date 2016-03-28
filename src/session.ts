@@ -451,7 +451,8 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
         links.observer = new Observer(() => {
             // value has changed
-            this._makeDirty(links)
+            // TODO: should this be added to the task queue in-case modification occurs during another operation?
+            this._makeDirty(links);
             links.observer = undefined;
         });
         links.persister.watch(links.object, links.observer);
@@ -584,6 +585,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 }
             }
         }
+
 
         callback();
     }
@@ -783,42 +785,69 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      */
     private _buildBatch(batch: Batch, links: ObjectLinks, callback: Callback): void {
 
-        var count = 0;
+        var count = 0,
+            replenishing = false,
+            errored = false;
 
-        while(links && count < 1000) {
+        replenish();
 
-            if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
-                var result = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
-                if(result.error) {
-                    return callback(result.error);
-                }
-                else {
-                    links.originalDocument = result.value;
-                }
-            }
-            else if (links.scheduledOperation == ScheduledOperation.Insert) {
-                var result = links.persister.addInsert(batch, links.object);
-                if(result.error) {
-                    return callback(result.error);
-                }
-                else {
-                    links.originalDocument = result.value;
-                }
-            }
-            else if (links.scheduledOperation == ScheduledOperation.Delete) {
-                links.persister.addRemove(batch, links.object);
-            }
+        function replenish() {
 
-            links = links.next;
-            count++;
+            replenishing = true;
+            while (links && count < 1000 && !errored) {
+
+                if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
+                    count++;
+                    links.persister.dirtyCheck(batch, links.object, links.originalDocument, (err, document) => {
+                        if(err) return done(err);
+                        links.originalDocument = document;
+                        done();
+                    });
+                }
+                else if (links.scheduledOperation == ScheduledOperation.Insert) {
+                    count++;
+                    links.persister.addInsert(batch, links.object, (err, document) => {
+                        if(err) return done(err);
+                        links.originalDocument = document;
+                        done();
+                    });
+                }
+                else if (links.scheduledOperation == ScheduledOperation.Delete) {
+                    count++;
+                    links.persister.addRemove(batch, links.object, done);
+                }
+
+                links = links.next;
+            }
+            replenishing = false;
+
+            // If persister finished synchronously then call callback now
+            if(!links && count <= 0) {
+                callback();
+            }
         }
 
-        // If there are more links in the queue, continue building the batch on the next tick.
-        if(links) {
-            process.nextTick(() => this._buildBatch(batch, links, callback));
-        }
-        else {
-            callback();
+        function done(err?: Error): void {
+            if(errored) return;
+            
+            count--;
+
+            if(err) {
+                errored = true;
+                callback(err);
+                return;
+            }
+
+            if(!replenishing && count <= 0) {
+                if(links) {
+                    // If there are more links to process then handle on the next tick
+                    process.nextTick(replenish);
+                }
+                else {
+                    // all done
+                    callback();
+                }
+            }
         }
     }
 
@@ -1049,7 +1078,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
         var mapping = this.factory.getMappingForObject(obj);
         if (!mapping) {
-            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            callback(new Error("Object type is not mapped as an entity."));
             return;
         }
 
@@ -1057,8 +1086,8 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             embedded: any[] = [];
 
         this._walk(mapping, obj, flags, entities, embedded, err => {
-            if (err) return process.nextTick(() => callback(err));
-            return process.nextTick(() => callback(null, entities));
+            if (err) return callback(err);
+            process.nextTick(() => callback(null, entities));
         });
     }
 

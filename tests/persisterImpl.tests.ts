@@ -40,20 +40,21 @@ describe('PersisterImpl', () => {
             helpers.createPersister(collection, model.Party, (err, persister) => {
                 if (err) return done(err);
 
-                var result = persister.dirtyCheck(batch, party, originalDocument);
-                if(result.error) return done(result.error);
+                var result = persister.dirtyCheck(batch, party, originalDocument, (err, value) => {
+                    if(err) return done(err);
 
-                if(!updated) {
-                    assert.isUndefined(collection.bulk);
-                }
-                else {
-                    assert.equal(collection.bulk.findDocuments.length, 1);
-                    assert.equal(collection.bulk.findDocuments[0]._id, originalDocument._id);
-                    assert.equal(collection.bulk.replaceOneDocuments.length, 1);
-                    assert.equal(collection.bulk.replaceOneDocuments[0], result.value);
-                }
+                    if(!updated) {
+                        assert.isUndefined(collection.bulk);
+                    }
+                    else {
+                        assert.equal(collection.bulk.findDocuments.length, 1);
+                        assert.equal(collection.bulk.findDocuments[0]._id, originalDocument._id);
+                        assert.equal(collection.bulk.replaceOneDocuments.length, 1);
+                        assert.equal(collection.bulk.replaceOneDocuments[0], value);
+                    }
 
-                done();
+                    done();
+                });
             });
         }
     });
@@ -70,11 +71,12 @@ describe('PersisterImpl', () => {
             helpers.createPersister(collection, model.Party, (err, persister) => {
                 if (err) return done(err);
 
-                var result = persister.addInsert(batch, party);
-                if(result.error) return done(result.error);
+                var result = persister.addInsert(batch, party, (err, value) => {
+                    if(err) return done(err);
 
-                assert.deepEqual((<any>result.value).__t, "Party");
-                done();
+                    assert.deepEqual((<any>value).__t, "Party");
+                    done();
+                });
             });
         });
     });
@@ -91,13 +93,15 @@ describe('PersisterImpl', () => {
             helpers.createPersister(collection, model.Party, (err, persister) => {
                 if (err) return done(err);
 
-                persister.addRemove(batch, party);
+                persister.addRemove(batch, party, (err) => {
+                    if(err) return done(err);
 
-                assert.equal(collection.bulk.findDocuments.length, 1);
-                assert.equal(collection.bulk.findDocuments[0]._id, id);
-                assert.equal(collection.bulk.removeOneCalled, 1);
+                    assert.equal(collection.bulk.findDocuments.length, 1);
+                    assert.equal(collection.bulk.findDocuments[0]._id, id);
+                    assert.equal(collection.bulk.removeOneCalled, 1);
 
-                done();
+                    done();
+                });
             });
         });
     });
