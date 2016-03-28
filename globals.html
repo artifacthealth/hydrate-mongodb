@@ -133,6 +133,13 @@
 								<li class="tsd-kind-function"><a href="globals.html#id" class="tsd-kind-icon">Id</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#index" class="tsd-kind-icon">Index</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#inverseof" class="tsd-kind-icon">Inverse<wbr>Of</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#postload" class="tsd-kind-icon">Post<wbr>Load</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#postpersist" class="tsd-kind-icon">Post<wbr>Persist</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#postremove" class="tsd-kind-icon">Post<wbr>Remove</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#postupdate" class="tsd-kind-icon">Post<wbr>Update</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#prepersist" class="tsd-kind-icon">Pre<wbr>Persist</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#preremove" class="tsd-kind-icon">Pre<wbr>Remove</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#preupdate" class="tsd-kind-icon">Pre<wbr>Update</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#type" class="tsd-kind-icon">Type</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#versionfield" class="tsd-kind-icon">Version<wbr>Field</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#versioned" class="tsd-kind-icon">Versioned</a></li>
@@ -155,7 +162,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L430">mapping/providers/decorators.ts:430</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L447">mapping/providers/decorators.ts:447</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -192,7 +199,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L243">mapping/providers/decorators.ts:243</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L260">mapping/providers/decorators.ts:260</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -229,7 +236,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L117">mapping/providers/decorators.ts:117</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L134">mapping/providers/decorators.ts:134</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -258,7 +265,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L136">mapping/providers/decorators.ts:136</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L153">mapping/providers/decorators.ts:153</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -296,7 +303,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L97">mapping/providers/decorators.ts:97</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L114">mapping/providers/decorators.ts:114</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -304,7 +311,8 @@
 									<p>Specifies the property converter to use.</p>
 								</div>
 								<p>See <a href="interfaces/propertyconverter.html">PropertyConverter</a> for more information on creating property converts. The Converter decorator can be used at
-								the class or property level.</p>
+									the class or property level. The decorator accepts an instance of a PropertyConverter, the parameterless constructor
+								for a PropertyConverter, or a string for a named PropertyConverter.</p>
 								<h3 id="example">Example</h3>
 								<p>The example below defines the property converter on the Point class. In this case the convert is used for all
 								instances of the Point class.</p>
@@ -313,6 +321,13 @@
 
     x: <span class="hljs-built_in">number</span>;
     y: <span class="hljs-built_in">number</span>;
+ }
+</code></pre>
+								<p>The example below defines the property converter as an instance of the converter. Passing an instance of the
+								converter to the decorator allows for options to be passed to the converter.</p>
+								<pre><code class="lang-typescript"> @Converter(<span class="hljs-keyword">new</span> EnumerationConverter(IdentifierType))
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> IdentifierType extends Enumeration {
+     ...
  }
 </code></pre>
 								<p>The example below specifies the property converter on the properties of the target class.</p>
@@ -347,7 +362,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L260">mapping/providers/decorators.ts:260</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L277">mapping/providers/decorators.ts:277</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -383,7 +398,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L290">mapping/providers/decorators.ts:290</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L307">mapping/providers/decorators.ts:307</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -431,7 +446,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L470">mapping/providers/decorators.ts:470</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L487">mapping/providers/decorators.ts:487</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -469,7 +484,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L62">mapping/providers/decorators.ts:62</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L69">mapping/providers/decorators.ts:69</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -497,7 +512,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L47">mapping/providers/decorators.ts:47</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L54">mapping/providers/decorators.ts:54</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -525,7 +540,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L355">mapping/providers/decorators.ts:355</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L372">mapping/providers/decorators.ts:372</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -572,7 +587,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L307">mapping/providers/decorators.ts:307</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L324">mapping/providers/decorators.ts:324</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -600,7 +615,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L328">mapping/providers/decorators.ts:328</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L345">mapping/providers/decorators.ts:345</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -640,7 +655,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L152">mapping/providers/decorators.ts:152</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L169">mapping/providers/decorators.ts:169</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -671,7 +686,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L175">mapping/providers/decorators.ts:175</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L192">mapping/providers/decorators.ts:192</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -704,7 +719,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L192">mapping/providers/decorators.ts:192</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L209">mapping/providers/decorators.ts:209</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -741,7 +756,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L413">mapping/providers/decorators.ts:413</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L430">mapping/providers/decorators.ts:430</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -806,6 +821,170 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="postload" class="tsd-anchor"></a>
+					<h3>Post<wbr>Load</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Post<wbr>Load<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L520">mapping/providers/decorators.ts:520</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Specifies a callback to be called after an entity is loaded from the database.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="postpersist" class="tsd-anchor"></a>
+					<h3>Post<wbr>Persist</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Post<wbr>Persist<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L515">mapping/providers/decorators.ts:515</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Specifies a callback to be called after a new entity is saved to the database.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="postremove" class="tsd-anchor"></a>
+					<h3>Post<wbr>Remove</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Post<wbr>Remove<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L540">mapping/providers/decorators.ts:540</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Specifies a callback to be called after an entity is deleted from the database.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="postupdate" class="tsd-anchor"></a>
+					<h3>Post<wbr>Update</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Post<wbr>Update<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L530">mapping/providers/decorators.ts:530</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Specifies a callback to be called after modifications to an entity are saved to the database.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="prepersist" class="tsd-anchor"></a>
+					<h3>Pre<wbr>Persist</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Pre<wbr>Persist<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L510">mapping/providers/decorators.ts:510</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Specifies a callback to be called before a new entity is saved to the database.</p>
+								</div>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+     @PrePersist()
+     <span class="hljs-keyword">private</span> _onPrePersist(): <span class="hljs-built_in">void</span> {
+         ...
+     }
+ }
+</code></pre>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="preremove" class="tsd-anchor"></a>
+					<h3>Pre<wbr>Remove</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Pre<wbr>Remove<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L535">mapping/providers/decorators.ts:535</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Specifies a callback to be called before an entity is deleted from the database.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="preupdate" class="tsd-anchor"></a>
+					<h3>Pre<wbr>Update</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Pre<wbr>Update<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L525">mapping/providers/decorators.ts:525</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Specifies a callback to be called before modifications to an entity are saved to the database.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
 					<a name="type" class="tsd-anchor"></a>
 					<h3>Type</h3>
 					<ul class="tsd-signatures tsd-kind-function">
@@ -815,12 +994,12 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L451">mapping/providers/decorators.ts:451</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L468">mapping/providers/decorators.ts:468</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Specified the type of a property.</p>
+									<p>Specifies the type of a property.</p>
 								</div>
 								<p>It is generally not necessary to explicitly indicate the type of a property.
 									However, when a property is an embeddable or a reference to an entity, sometimes the type of the property cannot be
@@ -855,7 +1034,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L209">mapping/providers/decorators.ts:209</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L226">mapping/providers/decorators.ts:226</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -891,7 +1070,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L226">mapping/providers/decorators.ts:226</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L243">mapping/providers/decorators.ts:243</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1125,6 +1304,27 @@
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#inverseof" class="tsd-kind-icon">Inverse<wbr>Of</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#postload" class="tsd-kind-icon">Post<wbr>Load</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#postpersist" class="tsd-kind-icon">Post<wbr>Persist</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#postremove" class="tsd-kind-icon">Post<wbr>Remove</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#postupdate" class="tsd-kind-icon">Post<wbr>Update</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#prepersist" class="tsd-kind-icon">Pre<wbr>Persist</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#preremove" class="tsd-kind-icon">Pre<wbr>Remove</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#preupdate" class="tsd-kind-icon">Pre<wbr>Update</a>
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#type" class="tsd-kind-icon">Type</a>

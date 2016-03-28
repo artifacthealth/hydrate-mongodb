@@ -70,6 +70,8 @@
 					work normally with objects and classes, and Hydrate takes care of the onerous details such as
 					serializing classes to documents, validation, mapping of class inheritance, optimistic locking, fetching of references
 				between database collections, change tracking, and managing of persistence through bulk operations.</p>
+				<p>Hydrate is inspired by other projects including <a href="https://en.wikipedia.org/wiki/Java_Persistence_API">JPA</a>,
+				<a href="http://hibernate.org/orm/">Hibernate</a>, and <a href="http://doctrine-orm.readthedocs.org/projects/doctrine-mongodb-odm/en/latest/">Doctrine</a>.</p>
 				<p><strong>NOTICE: Hydrate is an experimental project and is not recommended for production systems. It is also possible that
 				breaking changes may be introduced in the API until version 1.0.0 is reached.</strong> </p>
 				<h4 id="idiomatic-javascript">Idiomatic Javascript</h4>
@@ -518,11 +520,8 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     ...
 }
 </code></pre>
-				<p>The discriminator value for a class is determined using the
-					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#discriminatornamingstrategy">discriminatorNamingStrategy</a> on the
-					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a>.
-					By default, the name of the class is used. The discriminator value can also be specified using the
-				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#discriminatorvalue">DiscriminatorValue</a> decorator on a class.</p>
+				<p>The class discriminator can be specified using the
+				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#discriminatorvalue">DiscriminatorValue</a> decorator.</p>
 				<pre><code class="lang-typescript">@Entity()
 @DiscriminatorValue(<span class="hljs-string">"P"</span>)
 <span class="hljs-keyword">class</span> Person extends Party {
@@ -535,6 +534,76 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     ...
 }
 </code></pre>
+				<p>If the discriminator value is not explicitly specified for a class, it is determined using the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#discriminatornamingstrategy">discriminatorNamingStrategy</a> on the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a>.
+				By default, the name of the class is used. </p>
+				<h3 id="lifecycle-callbacks">Lifecycle Callbacks</h3>
+				<p>Hydrate provides callbacks that can be called on an entity during various stages of the entity lifecycle similar to
+					<a href="http://openjpa.apache.org/builds/1.2.3/apache-openjpa/docs/jpa_overview_pc_callbacks.html">JPA Lifecycle Callbacks</a>.
+				Callbacks are indicated by adding a decorator to a class method. A few important restrictions: </p>
+				<ul>
+					<li>If the method is parameterless, it is executed synchronously.</li>
+					<li>If the method has a single parameter, it is executed as an asynchronous method and passed a callback for it to call
+						when finished. Any errors passed to the callback by the method get returned on the
+					<a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a> operation that triggered the callback.</li>
+					<li>The method must not have more than one parameter.</li>
+					<li>The method must not modify any entities other than the entity that the method is called on; otherwise, results are unpredictable.</li>
+					<li>The method should avoid accessing the <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a>.
+						Because of the way operations are queued on the session, executing an operation on the session during a lifecycle callback
+					could cause the callback to hang. </li>
+				</ul>
+				<p>Lifecycle callbacks are defined by adding the corresponding decorator to the class method as follows:</p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">class</span> Person {
+
+    @Field()
+    modified: <span class="hljs-built_in">Date</span>;
+
+    @PreUpdate()
+    <span class="hljs-keyword">private</span> _beforeUpdate(): <span class="hljs-built_in">void</span> {
+
+        <span class="hljs-comment">// set the modified date on the entity before it is saved to the database.</span>
+        <span class="hljs-keyword">this</span>.modified = <span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>();
+    }   
+}
+</code></pre>
+				<p>Lifecycle callbacks can be used to validate entities.</p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">class</span> Document {
+
+    @Field()
+    owner: Person;
+
+    @PrePersist()
+    @PreUpdate()
+    <span class="hljs-keyword">private</span> _validate(callback: Callback): <span class="hljs-built_in">void</span> {
+
+        <span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.owner) {
+            <span class="hljs-keyword">return</span> callback(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">"A document must have an owner."</span>);
+        }
+
+        callback();
+    }   
+}
+</code></pre>
+				<p>The following decorators are available for lifecycle callbacks:</p>
+				<ul>
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#prePersist">PrePersist</a>: Call method before a new
+					entity is saved to the database.</li>
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postPersist">PostPersist</a>: Call method after a new
+					entity is saved to the database.</li>
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postload">PostLoad</a>: Call method after an entity is loaded
+					from the database.</li>
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#preUpdate">PreUpdate</a>: Call method before modifications to
+					an entity are saved to the database.</li>
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postUpdate">PostUpdate</a>: Call method after
+					modifications to an entity are saved to the database.</li>
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#preRemove">PreRemove</a>: Call method before an entity is
+					deleted from the database.</li>
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postRemove">PostRemove</a>: Call method after an entity is
+					deleted from the database.</li>
+				</ul>
 			</div>
 		</div>
 		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
@@ -678,6 +747,27 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#inverseof" class="tsd-kind-icon">Inverse<wbr>Of</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#postload" class="tsd-kind-icon">Post<wbr>Load</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#postpersist" class="tsd-kind-icon">Post<wbr>Persist</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#postremove" class="tsd-kind-icon">Post<wbr>Remove</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#postupdate" class="tsd-kind-icon">Post<wbr>Update</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#prepersist" class="tsd-kind-icon">Pre<wbr>Persist</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#preremove" class="tsd-kind-icon">Pre<wbr>Remove</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#preupdate" class="tsd-kind-icon">Pre<wbr>Update</a>
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#type" class="tsd-kind-icon">Type</a>

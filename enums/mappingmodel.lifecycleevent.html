@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Mapping | hydrate-mongodb</title>
+	<title>LifecycleEvent | hydrate-mongodb</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -58,10 +58,10 @@
 					<a href="../modules/mappingmodel.html">MappingModel</a>
 				</li>
 				<li>
-					<a href="mappingmodel.mapping.html">Mapping</a>
+					<a href="mappingmodel.lifecycleevent.html">LifecycleEvent</a>
 				</li>
 			</ul>
-			<h1>Interface Mapping</h1>
+			<h1>Enumeration LifecycleEvent</h1>
 		</div>
 	</div>
 </header>
@@ -71,52 +71,100 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Represents a data mapping.</p>
+						<p>Lifecycle events.</p>
 					</div>
 				</div>
-			</section>
-			<section class="tsd-panel tsd-hierarchy">
-				<h3>Hierarchy</h3>
-				<ul class="tsd-hierarchy">
-					<li>
-						<span class="target">Mapping</span>
-						<ul class="tsd-hierarchy">
-							<li>
-								<a href="mappingmodel.objectmapping.html" class="tsd-signature-type">ObjectMapping</a>
-							</li>
-						</ul>
-					</li>
-				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Properties</h3>
+							<h3>Enumeration members</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="mappingmodel.mapping.html#flags" class="tsd-kind-icon">flags</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.lifecycleevent.html#postload" class="tsd-kind-icon">Post<wbr>Load</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.lifecycleevent.html#postpersist" class="tsd-kind-icon">Post<wbr>Persist</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.lifecycleevent.html#postremove" class="tsd-kind-icon">Post<wbr>Remove</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.lifecycleevent.html#postupdate" class="tsd-kind-icon">Post<wbr>Update</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.lifecycleevent.html#prepersist" class="tsd-kind-icon">Pre<wbr>Persist</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.lifecycleevent.html#preremove" class="tsd-kind-icon">Pre<wbr>Remove</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.lifecycleevent.html#preupdate" class="tsd-kind-icon">Pre<wbr>Update</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="flags" class="tsd-anchor"></a>
-					<h3>flags</h3>
-					<div class="tsd-signature tsd-kind-icon">flags<span class="tsd-signature-symbol">:</span> <a href="../enums/mappingmodel.mappingflags.html" class="tsd-signature-type">MappingFlags</a></div>
+				<h2>Enumeration members</h2>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="postload" class="tsd-anchor"></a>
+					<h3>Post<wbr>Load</h3>
+					<div class="tsd-signature tsd-kind-icon">Post<wbr>Load<span class="tsd-signature-symbol">:</span> </div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L34">mapping/mappingModel.ts:34</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L198">mapping/mappingModel.ts:198</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Readonly flags that describe the mapping. This value is assigned internally and should not be modified.</p>
-						</div>
-					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="postpersist" class="tsd-anchor"></a>
+					<h3>Post<wbr>Persist</h3>
+					<div class="tsd-signature tsd-kind-icon">Post<wbr>Persist<span class="tsd-signature-symbol">:</span> </div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L197">mapping/mappingModel.ts:197</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="postremove" class="tsd-anchor"></a>
+					<h3>Post<wbr>Remove</h3>
+					<div class="tsd-signature tsd-kind-icon">Post<wbr>Remove<span class="tsd-signature-symbol">:</span> </div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L202">mapping/mappingModel.ts:202</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="postupdate" class="tsd-anchor"></a>
+					<h3>Post<wbr>Update</h3>
+					<div class="tsd-signature tsd-kind-icon">Post<wbr>Update<span class="tsd-signature-symbol">:</span> </div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L200">mapping/mappingModel.ts:200</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="prepersist" class="tsd-anchor"></a>
+					<h3>Pre<wbr>Persist</h3>
+					<div class="tsd-signature tsd-kind-icon">Pre<wbr>Persist<span class="tsd-signature-symbol">:</span> </div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L196">mapping/mappingModel.ts:196</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="preremove" class="tsd-anchor"></a>
+					<h3>Pre<wbr>Remove</h3>
+					<div class="tsd-signature tsd-kind-icon">Pre<wbr>Remove<span class="tsd-signature-symbol">:</span> </div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L201">mapping/mappingModel.ts:201</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="preupdate" class="tsd-anchor"></a>
+					<h3>Pre<wbr>Update</h3>
+					<div class="tsd-signature tsd-kind-icon">Pre<wbr>Update<span class="tsd-signature-symbol">:</span> </div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L199">mapping/mappingModel.ts:199</a></li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 		</div>
@@ -136,41 +184,59 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-enum tsd-parent-kind-module">
-						<a href="../enums/mappingmodel.lifecycleevent.html" class="tsd-kind-icon">Lifecycle<wbr>Event</a>
-					</li>
-					<li class=" tsd-kind-enum tsd-parent-kind-module">
-						<a href="../enums/mappingmodel.mappingflags.html" class="tsd-kind-icon">Mapping<wbr>Flags</a>
-					</li>
-					<li class=" tsd-kind-enum tsd-parent-kind-module">
-						<a href="../enums/mappingmodel.propertyflags.html" class="tsd-kind-icon">Property<wbr>Flags</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="mappingmodel.classmapping.html" class="tsd-kind-icon">Class<wbr>Mapping</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="mappingmodel.entitymapping.html" class="tsd-kind-icon">Entity<wbr>Mapping</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="mappingmodel.enummembers.html" class="tsd-kind-icon">Enum<wbr>Members</a>
-					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-module">
-						<a href="mappingmodel.mapping.html" class="tsd-kind-icon">Mapping</a>
+					<li class="current tsd-kind-enum tsd-parent-kind-module">
+						<a href="mappingmodel.lifecycleevent.html" class="tsd-kind-icon">Lifecycle<wbr>Event</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="mappingmodel.mapping.html#flags" class="tsd-kind-icon">flags</a>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="mappingmodel.lifecycleevent.html#postload" class="tsd-kind-icon">Post<wbr>Load</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="mappingmodel.lifecycleevent.html#postpersist" class="tsd-kind-icon">Post<wbr>Persist</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="mappingmodel.lifecycleevent.html#postremove" class="tsd-kind-icon">Post<wbr>Remove</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="mappingmodel.lifecycleevent.html#postupdate" class="tsd-kind-icon">Post<wbr>Update</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="mappingmodel.lifecycleevent.html#prepersist" class="tsd-kind-icon">Pre<wbr>Persist</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="mappingmodel.lifecycleevent.html#preremove" class="tsd-kind-icon">Pre<wbr>Remove</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="mappingmodel.lifecycleevent.html#preupdate" class="tsd-kind-icon">Pre<wbr>Update</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="mappingmodel.objectmapping.html" class="tsd-kind-icon">Object<wbr>Mapping</a>
+					<li class=" tsd-kind-enum tsd-parent-kind-module">
+						<a href="mappingmodel.mappingflags.html" class="tsd-kind-icon">Mapping<wbr>Flags</a>
+					</li>
+					<li class=" tsd-kind-enum tsd-parent-kind-module">
+						<a href="mappingmodel.propertyflags.html" class="tsd-kind-icon">Property<wbr>Flags</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
-						<a href="mappingmodel.property.html" class="tsd-kind-icon">Property</a>
+						<a href="../interfaces/mappingmodel.classmapping.html" class="tsd-kind-icon">Class<wbr>Mapping</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/mappingmodel.entitymapping.html" class="tsd-kind-icon">Entity<wbr>Mapping</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/mappingmodel.enummembers.html" class="tsd-kind-icon">Enum<wbr>Members</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/mappingmodel.mapping.html" class="tsd-kind-icon">Mapping</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/mappingmodel.objectmapping.html" class="tsd-kind-icon">Object<wbr>Mapping</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/mappingmodel.property.html" class="tsd-kind-icon">Property</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/mappingmodel.html#createarraymapping" class="tsd-kind-icon">create<wbr>Array<wbr>Mapping</a>
