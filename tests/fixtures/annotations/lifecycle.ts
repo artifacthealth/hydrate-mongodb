@@ -22,8 +22,10 @@ export class B extends A {
     loadBOrder: number;
 
     @PostLoad()
-    private _onLoadB(): void {
+    private _onLoadB(callback: Callback): void {
         this.loadBCalled++;
         this.loadBOrder = order++;
+
+        process.nextTick(callback);
     }
 }

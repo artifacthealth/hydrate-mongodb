@@ -1,8 +1,6 @@
 import * as async from "async";
 import {InternalMapping} from "./internalMapping";
 import {MappingBase} from "./mappingBase";
-import {MappingError} from "./mappingError";
-import {Changes} from "./changes";
 import {Reference} from "../reference";
 import {MappingModel} from "./mappingModel";
 import {InternalSession} from "../session";

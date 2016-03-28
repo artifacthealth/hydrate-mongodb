@@ -604,12 +604,18 @@ By default, the name of the class is used.
 ### Lifecycle Callbacks
 
 Hydrate provides callbacks that can be called on an entity during various stages of the entity lifecycle similar to 
-[JPA Lifecycle Callbacks](http://openjpa.apache.org/builds/1.2.3/apache-openjpa/docs/jpa_overview_pc_callbacks.html). A few 
-important restrictions: 
+[JPA Lifecycle Callbacks](http://openjpa.apache.org/builds/1.2.3/apache-openjpa/docs/jpa_overview_pc_callbacks.html). 
+Callbacks are indicated by adding a decorator to a class method. A few important restrictions: 
 
-* Lifecycle callbacks are synchronous and parameterless.
-* Lifecycle callbacks must not modify any entities other than the entity they are called on; otherwise, results are unpredictable.
-* Lifecycle callbacks should avoid accessing the [Session](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html).
+* If the method is parameterless, it is executed synchronously.
+* If the method has a single parameter, it is executed as an asynchronous method and passed a callback for it to call 
+when finished. Any errors passed to the callback by the method get returned on the 
+[Session](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html) operation that triggered the callback.
+* The method must not have more than one parameter.
+* The method must not modify any entities other than the entity that the method is called on; otherwise, results are unpredictable.
+* The method should avoid accessing the [Session](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html). 
+Because of the way operations are queued on the session, executing an operation on the session during a lifecycle callback 
+could cause the callback to hang. 
 
 Lifecycle callbacks are defined by adding the corresponding decorator to the class method as follows:
 
@@ -619,12 +625,34 @@ class Person {
 
     @Field()
     modified: Date;
-    
+       
     @PreUpdate()
     private _beforeUpdate(): void {
     
         // set the modified date on the entity before it is saved to the database.
         this.modified = new Date();
+    }   
+}
+```
+
+Lifecycle callbacks can be used to validate entities.
+
+```typescript
+@Entity()
+class Document {
+
+    @Field()
+    owner: Person;
+       
+    @PrePersist()
+    @PreUpdate()
+    private _validate(callback: Callback): void {
+
+        if(!this.owner) {
+            return callback(new Error("A document must have an owner.");
+        }
+        
+        callback();
     }   
 }
 ```

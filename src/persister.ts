@@ -75,13 +75,13 @@ export interface Persister {
     changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
 
-    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Object;
-    addInsert(batch: Batch, entity: Object): Object;
-    addRemove(batch: Batch, entity: Object): void;
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void;
+    addInsert(batch: Batch, entity: Object, callback: ResultCallback<Object>): void;
+    addRemove(batch: Batch, entity: Object, callback: Callback): void;
 
-    postUpdate(entity: Object): void;
-    postInsert(entity: Object): void;
-    postRemove(entity: Object): void;
+    postUpdate(entity: Object, callback: Callback): void;
+    postInsert(entity: Object, callback: Callback): void;
+    postRemove(entity: Object, callback: Callback): void;
 
     fetch(entity: Object, path: string, callback: Callback): void;
     refresh(entity: Object, callback: ResultCallback<Object>): void;
@@ -121,82 +121,89 @@ export class PersisterImpl implements Persister {
         this._versioned = inheritanceRoot.versioned;
     }
 
-    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Object {
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void {
 
         var context = new WriteContext();
         var document = this._mapping.write(context, entity);
         if(context.hasErrors) {
-            batch.error = new Error(`Error serializing document:\n${context.getErrorMessage()}`);
-            return null;
+            return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
         }
 
-        if(!this._mapping.areDocumentsEqual(originalDocument, document)) {
+        if(this._mapping.areDocumentsEqual(originalDocument, document)) {
+            // document did not change
+            callback(null);
+        }
+        else {
+            this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PreUpdate, (err, count) => {
+                if(err) return callback(err);
 
-            if(this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PreUpdate) > 0) {
-                // lifecycle callback may have changed the entity so we need to write the document again before saving
-                // to the database
-                context = new WriteContext();
-                document = this._mapping.write(context, entity);
-                if(context.hasErrors) {
-                    batch.error = new Error(`Error serializing document:\n${context.getErrorMessage()}`);
-                    return null;
+                if(count > 0) {
+                    // lifecycle callback may have changed the entity so we need to write the document again before saving
+                    // to the database
+                    context = new WriteContext();
+                    document = this._mapping.write(context, entity);
+                    if(context.hasErrors) {
+                        return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
+                    }
                 }
+
+                // update version field if versioned
+                if (this._versioned) {
+                    // get the current version
+                    var version = this._mapping.getDocumentVersion(originalDocument);
+                    // increment the version if defined; otherwise, start at 1.
+                    this._mapping.setDocumentVersion(document, (version || 0) + 1);
+                }
+
+                this._getCommand(batch).addReplace(document, version);
+                callback(null, document);
+            });
+        }
+    }
+
+    addInsert(batch: Batch, entity: Object, callback: ResultCallback<Object>): void {
+
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PrePersist, (err) => {
+            if(err) return callback(err);
+
+            var context = new WriteContext();
+            var document = this._mapping.write(context, entity);
+            if(context.hasErrors) {
+                return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
             }
 
-            // update version field if versioned
-            if (this._versioned) {
-                // get the current version
-                var version = this._mapping.getDocumentVersion(originalDocument);
-                // increment the version if defined; otherwise, start at 1.
-                this._mapping.setDocumentVersion(document, (version || 0) + 1);
+            // add version field if versioned
+            if(this._versioned) {
+                this._mapping.setDocumentVersion(document, 1);
             }
 
-            this._getCommand(batch).addReplace(document, version);
-            return document;
-        }
-
-        return null;
+            this._getCommand(batch).addInsert(document);
+            callback(null, document);
+        });
     }
 
-    addInsert(batch: Batch, entity: Object): Object {
+    addRemove(batch: Batch, entity: any, callback: Callback): void {
 
-        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PrePersist);
-
-        var context = new WriteContext();
-        var document = this._mapping.write(context, entity);
-        if(context.hasErrors) {
-            batch.error = new Error(`Error serializing document:\n${context.getErrorMessage()}`);
-            return null;
-        }
-
-        // add version field if versioned
-        if(this._versioned) {
-            this._mapping.setDocumentVersion(document, 1);
-        }
-
-        this._getCommand(batch).addInsert(document);
-        return document;
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PreRemove, (err) => {
+            if(err) return callback(err);
+            this._getCommand(batch).addRemove(entity["_id"]);
+            callback();
+        });
     }
 
-    addRemove(batch: Batch, entity: any): void {
+    postUpdate(entity: Object, callback: Callback): void {
 
-        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PreRemove);
-        this._getCommand(batch).addRemove(entity["_id"]);
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostUpdate, callback);
     }
 
-    postUpdate(entity: Object): void {
+    postInsert(entity: Object, callback: Callback): void {
 
-        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostUpdate);
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostPersist, callback);
     }
 
-    postInsert(entity: Object): void {
+    postRemove(entity: Object, callback: Callback): void {
 
-        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostPersist);
-    }
-
-    postRemove(entity: Object): void {
-
-        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostRemove);
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostRemove, callback);
     }
 
     /**
@@ -794,8 +801,14 @@ export class PersisterImpl implements Persister {
                 if (context.hasErrors) {
                     return callback(new Error("Error deserializing document:\n" + context.getErrorMessage()));
                 }
-                this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostLoad);
-                this._session.registerManaged(this, entity, document);
+
+                this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostLoad, (err) => {
+                    if(err) return callback(err);
+                    
+                    this._session.registerManaged(this, entity, document);
+                    callback(null, entity);
+                });
+                return;
             }
         }
 

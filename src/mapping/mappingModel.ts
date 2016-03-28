@@ -189,14 +189,6 @@ export namespace MappingModel {
     }
 
     /**
-     * A lifecycle event callback.
-     */
-    export interface LifecycleCallback {
-
-        (): void;
-    }
-
-    /**
      * Lifecycle events.
      */
     export const enum LifecycleEvent {
@@ -328,9 +320,11 @@ export namespace MappingModel {
         /**
          * Adds a lifecycle callback to the entity mapping.
          * @param event The lifecycle event.
-         * @param callback The callback.
+         * @param callback The method implementation.
+         * @param async Indicates if the method is async. If the method is async then it should take a single parameter
+         * which is the callback that it calls when it is finished; otherwise, it should be parameterless.
          */
-        addLifecycleCallback(event: LifecycleEvent, callback: LifecycleCallback): void;
+        addLifecycleCallback(event: LifecycleEvent, method: Function, async: boolean): void;
     }
 
     /**

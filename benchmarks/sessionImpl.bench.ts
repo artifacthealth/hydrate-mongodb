@@ -103,28 +103,32 @@ class DummyPersister implements Persister {
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
-    dirtyCheck(batch: Batch, entity: any, originalDocument: any): Object {
-        return originalDocument;
+    dirtyCheck(batch: Batch, entity: any, originalDocument: any, callback: ResultCallback<Object>): void {
+        callback(null, originalDocument);
     }
 
-    addInsert(batch: Batch, entity: any): Object {
-        return {};
+    addInsert(batch: Batch, entity: any, callback: ResultCallback<Object>): void {
+        callback(null, {});
     }
 
-    addRemove(batch: Batch, entity: any): void {
+    addRemove(batch: Batch, entity: any, callback: Callback): void {
 
+        callback();
     }
 
-    postUpdate(entity: Object): void {
+    postUpdate(entity: Object, callback: Callback): void {
 
+        callback();
     }
 
-    postInsert(entity: Object): void {
+    postInsert(entity: Object, callback: Callback): void {
 
+        callback();
     }
 
-    postRemove(entity: Object): void {
+    postRemove(entity: Object, callback: Callback): void {
 
+        callback();
     }
 
     refresh(entity: any, callback: ResultCallback<any>): void {

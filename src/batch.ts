@@ -13,11 +13,6 @@ export class Batch implements Command {
     private _executed = false;
 
     /**
-     * Error that occurred while building the batch.
-     */
-    error: Error;
-
-    /**
      * Gets a command from the batch.
      * @param id The id of the command.
      * @returns The command or undefined if the id cannot be found.

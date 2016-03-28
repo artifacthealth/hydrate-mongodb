@@ -3,7 +3,6 @@ import {EventEmitter} from "events";
 import {Callback} from "./core/callback";
 import {ChangeTrackingType} from "./mapping/mappingModel";
 import {Constructor} from "./index";
-import {IteratorCallback} from "./core/callback";
 import {MappingModel} from "./mapping/mappingModel";
 import {ResultCallback} from "./core/callback";
 import {InternalSessionFactory} from "./sessionFactory";
@@ -16,7 +15,6 @@ import {EntityMapping} from "./mapping/entityMapping";
 import {QueryBuilder, QueryBuilderImpl, FindOneQuery} from "./query/queryBuilder";
 import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
-import {ReadContext} from "./mapping/readContext";
 
 /**
  * The state of an object.
@@ -770,7 +768,11 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 batch.execute((err) => {
                     if (err) return callback(err);
 
-                    this._batchCompleted(head, callback);
+                    this._postExecute(head, (err) => {
+                        if(err) return callback(err);
+
+                        this._batchCompleted(head, callback);
+                    });
                 });
             });
         });
@@ -785,46 +787,121 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      */
     private _buildBatch(batch: Batch, links: ObjectLinks, callback: Callback): void {
 
-        var count = 0;
+        var count = 0,
+            replenishing = false,
+            errored = false;
 
-        while(links && count < 1000) {
+        replenish();
 
-            if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
-                var document = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
-                if(document) {
-                    // if we got a document back then the entity was dirty. change the scheduled operation to update
-                    // so we know to run post-update callback when batch is finished
-                    links.scheduledOperation = ScheduledOperation.Update;
-                    links.originalDocument = document;
+        function replenish() {
+
+            replenishing = true;
+            while (links && count < 1000 && !errored) {
+
+                if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
+                    count++;
+                    links.persister.dirtyCheck(batch, links.object, links.originalDocument, (err, document) => {
+                        if(err) return done(err);
+                        if(document) {
+                            // if we got a document back then the entity was dirty. change the scheduled operation to update
+                            // so we know to run post-update callback when batch is finished.
+                            links.scheduledOperation = ScheduledOperation.Update;
+                            links.originalDocument = document;
+                        }
+                        done();
+                    });
                 }
-            }
-            else if (links.scheduledOperation == ScheduledOperation.Insert) {
-                var document = links.persister.addInsert(batch, links.object);
-                if(document) {
-                    links.originalDocument = document;
+                else if (links.scheduledOperation == ScheduledOperation.Insert) {
+                    count++;
+                    links.persister.addInsert(batch, links.object, (err, document) => {
+                        if(err) return done(err);
+                        links.originalDocument = document;
+                        done();
+                    });
                 }
-            }
-            else if (links.scheduledOperation == ScheduledOperation.Delete) {
-                links.persister.addRemove(batch, links.object);
-            }
+                else if (links.scheduledOperation == ScheduledOperation.Delete) {
+                    count++;
+                    links.persister.addRemove(batch, links.object, done);
+                }
 
-            if(batch.error) {
-                return callback(batch.error);
+                links = links.next;
             }
+            replenishing = false;
 
-            links = links.next;
-            count++;
+            // If persister finished synchronously then call callback now
+            if(!links && count <= 0) {
+                callback();
+            }
         }
 
-        // If there are more links in the queue, continue building the batch on the next tick.
-        if(links) {
-            process.nextTick(() => this._buildBatch(batch, links, callback));
-        }
-        else {
-            callback();
+        function done(err?: Error): void {
+            if(errored) return;
+
+            count--;
+
+            if(err) {
+                errored = true;
+                callback(err);
+                return;
+            }
+
+            if(!replenishing && count <= 0) {
+                if(links) {
+                    // If there are more links to process then handle on the next tick
+                    process.nextTick(replenish);
+                }
+                else {
+                    // all done
+                    callback();
+                }
+            }
         }
     }
 
+    private _postExecute(head: ObjectLinks, callback: Callback): void {
+
+        var count = 0,
+            errored = false;
+
+        var links = head;
+        while(links) {
+
+            switch (links.scheduledOperation) {
+                case ScheduledOperation.Update:
+                    links.persister.postUpdate(links.object, done);
+                    break;
+                case ScheduledOperation.Delete:
+                    links.persister.postRemove(links.object, done);
+                    break;
+                case ScheduledOperation.Insert:
+                    links.persister.postInsert(links.object, done);
+                    break;
+            }
+
+            links = links.next;
+        }
+
+        // If persister finished synchronously then call callback now
+        if(!links && count <= 0) {
+            callback();
+        }
+
+        function done(err?: Error): void {
+            if(errored) return;
+
+            count--;
+
+            if(err) {
+                errored = true;
+                callback(err);
+                return;
+            }
+
+            if(!links && count <= 0) {
+                callback();
+            }
+        }
+    }
 
     /**
      * Called after a batch is successfully executed.
@@ -836,18 +913,6 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         var links = head;
         while(links) {
             var next = links.next;
-
-            switch(links.scheduledOperation) {
-                case ScheduledOperation.Update:
-                    links.persister.postUpdate(links.object);
-                    break;
-                case ScheduledOperation.Delete:
-                    links.persister.postRemove(links.object);
-                    break;
-                case ScheduledOperation.Insert:
-                    links.persister.postInsert(links.object);
-                    break;
-            }
 
             links.scheduledOperation = ScheduledOperation.None;
             links.flags = ObjectFlags.None;

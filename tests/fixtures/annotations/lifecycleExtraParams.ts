@@ -4,7 +4,7 @@ import { Entity, PostLoad } from "../../../src/mapping/providers/decorators";
 export class A {
 
     @PostLoad()
-    private _onLoadA(callback: Callback): void {
-        callback();
+    private _onLoadA(arg: number, callback: Callback): void {
+        process.nextTick(callback);
     }
 }

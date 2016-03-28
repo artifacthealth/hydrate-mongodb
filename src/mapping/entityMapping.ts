@@ -1,13 +1,10 @@
 import * as async from "async";
 import {IdentityGenerator} from "../config/configuration";
-import {MappingError} from "./mappingError";
 import {ClassMapping} from "./classMapping";
 import {ChangeTrackingType} from "./mappingModel";
 import {Index} from "./index";
 import {CollectionOptions} from "./collectionOptions";
-import {MappingRegistry} from "./mappingRegistry";
 import {MappingModel} from "./mappingModel";
-import {Changes} from "./changes";
 import {Reference} from "../reference";
 import {InternalSession} from "../session";
 import {ResultCallback} from "../core/callback";
@@ -16,7 +13,6 @@ import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {Property} from "./property";
 import {WriteContext} from "./writeContext";
-import {PostPersist} from "./providers/decorators";
 
 /**
  * @hidden
@@ -274,18 +270,31 @@ export class EntityMapping extends ClassMapping {
         super.resolveCore(context);
     }
 
-    private _lifecycleCallbacks: { [event: number]: MappingModel.LifecycleCallback[] };
+    private _lifecycleCallbacks: LifecycleEventList;
+    private _lifecycleCallbacksAsync: LifecycleEventList;
 
-    addLifecycleCallback(event: MappingModel.LifecycleEvent, callback: MappingModel.LifecycleCallback): void {
+    addLifecycleCallback(event: MappingModel.LifecycleEvent, method: Function, async: boolean): void {
 
-        if(!this._lifecycleCallbacks) {
-            this._lifecycleCallbacks = [];
+        var events: LifecycleEventList;
+
+        if(async) {
+            if (!this._lifecycleCallbacksAsync) {
+                this._lifecycleCallbacksAsync = [];
+            }
+            events = this._lifecycleCallbacksAsync;
         }
-        var callbacks = this._lifecycleCallbacks[event];
-        if(!callbacks) {
-            callbacks = this._lifecycleCallbacks[event] = [];
+        else {
+            if (!this._lifecycleCallbacks) {
+                this._lifecycleCallbacks = [];
+            }
+            events = this._lifecycleCallbacks;
         }
-        callbacks.push(callback);
+
+        var callbacks = events[event];
+        if (!callbacks) {
+            callbacks = events[event] = [];
+        }
+        callbacks.push(method);
     }
 
     /**
@@ -294,20 +303,38 @@ export class EntityMapping extends ClassMapping {
      * @param event The lifecycle event.
      * @param callback Called after lifecycle callbacks have executed.
      */
-    executeLifecycleCallbacks(entity: Object, event: MappingModel.LifecycleEvent): number {
+    executeLifecycleCallbacks(entity: Object, event: MappingModel.LifecycleEvent, callback: ResultCallback<number>): void {
 
-        if(!this._lifecycleCallbacks) {
-            return 0;
+        var l = 0;
+
+        if(this._lifecycleCallbacks) {
+            var callbacks = this._lifecycleCallbacks[event];
+            if(callbacks) {
+                l = callbacks.length;
+                for(var i = 0; i < l; i++) {
+                    callbacks[i].call(entity);
+                }
+            }
         }
-        var callbacks = this._lifecycleCallbacks[event];
+
+        if(!this._lifecycleCallbacksAsync) {
+            return callback(null, l);
+        }
+
+        var callbacks = this._lifecycleCallbacksAsync[event];
         if(!callbacks) {
-            return 0;
+            return callback(null, l);
         }
 
-        for(var i = 0, l = callbacks.length; i < l; i++) {
-            callbacks[i].call(entity);
-        }
-
-        return l;
+        async.eachSeries(callbacks, (item, done) => {
+            item.call(entity, done);
+        }, (err) => {
+            if(err) return callback(err);
+            callback(null, l + callbacks.length);
+        });
     }
+}
+
+interface LifecycleEventList {
+    [event: number]: Function[];
 }
