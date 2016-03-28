@@ -830,13 +830,25 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L520">mapping/providers/decorators.ts:520</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L555">mapping/providers/decorators.ts:555</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Specifies a callback to be called after an entity is loaded from the database.</p>
 								</div>
+								<p>See <a href="https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks">Lifecycle Callbacks</a> for more
+								information.</p>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+     @PostLoad()
+     <span class="hljs-keyword">private</span> _onPostLoad(): <span class="hljs-built_in">void</span> {
+         ...
+     }
+ }
+</code></pre>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
 						</li>
@@ -852,13 +864,25 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L515">mapping/providers/decorators.ts:515</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L534">mapping/providers/decorators.ts:534</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Specifies a callback to be called after a new entity is saved to the database.</p>
 								</div>
+								<p>See <a href="https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks">Lifecycle Callbacks</a> for more
+								information.</p>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+     @PostPersist()
+     <span class="hljs-keyword">private</span> _onPostPersist(): <span class="hljs-built_in">void</span> {
+         ...
+     }
+ }
+</code></pre>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
 						</li>
@@ -874,13 +898,25 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L540">mapping/providers/decorators.ts:540</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L639">mapping/providers/decorators.ts:639</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Specifies a callback to be called after an entity is deleted from the database.</p>
 								</div>
+								<p>See <a href="https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks">Lifecycle Callbacks</a> for more
+								information.</p>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+     @PostRemove()
+     <span class="hljs-keyword">private</span> _onPostRemove(): <span class="hljs-built_in">void</span> {
+         ...
+     }
+ }
+</code></pre>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
 						</li>
@@ -896,13 +932,25 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L530">mapping/providers/decorators.ts:530</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L597">mapping/providers/decorators.ts:597</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Specifies a callback to be called after modifications to an entity are saved to the database.</p>
 								</div>
+								<p>See <a href="https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks">Lifecycle Callbacks</a> for more
+								information.</p>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+     @PostUpdate()
+     <span class="hljs-keyword">private</span> _onPostUpdate(): <span class="hljs-built_in">void</span> {
+         ...
+     }
+ }
+</code></pre>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
 						</li>
@@ -918,13 +966,15 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L510">mapping/providers/decorators.ts:510</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L513">mapping/providers/decorators.ts:513</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Specifies a callback to be called before a new entity is saved to the database.</p>
 								</div>
+								<p>See <a href="https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks">Lifecycle Callbacks</a> for more
+								information.</p>
 								<h3 id="example">Example</h3>
 								<pre><code class="lang-typescript"> @Entity()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
@@ -950,13 +1000,25 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L535">mapping/providers/decorators.ts:535</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L618">mapping/providers/decorators.ts:618</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Specifies a callback to be called before an entity is deleted from the database.</p>
 								</div>
+								<p>See <a href="https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks">Lifecycle Callbacks</a> for more
+								information.</p>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+     @PreRemove()
+     <span class="hljs-keyword">private</span> _onPreRemove(): <span class="hljs-built_in">void</span> {
+         ...
+     }
+ }
+</code></pre>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
 						</li>
@@ -972,13 +1034,25 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L525">mapping/providers/decorators.ts:525</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L576">mapping/providers/decorators.ts:576</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Specifies a callback to be called before modifications to an entity are saved to the database.</p>
 								</div>
+								<p>See <a href="https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks">Lifecycle Callbacks</a> for more
+								information.</p>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+     @PreUpdate()
+     <span class="hljs-keyword">private</span> _onPreUpdate(): <span class="hljs-built_in">void</span> {
+         ...
+     }
+ }
+</code></pre>
 							</div>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
 						</li>

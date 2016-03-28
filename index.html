@@ -257,6 +257,19 @@ session.find(Person, personId, (err, person) =&gt; {
 </code></pre>
 				<h2 id="modeling">Modeling</h2>
 				<p>In TypeScript, the emitDecoratorMetadata and experimentalDecorators options must be enabled on the compiler.</p>
+				<ul>
+					<li><a href="#Entities"><code>Entities</code></a></li>
+					<li><a href="#Collections"><code>Collections</code></a></li>
+					<li><a href="#Fields"><code>Fields</code></a></li>
+					<li><a href="#Identity"><code>Identity</code></a></li>
+					<li><a href="#Embeddables"><code>Embeddables</code></a></li>
+					<li><a href="#Types"><code>Types</code></a></li>
+					<li><a href="#Inheritance"><code>Inheritance</code></a></li>
+					<li><a href="#MappedSuperclass"><code>Mapped Superclass</code></a></li>
+					<li><a href="#Discriminators"><code>Discriminators</code></a></li>
+					<li><a href="#LifecycleCallbacks"><code>Lifecycle Callbacks</code></a></li>
+				</ul>
+				<p><a name="Entities"></a></p>
 				<h3 id="entities">Entities</h3>
 				<p>Entities are classes that map to a document in a MongoDB collection. </p>
 				<pre><code class="lang-typescript">@Entity()
@@ -280,6 +293,7 @@ session.find(Person, personId, (err, person) =&gt; {
 					fields.</li>
 					<li>An identifier is assigned to the entity when it is saved. </li>
 				</ul>
+				<p><a name="Collections"></a></p>
 				<h3 id="collections">Collections</h3>
 				<p>If a name for the collection is not given, an entity is mapped to a collection in MongoDB based on the name of the
 					class.
@@ -302,6 +316,7 @@ session.find(Person, personId, (err, person) =&gt; {
     }
 }
 </code></pre>
+				<p><a name="Fields"></a></p>
 				<h3 id="fields">Fields</h3>
 				<p>Fields are mapped on an opt-in basis. <em>Only fields that are decorated are mapped.</em> The name for the field in the document
 				can optionally be specified using the <a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#field">Field</a> decorator.</p>
@@ -316,6 +331,7 @@ session.find(Person, personId, (err, person) =&gt; {
 					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#fieldnamingstrategy">fieldNamingStrategy</a>
 					on the <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a> is used to determine
 				the name of the field. The default naming strategy is <a href="https://artifacthealth.github.io/hydrate-mongodb/modules/namingstrategies.html#camelcase">CamelCase</a>.</p>
+				<p><a name="Identity"></a></p>
 				<h3 id="identity">Identity</h3>
 				<p>The <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#identitygenerator">identityGenerator</a>
 					on the <a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a> is used to generate
@@ -346,6 +362,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     username: <span class="hljs-built_in">string</span>;
 }
 </code></pre>
+				<p><a name="Embeddables"></a></p>
 				<h3 id="embeddables">Embeddables</h3>
 				<p>Embeddables are classes that map to nested subdocuments within entities, arrays, or other embeddables.</p>
 				<pre><code class="lang-typescript">@Embeddable()
@@ -391,6 +408,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 						deserialized from the database, the constructor is not called. This means the internal state of an embeddable must fully
 					represented by it&#39;s serialized fields.</li>
 				</ul>
+				<p><a name="Types"></a></p>
 				<h3 id="types">Types</h3>
 				<p>When using TypeScript, the type of a field is automatically provided. The following types are supported:</p>
 				<ul>
@@ -460,6 +478,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
     status: TaskStatus;
 }
 </code></pre>
+				<p><a name="Inheritance"></a></p>
 				<h3 id="inheritance">Inheritance</h3>
 				<p>Standard prototypical inheritance is supported for both entities and embeddables.</p>
 				<pre><code class="lang-typescript">@Entity()
@@ -480,6 +499,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 				<p>All entities within an inheritance hierarchy are stored in the same collection. If the
 					<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#collection">Collection</a> decorator is used,
 				it is only valid on the root of an inheritance hierarchy.</p>
+				<p><a name="MappedSuperclass"></a></p>
 				<h4 id="mapped-superclass">Mapped Superclass</h4>
 				<p>Entities stored in separate collections may share a common superclass that is not mapped to a collection. In the example,
 					below <code>Patient</code> (stored in <code>patient</code> collection) and <code>Document</code> (stored in <code>document</code> collection) share a common
@@ -506,6 +526,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 </code></pre>
 				<p>If <code>Asset</code> was decorated with <a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#entity">Entity</a> then <code>Patient</code>
 				and <code>Document</code> would instead both be stored in a collection called <code>asset</code>.</p>
+				<p><a name="Discriminators"></a></p>
 				<h4 id="discriminators">Discriminators</h4>
 				<p>If an inheritance hierarchy is defined, a discriminator field is added to the serialized document to indicate the type
 					when deserializing the entity or embeddable. By default, the
@@ -538,6 +559,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#discriminatornamingstrategy">discriminatorNamingStrategy</a> on the
 					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html">Configuration</a>.
 				By default, the name of the class is used. </p>
+				<p><a name="LifecycleCallbacks"></a></p>
 				<h3 id="lifecycle-callbacks">Lifecycle Callbacks</h3>
 				<p>Hydrate provides callbacks that can be called on an entity during various stages of the entity lifecycle similar to
 					<a href="http://openjpa.apache.org/builds/1.2.3/apache-openjpa/docs/jpa_overview_pc_callbacks.html">JPA Lifecycle Callbacks</a>.
@@ -577,7 +599,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 
     @PrePersist()
     @PreUpdate()
-    <span class="hljs-keyword">private</span> _validate(callback: Callback): <span class="hljs-built_in">void</span> {
+    validate(callback: Callback): <span class="hljs-built_in">void</span> {
 
         <span class="hljs-keyword">if</span>(!<span class="hljs-keyword">this</span>.owner) {
             <span class="hljs-keyword">return</span> callback(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">"A document must have an owner."</span>);
@@ -589,19 +611,19 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 </code></pre>
 				<p>The following decorators are available for lifecycle callbacks:</p>
 				<ul>
-					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#prePersist">PrePersist</a>: Call method before a new
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#prepersist">PrePersist</a>: Call method before a new
 					entity is saved to the database.</li>
-					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postPersist">PostPersist</a>: Call method after a new
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postpersist">PostPersist</a>: Call method after a new
 					entity is saved to the database.</li>
 					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postload">PostLoad</a>: Call method after an entity is loaded
 					from the database.</li>
-					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#preUpdate">PreUpdate</a>: Call method before modifications to
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#preupdate">PreUpdate</a>: Call method before modifications to
 					an entity are saved to the database.</li>
-					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postUpdate">PostUpdate</a>: Call method after
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postupdate">PostUpdate</a>: Call method after
 					modifications to an entity are saved to the database.</li>
-					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#preRemove">PreRemove</a>: Call method before an entity is
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#preremove">PreRemove</a>: Call method before an entity is
 					deleted from the database.</li>
-					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postRemove">PostRemove</a>: Call method after an entity is
+					<li><a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#postremove">PostRemove</a>: Call method after an entity is
 					deleted from the database.</li>
 				</ul>
 			</div>
