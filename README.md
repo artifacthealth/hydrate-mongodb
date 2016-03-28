@@ -254,6 +254,18 @@ session.find(Task, id).fetch("assigned", (err, task) => {
 
 In TypeScript, the emitDecoratorMetadata and experimentalDecorators options must be enabled on the compiler.
 
+* [`Entities`](#Entities)
+* [`Collections`](#Collections)
+* [`Fields`](#Fields)
+* [`Identity`](#Identity)
+* [`Embeddables`](#Embeddables)
+* [`Types`](#Types)
+* [`Inheritance`](#Inheritance)
+* [`Mapped Superclass`](#MappedSuperclass)
+* [`Discriminators`](#Discriminators)
+* [`Lifecycle Callbacks`](#LifecycleCallbacks)
+
+<a name="Entities"></a>
 ### Entities
 
 Entities are classes that map to a document in a MongoDB collection. 
@@ -280,7 +292,7 @@ the constructor is not called. This means the internal state of an entity must f
 fields.
 * An identifier is assigned to the entity when it is saved. 
 
-
+<a name="Collections"></a>
 ### Collections
 
 If a name for the collection is not given, an entity is mapped to a collection in MongoDB based on the name of the 
@@ -307,6 +319,7 @@ export class Person {
 }
 ```
 
+<a name="Fields"></a>
 ### Fields
 
 Fields are mapped on an opt-in basis. *Only fields that are decorated are mapped.* The name for the field in the document
@@ -326,6 +339,7 @@ If the name for the field is not specified, the
 on the [Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html) is used to determine
 the name of the field. The default naming strategy is [CamelCase](https://artifacthealth.github.io/hydrate-mongodb/modules/namingstrategies.html#camelcase).
 
+<a name="Identity"></a>
 ### Identity
   
 The [identityGenerator](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#identitygenerator) 
@@ -365,6 +379,7 @@ export class User {
 ```
   
   
+<a name="Embeddables"></a>
 ### Embeddables
   
 Embeddables are classes that map to nested subdocuments within entities, arrays, or other embeddables.
@@ -413,6 +428,7 @@ export class Person {
 deserialized from the database, the constructor is not called. This means the internal state of an embeddable must fully 
 represented by it's serialized fields.
 
+<a name="Types"></a>
 ### Types
 
 When using TypeScript, the type of a field is automatically provided. The following types are supported:
@@ -502,6 +518,7 @@ export class Task {
 ```
 
 
+<a name="Inheritance"></a>
 ### Inheritance
 
 Standard prototypical inheritance is supported for both entities and embeddables.
@@ -528,6 +545,7 @@ All entities within an inheritance hierarchy are stored in the same collection. 
 it is only valid on the root of an inheritance hierarchy.
 
 
+<a name="MappedSuperclass"></a>
 #### Mapped Superclass
 
 Entities stored in separate collections may share a common superclass that is not mapped to a collection. In the example,
@@ -559,7 +577,7 @@ class Document extends Asset {
 If `Asset` was decorated with [Entity](https://artifacthealth.github.io/hydrate-mongodb/globals.html#entity) then `Patient`
 and `Document` would instead both be stored in a collection called `asset`.
 
-
+<a name="Discriminators"></a>
 #### Discriminators
 
 If an inheritance hierarchy is defined, a discriminator field is added to the serialized document to indicate the type
@@ -600,7 +618,7 @@ If the discriminator value is not explicitly specified for a class, it is determ
 [Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html).
 By default, the name of the class is used. 
 
-
+<a name="LifecycleCallbacks"></a>
 ### Lifecycle Callbacks
 
 Hydrate provides callbacks that can be called on an entity during various stages of the entity lifecycle similar to 
@@ -646,7 +664,7 @@ class Document {
        
     @PrePersist()
     @PreUpdate()
-    private _validate(callback: Callback): void {
+    validate(callback: Callback): void {
 
         if(!this.owner) {
             return callback(new Error("A document must have an owner.");
@@ -659,17 +677,17 @@ class Document {
 
 The following decorators are available for lifecycle callbacks:
 
-* [PrePersist](https://artifacthealth.github.io/hydrate-mongodb/globals.html#prePersist): Call method before a new 
+* [PrePersist](https://artifacthealth.github.io/hydrate-mongodb/globals.html#prepersist): Call method before a new 
 entity is saved to the database.
-* [PostPersist](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postPersist): Call method after a new 
+* [PostPersist](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postpersist): Call method after a new 
 entity is saved to the database.
 * [PostLoad](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postload): Call method after an entity is loaded 
 from the database.
-* [PreUpdate](https://artifacthealth.github.io/hydrate-mongodb/globals.html#preUpdate): Call method before modifications to 
+* [PreUpdate](https://artifacthealth.github.io/hydrate-mongodb/globals.html#preupdate): Call method before modifications to 
 an entity are saved to the database.
-* [PostUpdate](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postUpdate): Call method after 
+* [PostUpdate](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postupdate): Call method after 
 modifications to an entity are saved to the database.
-* [PreRemove](https://artifacthealth.github.io/hydrate-mongodb/globals.html#preRemove): Call method before an entity is 
+* [PreRemove](https://artifacthealth.github.io/hydrate-mongodb/globals.html#preremove): Call method before an entity is 
 deleted from the database.
-* [PostRemove](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postRemove): Call method after an entity is 
+* [PostRemove](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postremove): Call method after an entity is 
 deleted from the database.

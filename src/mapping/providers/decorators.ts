@@ -492,7 +492,10 @@ export declare function ElementType(target: Constructor<any> | string): Property
 export declare function MapKey(propertyName: string): PropertyDecorator;
 
 /**
- * Specifies a callback to be called before a new entity is saved to the database. 
+ * Specifies a callback to be called before a new entity is saved to the database.
+ *
+ * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
+ * information.
  *
  * ### Example
  *
@@ -511,31 +514,127 @@ export declare function PrePersist(): PropertyDecorator;
 
 /**
  * Specifies a callback to be called after a new entity is saved to the database.
+ *
+ * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
+ * information.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class User {
+ *
+ *      @PostPersist()
+ *      private _onPostPersist(): void {
+ *          ...
+ *      }
+ *  }
+ * ```
  */
 export declare function PostPersist(): PropertyDecorator;
 
 /**
  * Specifies a callback to be called after an entity is loaded from the database.
+ *
+ * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
+ * information.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class User {
+ *
+ *      @PostLoad()
+ *      private _onPostLoad(): void {
+ *          ...
+ *      }
+ *  }
+ * ```
  */
 export declare function PostLoad(): PropertyDecorator;
 
 /**
  * Specifies a callback to be called before modifications to an entity are saved to the database.
+ *
+ * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
+ * information.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class User {
+ *
+ *      @PreUpdate()
+ *      private _onPreUpdate(): void {
+ *          ...
+ *      }
+ *  }
+ * ```
  */
 export declare function PreUpdate(): PropertyDecorator;
 
 /**
  * Specifies a callback to be called after modifications to an entity are saved to the database.
+ *
+ * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
+ * information.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class User {
+ *
+ *      @PostUpdate()
+ *      private _onPostUpdate(): void {
+ *          ...
+ *      }
+ *  }
+ * ```
  */
 export declare function PostUpdate(): PropertyDecorator;
 
 /**
  * Specifies a callback to be called before an entity is deleted from the database.
+ *
+ * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
+ * information.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class User {
+ *
+ *      @PreRemove()
+ *      private _onPreRemove(): void {
+ *          ...
+ *      }
+ *  }
+ * ```
  */
 export declare function PreRemove(): PropertyDecorator;
 
 /**
  * Specifies a callback to be called after an entity is deleted from the database.
+ *
+ * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
+ * information.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class User {
+ *
+ *      @PostRemove()
+ *      private _onPostRemove(): void {
+ *          ...
+ *      }
+ *  }
+ * ```
  */
 export declare function PostRemove(): PropertyDecorator;
 
