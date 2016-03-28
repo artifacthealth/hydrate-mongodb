@@ -8,7 +8,6 @@ import {ChangeTrackingType} from "./mapping/mappingModel";
 import {IdentityGenerator} from "./config/configuration";
 import {Batch} from "./batch";
 import {Callback} from "./core/callback";
-import {Result} from "./core/result";
 import {Command} from "./core/command";
 import {Changes} from "./mapping/changes";
 import {QueryDefinition} from "./query/queryDefinition";
@@ -76,9 +75,13 @@ export interface Persister {
     changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
 
-    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void;
-    addInsert(batch: Batch, entity: Object, callback: ResultCallback<Object>): void;
-    addRemove(batch: Batch, entity: Object, callback: Callback): void;
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Object;
+    addInsert(batch: Batch, entity: Object): Object;
+    addRemove(batch: Batch, entity: Object): void;
+
+    postUpdate(entity: Object): void;
+    postInsert(entity: Object): void;
+    postRemove(entity: Object): void;
 
     fetch(entity: Object, path: string, callback: Callback): void;
     refresh(entity: Object, callback: ResultCallback<Object>): void;
@@ -105,7 +108,6 @@ export class PersisterImpl implements Persister {
     private _session: InternalSession;
     private _criteriaBuilder: CriteriaBuilder;
     private _updateDocumentBuilder: UpdateDocumentBuilder;
-    private _hasPostLoad: boolean;
 
     constructor(session: InternalSession, mapping: EntityMapping, collection: mongodb.Collection) {
 
@@ -117,21 +119,32 @@ export class PersisterImpl implements Persister {
         this.changeTracking = inheritanceRoot.changeTracking;
         this.identity = inheritanceRoot.identity;
         this._versioned = inheritanceRoot.versioned;
-        this._hasPostLoad = mapping.hasLifecycleCallbacks(MappingModel.LifecycleEvent.PostLoad);
     }
 
-    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void {
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Object {
 
         var context = new WriteContext();
         var document = this._mapping.write(context, entity);
         if(context.hasErrors) {
-            return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
+            batch.error = new Error(`Error serializing document:\n${context.getErrorMessage()}`);
+            return null;
         }
 
         if(!this._mapping.areDocumentsEqual(originalDocument, document)) {
 
+            if(this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PreUpdate) > 0) {
+                // lifecycle callback may have changed the entity so we need to write the document again before saving
+                // to the database
+                context = new WriteContext();
+                document = this._mapping.write(context, entity);
+                if(context.hasErrors) {
+                    batch.error = new Error(`Error serializing document:\n${context.getErrorMessage()}`);
+                    return null;
+                }
+            }
+
             // update version field if versioned
-            if(this._versioned) {
+            if (this._versioned) {
                 // get the current version
                 var version = this._mapping.getDocumentVersion(originalDocument);
                 // increment the version if defined; otherwise, start at 1.
@@ -139,17 +152,21 @@ export class PersisterImpl implements Persister {
             }
 
             this._getCommand(batch).addReplace(document, version);
+            return document;
         }
 
-        callback(null, document);
+        return null;
     }
 
-    addInsert(batch: Batch, entity: Object, callback: ResultCallback<Object>): void {
+    addInsert(batch: Batch, entity: Object): Object {
+
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PrePersist);
 
         var context = new WriteContext();
         var document = this._mapping.write(context, entity);
         if(context.hasErrors) {
-            return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
+            batch.error = new Error(`Error serializing document:\n${context.getErrorMessage()}`);
+            return null;
         }
 
         // add version field if versioned
@@ -158,13 +175,28 @@ export class PersisterImpl implements Persister {
         }
 
         this._getCommand(batch).addInsert(document);
-        callback(null, document);
+        return document;
     }
 
-    addRemove(batch: Batch, entity: any, callback: Callback): void {
+    addRemove(batch: Batch, entity: any): void {
 
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PreRemove);
         this._getCommand(batch).addRemove(entity["_id"]);
-        callback();
+    }
+
+    postUpdate(entity: Object): void {
+
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostUpdate);
+    }
+
+    postInsert(entity: Object): void {
+
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostPersist);
+    }
+
+    postRemove(entity: Object): void {
+
+        this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostRemove);
     }
 
     /**
@@ -352,14 +384,19 @@ export class PersisterImpl implements Persister {
 
         // map sorting
         if(query.sortValue) {
-            var preparedOrder = this._prepareOrderDocument(query.sortValue);
-            if(preparedOrder.error) {
-                return callback(preparedOrder.error);
-            }
-            else {
-                query.orderDocument = preparedOrder.value;
-            }
+            this._prepareOrderDocument(query.sortValue, (err, preparedOrder) => {
+                if(err) return callback(err);
+
+                query.orderDocument = preparedOrder;
+                this._executeQuery(query, callback);
+            });
         }
+        else {
+            this._executeQuery(query, callback);
+        }
+    }
+
+    private _executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
 
         switch(query.kind) {
             case QueryKind.FindOne:
@@ -395,10 +432,12 @@ export class PersisterImpl implements Persister {
             case QueryKind.Count:
                 this._count(query, callback);
                 break;
+            default:
+                callback(new Error(`Unknown query type '${query.kind}'.`));
         }
     }
 
-    private _prepareOrderDocument(sorting: [string, number][]): Result<OrderDocument[]> {
+    private _prepareOrderDocument(sorting: [string, number][], callback: ResultCallback<OrderDocument[]>): void {
 
         var order: OrderDocument[] = [];
 
@@ -409,7 +448,7 @@ export class PersisterImpl implements Persister {
             // resolve field path
             var context = this._mapping.resolve(sortTuple[0]);
             if(context.error) {
-                return new Result<OrderDocument[]>(context.error);
+                return callback(context.error);
             }
 
             var sortDocument: OrderDocument = {};
@@ -417,7 +456,7 @@ export class PersisterImpl implements Persister {
             order.push(sortDocument);
         }
 
-        return new Result(null, order);
+        callback(null, order);
     }
 
     // TODO: optimize this function by using underlying cursor from core directly
@@ -755,20 +794,12 @@ export class PersisterImpl implements Persister {
                 if (context.hasErrors) {
                     return callback(new Error("Error deserializing document:\n" + context.getErrorMessage()));
                 }
-
+                this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostLoad);
                 this._session.registerManaged(this, entity, document);
             }
         }
 
-        if(this._hasPostLoad) {
-            this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostLoad, (err) => {
-                if(err) return callback(err);
-                callback(null, entity);
-            });
-        }
-        else {
-            callback(null, entity);
-        }
+        callback(null, entity);
     }
 
     private _getCommand(batch: Batch): BulkOperationCommand {

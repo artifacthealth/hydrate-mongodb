@@ -53,7 +53,7 @@ export class MappingBuilderContext {
 
         if(this.currentMethod) {
 
-            message = `Error processing method '${this.currentMethod.name}' on type '${this.currentProperty.parent.name}': ${message}`;
+            message = `Error processing method '${this.currentMethod.name}' on type '${this.currentMethod.parent.name}': ${message}`;
         }
         else if(this.currentProperty) {
 

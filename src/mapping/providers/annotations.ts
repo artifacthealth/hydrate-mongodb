@@ -677,6 +677,12 @@ export class LifecycleEventAnnotation extends Annotation implements MethodAnnota
 
         if(!context.assertEntityMapping(mapping)) return;
 
+        if(method.parameters.length != 0) {
+            console.log(method.parameters);
+            context.addError("Lifecycle callback must be parameterless.");
+            return;
+        }
+
         mapping.addLifecycleCallback(this.event, method.parent.ctr.prototype[method.name]);
     }
 }

@@ -492,7 +492,7 @@ export declare function ElementType(target: Constructor<any> | string): Property
 export declare function MapKey(propertyName: string): PropertyDecorator;
 
 /**
- * Specifies a callback to be called before a new entity is saved to the database.
+ * Specifies a callback to be called before a new entity is saved to the database. 
  *
  * ### Example
  *
@@ -501,7 +501,7 @@ export declare function MapKey(propertyName: string): PropertyDecorator;
  *  export class User {
  *
  *      @PrePersist()
- *      private _onPrePersist(callback: Callback): void {
+ *      private _onPrePersist(): void {
  *          ...
  *      }
  *  }

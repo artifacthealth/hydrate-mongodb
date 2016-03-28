@@ -1,15 +1,10 @@
-import * as model from "./fixtures/model";
 import {Persister} from "../src/persister";
 import {ResultCallback} from "../src/core/callback";
-import {InternalSession} from "../src/session";
 import {MappingModel} from "../src/mapping/mappingModel";
 import {Batch} from "../src/batch";
 import {ChangeTrackingType} from "../src/mapping/mappingModel";
 import {IdentityGenerator} from "../src/config/configuration";
 import {EntityMapping} from "../src/mapping/entityMapping";
-import {MockIdentityGenerator} from "./id/mockIdentityGenerator";
-import {MappingRegistry} from "../src/mapping/mappingRegistry";
-import {Result} from "../src/core/result";
 import {Callback} from "../src/core/callback";
 import {QueryDefinition} from "../src/query/queryDefinition";
 import {Observer} from "../src/observer";
@@ -38,41 +33,52 @@ export class MockPersister implements Persister {
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
-    dirtyCheck(batch: Batch, entity: any, originalDocument: any, callback: ResultCallback<Object>): void {
+    dirtyCheck(batch: Batch, entity: any, originalDocument: any): Object {
         this.dirtyCheckCalled++;
         if (!this.wasDirtyChecked(entity)) {
             this.dirtyChecked.push(entity);
         }
 
-        callback(null, originalDocument);
+        return originalDocument;
     }
 
     wasDirtyChecked(entity: any): boolean {
         return this.dirtyChecked.indexOf(entity) !== -1;
     }
 
-    addInsert(batch: Batch, entity: any, callback: ResultCallback<Object>): void{
+    addInsert(batch: Batch, entity: any): Object{
         this.insertCalled++;
         if (!this.wasInserted(entity)) {
             this.inserted.push(entity);
         }
-        callback(null, {});
+        return {};
     }
 
     wasInserted(entity: any): boolean {
         return this.inserted.indexOf(entity) !== -1;
     }
 
-    addRemove(batch: Batch, entity: any, callback: Callback): void {
+    addRemove(batch: Batch, entity: any): void {
         this.removeCalled++;
         if (!this.wasRemoved(entity)) {
             this.removed.push(entity);
         }
-        callback();
     }
 
     wasRemoved(entity: any): boolean {
         return this.removed.indexOf(entity) !== -1;
+    }
+
+    postUpdate(entity: Object): void {
+
+    }
+
+    postInsert(entity: Object): void {
+
+    }
+
+    postRemove(entity: Object): void {
+
     }
 
     refresh(entity: any, callback: ResultCallback<any>): void {

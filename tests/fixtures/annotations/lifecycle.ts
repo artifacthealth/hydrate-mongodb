@@ -9,10 +9,9 @@ export class A {
     loadAOrder: number;
 
     @PostLoad()
-    private _onLoadA(callback: Callback): void {
+    private _onLoadA(): void {
         this.loadACalled++;
         this.loadAOrder = order++;
-        callback();
     }
 }
 
@@ -23,9 +22,8 @@ export class B extends A {
     loadBOrder: number;
 
     @PostLoad()
-    private _onLoadB(callback: Callback): void {
+    private _onLoadB(): void {
         this.loadBCalled++;
         this.loadBOrder = order++;
-        callback();
     }
 }

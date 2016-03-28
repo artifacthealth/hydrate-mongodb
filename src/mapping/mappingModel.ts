@@ -193,7 +193,7 @@ export namespace MappingModel {
      */
     export interface LifecycleCallback {
 
-        (callback: Callback): void;
+        (): void;
     }
 
     /**

@@ -785,71 +785,46 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      */
     private _buildBatch(batch: Batch, links: ObjectLinks, callback: Callback): void {
 
-        var count = 0,
-            replenishing = false,
-            errored = false;
+        var count = 0;
 
-        replenish();
+        while(links && count < 1000) {
 
-        function replenish() {
-
-            replenishing = true;
-            while (links && count < 1000 && !errored) {
-
-                if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
-                    count++;
-                    links.persister.dirtyCheck(batch, links.object, links.originalDocument, (err, document) => {
-                        if(err) return done(err);
-                        links.originalDocument = document;
-                        done();
-                    });
+            if (links.scheduledOperation == ScheduledOperation.DirtyCheck) {
+                var document = links.persister.dirtyCheck(batch, links.object, links.originalDocument);
+                if(document) {
+                    // if we got a document back then the entity was dirty. change the scheduled operation to update
+                    // so we know to run post-update callback when batch is finished
+                    links.scheduledOperation = ScheduledOperation.Update;
+                    links.originalDocument = document;
                 }
-                else if (links.scheduledOperation == ScheduledOperation.Insert) {
-                    count++;
-                    links.persister.addInsert(batch, links.object, (err, document) => {
-                        if(err) return done(err);
-                        links.originalDocument = document;
-                        done();
-                    });
-                }
-                else if (links.scheduledOperation == ScheduledOperation.Delete) {
-                    count++;
-                    links.persister.addRemove(batch, links.object, done);
-                }
-
-                links = links.next;
             }
-            replenishing = false;
-
-            // If persister finished synchronously then call callback now
-            if(!links && count <= 0) {
-                callback();
+            else if (links.scheduledOperation == ScheduledOperation.Insert) {
+                var document = links.persister.addInsert(batch, links.object);
+                if(document) {
+                    links.originalDocument = document;
+                }
             }
+            else if (links.scheduledOperation == ScheduledOperation.Delete) {
+                links.persister.addRemove(batch, links.object);
+            }
+
+            if(batch.error) {
+                return callback(batch.error);
+            }
+
+            links = links.next;
+            count++;
         }
 
-        function done(err?: Error): void {
-            if(errored) return;
-            
-            count--;
-
-            if(err) {
-                errored = true;
-                callback(err);
-                return;
-            }
-
-            if(!replenishing && count <= 0) {
-                if(links) {
-                    // If there are more links to process then handle on the next tick
-                    process.nextTick(replenish);
-                }
-                else {
-                    // all done
-                    callback();
-                }
-            }
+        // If there are more links in the queue, continue building the batch on the next tick.
+        if(links) {
+            process.nextTick(() => this._buildBatch(batch, links, callback));
+        }
+        else {
+            callback();
         }
     }
+
 
     /**
      * Called after a batch is successfully executed.
@@ -861,6 +836,18 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         var links = head;
         while(links) {
             var next = links.next;
+
+            switch(links.scheduledOperation) {
+                case ScheduledOperation.Update:
+                    links.persister.postUpdate(links.object);
+                    break;
+                case ScheduledOperation.Delete:
+                    links.persister.postRemove(links.object);
+                    break;
+                case ScheduledOperation.Insert:
+                    links.persister.postInsert(links.object);
+                    break;
+            }
 
             links.scheduledOperation = ScheduledOperation.None;
             links.flags = ObjectFlags.None;

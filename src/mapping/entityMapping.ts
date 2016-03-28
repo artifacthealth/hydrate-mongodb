@@ -288,31 +288,26 @@ export class EntityMapping extends ClassMapping {
         callbacks.push(callback);
     }
 
-    hasLifecycleCallbacks(event: MappingModel.LifecycleEvent): boolean {
-
-        return this._lifecycleCallbacks != null && this._lifecycleCallbacks[event] != null;
-    }
-
     /**
      * Execute callbacks for a lifecycle event.
      * @param entity The entity instance to execute callbacks for.
      * @param event The lifecycle event.
      * @param callback Called after lifecycle callbacks have executed.
      */
-    executeLifecycleCallbacks(entity: Object, event: MappingModel.LifecycleEvent, callback: Callback): void {
+    executeLifecycleCallbacks(entity: Object, event: MappingModel.LifecycleEvent): number {
 
         if(!this._lifecycleCallbacks) {
-            callback();
-            return;
+            return 0;
         }
         var callbacks = this._lifecycleCallbacks[event];
         if(!callbacks) {
-            callback();
-            return;
+            return 0;
         }
 
-        async.eachSeries(callbacks, (item, done) => {
-            item.call(entity, done);
-        }, callback);
+        for(var i = 0, l = callbacks.length; i < l; i++) {
+            callbacks[i].call(entity);
+        }
+
+        return l;
     }
 }

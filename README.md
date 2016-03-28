@@ -578,11 +578,8 @@ class Party {
 }
 ```
 
-The discriminator value for a class is determined using the 
-[discriminatorNamingStrategy](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#discriminatornamingstrategy) on the 
-[Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html).
-By default, the name of the class is used. The discriminator value can also be specified using the 
-[DiscriminatorValue](https://artifacthealth.github.io/hydrate-mongodb/globals.html#discriminatorvalue) decorator on a class.
+The class discriminator can be specified using the 
+[DiscriminatorValue](https://artifacthealth.github.io/hydrate-mongodb/globals.html#discriminatorvalue) decorator.
 
 ```typescript
 @Entity()
@@ -597,3 +594,54 @@ class Organization extends Party {
     ...
 }
 ```
+
+If the discriminator value is not explicitly specified for a class, it is determined using the 
+[discriminatorNamingStrategy](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#discriminatornamingstrategy) on the 
+[Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html).
+By default, the name of the class is used. 
+
+
+### Lifecycle Callbacks
+
+Hydrate provides callbacks that can be called on an entity during various stages of the entity lifecycle similar to 
+[JPA Lifecycle Callbacks](http://openjpa.apache.org/builds/1.2.3/apache-openjpa/docs/jpa_overview_pc_callbacks.html). A few 
+important restrictions: 
+
+* Lifecycle callbacks are synchronous and parameterless.
+* Lifecycle callbacks must not modify any entities other than the entity they are called on; otherwise, results are unpredictable.
+* Lifecycle callbacks should avoid accessing the [Session](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html).
+
+Lifecycle callbacks are defined by adding the corresponding decorator to the class method as follows:
+
+```typescript
+@Entity()
+class Person {
+
+    @Field()
+    modified: Date;
+    
+    @PreUpdate()
+    private _beforeUpdate(): void {
+    
+        // set the modified date on the entity before it is saved to the database.
+        this.modified = new Date();
+    }   
+}
+```
+
+The following decorators are available for lifecycle callbacks:
+
+* [PrePersist](https://artifacthealth.github.io/hydrate-mongodb/globals.html#prePersist): Call method before a new 
+entity is saved to the database.
+* [PostPersist](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postPersist): Call method after a new 
+entity is saved to the database.
+* [PostLoad](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postload): Call method after an entity is loaded 
+from the database.
+* [PreUpdate](https://artifacthealth.github.io/hydrate-mongodb/globals.html#preUpdate): Call method before modifications to 
+an entity are saved to the database.
+* [PostUpdate](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postUpdate): Call method after 
+modifications to an entity are saved to the database.
+* [PreRemove](https://artifacthealth.github.io/hydrate-mongodb/globals.html#preRemove): Call method before an entity is 
+deleted from the database.
+* [PostRemove](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postRemove): Call method after an entity is 
+deleted from the database.

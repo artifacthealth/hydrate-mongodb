@@ -1,15 +1,12 @@
 import * as mongodb from "mongodb";
-import * as async from "async";
 import { InternalSession, Session } from "../src/session";
 import { Configuration } from "../src/config/configuration";
 import { AnnotationMappingProvider } from "../src/mapping/providers/annotationMappingProvider";
 import { Cat } from "../tests/fixtures/cat";
-import * as helpers from "../tests/helpers";
 import { SessionFactory, SessionFactoryImpl } from "../src/sessionFactory";
 import { Persister } from "../src/persister";
 import { IdentityGenerator } from "../src/config/configuration";
 import { Batch } from "../src/batch";
-import { Result } from "../src/core/result";
 import { MappingModel, ChangeTrackingType } from "../src/mapping/mappingModel";
 import { MappingRegistry } from "../src/mapping/mappingRegistry";
 import { ResultCallback } from "../src/core/callback";
@@ -62,8 +59,6 @@ suite("SessionImpl", () => {
         i = 0;
     });
 
-
-
     test("save x 1000", (done) => {
         for(var j = 0; j < 1000; j++) {
             if(!cats[i]) return done(new Error("ran out of cats at " + i));
@@ -108,15 +103,28 @@ class DummyPersister implements Persister {
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
-    dirtyCheck(batch: Batch, entity: any, originalDocument: any): Result<any> {
-        return new Result(null, originalDocument);
+    dirtyCheck(batch: Batch, entity: any, originalDocument: any): Object {
+        return originalDocument;
     }
 
-    addInsert(batch: Batch, entity: any): Result<any> {
-        return new Result(null, {});
+    addInsert(batch: Batch, entity: any): Object {
+        return {};
     }
 
     addRemove(batch: Batch, entity: any): void {
+
+    }
+
+    postUpdate(entity: Object): void {
+
+    }
+
+    postInsert(entity: Object): void {
+
+    }
+
+    postRemove(entity: Object): void {
+
     }
 
     refresh(entity: any, callback: ResultCallback<any>): void {
