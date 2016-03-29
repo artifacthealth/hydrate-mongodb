@@ -797,3 +797,19 @@ function getParentMapping(context: MappingBuilderContext, type: Type): MappingMo
         }
     }
 }
+
+/**
+ * @hidden
+ */
+export class TransientAnnotation implements PropertyAnnotation {
+
+    toString(): string {
+        return "@Transient";
+    }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: Annotation): void {
+
+        property.field = null;
+        property.setFlags(MappingModel.PropertyFlags.Ignored);
+    }
+}

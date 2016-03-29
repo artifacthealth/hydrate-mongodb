@@ -30,7 +30,7 @@ import {
     PreUpdateAnnotation,
     PostUpdateAnnotation,
     PreRemoveAnnotation,
-    PostRemoveAnnotation
+    PostRemoveAnnotation, TransientAnnotation
 } from "./annotations";
 
 import {PropertyConverter} from "../mappingModel";
@@ -638,6 +638,27 @@ export declare function PreRemove(): PropertyDecorator;
  */
 export declare function PostRemove(): PropertyDecorator;
 
+/**
+ * Specifies that a property should not be persisted.
+ *
+ * Properties are mapped to persistent document fields on an opt-in basis. *All properties that are decorated are
+ * mapped.* However, if you wish to prevent a decorated property from being mapped, decorate that property with the
+ * Transient decorator as demonstrated below.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class User {
+ *
+ *      @Transient()
+ *      @SomeOtherDecorator()
+ *      private _something: string;
+ *  }
+ * ```
+ */
+export declare function Transient(): PropertyDecorator;
+
 
 exports.Entity = makeDecorator(EntityAnnotation);
 exports.Embeddable = makeDecorator(EmbeddableAnnotation);
@@ -664,5 +685,6 @@ exports.PreUpdate = makeDecorator(PreUpdateAnnotation);
 exports.PostUpdate = makeDecorator(PostUpdateAnnotation);
 exports.PreRemove = makeDecorator(PreRemoveAnnotation);
 exports.PostRemove = makeDecorator(PostRemoveAnnotation);
+exports.Transient = makeDecorator(TransientAnnotation);
 
 

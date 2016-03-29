@@ -420,6 +420,30 @@ describe('AnnotationMappingProvider', () => {
                 });
             });
         });
+
+        describe('@transient', () => {
+
+            it("sets property as ignored", (done) => {
+
+                getTransientFieldMapping(done, (property) => assert.isTrue(property.hasFlags(MappingModel.PropertyFlags.Ignored)));
+            });
+
+            it("sets field name to null.", (done) => {
+
+                getTransientFieldMapping(done, (property) => assert.isNull(property.field));
+            });
+
+            function getTransientFieldMapping(done: Callback, callback: (mapping: Property) => void): void {
+
+                processFixture("transient", done, (results) => {
+
+                    var classMapping = findMapping(results, "A");
+                    var property = classMapping.getProperty("a");
+                    assert.ok(property, "Unable to get property 'a' on class 'A' in fixture 'transient'.");
+                    callback(property);
+                });
+            }
+        });
     });
 });
 
