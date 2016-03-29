@@ -246,7 +246,7 @@ describe('PersisterImpl', () => {
 
                         cursor.onSort = (keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void): Cursor => {
 
-                            assert.deepEqual(keyOrList, [ { 'name': 1 }]);
+                            assert.deepEqual(keyOrList, [ [ 'name', 1 ] ]);
                             done();
 
                             return cursor;

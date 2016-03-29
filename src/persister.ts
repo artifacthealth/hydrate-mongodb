@@ -444,23 +444,21 @@ export class PersisterImpl implements Persister {
         }
     }
 
-    private _prepareOrderDocument(sorting: [string, number][], callback: ResultCallback<OrderDocument[]>): void {
+    private _prepareOrderDocument(sorting: [string, number][], callback: ResultCallback<[string, number][]>): void {
 
-        var order: OrderDocument[] = [];
+        var order: [string, number][] = [];
 
         for(var i = 0; i < sorting.length; i++) {
 
-            var sortTuple = sorting[i];
+            var value = sorting[i];
 
             // resolve field path
-            var context = this._mapping.resolve(sortTuple[0]);
+            var context = this._mapping.resolve(value[0]);
             if(context.error) {
                 return callback(context.error);
             }
 
-            var sortDocument: OrderDocument = {};
-            sortDocument[context.resolvedPath] = sortTuple[1];
-            order.push(sortDocument);
+            order.push([context.resolvedPath, value[1]]);
         }
 
         callback(null, order);

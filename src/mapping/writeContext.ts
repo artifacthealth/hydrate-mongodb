@@ -12,7 +12,7 @@ export class WriteContext {
     errors: MappingError[] = [];
 
     /**
-     * Listed of objects that have been visited order order to prevent infinite loops.
+     * Listed of objects that have been visited to prevent infinite loops.
      */
     visited: any[] = [];
 
