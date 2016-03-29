@@ -140,6 +140,7 @@
 								<li class="tsd-kind-function"><a href="globals.html#prepersist" class="tsd-kind-icon">Pre<wbr>Persist</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#preremove" class="tsd-kind-icon">Pre<wbr>Remove</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#preupdate" class="tsd-kind-icon">Pre<wbr>Update</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#transient" class="tsd-kind-icon">Transient</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#type" class="tsd-kind-icon">Type</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#versionfield" class="tsd-kind-icon">Version<wbr>Field</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#versioned" class="tsd-kind-icon">Versioned</a></li>
@@ -1059,6 +1060,40 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="transient" class="tsd-anchor"></a>
+					<h3>Transient</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Transient<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L660">mapping/providers/decorators.ts:660</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Specifies that a property should not be persisted.</p>
+								</div>
+								<p>Properties are mapped to persistent document fields on an opt-in basis. <em>All properties that are decorated are
+									mapped.</em> However, if you wish to prevent a decorated property from being mapped, decorate that property with the
+								Transient decorator as demonstrated below.</p>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+     @Transient()
+     @SomeOtherDecorator()
+     <span class="hljs-keyword">private</span> _something: <span class="hljs-built_in">string</span>;
+ }
+</code></pre>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
 					<a name="type" class="tsd-anchor"></a>
 					<h3>Type</h3>
 					<ul class="tsd-signatures tsd-kind-function">
@@ -1399,6 +1434,9 @@
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#preupdate" class="tsd-kind-icon">Pre<wbr>Update</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#transient" class="tsd-kind-icon">Transient</a>
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#type" class="tsd-kind-icon">Type</a>
