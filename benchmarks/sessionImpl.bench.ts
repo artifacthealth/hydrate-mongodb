@@ -81,6 +81,8 @@ suite("SessionImpl", () => {
     });
 });
 
+
+
 class DummySessionFactory extends SessionFactoryImpl {
 
     constructor(mappingRegistry: MappingRegistry) {

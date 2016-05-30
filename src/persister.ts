@@ -21,6 +21,7 @@ import {Observer} from "./observer";
 import {OrderDocument} from "./query/orderDocument";
 import {WriteContext} from "./mapping/writeContext";
 import {MappingModel} from "./mapping/mappingModel";
+import {Readable} from "stream";
 
 interface FindOneQuery {
 
@@ -675,7 +676,7 @@ export class PersisterImpl implements Persister {
 
         var options: RemoveOptions = {
             single: query.kind == QueryKind.RemoveOne
-        }
+        };
 
         this._collection.remove(query.criteria, options, (err: Error, response: any) => {
             if(err) return callback(err);
@@ -687,7 +688,7 @@ export class PersisterImpl implements Persister {
 
         var options: UpdateOptions = {
             multi: query.kind == QueryKind.UpdateAll
-        }
+        };
 
         this._collection.update(query.criteria, query.updateDocument, options, (err: Error, response: any) => {
             if(err) return callback(err);
@@ -853,7 +854,7 @@ class BulkOperationCommand implements Command {
 
         var query: any = {
             _id: document["_id"]
-        }
+        };
 
         if(version != null) {
             // TODO: adding the version to the query makes the query much slower. Couldn't figure out any way around it. Look into this.
@@ -868,7 +869,7 @@ class BulkOperationCommand implements Command {
 
         var query: any = {
             _id: id
-        }
+        };
 
         this.updated++;
         this.operation.find(query).update(changes);
@@ -878,7 +879,7 @@ class BulkOperationCommand implements Command {
 
         var query: any = {
             _id: id
-        }
+        };
 
         this.removed++;
         this.operation.find(query).removeOne();
@@ -948,22 +949,24 @@ class FindQueue {
 
         // check for simple case of only a single find in the queue
         if(ids.length == 1) {
-            var id = ids[0],
-                callback = callbacks.get(id.toString());
+            var originalId = ids[0],
+                callback = callbacks.get(originalId.toString()),
+                id: any;
 
-            if(typeof id === "string") {
-                id = this._persister.identity.fromString(id);
+            if(typeof originalId === "string") {
+                id = this._persister.identity.fromString(originalId);
                 if(id == null) {
-                    return callback(new Error(`Unable to convert string '${id}' to valid identifier.`))
+                    return callback(new Error(`Unable to convert string '${originalId}' to valid identifier.`))
                 }
             }
             else {
-                if(!this._persister.identity.validate(id)) {
-                    return callback(new Error(`'${id}' is not a valid identifier.`))
+                if(!this._persister.identity.validate(originalId)) {
+                    return callback(new Error(`'${originalId}' is not a valid identifier.`))
                 }
+                id = originalId;
             }
 
-            this._persister.findOne({ _id:  id }, (err, entity) => {
+            this._persister.findOne({ _id: id }, (err, entity) => {
                 if(err) return callback(err);
 
                 if(!entity) {
@@ -995,41 +998,39 @@ class FindQueue {
         });
     }
 }
-
 /*
- class QueryStream extends Readable {
+class QueryStream extends Readable {
 
-     private _cursor: Cursor;
+    private _cursor: mongodb.Cursor;
+    private _persister: PersisterImpl;
 
-     constructor(persister: PersisterImpl, cursor: Cursor) {
-         super({readableObjectMode: true});
-         this._cursor = cursor;
-     }
+    constructor(persister: PersisterImpl, cursor: mongodb.Cursor) {
+        super({readableObjectMode: true});
+        this._cursor = cursor;
+        this._persister = persister;
+    }
 
-     _read(): void {
+    _read(): void {
 
-         this._cursor.nextObject((err: Error, item: any) => {
-             if (err) return error(err);
+        this._cursor.nextObject((err: Error, item: any) => {
+            if (err) return handleError(err);
 
-             if (item == null) {
-                 // end of cursor
-                 this.push(null);
-                 return;
-             }
+            if (item == null) {
+                // end of cursor
+                this.push(null);
+                return;
+            }
 
-             var result = self._loadOne(item);
-             if (result.error) {
-                 return error(result.error);
-             }
+            this._persister._loadOne(item, (err, result) => {
+                if (err) return handleError(err);
+                this.push(result);
+            });
+        });
 
-             this.push(result.value);
-         });
-
-         function error(err: Error) {
-             this._cursor.close();  // close the cursor since it may not be exhausted
-             this.emit('error', err);
-         }
-     }
- }
-
+        function handleError(err: Error) {
+            this._cursor.close();  // close the cursor since it may not be exhausted
+            this.emit('error', err);
+        }
+    }
+}
 */

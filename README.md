@@ -41,8 +41,6 @@ to the MongoDB native Node.js driver.
 MongoDB [bulk write operations](https://docs.mongodb.org/v3.0/core/bulk-write-operations/) are used to synchronize 
 changes with the database, which can result in significant performance gains.
 
-#### Extensibility
-Hydrate provides numerous opportunities for extensibility.
 
 ## Installation
 
@@ -157,6 +155,10 @@ MongoClient.connect('mongodb://localhost/mydatabase', (err, db) => {
 ```
 
 ### Creating a Session
+
+A Hydrate Session should not be confused with the web-server session. The Hydrate Session is analogous to JPA's 
+[EntityManager](http://www.objectdb.com/java/jpa/persistence/overview), and is responsible for managing the lifecycle of 
+persistent entities.
 
 Typically the [SessionFactory](https://artifacthealth.github.io/hydrate-mongodb/interfaces/sessionfactory.html) is 
 created once at server startup and then used to create a [Session](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html) for each connection to 
