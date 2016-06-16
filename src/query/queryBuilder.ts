@@ -8,6 +8,7 @@ import {QueryDefinition} from "./queryDefinition";
 import {QueryKind} from "./queryKind";
 
 import {Constructor} from "../index"
+import {PersistenceError} from "../persistenceError";
 
 export interface QueryBuilder<T> {
     findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
@@ -139,7 +140,7 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
         var query = this._createQuery(QueryKind.FindOneById);
 
         if(id == null) {
-            query.error = new Error("Missing or invalid identifier.");
+            query.error = new PersistenceError("Missing or invalid identifier.");
         }
 
         query.id = id;
@@ -350,12 +351,12 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
                 this.sortValue.push([field, directionOrCallback]);
             }
             else {
-                throw new Error("Expected second parameter to be the sort direction when first parameter is a string.");
+                throw new PersistenceError("Expected second parameter to be the sort direction when first parameter is a string.");
             }
         }
         else {
             if(!Array.isArray(field)) {
-                throw new Error("Expected first parameter to be a string or array");
+                throw new PersistenceError("Expected first parameter to be a string or array");
             }
             this.sortValue = this.sortValue.concat(field);
         }
@@ -394,11 +395,11 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     each(iterator: IteratorCallback<Object>, callback: Callback): void {
 
         if(!iterator) {
-            throw new Error("Missing required argument 'iterator'.");
+            throw new PersistenceError("Missing required argument 'iterator'.");
         }
 
         if(!callback) {
-            throw new Error("Missing required argument 'callback'.");
+            throw new PersistenceError("Missing required argument 'callback'.");
         }
 
         this.kind = QueryKind.FindEach;
@@ -409,11 +410,11 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     eachSeries(iterator: IteratorCallback<Object>, callback: Callback): void {
 
         if(!iterator) {
-            throw new Error("Missing required argument 'iterator'.");
+            throw new PersistenceError("Missing required argument 'iterator'.");
         }
 
         if(!callback) {
-            throw new Error("Missing required argument 'callback'.");
+            throw new PersistenceError("Missing required argument 'callback'.");
         }
 
         this.kind = QueryKind.FindEachSeries;
@@ -425,7 +426,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
 
         if(callback) {
             if(this._executed) {
-                callback(new Error("Query already executed. A callback can only be passed to one function in the chain."));
+                callback(new PersistenceError("Query already executed. A callback can only be passed to one function in the chain."));
             }
             else {
                 this._executed = true;
@@ -446,7 +447,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
 
         var mapping = this._session.factory.getMappingForConstructor(this._entityCtr);
         if(!mapping) {
-            callback(new Error("Object type is not mapped as an entity."));
+            callback(new PersistenceError("Object type is not mapped as an entity."));
             return;
         }
 

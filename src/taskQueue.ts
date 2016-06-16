@@ -1,6 +1,7 @@
 import {EventEmitter} from "events";
 import {ResultCallback} from "./core/callback";
 import {Table} from "./core/table";
+import {PersistenceError} from "./persistenceError";
 
 /**
  * @hidden
@@ -38,11 +39,11 @@ export class TaskQueue extends EventEmitter {
         var err: Error;
 
         if(this._closed) {
-            err = new Error("Session is closed.");
+            err = new PersistenceError("Session is closed.");
         }
 
         if(this._invalid) {
-            err = new Error("Session is invalid. An error occurred during a previous action.");
+            err = new PersistenceError("Session is invalid. An error occurred during a previous action.");
         }
 
         if(err) {
@@ -56,7 +57,7 @@ export class TaskQueue extends EventEmitter {
             arg: arg,
             callback: callback,
             finished: false
-        }
+        };
 
         // initialize counts for this operation if it's the first time the operation has been added
         if(this._activeCounts[operation] === undefined) {
@@ -105,7 +106,7 @@ export class TaskQueue extends EventEmitter {
         return (err, result) => {
 
             if(task.finished) {
-                throw new Error("Callback for task can only be called once.");
+                throw new PersistenceError("Callback for task can only be called once.");
             }
             task.finished = true;
 

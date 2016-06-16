@@ -11,6 +11,7 @@ import {TupleMapping} from "./tupleMapping";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {WriteContext} from "./writeContext";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -125,11 +126,11 @@ export class ArrayMapping extends MappingBase {
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!parentEntity) {
-            return callback(new Error("Parent entity required to resolve inverse relationship."));
+            return callback(new PersistenceError("Parent entity required to resolve inverse relationship."));
         }
 
         if(!(this.elementMapping.flags & MappingModel.MappingFlags.Entity)) {
-            return callback(new Error("Element mapping must be an entity to resolve inverse relationship."));
+            return callback(new PersistenceError("Element mapping must be an entity to resolve inverse relationship."));
         }
 
         session.getPersister(<EntityMapping>this.elementMapping).findInverseOf(parentEntity, propertyName, (err, value) => {

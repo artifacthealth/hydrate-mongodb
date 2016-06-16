@@ -7,6 +7,7 @@ import {InternalMapping} from "../mapping/internalMapping";
 import {MappingError} from "../mapping/mappingError";
 import {EntityMapping} from "../mapping/entityMapping";
 import {WriteContext} from "../mapping/writeContext";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * Class that builds a database query document.
@@ -56,7 +57,7 @@ export class CriteriaBuilder {
                     // check for top level operators that require recursive processing
                     if (key == "$and" || key == "$or" || key == "$nor") {
                         if (!Array.isArray(value)) {
-                            this.error = new Error("Value of '" + key + "' operator should be an array.");
+                            this.error = new PersistenceError("Value of '" + key + "' operator should be an array.");
                             return null;
                         }
 
@@ -71,7 +72,7 @@ export class CriteriaBuilder {
                         // the $text operator doesn't contain any fields and we do not make any attempt to prepare
                         // field values in a $where operator, so we can just copy the value directly
                         if(withinField) {
-                            this.error = new Error("Operator '" + key + "' is not allowed in $elemMatch.");
+                            this.error = new PersistenceError("Operator '" + key + "' is not allowed in $elemMatch.");
                             return null;
                         }
 
@@ -85,7 +86,7 @@ export class CriteriaBuilder {
                     }
                     else {
                         // the only valid top-level operators are $and, $or, $nor, $where, and $text
-                        this.error = new Error("Unknown top-level operator '" + key + "'.");
+                        this.error = new PersistenceError("Unknown top-level operator '" + key + "'.");
                         return null;
                     }
                 }
@@ -97,7 +98,7 @@ export class CriteriaBuilder {
                             preparedValue = (<EntityMapping>this.mapping.inheritanceRoot).identity.fromString(value);
                         }
                         if(value == null || preparedValue == null) {
-                            this.error = new Error("Missing or invalid identifier for '_id'.");
+                            this.error = new PersistenceError("Missing or invalid identifier for '_id'.");
                             return null;                            
                         }
                     }
@@ -155,7 +156,7 @@ export class CriteriaBuilder {
     private _prepareQueryExpression(operator: string, query: QueryDocument, mapping: InternalMapping): QueryDocument {
 
         if(!query) {
-            this.error = new Error("Missing value for operator '" + operator + "'.");
+            this.error = new PersistenceError("Missing value for operator '" + operator + "'.");
             return null;
         }
 
@@ -164,7 +165,7 @@ export class CriteriaBuilder {
         for(var key in query) {
             if (query.hasOwnProperty(key)) {
                 if(key[0] != "$") {
-                    this.error = new Error("Unexpected value '" + key + "' in query expression.");
+                    this.error = new PersistenceError("Unexpected value '" + key + "' in query expression.");
                     return null;
                 }
                 var value = query[key],
@@ -207,7 +208,7 @@ export class CriteriaBuilder {
                         preparedValue = value;
                         break;
                     default:
-                        this.error = new Error("Unknown query operator '" + key + "'.");
+                        this.error = new PersistenceError("Unknown query operator '" + key + "'.");
                         return null;
                 }
 
@@ -221,7 +222,7 @@ export class CriteriaBuilder {
     protected prepareArrayOfValues(operator: string, value: any[], mapping: InternalMapping): any[] {
 
         if(!Array.isArray(value)) {
-            this.error = new Error("Expected array for '" + operator +"' operator.");
+            this.error = new PersistenceError("Expected array for '" + operator +"' operator.");
             return null;
         }
 
@@ -243,7 +244,7 @@ export class CriteriaBuilder {
         var context = new WriteContext(path);
         var preparedValue = mapping.write(context, value);
         if(context.hasErrors) {
-            this.error = new Error(`Bad value: ${context.getErrorMessage()}`);
+            this.error = new PersistenceError(`Bad value: ${context.getErrorMessage()}`);
             return null;
         }
         return preparedValue;

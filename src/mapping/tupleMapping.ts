@@ -10,6 +10,7 @@ import {ResolveContext} from "./resolveContext";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {WriteContext} from "./writeContext";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -135,7 +136,7 @@ export class TupleMapping extends MappingBase {
 
         var index = parseInt(path[depth]);
         if(index !== index || index < 0 || index >= this.elementMappings.length) {
-            return callback(new Error("Undefined tuple index '" + path[depth] + "' in path '"+ path.join(".") + "'."));
+            return callback(new PersistenceError("Undefined tuple index '" + path[depth] + "' in path '"+ path.join(".") + "'."));
         }
 
         var item = value[index];

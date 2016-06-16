@@ -13,6 +13,7 @@ import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {Property} from "./property";
 import {WriteContext} from "./writeContext";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -251,7 +252,7 @@ export class EntityMapping extends ClassMapping {
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!parentEntity) {
-            return callback(new Error("Parent entity required to resolve inverse relationship."));
+            return callback(new PersistenceError("Parent entity required to resolve inverse relationship."));
         }
 
         session.getPersister(this).findOneInverseOf(parentEntity, propertyName, (err, value) => {

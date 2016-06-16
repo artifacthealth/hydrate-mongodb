@@ -1,4 +1,5 @@
 import {Reference} from "./reference";
+import {PersistenceError} from "./persistenceError";
 
 /**
  * @hidden
@@ -18,7 +19,7 @@ export class Observer {
     }
 
     watch(obj: any): void {
-        if(!this._watching) throw new Error("Observer is destroyed.");
+        if(!this._watching) throw new PersistenceError("Observer is destroyed.");
         Object.observe(obj, this._onChange);
         this._watching.push(obj);
     }

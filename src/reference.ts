@@ -1,6 +1,7 @@
 import {InternalSession} from "./session";
 import {EntityMapping} from "./mapping/entityMapping";
 import {ResultCallback} from "./core/callback";
+import {PersistenceError} from "./persistenceError";
 
 /**
  * @hidden
@@ -17,12 +18,12 @@ export class Reference {
     fetch(session: InternalSession, callback: ResultCallback<any>): void {
 
         if (!this.mapping) {
-            process.nextTick(() => callback(new Error("Object type is not mapped as an entity.")));
+            process.nextTick(() => callback(new PersistenceError("Object type is not mapped as an entity.")));
             return;
         }
 
         if (this._id == null) {
-            process.nextTick(() => callback(new Error("Missing or invalid identifier.")));
+            process.nextTick(() => callback(new PersistenceError("Missing or invalid identifier.")));
             return;
         }
 

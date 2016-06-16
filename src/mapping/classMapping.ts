@@ -8,6 +8,7 @@ import {InternalSession} from "../session";
 import {ResultCallback} from "../core/callback";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -61,7 +62,7 @@ export class ClassMapping extends ObjectMapping {
     setDiscriminatorValue(value: string): void {
 
         if(typeof value !== "string") {
-            throw new Error("Expected string for discriminator value.");
+            throw new PersistenceError("Expected string for discriminator value.");
         }
         this._discriminatorValue = value;
         this.inheritanceRoot._addDiscriminatorMapping(value, this);
@@ -153,7 +154,7 @@ export class ClassMapping extends ObjectMapping {
         }
 
         if(this._discriminatorMap.has(value)) {
-            throw new Error("There is already a class in this inheritance hierarchy with a discriminator value of '" + value + "'.");
+            throw new PersistenceError("There is already a class in this inheritance hierarchy with a discriminator value of '" + value + "'.");
         }
 
         this._discriminatorMap.set(value, mapping);

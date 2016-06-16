@@ -1,4 +1,5 @@
 import {InternalMapping} from "./internalMapping";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -15,7 +16,7 @@ export class ResolveContext {
 
     constructor(public path: string) {
         if(typeof path !== "string") {
-            throw new Error("Expected argument 'path' to be a string.");
+            throw new PersistenceError("Expected argument 'path' to be a string.");
         }
         this._path = path.split(".");
         this._resolvePath = new Array(this._path.length);
@@ -37,10 +38,10 @@ export class ResolveContext {
     setError(message: string): void {
 
         if(this._path.length == 1) {
-            this.error = new Error("Invalid path '" + this.path + "': " + message);
+            this.error = new PersistenceError("Invalid path '" + this.path + "': " + message);
         }
         else {
-            this.error = new Error("Invalid path '" + this.path + "' at property '" + this.currentProperty + "': " + message);
+            this.error = new PersistenceError("Invalid path '" + this.path + "' at property '" + this.currentProperty + "': " + message);
         }
         this._finished();
     }

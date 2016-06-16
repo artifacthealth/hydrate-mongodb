@@ -15,6 +15,7 @@ import {EntityMapping} from "./mapping/entityMapping";
 import {QueryBuilder, QueryBuilderImpl, FindOneQuery} from "./query/queryBuilder";
 import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
+import {PersistenceError} from "./persistenceError";
 
 /**
  * The state of an object.
@@ -407,7 +408,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     getObject(id: any): any {
 
         if(id == null) {
-            throw new Error("Missing required argument 'id'.");
+            throw new PersistenceError("Missing required argument 'id'.");
         }
 
         var links = this._objectLinksById.get(id.toString());
@@ -521,7 +522,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     private _save(obj: any, callback: Callback): void {
 
         if(Reference.isReference(obj)) {
-            return callback(new Error("Reference passed to save"));
+            return callback(new PersistenceError("Reference passed to save"));
         }
 
         this._findReferencedEntities(obj, MappingModel.PropertyFlags.CascadeSave, (err, entities) => {
@@ -541,7 +542,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             if (!links) {
                 var mapping = this.factory.getMappingForObject(obj);
                 if (!mapping) {
-                    callback(new Error("Object type is not mapped as an entity."));
+                    callback(new PersistenceError("Object type is not mapped as an entity."));
                     return;
                 }
 
@@ -564,7 +565,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                         }
                         break;
                     case ObjectState.Detached:
-                        callback(new Error("Cannot save a detached object."));
+                        callback(new PersistenceError("Cannot save a detached object."));
                         return;
                     case ObjectState.Removed:
                         if (links.scheduledOperation == ScheduledOperation.Delete) {
@@ -629,7 +630,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         // Remove entity. No need to schedule delete operation since it is already removed from the database.
         if(!this._removeEntity(entity, /* scheduleDelete */ false)) {
             // this should never happen
-            throw new Error("Cannot remove a detached object.");
+            throw new PersistenceError("Cannot remove a detached object.");
         }
     }
 
@@ -653,7 +654,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             var obj = entities[i];
 
             if(!this._removeEntity(obj, /* scheduleDelete */ true)) {
-                callback(new Error("Cannot remove a detached object."));
+                callback(new PersistenceError("Cannot remove a detached object."));
                 return;
             }
         }
@@ -693,7 +694,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     private _detach(obj: any, callback: Callback): void {
 
         if(Reference.isReference(obj)) {
-            return callback(new Error("Reference passed to detach"));
+            return callback(new PersistenceError("Reference passed to detach"));
         }
 
         this._findReferencedEntities(obj, MappingModel.PropertyFlags.CascadeDetach, (err, entities) => {
@@ -719,7 +720,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     private _refresh(obj: any, callback: Callback): void {
 
         if(Reference.isReference(obj)) {
-            return callback(new Error("Reference passed to refresh"));
+            return callback(new PersistenceError("Reference passed to refresh"));
         }
 
         this._findReferencedEntities(obj, MappingModel.PropertyFlags.CascadeRefresh, (err, entities) => {
@@ -733,7 +734,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         async.each(entities, (entity: any, done: (err?: Error) => void) => {
             var links = this._getObjectLinks(entity);
             if (!links || links.state != ObjectState.Managed) {
-                return done(new Error("Object is not managed."));
+                return done(new PersistenceError("Object is not managed."));
             }
 
             // Refreshing an entity should not cause it to become dirty, so if we have an observer, destroy it before
@@ -931,7 +932,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                     this._trackChanges(links);
                     break;
                 default:
-                    return callback(new Error("Unexpected object state in flush."));
+                    return callback(new PersistenceError("Unexpected object state in flush."));
             }
 
             links = next;
@@ -976,7 +977,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
         var links = this._getObjectLinks(obj);
         if (!links || links.state == ObjectState.Detached) {
-            return callback(new Error("Object is not associated with the session."));
+            return callback(new PersistenceError("Object is not associated with the session."));
         }
 
         if(!paths || paths.length === 0) {
@@ -1039,12 +1040,12 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
         var _id = obj["_id"];
         if(_id === undefined) {
-            throw new Error("Object is missing identifier.");
+            throw new PersistenceError("Object is missing identifier.");
         }
 
         var id = _id.toString();
         if(this._objectLinksById.has(id)) {
-            throw new Error("Session already contains an entity with identifier '" + id + "'.");
+            throw new PersistenceError("Session already contains an entity with identifier '" + id + "'.");
         }
 
         var links = {
@@ -1130,7 +1131,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
         var mapping = this.factory.getMappingForObject(obj);
         if (!mapping) {
-            callback(new Error("Object type is not mapped as an entity."));
+            callback(new PersistenceError("Object type is not mapped as an entity."));
             return;
         }
 

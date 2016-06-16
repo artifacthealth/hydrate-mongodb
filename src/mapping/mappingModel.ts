@@ -20,6 +20,7 @@ import {ConverterMapping} from "./converterMapping";
 import {BufferMapping} from "./bufferMapping";
 import {Constructor} from "../index";
 import {IdentityMapping} from "./identityMapping";
+import {PersistenceError} from "../persistenceError";
 
 
 export namespace MappingModel {
@@ -334,10 +335,10 @@ export namespace MappingModel {
      */
     export function createProperty(name: string, mapping: Mapping): Property {
         if(!name) {
-            throw new Error("Missing required argument 'name'.");
+            throw new PersistenceError("Missing required argument 'name'.");
         }
         if(!mapping) {
-            throw new Error("Missing required argument 'mapping'.");
+            throw new PersistenceError("Missing required argument 'mapping'.");
         }
         return new PropertyImpl(name, <InternalMapping>mapping);
     }
@@ -348,7 +349,7 @@ export namespace MappingModel {
      */
     export function createArrayMapping(elementMapping: Mapping): Mapping {
         if(!elementMapping) {
-            throw new Error("Missing required argument 'elementMapping'.");
+            throw new PersistenceError("Missing required argument 'elementMapping'.");
         }
         return new ArrayMapping(<InternalMapping>elementMapping);
     }
@@ -389,7 +390,7 @@ export namespace MappingModel {
      */
     export function createEnumMapping(members: EnumMembers, ignoreCase?: boolean): Mapping {
         if(!members) {
-            throw new Error("Missing required argument 'members'.");
+            throw new PersistenceError("Missing required argument 'members'.");
         }
         return new EnumMappingImpl(members, ignoreCase);
     }
@@ -450,7 +451,7 @@ export namespace MappingModel {
      */
     export function createTupleMapping(elementMappings: Mapping[]): Mapping {
         if(!elementMappings) {
-            throw new Error("Missing required argument 'elementMappings'.");
+            throw new PersistenceError("Missing required argument 'elementMappings'.");
         }
         return new TupleMapping(<InternalMapping[]>elementMappings);
     }

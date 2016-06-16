@@ -2,6 +2,7 @@ import {ClassMapping} from "./classMapping";
 import {EntityMapping} from "./entityMapping";
 import {Constructor} from "../index";
 import {MappingModel} from "./mappingModel";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -18,11 +19,11 @@ export class MappingRegistry {
     addMapping(mapping: ClassMapping): void {
 
         if(!mapping.classConstructor) {
-            throw new Error("Class mapping is missing classConstructor.");
+            throw new PersistenceError("Class mapping is missing classConstructor.");
         }
 
         if(this._mappings.has(mapping.classConstructor)) {
-            throw new Error("Mapping '" + mapping.classConstructor.name + "' has already been registered.");
+            throw new PersistenceError("Mapping '" + mapping.classConstructor.name + "' has already been registered.");
         }
 
         this._mappings.set(mapping.classConstructor, mapping);

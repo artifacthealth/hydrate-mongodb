@@ -12,6 +12,7 @@ import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {InternalMapping} from "./internalMapping";
 import {WriteContext} from "./writeContext";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -29,12 +30,12 @@ export class ObjectMapping extends MappingBase {
     addProperty(property: Property): Property {
 
         if(!property) {
-            throw new Error("Missing required argument 'property'.");
+            throw new PersistenceError("Missing required argument 'property'.");
         }
 
         var error = this.validateProperty(property);
         if(error) {
-            throw new Error(error);
+            throw new PersistenceError(error);
         }
 
         this._propertiesByName.set(property.name, property);
@@ -74,7 +75,7 @@ export class ObjectMapping extends MappingBase {
     getProperty(name: string): Property {
 
         if(!name) {
-            throw new Error("Missing required argument 'name'.");
+            throw new PersistenceError("Missing required argument 'name'.");
         }
 
         return this._propertiesByName.get(name);
@@ -308,7 +309,7 @@ export class ObjectMapping extends MappingBase {
 
         var property = this.getProperty(path[depth]);
         if (property === undefined) {
-            return callback(new Error("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
+            return callback(new PersistenceError("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
         }
 
         // TODO: In mapping validation, throw error if object that holds inverse side of relationship is not an entity

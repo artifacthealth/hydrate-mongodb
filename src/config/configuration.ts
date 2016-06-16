@@ -10,6 +10,7 @@ import {SessionFactory, SessionFactoryImpl} from "../sessionFactory";
 import {EntityMapping} from "../mapping/entityMapping";
 import {ObjectIdGenerator} from "./objectIdGenerator";
 import {ClassMapping} from "../mapping/classMapping";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * Specifies default settings used to create the [[SessionFactory]].
@@ -85,7 +86,7 @@ export class Configuration {
         var registry = new MappingRegistry();
 
         if(!this._mappings || this._mappings.length == 0) {
-            return callback(new Error("No mappings were added to the configuration."));
+            return callback(new PersistenceError("No mappings were added to the configuration."));
         }
 
         // Get the mappings from the mapping providers
@@ -127,13 +128,13 @@ export class Configuration {
 
             // make sure we have a collection name
             if (!mapping.collectionName) {
-                return done(new Error("Missing collection name on mapping for type '" + mapping.name + "'."));
+                return done(new PersistenceError("Missing collection name on mapping for type '" + mapping.name + "'."));
             }
 
             // make sure db/collection is not mapped to some other type.
             var key = [(mapping.databaseName || localConnection.databaseName), "/", mapping.collectionName].join("");
             if (namesSeen.has(key)) {
-                return done(new Error("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
+                return done(new PersistenceError("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
             }
             namesSeen.set(key, true);
 

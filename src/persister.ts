@@ -22,6 +22,7 @@ import {OrderDocument} from "./query/orderDocument";
 import {WriteContext} from "./mapping/writeContext";
 import {MappingModel} from "./mapping/mappingModel";
 import {Readable} from "stream";
+import {PersistenceError} from "./persistenceError";
 
 interface FindOneQuery {
 
@@ -127,7 +128,7 @@ export class PersisterImpl implements Persister {
         var context = new WriteContext();
         var document = this._mapping.write(context, entity);
         if(context.hasErrors) {
-            return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
+            return callback(new PersistenceError(`Error serializing document:\n${context.getErrorMessage()}`));
         }
 
         if(this._mapping.areDocumentsEqual(originalDocument, document)) {
@@ -144,7 +145,7 @@ export class PersisterImpl implements Persister {
                     context = new WriteContext();
                     document = this._mapping.write(context, entity);
                     if(context.hasErrors) {
-                        return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
+                        return callback(new PersistenceError(`Error serializing document:\n${context.getErrorMessage()}`));
                     }
                 }
 
@@ -170,7 +171,7 @@ export class PersisterImpl implements Persister {
             var context = new WriteContext();
             var document = this._mapping.write(context, entity);
             if(context.hasErrors) {
-                return callback(new Error(`Error serializing document:\n${context.getErrorMessage()}`));
+                return callback(new PersistenceError(`Error serializing document:\n${context.getErrorMessage()}`));
             }
 
             // add version field if versioned
@@ -232,7 +233,7 @@ export class PersisterImpl implements Persister {
         var context = new ReadContext(this._session);
         this._mapping.refresh(context, entity, document);
         if(context.hasErrors) {
-            return callback(new Error("Error deserializing document:\n" + context.getErrorMessage()));
+            return callback(new PersistenceError("Error deserializing document:\n" + context.getErrorMessage()));
         }
 
         callback(null, document);
@@ -241,7 +242,7 @@ export class PersisterImpl implements Persister {
     fetch(entity: any, path: string, callback: Callback): void {
 
         if(typeof path !== "string") {
-            return callback(new Error("Path must be a string."));
+            return callback(new PersistenceError("Path must be a string."));
         }
 
         this._mapping.fetch(this._session, undefined, entity, path.split("."), 0, callback);
@@ -275,13 +276,13 @@ export class PersisterImpl implements Persister {
 
         var property = this._mapping.getProperty(path);
         if(property === undefined) {
-            callback(new Error("Missing property '" + path + "'."));
+            callback(new PersistenceError("Missing property '" + path + "'."));
             return null;
         }
 
         var id = (<any>entity)._id;
         if(id === undefined) {
-            callback(new Error("Missing identifier on entity that is the inverse side of a relationship."));
+            callback(new PersistenceError("Missing identifier on entity that is the inverse side of a relationship."));
             return null;
         }
 
@@ -441,7 +442,7 @@ export class PersisterImpl implements Persister {
                 this._count(query, callback);
                 break;
             default:
-                callback(new Error(`Unknown query type '${query.kind}'.`));
+                callback(new PersistenceError(`Unknown query type '${query.kind}'.`));
         }
     }
 
@@ -715,7 +716,7 @@ export class PersisterImpl implements Persister {
                 readContext.path = context.resolvedPath;
                 results[i] = context.resolvedMapping.read(readContext, results[i]);
                 if (readContext.hasErrors) {
-                    return callback(new Error("Error deserializing distinct values for: " + readContext.getErrorMessage()));
+                    return callback(new PersistenceError("Error deserializing distinct values for: " + readContext.getErrorMessage()));
                 }
             }
 
@@ -798,7 +799,7 @@ export class PersisterImpl implements Persister {
                 var context = new ReadContext(this._session);
                 entity = this._mapping.read(context, document);
                 if (context.hasErrors) {
-                    return callback(new Error("Error deserializing document:\n" + context.getErrorMessage()));
+                    return callback(new PersistenceError("Error deserializing document:\n" + context.getErrorMessage()));
                 }
 
                 this._mapping.executeLifecycleCallbacks(entity, MappingModel.LifecycleEvent.PostLoad, (err) => {
@@ -892,15 +893,15 @@ class BulkOperationCommand implements Command {
 
             // TODO: provide more detailed error information
             if((result.nInserted || 0) != this.inserted) {
-                return callback(new Error("Flush failed for collection '" + this.collectionName + "'. Expected to insert " + this.inserted + " documents but only inserted " + (result.nInserted || 0) + "."));
+                return callback(new PersistenceError("Flush failed for collection '" + this.collectionName + "'. Expected to insert " + this.inserted + " documents but only inserted " + (result.nInserted || 0) + "."));
             }
 
             if((result.nModified || 0) != this.updated) {
-                return callback(new Error("Flush failed for collection '" + this.collectionName + "'. Expected to update " + this.updated + " documents but only updated " + (result.nModified || 0) + "."));
+                return callback(new PersistenceError("Flush failed for collection '" + this.collectionName + "'. Expected to update " + this.updated + " documents but only updated " + (result.nModified || 0) + "."));
             }
 
             if((result.nRemoved || 0) != this.removed) {
-                return callback(new Error("Flush failed for collection '" + this.collectionName + "'. Expected to remove " + this.removed + " documents but only removed " + (result.nRemoved || 0) + "."));
+                return callback(new PersistenceError("Flush failed for collection '" + this.collectionName + "'. Expected to remove " + this.removed + " documents but only removed " + (result.nRemoved || 0) + "."));
             }
 
             callback();
@@ -956,12 +957,12 @@ class FindQueue {
             if(typeof originalId === "string") {
                 id = this._persister.identity.fromString(originalId);
                 if(id == null) {
-                    return callback(new Error(`Unable to convert string '${originalId}' to valid identifier.`))
+                    return callback(new PersistenceError(`Unable to convert string '${originalId}' to valid identifier.`))
                 }
             }
             else {
                 if(!this._persister.identity.validate(originalId)) {
-                    return callback(new Error(`'${originalId}' is not a valid identifier.`))
+                    return callback(new PersistenceError(`'${originalId}' is not a valid identifier.`))
                 }
                 id = originalId;
             }
@@ -970,7 +971,7 @@ class FindQueue {
                 if(err) return callback(err);
 
                 if(!entity) {
-                    return callback(new Error("Unable to find document with identifier '" + id.toString() + "'."));
+                    return callback(new PersistenceError("Unable to find document with identifier '" + id.toString() + "'."));
                 }
                 callback(null, entity);
             });
@@ -994,7 +995,7 @@ class FindQueue {
             // TODO: add test to make sure callbacks are called if document cannot be found
 
             // pass error message to any callbacks that have not been called yet
-            callbacks.forEach((callback, id) => callback(err || new Error("Unable to find document with identifier '" + id + "'.")));
+            callbacks.forEach((callback, id) => callback(err || new PersistenceError("Unable to find document with identifier '" + id + "'.")));
         });
     }
 }

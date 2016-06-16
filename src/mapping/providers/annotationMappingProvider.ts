@@ -16,6 +16,7 @@ import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";
 import {EntityMappingBuilder} from "./entityMappingBuilder";
+import {PersistenceError} from "../../persistenceError";
 
 export class AnnotationMappingProvider implements MappingProvider {
 
@@ -60,7 +61,7 @@ export class AnnotationMappingProvider implements MappingProvider {
         var mappings = builder.build(this._modules);
 
         if (builder.hasErrors) {
-            callback(new Error(builder.getErrorMessage()), null);
+            callback(new PersistenceError(builder.getErrorMessage()), null);
         }
         else {
             callback(null, mappings);

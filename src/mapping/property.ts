@@ -1,5 +1,6 @@
 import {InternalMapping} from "./internalMapping";
 import {MappingModel} from "./mappingModel";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -33,10 +34,10 @@ export class Property implements MappingModel.Property {
 
     constructor(name: string, mapping: InternalMapping) {
         if(!name) {
-            throw new Error("Missing required argument 'name'.");
+            throw new PersistenceError("Missing required argument 'name'.");
         }
         if(!mapping) {
-            throw new Error("Missing required argument 'mapping'.");
+            throw new PersistenceError("Missing required argument 'mapping'.");
         }
         this.name = name;
         this.mapping = mapping;

@@ -8,6 +8,7 @@ import {CriteriaBuilder} from "./criteriaBuilder";
 import {ObjectMapping} from "../mapping/objectMapping";
 import {ClassMapping} from "../mapping/classMapping";
 import {EntityMapping} from "../mapping/entityMapping";
+import {PersistenceError} from "../persistenceError";
 
 /**
  * @hidden
@@ -23,13 +24,13 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
         for(var operator in updateDocument) {
             if (updateDocument.hasOwnProperty(operator)) {
                 if (operator[0] != "$") {
-                    this.error = new Error("Replacement documents are not support in updates. Use the Session's 'save' method.");
+                    this.error = new PersistenceError("Replacement documents are not support in updates. Use the Session's 'save' method.");
                     return null;
                 }
 
                 var fields = updateDocument[operator];
                 if(!fields) {
-                    this.error = new Error("Missing value for operator '" + operator + "'.");
+                    this.error = new PersistenceError("Missing value for operator '" + operator + "'.");
                     return null;
                 }
 
@@ -91,7 +92,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
                                     preparedValue = this.prepareArrayOfValues(operator, value, (<ArrayMapping>mapping).elementMapping);
                                     break;
                                 default:
-                                    this.error = new Error("Unknown query operator '" + operator + "'.");
+                                    this.error = new PersistenceError("Unknown query operator '" + operator + "'.");
                                     return null;
                             }
 
@@ -109,7 +110,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
 
     private _isArray(operator: string, mapping: InternalMapping): boolean {
         if(!(mapping.flags & MappingModel.MappingFlags.Array)) {
-            this.error = new Error("Operator '" + operator + "' only applies to properties that have an array type.");
+            this.error = new PersistenceError("Operator '" + operator + "' only applies to properties that have an array type.");
             return false;
         }
         return true;
@@ -118,7 +119,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
     private _prepareQueryModifier(operator: string, query: QueryDocument, mapping: InternalMapping): QueryDocument {
 
         if(!query) {
-            this.error = new Error("Missing value for operator '" + operator + "'.");
+            this.error = new PersistenceError("Missing value for operator '" + operator + "'.");
             return null;
         }
 
@@ -127,7 +128,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
         for(var key in query) {
             if (query.hasOwnProperty(key)) {
                 if(key[0] != "$") {
-                    this.error = new Error("Unexpected value '" + key + "' in query expression.");
+                    this.error = new PersistenceError("Unexpected value '" + key + "' in query expression.");
                     return null;
                 }
                 var value = query[key],
@@ -146,7 +147,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
                         preparedValue = this._prepareSortSpecification(value, mapping);
                         break;
                     default:
-                        this.error = new Error("Unknown query modifier '" + key + "'.");
+                        this.error = new PersistenceError("Unknown query modifier '" + key + "'.");
                         return null;
                 }
 
@@ -161,7 +162,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
 
         if(mapping.flags & MappingModel.MappingFlags.Embeddable) {
             if(typeof sortSpecification !== "object") {
-                this.error = new Error("Value of $sort must be an object if sorting an array of embedded documents.");
+                this.error = new PersistenceError("Value of $sort must be an object if sorting an array of embedded documents.");
             }
 
             var result: QueryDocument = {};
@@ -172,10 +173,10 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
                     var property = (<ObjectMapping>mapping).getProperty(field);
                     if (property === undefined) {
                         if(mapping.flags & MappingModel.MappingFlags.Class) {
-                            this.error = new Error("Unknown property '" + field + "' for class '" + (<ClassMapping>mapping).name +"' in $sort.");
+                            this.error = new PersistenceError("Unknown property '" + field + "' for class '" + (<ClassMapping>mapping).name +"' in $sort.");
                         }
                         else {
-                            this.error = new Error("Unknown property '" + field + "' in $sort.");
+                            this.error = new PersistenceError("Unknown property '" + field + "' in $sort.");
                         }
                         return;
                     }
@@ -187,7 +188,7 @@ export class UpdateDocumentBuilder extends CriteriaBuilder {
         }
 
         if(typeof sortSpecification !== "number") {
-            this.error = new Error("Value of $sort must be a number if sorting an array that does not contain embedded documents.");
+            this.error = new PersistenceError("Value of $sort must be a number if sorting an array that does not contain embedded documents.");
         }
 
         return sortSpecification;

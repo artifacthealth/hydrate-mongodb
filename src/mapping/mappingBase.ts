@@ -9,6 +9,7 @@ import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
 import {InternalMapping} from "./internalMapping";
 import {WriteContext} from "./writeContext";
+import {PersistenceError} from "../persistenceError";
 
 var nextMappingId = 1;
 
@@ -52,13 +53,13 @@ export abstract class MappingBase implements InternalMapping {
             callback(null, value);
         }
         else {
-            callback(new Error("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
+            callback(new PersistenceError("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
         }
     }
 
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
 
-        callback(new Error("Mapping does not support inverse relationships."));
+        callback(new PersistenceError("Mapping does not support inverse relationships."));
     }
 
     resolve(pathOrContext: string | ResolveContext): ResolveContext {

@@ -2,6 +2,7 @@ import * as async from "async";
 import {Table} from "./core/table";
 import {Callback} from "./core/callback";
 import {Command} from "./core/command";
+import {PersistenceError} from "./persistenceError";
 
 /**
  * @hidden
@@ -30,7 +31,7 @@ export class Batch implements Command {
     addCommand(id: number, command: Command): void {
 
         if(this._commandTable[id]) {
-            throw new Error("Batch already contains a command with id '" + id + "'.");
+            throw new PersistenceError("Batch already contains a command with id '" + id + "'.");
         }
 
         this._commandTable[id] = command;
@@ -44,7 +45,7 @@ export class Batch implements Command {
     execute(callback: Callback): void {
 
         if(this._executed) {
-            throw new Error("Batch had already been executed.");
+            throw new PersistenceError("Batch had already been executed.");
         }
         this._executed = true;
 
