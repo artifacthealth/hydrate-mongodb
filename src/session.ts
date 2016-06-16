@@ -268,12 +268,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     constructor(public factory: InternalSessionFactory) {
         super();
 
-        this._queue = new TaskQueue((action, args, callback) => this._execute(action, args, callback));
-
-        // if we get an error on the queue, raise it on the session
-        this._queue.on('error', (err: Error) => {
-           this.emit('error', err);
-        });
+        this._createTaskQueue();
     }
 
     save(obj: any, callback?: Callback): void {
@@ -298,6 +293,12 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     clear(callback?: Callback): void {
 
+        // check to see if the task queue is invalid. if it is, create a new one. the session becomes invalid when an error occurs since
+        // the session may be in an inconsistent state with the database. however, clearing the session means that it has no state so it
+        // should make the session valid again. we do this by creating a new task queue.
+        if (this._queue.invalid) {
+            this._createTaskQueue();
+        }
         this._queue.add(Action.Clear, Action.All, undefined, callback);
     }
 
@@ -1156,6 +1157,20 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 this._walk(reference.mapping, entity, flags, entities, embedded, done);
             });
         }, callback);
+    }
+
+    private _createTaskQueue(): void {
+
+        if (this._queue) {
+            this._queue.removeAllListeners();
+        }
+
+        this._queue = new TaskQueue((action, args, callback) => this._execute(action, args, callback));
+
+        // if we get an error on the queue, raise it on the session
+        this._queue.on('error', (err: Error) => {
+            this.emit('error', err);
+        });
     }
 }
 

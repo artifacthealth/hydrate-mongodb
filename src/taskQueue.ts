@@ -76,6 +76,14 @@ export class TaskQueue extends EventEmitter {
     }
 
     /**
+     * Returns true if the TaskQueue is invalid because an error occurred; otherwise, return false.
+     */
+    get invalid(): boolean {
+
+        return this._invalid;
+    }
+
+    /**
      * Clears the current queue and prevents any new actions from being added to the queue. Note that any currently
      * executing tasks may still return and call their callback.
      */

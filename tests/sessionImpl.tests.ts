@@ -679,6 +679,39 @@ describe('SessionImpl', () => {
                 });
             });
         });
+
+        it("makes an invalid session valid again", (done) => {
+
+            helpers.createFactory("cat", (err, factory) => {
+                if (err) return done(err);
+
+                var entity = new Cat("Fluffy");
+                var session = factory.createSession();
+                var persister = factory.getPersisterForObject(session, entity);
+
+                persister.onRefresh = (entity, callback) => {
+                    callback(new Error("some error"))
+                };
+
+                // make the session invalid by causing an error on refresh
+                session.save(entity);
+                session.refresh(entity, (err) => {
+
+                    // confirm that the session is now invalid
+                    session.flush((err) => {
+                        assert.ok(err);
+                        assert.include(err.message, "Session is invalid. An error occurred during a previous action.");
+
+                        // clearing the session should make it valid again
+                        session.clear((err) => {
+                            if (err) return done(err);
+
+                            session.flush(done);
+                        });
+                    });
+                });
+            });
+        });
     });
 
     describe('flush', () => {
