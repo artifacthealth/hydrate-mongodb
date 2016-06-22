@@ -95,8 +95,6 @@
 				<h4 id="high-performance">High performance</h4>
 				<p>MongoDB <a href="https://docs.mongodb.org/v3.0/core/bulk-write-operations/">bulk write operations</a> are used to synchronize
 				changes with the database, which can result in significant performance gains.</p>
-				<h4 id="extensibility">Extensibility</h4>
-				<p>Hydrate provides numerous opportunities for extensibility.</p>
 				<h2 id="installation">Installation</h2>
 				<p>Hydrate requires a minimum of <a href="https://www.mongodb.org/downloads#production">MongoDB 2.6</a> and <a href="https://nodejs.org/">Node 4.0</a>.
 				Once these dependencies are installed, Hydrate can be installed using <a href="https://www.npmjs.com/">npm</a>:</p>
@@ -189,6 +187,9 @@ MongoClient.connect(<span class="hljs-string">'mongodb://localhost/mydatabase'</
 });
 </code></pre>
 				<h3 id="creating-a-session">Creating a Session</h3>
+				<p>A Hydrate Session should not be confused with the web-server session. The Hydrate Session is analogous to JPA&#39;s
+					<a href="http://www.objectdb.com/java/jpa/persistence/overview">EntityManager</a>, and is responsible for managing the lifecycle of
+				persistent entities.</p>
 				<p>Typically the <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/sessionfactory.html">SessionFactory</a> is
 					created once at server startup and then used to create a <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a> for each connection to
 					the server. For example, using a <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html">Session</a>
@@ -658,6 +659,9 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 					</li>
 					<li class=" tsd-kind-class">
 						<a href="classes/objectidgenerator.html" class="tsd-kind-icon">Object<wbr>IdGenerator</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/persistenceerror.html" class="tsd-kind-icon">Persistence<wbr>Error</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/callback.html" class="tsd-kind-icon">Callback</a>
