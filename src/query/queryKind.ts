@@ -17,5 +17,5 @@ export const enum QueryKind {
     Distinct            = 0x00000800,
     Count               = 0x00001000,
 
-    ReadOnly = FindAll | FindEach | FindOne | FindOneById | Distinct | Count
+    ReadOnly = FindAll | FindEach | FindEachSeries | FindOne | FindOneById | Distinct | Count
 }

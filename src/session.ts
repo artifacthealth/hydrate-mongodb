@@ -16,6 +16,7 @@ import {QueryBuilder, QueryBuilderImpl, FindOneQuery} from "./query/queryBuilder
 import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
 import {PersistenceError} from "./persistenceError";
+import {WriteContext} from "./mapping/writeContext";
 
 /**
  * The state of an object.
@@ -203,6 +204,22 @@ export interface Session {
     contains(obj: Object): boolean;
 
     /**
+     * Converts an entity to a document, the same document that is stored in the database. The document is suitable for serialization to
+     * JSON.
+     * @param obj The entity to convert to a document.
+     * @param callback Optional callback is called with serialized document. If callback is provided, any errors encountered during
+     * writing the document are passed to the callback. If a callback is not provided and errors are encountered during writing the
+     * document, `null` is returned.
+     */
+    toDocument(obj: Object, callback?: ResultCallback<Object>): Object;
+
+    /**
+     * Gets the version number of an entity used for optimistic locking. Returns `null` if the version cannot be determined.
+     * @param obj The entity to get the version for.
+     */
+    getVersion(obj: Object): number;
+
+    /**
      * Adds an event listener.
      * @param event The event to listen for.
      * @param listener The listener function.
@@ -374,7 +391,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      */
     getReference<T>(ctr: Constructor<T>, id: any): T {
 
-        var mapping = this.factory.getMappingForConstructor(ctr)
+        var mapping = this.factory.getMappingForConstructor(ctr);
         if(mapping) {
             // validate the id that was passed in now instead of when reference is resolved so we save time on references
             // that were already validated by the mapping
@@ -393,6 +410,54 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         // If the mapping is not found, the reference is still created. An error will be returned when the reference
         // is fetched.
         return this.getReferenceInternal(mapping, id);
+    }
+
+
+    /**
+     * Converts an entity to a document, the same document that is stored in the database. The document is suitable for serialization to
+     * JSON.
+     * @param obj The entity to convert to a document.
+     * @param callback Optional callback is called with serialized document. If callback is provided, any errors encountered during
+     * writing the document are passed to the callback. If a callback is not provided and errors are encountered during writing the
+     * document, `null` is returned.
+     */
+    toDocument(obj: Object, callback?: ResultCallback<Object>): Object {
+
+        var mapping = this.factory.getMappingForObject(obj);
+        if (!mapping) {
+            if (callback) {
+                callback(new PersistenceError("Object type is not mapped as an entity."));
+            }
+            return null;
+        }
+
+        var context = new WriteContext();
+        var document = mapping.write(context, obj);
+        if(context.hasErrors) {
+            if (callback) {
+                callback(new PersistenceError(`Error serializing document:\n${context.getErrorMessage()}`));
+            }
+            return null;
+        }
+
+        if (callback) {
+            callback(null, document);
+        }
+        return document;
+    }
+
+    /**
+     * Gets the version number of an entity used for optimistic locking. Returns `null` if the version cannot be determined.
+     * @param obj The entity to get the version for.
+     */
+    getVersion(obj: Object): number {
+
+        var mapping = this.factory.getMappingForObject(obj);
+        if (!mapping) {
+            return null;
+        }
+
+        return mapping.getDocumentVersion(obj);
     }
 
     getReferenceInternal(mapping: EntityMapping, id: any): any {

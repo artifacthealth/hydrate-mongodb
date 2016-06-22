@@ -20,6 +20,7 @@ import {Cat} from "./fixtures/cat";
 import {Kitten} from "./fixtures/kitten";
 import {Dog} from "./fixtures/dog";
 import * as cascade from "./fixtures/cascade";
+import {getIdentifier} from "../src/index";
 
 describe('SessionImpl', () => {
 
@@ -1012,6 +1013,59 @@ describe('SessionImpl', () => {
         });
     });
 
+    describe("toDocument", () => {
+
+        it("returns the serialized document for an entity", (done) => {
+
+            helpers.createFactory("cat", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                var entity = new Cat("Mittens");
+                session.save(entity, (err) => {
+                    if (err) return done(err);
+
+                    var expected = { name: 'Mittens', _id: new ObjectID(getIdentifier(entity)) };
+                    assert.deepEqual(session.toDocument(entity), expected);
+                    
+                    session.toDocument(entity, (err, document) => {
+                        if (err) return done(err);
+
+                        assert.deepEqual(document, expected);
+                        done();
+                    });
+                });
+            });
+        });
+
+        it("returns null if callback is not provided and object is not mapped as an entity", (done) => {
+
+            helpers.createFactory("cat", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                assert.isNull(session.toDocument(new Date()));
+                done();
+            });
+        });
+
+        it("passes error to callback if callback is provided and object is not mapped as an entity", (done) => {
+
+            helpers.createFactory("cat", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                session.toDocument(new Date(), (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Object type is not mapped as an entity.");
+                    done();
+                });
+            });
+        });
+    });
 });
 
 function createEntity(id?: any): any {
