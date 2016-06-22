@@ -214,7 +214,7 @@ export interface Session {
     toDocument(obj: Object, callback?: ResultCallback<Object>): Object;
 
     /**
-     * Gets the version number of an entity used for optimistic locking. Returns `null` if the version cannot be determined.
+     * Gets the version number of an entity. Returns `null` if the version cannot be determined.
      * @param obj The entity to get the version for.
      */
     getVersion(obj: Object): number;
