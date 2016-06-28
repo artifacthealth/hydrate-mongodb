@@ -279,6 +279,11 @@ export namespace MappingModel {
         databaseName: string;
 
         /**
+         * The order in which collections are flushed to the database. Higher priority collections are flushed first.
+         */
+        flushPriority: FlushPriority;
+
+        /**
          * A list of indexes to optionally create for the collection on startup.
          */
         indexes: Index[];
@@ -463,11 +468,22 @@ export interface PropertyConverter {
     convertToObjectProperty(field: any): any;
 }
 
-export declare const enum ChangeTrackingType {
+export const enum ChangeTrackingType {
 
     DeferredImplicit,
     DeferredExplicit,
     Observe
+}
+
+/**
+ * Indicates the order in which collections are flushed to the database. Higher priority collections are flushed first. By default
+ * collections are given a priority of Medium.
+ */
+export const enum FlushPriority {
+
+    High = 100,
+    Medium = 50,
+    Low = 0
 }
 
 /**

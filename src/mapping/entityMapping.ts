@@ -1,7 +1,7 @@
 import * as async from "async";
 import {IdentityGenerator} from "../config/configuration";
 import {ClassMapping} from "./classMapping";
-import {ChangeTrackingType} from "./mappingModel";
+import {ChangeTrackingType, FlushPriority} from "./mappingModel";
 import {Index} from "./index";
 import {CollectionOptions} from "./collectionOptions";
 import {MappingModel} from "./mappingModel";
@@ -31,6 +31,11 @@ export class EntityMapping extends ClassMapping {
 
     versioned: boolean;
     versionField: string;
+
+    /**
+     * The order in which collections are flushed to the database. Higher priority collections are flushed first.
+     */
+    flushPriority = FlushPriority.Medium;
 
     /**
      * The property that maps the identity field, if defined.

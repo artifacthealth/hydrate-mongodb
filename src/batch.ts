@@ -3,6 +3,7 @@ import {Table} from "./core/table";
 import {Callback} from "./core/callback";
 import {Command} from "./core/command";
 import {PersistenceError} from "./persistenceError";
+import {FlushPriority} from "./mapping/mappingModel";
 
 /**
  * @hidden
@@ -34,6 +35,11 @@ export class Batch implements Command {
             throw new PersistenceError("Batch already contains a command with id '" + id + "'.");
         }
 
+        // make sure command has a priority
+        if (command.priority == null) {
+            command.priority = FlushPriority.Medium;
+        }
+
         this._commandTable[id] = command;
         this._commands.push(command);
     }
@@ -53,6 +59,39 @@ export class Batch implements Command {
             return process.nextTick(() => callback());
         }
 
-        async.each(this._commands, (command: Command, done: (err?: Error) => void) => command.execute(done), callback);
+        var self = this;
+
+        // sort the commands in priority order
+        this._commands.sort(commandSorter);
+        executeCommands();
+
+        function executeCommands(err?: Error): void {
+
+            // if we got an error or there are no commands left then call the callback.
+            if (err || self._commands.length == 0) {
+                callback();
+                return;
+            }
+
+            // execute all commands with the same priority in parallel
+            var priority = self._commands[0].priority,
+                count = 0;
+
+            // count the number of commands that have the same priority
+            while(count < self._commands.length && self._commands[count].priority == priority) {
+                count++;
+            }
+
+            async.each(
+                self._commands.splice(0, count),
+                (command: Command, done: (err?: Error) => void) => command.execute(done),
+                executeCommands);
+        }
     }
+}
+
+function commandSorter(a: Command, b: Command): number {
+
+    // higher priority commands come first
+    return b.priority - a.priority;
 }

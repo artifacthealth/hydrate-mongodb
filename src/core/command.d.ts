@@ -5,5 +5,7 @@ import {Callback} from "./callback";
  */
 export interface Command {
 
+    priority?: number;
+
     execute(callback: Callback): void;
 }

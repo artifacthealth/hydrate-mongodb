@@ -2,7 +2,7 @@ import {assert} from "chai";
 import {AnnotationMappingProvider} from "../../../src/mapping/providers/annotationMappingProvider";
 import {Configuration} from "../../../src/config/configuration";
 import {MappingRegistry} from "../../../src/mapping/mappingRegistry";
-import {MappingModel} from "../../../src/mapping/mappingModel";
+import {MappingModel, FlushPriority} from "../../../src/mapping/mappingModel";
 import {EnumMapping} from "../../../src/mapping/enumMapping";
 import {ClassMapping} from "../../../src/mapping/classMapping";
 import {EntityMapping} from "../../../src/mapping/entityMapping";
@@ -140,9 +140,11 @@ describe('AnnotationMappingProvider', () => {
                     var mappingC = findMapping(results, "C");
                     assert.equal(mappingC.collectionName, "c");
                     assert.equal(mappingC.databaseName, "someDatabase");
+                    assert.equal(mappingC.flushPriority, FlushPriority.Medium);
                     var mappingD = findMapping(results, "D");
                     assert.equal(mappingD.collectionName, "someCollection");
                     assert.equal(mappingD.databaseName, "someDatabase");
+                    assert.equal(mappingD.flushPriority, FlushPriority.Low);
                 });
             });
 

@@ -1,4 +1,4 @@
-import {PropertyConverter} from "../mappingModel";
+import {PropertyConverter, FlushPriority} from "../mappingModel";
 import {CollectionOptions} from "../collectionOptions";
 import {IndexOptions} from "../indexOptions";
 import {ChangeTrackingType} from "../mappingModel";
@@ -218,6 +218,11 @@ export class CollectionAnnotation extends Annotation implements ClassAnnotation 
     name: string;
 
     /**
+     * The order in which collections are flushed to the database. Higher priority collections are flushed first.
+     */
+    flushPriority: FlushPriority;
+
+    /**
      * The name of the database to use.
      */
     db: string;
@@ -238,6 +243,7 @@ export class CollectionAnnotation extends Annotation implements ClassAnnotation 
 
         if(typeof nameOrDescription === "object") {
             this.name = nameOrDescription.name;
+            this.flushPriority = nameOrDescription.flushPriority;
             this.db = nameOrDescription.db;
             this.options = nameOrDescription.options;
         }
@@ -261,12 +267,17 @@ export class CollectionAnnotation extends Annotation implements ClassAnnotation 
             if (annotation.db) {
                 mapping.databaseName = annotation.db;
             }
+
+            if (annotation.flushPriority != null) {
+                mapping.flushPriority = annotation.flushPriority;
+            }
         }
     }
 }
 
 export interface CollectionDescription {
 
+    flushPriority?: FlushPriority;
     name?: string;
     db?: string,
     options?: CollectionOptions;

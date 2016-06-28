@@ -3,8 +3,18 @@ import * as helpers from "../helpers";
 import * as model from "../fixtures/model";
 import {EntityMapping} from "../../src/mapping/entityMapping";
 import {ObjectIdGenerator} from "../../src/config/objectIdGenerator";
+import {FlushPriority} from "../../src/mapping/mappingModel";
 
 describe('EntityMapping', () => {
+
+    describe("constructor", () => {
+
+        it("defaults the flushPriority to Medium", () => {
+
+            var mapping = createMapping();
+            assert.equal(mapping.flushPriority, FlushPriority.Medium);
+        });
+    });
 
     describe('areEqual', () => {
 
