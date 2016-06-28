@@ -1,7 +1,7 @@
 {
   "name": "hydrate-mongodb",
   "description": "An Object Document Mapper (ODM) for MongoDB.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "author": {
     "name": "Artifact Health, LLC",
     "url": "http://www.artifacthealth.com"
