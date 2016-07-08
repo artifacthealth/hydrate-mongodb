@@ -155,6 +155,18 @@ describe('AnnotationMappingProvider', () => {
                     assert.equal(findMapping(results, "A").collectionName, "a");
                 });
             });
+
+            it('adds the collectionPrefix to the collection name', (done) => {
+
+                var config = new Configuration();
+
+                config.collectionPrefix = "namespace.";
+
+                processFixtureWithConfiguration("collection", config, done, (results) => {
+
+                    assert.equal(findMapping(results, "A").collectionName, "namespace.a");
+                });
+            });
         });
 
         describe('@index', () => {

@@ -43,6 +43,11 @@ export class Configuration {
     changeTracking = ChangeTrackingType.Observe;
 
     /**
+     * If specified, prefix to add to all collection names.
+     */
+    collectionPrefix: string;
+
+    /**
      * Naming strategy to use for collection names.
      */
     collectionNamingStrategy: NamingStrategy = NamingStrategies.CamelCase;

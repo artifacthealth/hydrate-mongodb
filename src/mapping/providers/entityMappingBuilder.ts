@@ -41,6 +41,10 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
                 mapping.collectionName = this.context.config.collectionNamingStrategy(mapping.name);
             }
 
+            if (this.context.config.collectionPrefix) {
+                mapping.collectionName = this.context.config.collectionPrefix + mapping.collectionName;
+            }
+
             if(mapping.identity == null) {
                 mapping.identity = this.context.config.identityGenerator;
             }
