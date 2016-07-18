@@ -2,7 +2,6 @@ import {PropertyConverter, FlushPriority} from "../mappingModel";
 import {CollectionOptions} from "../collectionOptions";
 import {IndexOptions} from "../indexOptions";
 import {ChangeTrackingType} from "../mappingModel";
-import {EnumType} from "../enumType";
 import {CascadeFlags} from "../mappingModel";
 import {Constructor, ParameterlessConstructor} from "../../index";
 import {MappingModel} from "../mappingModel";
@@ -465,6 +464,10 @@ export class ChangeTrackingAnnotation extends Annotation implements ClassAnnotat
     processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: ChangeTrackingAnnotation): void {
 
         if(context.assertRootEntityMapping(mapping)) {
+            if((mapping.flags & MappingModel.MappingFlags.Immutable) != 0) {
+                context.addError("Change tracking cannot be set on immutable entity.");
+                return;
+            }
 
             mapping.changeTracking = annotation.type;
         }
@@ -493,6 +496,37 @@ export class DiscriminatorFieldAnnotation extends Annotation implements ClassAnn
                 return;
             }
             mapping.discriminatorField = annotation.name;
+        }
+    }
+}
+
+/**
+ * @hidden
+ */
+export class ImmutableAnnotation extends Annotation implements ClassAnnotation {
+
+    toString(): string {
+        return "@Immutable";
+    }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, annotation: ImmutableAnnotation): void {
+
+        if(context.assertClassMapping(mapping)) {
+
+            mapping.flags |= MappingModel.MappingFlags.Immutable;
+
+            // if this is a root entity then set the change tracking to 'None'
+            if((mapping.flags & MappingModel.MappingFlags.Entity) != 0
+                && (mapping.flags & MappingModel.MappingFlags.InheritanceRoot) != 0) {
+
+                var entityMapping = (<MappingModel.EntityMapping>mapping);
+                if (entityMapping.changeTracking != null) {
+                    context.addError("Change tracking cannot be set on immutable entity.");
+                    return;
+                }
+
+                entityMapping.changeTracking = ChangeTrackingType.None;
+            }
         }
     }
 }

@@ -40,7 +40,7 @@ export class Configuration {
     /**
      * Default change tracking strategy to use.
      */
-    changeTracking = ChangeTrackingType.Observe;
+    changeTracking = ChangeTrackingType.DeferredImplicit;
 
     /**
      * If specified, prefix to add to all collection names.

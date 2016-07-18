@@ -128,7 +128,7 @@ export class ObjectMapping extends MappingBase {
             var property = properties[i];
 
             // skip fields that are not persisted
-            if (property.flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide)) {
+            if ((property.flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide)) != 0) {
                 continue;
             }
             var fieldValue = property.getFieldValue(value),
@@ -138,7 +138,7 @@ export class ObjectMapping extends MappingBase {
             if (fieldValue !== undefined) {
                 // skip null values unless allowed
                 if (fieldValue === null) {
-                    if (property.flags & MappingModel.PropertyFlags.Nullable) {
+                    if ((property.flags & MappingModel.PropertyFlags.Nullable) != 0) {
                         propertyValue = null;
                     }
                 }
@@ -167,7 +167,7 @@ export class ObjectMapping extends MappingBase {
         }
 
         // if there is an observer in the context, then watch this object for changes.
-        if(context.observer) {
+        if(context.observer && (this.flags & MappingModel.MappingFlags.Immutable) == 0) {
             context.observer.watch(obj);
         }
 
@@ -201,7 +201,8 @@ export class ObjectMapping extends MappingBase {
                 flags = property.flags;
 
             // skip fields that are not persisted
-            if (flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide | MappingModel.PropertyFlags.ReadOnly)) {
+            if ((flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide
+                | MappingModel.PropertyFlags.ReadOnly)) != 0) {
                 continue;
             }
 
@@ -212,7 +213,7 @@ export class ObjectMapping extends MappingBase {
             }
             if (propertyValue === null) {
                 // skip null values unless allowed
-                if (!(flags & MappingModel.PropertyFlags.Nullable)) {
+                if ((flags & MappingModel.PropertyFlags.Nullable) == 0) {
                     continue;
                 }
                 fieldValue = null;
@@ -246,7 +247,7 @@ export class ObjectMapping extends MappingBase {
 
             var property = this.properties[i];
             // if the property is not ignored and it has the specified flags, then walk the value of the property
-            if (!(property.flags & MappingModel.PropertyFlags.Ignored)) {
+            if ((property.flags & MappingModel.PropertyFlags.Ignored) == 0) {
                 property.mapping.watch(property.getPropertyValue(value), observer, visited);
             }
         }
@@ -266,7 +267,7 @@ export class ObjectMapping extends MappingBase {
             var property = properties[i];
 
             // skip fields that are not persisted
-            if (property.flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide)) {
+            if ((property.flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide)) != 0) {
                 continue;
             }
 
@@ -295,7 +296,9 @@ export class ObjectMapping extends MappingBase {
         for (var i = 0, l = properties.length; i < l; i++) {
             var property = properties[i];
             // if the property is not ignored and it has the specified flags, then walk the value of the property
-            if (!(property.flags & MappingModel.PropertyFlags.Ignored) && ((property.flags & flags) || ((flags & MappingModel.PropertyFlags.All) == 0))) {
+            if ((property.flags & MappingModel.PropertyFlags.Ignored) == 0
+                && ((property.flags & flags) != 0 || ((flags & MappingModel.PropertyFlags.All) == 0))) {
+
                 property.mapping.walk(session, property.getPropertyValue(value), flags, entities, embedded, references);
             }
         }
@@ -315,7 +318,7 @@ export class ObjectMapping extends MappingBase {
         // TODO: In mapping validation, throw error if object that holds inverse side of relationship is not an entity
 
         var propertyValue = property.getPropertyValue(value);
-        if((property.flags & MappingModel.PropertyFlags.InverseSide) && propertyValue === undefined) {
+        if((property.flags & MappingModel.PropertyFlags.InverseSide) != 0 && propertyValue === undefined) {
             property.mapping.fetchInverse(session, parentEntity, property.inverseOf, path, depth + 1, handleCallback);
         } else {
             property.mapping.fetch(session, parentEntity, propertyValue, path, depth + 1, handleCallback);
@@ -336,7 +339,7 @@ export class ObjectMapping extends MappingBase {
 
         var property = this.getProperty(context.currentProperty);
         if (property === undefined) {
-            if(this.flags & MappingModel.MappingFlags.Class) {
+            if((this.flags & MappingModel.MappingFlags.Class) != 0) {
                 context.setError("Undefined property for class '" + (<any>this).name +"'.");
             }
             else {
@@ -345,11 +348,11 @@ export class ObjectMapping extends MappingBase {
             return;
         }
 
-        if((property.flags & MappingModel.PropertyFlags.InverseSide)) {
+        if((property.flags & MappingModel.PropertyFlags.InverseSide) != 0) {
             context.setError("Cannot resolve inverse side of relationship.");
         }
 
-        if((property.flags & MappingModel.PropertyFlags.Ignored)) {
+        if((property.flags & MappingModel.PropertyFlags.Ignored) != 0) {
             context.setError("Cannot resolve ignored property.");
         }
 

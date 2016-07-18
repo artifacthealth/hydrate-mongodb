@@ -1,21 +1,11 @@
-import * as async from "async";
-import * as path from "path";
-import {absolutePath, hasExtension} from "../../core/fileUtil";
 import {ResultCallback} from "../../core/callback";
-import {MappingRegistry} from "../mappingRegistry";
-import {Index} from "../index";
-import {IndexOptions} from "../indexOptions";
-import {ChangeTrackingType} from "../mappingModel";
-import {EnumType} from "../enumType";
 import {MappingModel} from "../mappingModel";
 import {MappingProvider, Configuration} from "../../config/configuration";
-import {ReflectContext, Type, Property} from "reflect-helper";
+import {Type, Property} from "reflect-helper";
 import {MappingBuilderAnnotation,TargetClassAnnotation} from "./annotations";
 import {Constructor} from "../../index";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 import {MappingBuilder} from "./mappingBuilder";
-import {ClassMappingBuilder} from "./classMappingBuilder";
-import {EntityMappingBuilder} from "./entityMappingBuilder";
 import {PersistenceError} from "../../persistenceError";
 
 export class AnnotationMappingProvider implements MappingProvider {

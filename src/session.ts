@@ -481,7 +481,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         if (links) {
             switch(links.state) {
                 case ObjectState.Removed:
-                    return null
+                    return null;
                 case ObjectState.Managed:
                     return links.object
             }
@@ -500,7 +500,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     private _trackChanges(links: ObjectLinks): void {
 
-        if((links.flags & ObjectFlags.Dirty) || links.persister.changeTracking == ChangeTrackingType.DeferredImplicit) {
+        if ((links.flags & ObjectFlags.Dirty) || links.persister.changeTracking == ChangeTrackingType.DeferredImplicit) {
             this._makeDirty(links);
             return;
         }
@@ -667,7 +667,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     }
 
     private _makeDirty(links: ObjectLinks): void {
-
+        
         // still flag the object as dirty even if we aren't going to schedule a dirty check because
         // the current operation could be canceled (e.g. save called after remove before flush),
         // and we'll want to queue the object for dirty check at that point.

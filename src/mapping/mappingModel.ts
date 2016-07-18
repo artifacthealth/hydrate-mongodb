@@ -100,7 +100,10 @@ export namespace MappingModel {
         Converter           = 0x00002000,
         Buffer              = 0x00004000,
         Iterable            = 0x00008000,
-        Virtual             = 0x00010000
+        Virtual             = 0x00010000,
+        Immutable           = 0x00020000,
+
+        ImmutableEmbeddable = Immutable | Embeddable
     }
 
     /**
@@ -470,6 +473,7 @@ export interface PropertyConverter {
 
 export const enum ChangeTrackingType {
 
+    None,
     DeferredImplicit,
     DeferredExplicit,
     Observe

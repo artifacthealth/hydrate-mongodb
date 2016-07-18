@@ -132,6 +132,7 @@ export class PersisterImpl implements Persister {
         }
 
         if(this._mapping.areDocumentsEqual(originalDocument, document)) {
+
             // document did not change
             callback(null);
         }

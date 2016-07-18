@@ -30,7 +30,7 @@ import {
     PreUpdateAnnotation,
     PostUpdateAnnotation,
     PreRemoveAnnotation,
-    PostRemoveAnnotation, TransientAnnotation
+    PostRemoveAnnotation, TransientAnnotation, ImmutableAnnotation
 } from "./annotations";
 
 import {PropertyConverter} from "../mappingModel";
@@ -167,6 +167,40 @@ export declare function Collection(description?: CollectionDescription): ClassDe
  * ```
  */
 export declare function Id(): PropertyDecorator;
+
+/**
+ * Specifies that a class is immutable. Can be used on Entity or Embeddable types. When specified on an Entity, the Entity is excluded from
+ * dirty checking. When specified on an Embeddable, the original document for the Embeddable is cached and used for serialization.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Embeddable()
+ *  @Immutable()
+ *  export class Name {
+ *
+ *      get first(): string {
+ *          return this._first;
+ *      }
+ *      
+ *      get last(): string {
+ *          return this._last;
+ *      }
+ *      
+ *      @Field()
+ *      private _last: string;
+ *
+ *      @Field()
+ *      private _first: string;
+ *      
+ *      constructor(last: string, first: string) {
+ *          this._last = last;
+ *          this._first = first;
+ *      }
+ *  }
+ * ```
+ */
+export declare function Immutable(): ClassDecorator;
 
 /**
  * Specifies a database index should be generated on the collection that holds this entity.
@@ -678,6 +712,7 @@ exports.Type = makeDecorator(TypeAnnotation);
 exports.ElementType = makeDecorator(ElementTypeAnnotation);
 exports.MapKey = makeDecorator(MapKeyAnnotation);
 exports.Id = makeDecorator(IdAnnotation);
+exports.Immutable = makeDecorator(ImmutableAnnotation);
 exports.PrePersist = makeDecorator(PrePersistAnnotation);
 exports.PostPersist = makeDecorator(PostPersistAnnotation);
 exports.PostLoad = makeDecorator(PostLoadAnnotation);

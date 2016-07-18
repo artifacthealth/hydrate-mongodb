@@ -19,6 +19,7 @@ import {Reference} from "../src/reference";
 import {Cat} from "./fixtures/cat";
 import {Kitten} from "./fixtures/kitten";
 import {Dog} from "./fixtures/dog";
+import {Person} from "./fixtures/classImmutable";
 import * as cascade from "./fixtures/cascade";
 import {getIdentifier} from "../src/index";
 
@@ -748,6 +749,16 @@ describe('SessionImpl', () => {
                 session.save(entities[1]);
             }, 1, done);
         });
+
+        it('does not dirty check immutable entities', (done) => {
+
+            dirtyCheckCalled("classImmutable", () => [new Person("Bob"), new Person("Jones")], (session, entities) => {
+                // note, an immutable should enforce that changes cannot be made, but even if it doesn't, changes are not persisted
+                entities[0].name = "Smith";
+                entities[1].name = "Smith";
+            }, 0, done);
+        });
+
 
         function dirtyCheckCalled(fixture: string, create: () => [any, any], modify: (session: InternalSession, entities: [any, any]) => void, expectedDirtyCheckCalled: number, done: (err?: Error) => void) {
 

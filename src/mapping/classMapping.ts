@@ -1,7 +1,5 @@
-import {MappingError} from "./mappingError";
 import {ObjectMapping} from "./objectMapping";
 import {MappingRegistry} from "./mappingRegistry";
-import {Changes} from "./changes";
 import {Reference} from "../reference";
 import {MappingModel} from "./mappingModel";
 import {InternalSession} from "../session";
@@ -9,6 +7,8 @@ import {ResultCallback} from "../core/callback";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 import {PersistenceError} from "../persistenceError";
+
+var OriginalDocument = Symbol();
 
 /**
  * @hidden
@@ -189,9 +189,6 @@ export class ClassMapping extends ObjectMapping {
 
     /**
      * Gets the mapping for the specified document. Note that this method can only be called on an inheritance root.
-     * @param document The document.
-     * @param path The current path. Used for error reporting.
-     * @param errors An array of reported errors.
      */
     getMapping(context: ReadContext, document: any): ClassMapping {
 
@@ -212,12 +209,25 @@ export class ClassMapping extends ObjectMapping {
 
     protected readClass(context: ReadContext, value: any): any {
 
-        return this.readObject(context, Object.create(this.classConstructor.prototype), value, /*checkRemoved*/ false);
+        var obj = this.readObject(context, Object.create(this.classConstructor.prototype), value, /*checkRemoved*/ false);
+        
+        // save original document value for immutable embeddable
+        if ((this.flags & MappingModel.MappingFlags.ImmutableEmbeddable) == MappingModel.MappingFlags.ImmutableEmbeddable) {
+            obj[OriginalDocument] = value;
+        }
+        
+        return obj;
     }
 
     write(context: WriteContext, value: any): any {
 
         if(value == null) return null;
+
+        // return original document for immutable embeddable
+        var originalDocument = value[OriginalDocument];
+        if (originalDocument != null) {
+            return originalDocument;
+        }
 
         // Object may be a subclass of the class whose type was passed, so retrieve mapping for the object. If it
         // does not exist, default to current mapping.

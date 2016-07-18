@@ -1,6 +1,4 @@
 import {assert} from "chai";
-import * as helpers from "../helpers";
-import * as model from "../fixtures/model";
 import {ArrayMapping} from "../../src/mapping/arrayMapping";
 import {EntityMapping} from "../../src/mapping/entityMapping";
 import {ObjectIdGenerator} from "../../src/config/objectIdGenerator";

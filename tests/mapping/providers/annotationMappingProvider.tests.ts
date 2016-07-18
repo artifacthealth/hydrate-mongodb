@@ -236,6 +236,36 @@ describe('AnnotationMappingProvider', () => {
             });
         });
 
+        describe("@immutable", () => {
+
+            it("throws error if class contains immutable and changetracking decorators", (done) => {
+
+                processFixture("immutableWithChangeTracking", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Change tracking cannot be set on immutable entity.");
+                    done();
+                });
+            });
+
+            it("sets the Immutable flag", (done) => {
+
+                processFixture("immutable", done, (results) => {
+
+                    var personMapping = findMapping(results, "Person");
+                    assert.equal(
+                        personMapping.flags & MappingModel.MappingFlags.Immutable,
+                        MappingModel.MappingFlags.Immutable,
+                        "Expected Immutable flag to be set on Entity `Person`.");
+
+                    var nameMapping = personMapping.getProperty("name").mapping;
+                    assert.equal(
+                        nameMapping.flags & MappingModel.MappingFlags.Immutable,
+                        MappingModel.MappingFlags.Immutable,
+                        "Expected Immutable flag to be set on Embeddable `Name`.");
+                });
+            });
+        });
+
         describe('@elementType', () => {
 
             it("can handle circular references by specifying target as class name", (done) => {
