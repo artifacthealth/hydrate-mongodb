@@ -951,24 +951,33 @@ class FindQueue {
         // clear queue
         this._ids = this._callbacks = undefined;
 
-        // check for simple case of only a single find in the queue
-        if(ids.length == 1) {
-            var originalId = ids[0],
-                callback = callbacks.get(originalId.toString()),
-                id: any;
+        // make sure we have valid ObjectIDs
+        for (let i = ids.length - 1; i >= 0; i--) {
+            let originalId = ids[i];
 
-            if(typeof originalId === "string") {
-                id = this._persister.identity.fromString(originalId);
-                if(id == null) {
-                    return callback(new PersistenceError(`Unable to convert string '${originalId}' to valid identifier.`))
+            if (typeof originalId === "string") {
+                let id = this._persister.identity.fromString(originalId);
+                if (id == null) {
+                    // remove the invalid id
+                    ids.splice(i, 1);
+                    handleCallback(originalId, new PersistenceError(`Unable to convert string '${originalId}' to valid identifier.`));
+                }
+                else {
+                    // store converted id
+                    ids[i] = id;
                 }
             }
-            else {
-                if(!this._persister.identity.validate(originalId)) {
-                    return callback(new PersistenceError(`'${originalId}' is not a valid identifier.`))
-                }
-                id = originalId;
+            else if (!this._persister.identity.validate(originalId)) {
+                // remove the invalid id
+                ids.splice(i, 1);
+                handleCallback(originalId, new PersistenceError(`'${originalId}' is not a valid identifier.`));
             }
+        }
+
+        // check for simple case of only a single find in the queue
+        if (ids.length == 1) {
+            let id = ids[0],
+                callback = callbacks.get(id.toString());
 
             this._persister.findOne({ _id: id }, (err, entity) => {
                 if(err) return callback(err);
@@ -984,14 +993,9 @@ class FindQueue {
         this._persister.findAll({ _id: { $in: ids }}, (err, entities) => {
             if(!err) {
                 for (var i = 0, l = entities.length; i < l; i++) {
+
                     var entity = entities[i];
-
-                    var id = entity["_id"].toString(),
-                        callback = callbacks.get(id);
-
-                    callback(null, entity);
-                    // remove called callback
-                    callbacks.delete(id);
+                    handleCallback(entity["_id"], null, entity);
                 }
             }
 
@@ -1000,6 +1004,15 @@ class FindQueue {
             // pass error message to any callbacks that have not been called yet
             callbacks.forEach((callback, id) => callback(err || new PersistenceError("Unable to find document with identifier '" + id + "'.")));
         });
+
+        function handleCallback(id: any, err: Error, result?: any): void {
+
+            var key = id.toString(),
+                callback = callbacks.get(key);
+
+            callback(err, result);
+            callbacks.delete(key);
+        }
     }
 }
 /*
