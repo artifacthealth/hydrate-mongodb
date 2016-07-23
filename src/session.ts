@@ -473,17 +473,15 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      */
     getObject(id: any): any {
 
-        if(id == null) {
-            throw new PersistenceError("Missing required argument 'id'.");
-        }
-
-        var links = this._objectLinksById.get(id.toString());
-        if (links) {
-            switch(links.state) {
-                case ObjectState.Removed:
-                    return null;
-                case ObjectState.Managed:
-                    return links.object
+        if (id) {
+            var links = this._objectLinksById.get(id.toString());
+            if (links) {
+                switch (links.state) {
+                    case ObjectState.Removed:
+                        return null;
+                    case ObjectState.Managed:
+                        return links.object
+                }
             }
         }
 

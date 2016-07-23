@@ -955,6 +955,19 @@ describe('SessionImpl', () => {
                 done();
             });
         });
+
+        it('should return a reference even id is invalid', (done) => {
+
+            helpers.createFactory(["kitten"], (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var ref = session.getReference(Kitten, null);
+
+                assert.ok(ref, "Expected getReference to return a Reference even if id is invalid.");
+                done();
+            });
+        });
     });
 
     describe('fetch', () => {
