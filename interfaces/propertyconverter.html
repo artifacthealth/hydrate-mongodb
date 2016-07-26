@@ -105,6 +105,7 @@
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="propertyconverter.html#areequal" class="tsd-kind-icon">are<wbr>Equal</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="propertyconverter.html#converttodocumentfield" class="tsd-kind-icon">convert<wbr>ToDocument<wbr>Field</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="propertyconverter.html#converttoobjectproperty" class="tsd-kind-icon">convert<wbr>ToObject<wbr>Property</a></li>
 							</ul>
@@ -114,6 +115,74 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="areequal" class="tsd-anchor"></a>
+					<h3>are<wbr>Equal</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">are<wbr>Equal<span class="tsd-signature-symbol">(</span>field1<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, field2<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon">are<wbr>Equal<span class="tsd-signature-symbol">(</span>field1<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, field2<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L488">mapping/mappingModel.ts:488</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns true if the document field values are equal; otherwise, returns false. This method is only called if both values are not
+									null and the values are not strictly equal.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>field1: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>First document field value.</p>
+									</div>
+								</li>
+								<li>
+									<h5>field2: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Other document field value.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L242">config/configuration.ts:242</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Returns true if the document field values are equal; otherwise, returns false. This method is only called if both values are not
+									null and the values are not strictly equal.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>field1: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>First document field value.</p>
+									</div>
+								</li>
+								<li>
+									<h5>field2: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Other document field value.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
 					<a name="converttodocumentfield" class="tsd-anchor"></a>
 					<h3>convert<wbr>ToDocument<wbr>Field</h3>
@@ -125,13 +194,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L470">mapping/mappingModel.ts:470</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L474">mapping/mappingModel.ts:474</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Converts an object property value to a document field value.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>property: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The property value to convert.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
@@ -139,13 +216,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L224">config/configuration.ts:224</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L228">config/configuration.ts:228</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Converts an object property value to a document field value.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>property: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The property value to convert.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
@@ -163,13 +248,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L471">mapping/mappingModel.ts:471</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L480">mapping/mappingModel.ts:480</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Converts a document field value to an object property value.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>field: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The field value to convert.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
@@ -177,13 +270,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L225">config/configuration.ts:225</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L234">config/configuration.ts:234</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Converts a document field value to an object property value.</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>field: <span class="tsd-signature-type">any</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The field value to convert.</p>
+									</div>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
@@ -207,6 +308,9 @@
 					<li class="current tsd-kind-interface">
 						<a href="propertyconverter.html" class="tsd-kind-icon">Property<wbr>Converter</a>
 						<ul>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="propertyconverter.html#areequal" class="tsd-kind-icon">are<wbr>Equal</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="propertyconverter.html#converttodocumentfield" class="tsd-kind-icon">convert<wbr>ToDocument<wbr>Field</a>
 							</li>
