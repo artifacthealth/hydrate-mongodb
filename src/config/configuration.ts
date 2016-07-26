@@ -221,8 +221,25 @@ export interface IdentityGenerator {
  */
 export interface PropertyConverter {
 
+    /**
+     * Converts an object property value to a document field value.
+     * @param property The property value to convert.
+     */
     convertToDocumentField(property: any): any;
+
+    /**
+     * Converts a document field value to an object property value.
+     * @param field The field value to convert.
+     */
     convertToObjectProperty(field: any): any;
+
+    /**
+     * Returns true if the document field values are equal; otherwise, returns false. This method is only called if both values are not
+     * null and the values are not strictly equal.
+     * @param field1 First document field value.
+     * @param field2 Other document field value.
+     */
+    areEqual(field1: any, field2: any): boolean;
 }
 
 /**

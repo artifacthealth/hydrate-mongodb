@@ -36,4 +36,11 @@ export class BufferMapping extends MappingBase {
         return new Binary(value);
     }
 
+    areEqual(documentValue1: any, documentValue2: any): boolean {
+
+        if (documentValue1 === documentValue2) return true;
+        if (documentValue1 === null || documentValue2 === null) return false;
+        
+        return documentValue1.value(true).equals(documentValue2.value(true));
+    }
 }

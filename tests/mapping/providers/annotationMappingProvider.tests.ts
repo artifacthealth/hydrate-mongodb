@@ -532,6 +532,11 @@ class MyEnumConverter implements PropertyConverter {
                 return ConverterFixture.B;
         }
     }
+
+    areEqual(field1: any, field2: any): boolean {
+
+        return field1 === field2;
+    }
 }
 
 class PointConverter implements PropertyConverter {
@@ -545,5 +550,10 @@ class PointConverter implements PropertyConverter {
 
         var parts = field.split('.');
         return new ConverterOnClassFixture.Point(parts[0], parts[1]);
+    }
+    
+    areEqual(field1: any, field2: any): boolean {
+
+        return field1 === field2;
     }
 }

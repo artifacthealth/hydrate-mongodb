@@ -25,6 +25,11 @@ export class PhoneTypeConverter implements PropertyConverter {
                 return PhoneType.Home;
         }
     }
+    
+    areEqual(field1: any, field2: any): boolean {
+
+        return field1 === field2;
+    }
 }
 
 @Embeddable()

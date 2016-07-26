@@ -15,7 +15,7 @@ class SomeConverter implements PropertyConverter {
         switch(property) {
             case MyEnum.value1:
                 return "A";
-            case MyEnum.value1:
+            case MyEnum.value2:
                 return "B";
             case MyEnum.value3:
                 return "C";
@@ -32,6 +32,11 @@ class SomeConverter implements PropertyConverter {
             case "C":
                 return MyEnum.value3;
         }
+    }
+
+    areEqual(field1: any, field2: any): boolean {
+
+        return field1 === field2;
     }
 }
 
