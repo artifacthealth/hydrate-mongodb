@@ -7,6 +7,7 @@ import {Persister} from "./persister";
 import {PersisterImpl} from "./persister";
 import {MappingModel} from "./mapping/mappingModel";
 import {EntityMapping} from "./mapping/entityMapping";
+import {Logger} from "./config/configuration";
 
 export interface SessionFactory {
 
@@ -19,6 +20,7 @@ export interface SessionFactory {
  */
 export interface InternalSessionFactory extends SessionFactory {
 
+    logger: Logger;
     getMappingForObject(obj: any): EntityMapping;
     getMappingForConstructor(ctr: Constructor<any>): EntityMapping;
     createPersister(session: InternalSession, mapping: EntityMapping): Persister;
@@ -28,6 +30,8 @@ export interface InternalSessionFactory extends SessionFactory {
  * @hidden
  */
 export class SessionFactoryImpl implements InternalSessionFactory {
+
+    logger: Logger;
 
     private _collections: Table<Collection>;
     private _mappingRegistry: MappingRegistry;

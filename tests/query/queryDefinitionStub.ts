@@ -21,7 +21,19 @@ export class QueryDefinitionStub implements QueryDefinition {
     batchSizeValue: number;
 
     get readOnly(): boolean {
-        return (this.kind & QueryKind.ReadOnly) !== 0;
+        switch (this.kind) {
+
+            case QueryKind.FindAll:
+            case QueryKind.FindEach:
+            case QueryKind.FindEachSeries:
+            case QueryKind.FindOne:
+            case QueryKind.FindOneById:
+            case QueryKind.Distinct:
+            case QueryKind.Count:
+                return true;
+            default:
+                return false;
+        }
     }
 
     constructor(public kind: QueryKind) {
@@ -30,5 +42,9 @@ export class QueryDefinitionStub implements QueryDefinition {
 
     execute(callback: ResultCallback<any>): void {
         throw new Error("Not implemented");
+    }
+
+    toObject(): Object {
+        return undefined;
     }
 }

@@ -28,4 +28,9 @@ export interface QueryDefinition {
     // TODO: add read preference. Use string or enumeration or static class with core values?
 
     execute(callback: ResultCallback<any>): void;
+
+    /**
+     * Creates an object for logging purposes.
+     */
+    toObject(): Object;
 }

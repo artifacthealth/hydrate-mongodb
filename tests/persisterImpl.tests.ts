@@ -217,7 +217,7 @@ describe('PersisterImpl', () => {
                 assert.deepEqual(criteria, { 'name': 'Bob' });
                 done();
                 return collection.createCursor();
-            }
+            };
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);

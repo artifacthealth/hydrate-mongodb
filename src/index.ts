@@ -49,7 +49,7 @@ export function areEqual(value1: Object, value2: Object): boolean {
 
 /**
  * Gets the database identifier for an entity as a string.
- * @param obj The entity.
+ * @param entity The entity.
  */
 export function getIdentifier(entity: Object): string {
 

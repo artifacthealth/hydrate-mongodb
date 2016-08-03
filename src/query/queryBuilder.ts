@@ -321,7 +321,19 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     }
 
     get readOnly(): boolean {
-        return (this.kind & QueryKind.ReadOnly) !== 0;
+        switch (this.kind) {
+
+            case QueryKind.FindAll:
+            case QueryKind.FindEach:
+            case QueryKind.FindEachSeries:
+            case QueryKind.FindOne:
+            case QueryKind.FindOneById:
+            case QueryKind.Distinct:
+            case QueryKind.Count:
+                return true;
+            default:
+                return false;
+        }
     }
 
     fetch(path: string | string[], callback?: ResultCallback<any>): QueryObject {
@@ -452,5 +464,23 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
         }
 
         this._session.getPersister(mapping).executeQuery(this, callback);
+    }
+
+    /**
+     * Creates an object for logging purposes.
+     */
+    toObject(): Object {
+
+        return {
+            kind: QueryKind[this.kind],
+            criteria: this.criteria,
+            update: this.updateDocument,
+            wantsUpdated: this.wantsUpdated,
+            fetch: this.fetchPaths,
+            sort: this.sortValue,
+            limit: this.limitCount,
+            skip: this.skipCount,
+            batchSize: this.batchSizeValue
+        };
     }
 }

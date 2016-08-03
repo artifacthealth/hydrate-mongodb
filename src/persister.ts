@@ -110,6 +110,7 @@ export class PersisterImpl implements Persister {
     private _session: InternalSession;
     private _criteriaBuilder: CriteriaBuilder;
     private _updateDocumentBuilder: UpdateDocumentBuilder;
+    private _traceEnabled: boolean;
 
     constructor(session: InternalSession, mapping: EntityMapping, collection: mongodb.Collection) {
 
@@ -121,6 +122,7 @@ export class PersisterImpl implements Persister {
         this.changeTracking = inheritanceRoot.changeTracking;
         this.identity = inheritanceRoot.identity;
         this._versioned = inheritanceRoot.versioned;
+        this._traceEnabled = this._session.factory.logger != null;
     }
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void {
@@ -251,17 +253,17 @@ export class PersisterImpl implements Persister {
 
     findInverseOf(entity: Object, path: string, callback: ResultCallback<any[]>): void {
 
-        var query = this._prepareInverseQuery(entity, path, callback);
-        if(query) {
-            this._findAll({criteria: query}, callback);
+        var criteria = this._prepareInverseQuery(entity, path, callback);
+        if(criteria) {
+            this.findAll(criteria, callback);
         }
     }
 
     findOneInverseOf(entity: Object, path: string, callback: ResultCallback<any>): void {
 
-        var query = this._prepareInverseQuery(entity, path, callback);
-        if(query) {
-            this.findOne(query, callback);
+        var criteria = this._prepareInverseQuery(entity, path, callback);
+        if(criteria) {
+            this.findOne(criteria, callback);
         }
     }
 
@@ -305,10 +307,21 @@ export class PersisterImpl implements Persister {
         (this._findQueue || (this._findQueue = new FindQueue(this))).add(id, callback);
     }
 
-    // TODO: findOne uses find under the hood in the mongodb driver. Consider optimizing to not use findOne function on mongodb driver.
     findOne(criteria: QueryDocument, callback: ResultCallback<any>): void {
 
-        this._collection.findOne(criteria, (err, document) => {
+        var handleCallback = callback;
+
+        // setup trace logging.
+        if (this._traceEnabled) {
+            handleCallback = this._createTraceableCallback({ kind: QueryKind[QueryKind.FindOne], criteria }, callback);
+        }
+
+        this._findOne({ criteria }, handleCallback);
+    }
+
+    private _findOne(query: FindOneQuery, callback: ResultCallback<any>): void {
+
+        this._collection.findOne(query.criteria, (err, document) => {
             if (err) return callback(err);
             this._loadOne(document, callback);
         });
@@ -316,7 +329,14 @@ export class PersisterImpl implements Persister {
 
     findAll(criteria: QueryDocument, callback: ResultCallback<any[]>): void {
 
-        this._findAll({ criteria: criteria }, callback);
+        var handleCallback = callback;
+
+        // setup trace logging.
+        if (this._traceEnabled) {
+            handleCallback = this._createTraceableCallback({ kind: QueryKind[QueryKind.FindAll], criteria }, callback);
+        }
+
+        this._findAll({ criteria }, handleCallback);
     }
 
     private _findAll(query: FindAllQuery, callback: ResultCallback<any[]>): void {
@@ -408,43 +428,68 @@ export class PersisterImpl implements Persister {
 
     private _executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
 
+        var handleCallback = callback;
+
+        // setup trace logging. note that we don't log the FindOneById query since those get queued up on the FindQueue which will get
+        // logged when the queue executes it's query.
+        if (this._traceEnabled && query.kind != QueryKind.FindOneById) {
+            handleCallback = this._createTraceableCallback(query.toObject(), callback);
+        }
+
         switch(query.kind) {
             case QueryKind.FindOne:
-                this.findOne(query.criteria, this._fetchOne(query, callback));
+                this._findOne(query, this._fetchOne(query, handleCallback));
                 break;
             case QueryKind.FindOneById:
-                this.findOneById(query.id, this._fetchOne(query, callback));
+                this.findOneById(query.id, this._fetchOne(query, handleCallback));
                 break;
             case QueryKind.FindAll:
-                this._findAll(query, this._fetchAll(query, callback));
+                this._findAll(query, this._fetchAll(query, handleCallback));
                 break;
             case QueryKind.FindEach:
-                this._findEach(query, callback);
+                this._findEach(query, handleCallback);
                 break;
             case QueryKind.FindEachSeries:
-                this._findEachSeries(query, callback);
+                this._findEachSeries(query, handleCallback);
                 break;
             case QueryKind.FindOneAndRemove:
             case QueryKind.FindOneAndUpdate:
-                this._findOneAndModify(query, this._fetchOne(query, callback));
+                this._findOneAndModify(query, this._fetchOne(query, handleCallback));
                 break;
             case QueryKind.RemoveOne:
             case QueryKind.RemoveAll:
-                this._remove(query, callback);
+                this._remove(query, handleCallback);
                 break;
             case QueryKind.UpdateOne:
             case QueryKind.UpdateAll:
-                this._update(query, callback);
+                this._update(query, handleCallback);
                 break;
             case QueryKind.Distinct:
-                this._distinct(query, callback);
+                this._distinct(query, handleCallback);
                 break;
             case QueryKind.Count:
-                this._count(query, callback);
+                this._count(query, handleCallback);
                 break;
             default:
-                callback(new PersistenceError(`Unknown query type '${query.kind}'.`));
+                handleCallback(new PersistenceError(`Unknown query type '${query.kind}'.`));
         }
+    }
+
+    private _createTraceableCallback(query: Object, callback: ResultCallback<any>): ResultCallback<any> {
+
+        var start = process.hrtime();
+        return (err?: Error, result?: any) => {
+            if (err) return callback(err);
+
+            this._session.factory.logger.trace(
+                {
+                    collection: (<EntityMapping>this._mapping.inheritanceRoot).collectionName,
+                    query,
+                    duration: getDuration(start)
+                },
+                "[Hydrate] Executed query.");
+            callback(null, result);
+        };
     }
 
     private _prepareOrderDocument(sorting: [string, number][], callback: ResultCallback<[string, number][]>): void {
@@ -585,7 +630,7 @@ export class PersisterImpl implements Persister {
     }
 
     private _prepareFind(query: FindAllQuery): mongodb.Cursor {
-
+        
         var cursor = this._collection.find(query.criteria);
 
         if(query.orderDocument !== undefined) {
@@ -612,7 +657,7 @@ export class PersisterImpl implements Persister {
         var options: FindAndModifyOptions = {
             remove: query.kind == QueryKind.FindOneAndRemove,
             new: query.wantsUpdated
-        }
+        };
 
         this._collection.findAndModify(query.criteria, query.orderDocument, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
@@ -732,7 +777,7 @@ export class PersisterImpl implements Persister {
         var options: CountOptions = {
             limit: query.limitCount,
             skip: query.skipCount
-        }
+        };
 
         this._collection.count(query.criteria, options, (err: Error, result: number) => {
             if(err) return callback(err);
@@ -825,7 +870,6 @@ export class PersisterImpl implements Persister {
         }
         return command;
     }
-
 }
 
 class BulkOperationCommand implements Command {
@@ -843,8 +887,8 @@ class BulkOperationCommand implements Command {
 
         this._mapping = mapping;
         this.priority = mapping.flushPriority;
-        this.collectionName = collection.collectionName,
-            this.operation = collection.initializeUnorderedBulkOp();
+        this.collectionName = collection.collectionName;
+        this.operation = collection.initializeUnorderedBulkOp();
         this.inserted = this.updated = this.removed = 0;
     }
 
@@ -1014,6 +1058,12 @@ class FindQueue {
             callbacks.delete(key);
         }
     }
+}
+
+function getDuration(start: number[]): number {
+
+    var stop = process.hrtime(start);
+    return (stop[0] * 1000) + stop[1] / 1000000;
 }
 /*
 class QueryStream extends Readable {
