@@ -833,11 +833,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 batch.execute((err) => {
                     if (err) return callback(err);
 
-                    this._postExecute(head, (err) => {
-                        if(err) return callback(err);
-
-                        this._batchCompleted(head, callback);
-                    });
+                    this._batchCompleted(head, callback);
                 });
             });
         });
@@ -919,51 +915,6 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                     // all done
                     callback();
                 }
-            }
-        }
-    }
-
-    private _postExecute(head: ObjectLinks, callback: Callback): void {
-
-        var count = 0,
-            errored = false;
-
-        var links = head;
-        while(links) {
-
-            switch (links.scheduledOperation) {
-                case ScheduledOperation.Update:
-                    links.persister.postUpdate(links.object, done);
-                    break;
-                case ScheduledOperation.Delete:
-                    links.persister.postRemove(links.object, done);
-                    break;
-                case ScheduledOperation.Insert:
-                    links.persister.postInsert(links.object, done);
-                    break;
-            }
-
-            links = links.next;
-        }
-
-        // If persister finished synchronously then call callback now
-        if(!links && count <= 0) {
-            callback();
-        }
-
-        function done(err?: Error): void {
-            if(errored) return;
-
-            count--;
-
-            if(err) {
-                errored = true;
-                callback(err);
-                return;
-            }
-
-            if(!links && count <= 0) {
-                callback();
             }
         }
     }
@@ -1078,7 +1029,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         this._objectLinksById = new Map();
         this._objectLinks = [];
         // clear scheduled operations
-        this._scheduleHead = this._scheduleTail = null
+        this._scheduleHead = this._scheduleTail = null;
 
         process.nextTick(callback);
     }

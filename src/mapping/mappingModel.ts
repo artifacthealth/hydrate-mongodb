@@ -193,20 +193,6 @@ export namespace MappingModel {
     }
 
     /**
-     * Lifecycle events.
-     */
-    export const enum LifecycleEvent {
-
-        PrePersist,
-        PostPersist,
-        PostLoad,
-        PreUpdate,
-        PostUpdate,
-        PreRemove,
-        PostRemove
-    }
-
-    /**
      * Represents the mappings from a document to an anonymous object type.
      */
     export interface ObjectMapping extends Mapping {
@@ -325,15 +311,6 @@ export namespace MappingModel {
          * @param index The index specification.
          */
         addIndex(index: Index): void;
-
-        /**
-         * Adds a lifecycle callback to the entity mapping.
-         * @param event The lifecycle event.
-         * @param callback The method implementation.
-         * @param async Indicates if the method is async. If the method is async then it should take a single parameter
-         * which is the callback that it calls when it is finished; otherwise, it should be parameterless.
-         */
-        addLifecycleCallback(event: LifecycleEvent, method: Function, async: boolean): void;
     }
 
     /**

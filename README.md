@@ -265,7 +265,6 @@ In TypeScript, the emitDecoratorMetadata and experimentalDecorators options must
 * [`Inheritance`](#Inheritance)
 * [`Mapped Superclass`](#MappedSuperclass)
 * [`Discriminators`](#Discriminators)
-* [`Lifecycle Callbacks`](#LifecycleCallbacks)
 
 <a name="Entities"></a>
 ### Entities
@@ -620,76 +619,4 @@ If the discriminator value is not explicitly specified for a class, it is determ
 [Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html).
 By default, the name of the class is used. 
 
-<a name="LifecycleCallbacks"></a>
-### Lifecycle Callbacks
 
-Hydrate provides callbacks that can be called on an entity during various stages of the entity lifecycle similar to 
-[JPA Lifecycle Callbacks](http://openjpa.apache.org/builds/1.2.3/apache-openjpa/docs/jpa_overview_pc_callbacks.html). 
-Callbacks are indicated by adding a decorator to a class method. A few important restrictions: 
-
-* If the method is parameterless, it is executed synchronously.
-* If the method has a single parameter, it is executed as an asynchronous method and passed a callback for it to call 
-when finished. Any errors passed to the callback by the method get returned on the 
-[Session](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html) operation that triggered the callback.
-* The method must not have more than one parameter.
-* The method must not modify any entities other than the entity that the method is called on; otherwise, results are unpredictable.
-* The method should avoid accessing the [Session](https://artifacthealth.github.io/hydrate-mongodb/interfaces/session.html). 
-Because of the way operations are queued on the session, executing an operation on the session during a lifecycle callback 
-could cause the callback to hang. 
-
-Lifecycle callbacks are defined by adding the corresponding decorator to the class method as follows:
-
-```typescript
-@Entity()
-class Person {
-
-    @Field()
-    modified: Date;
-       
-    @PreUpdate()
-    private _beforeUpdate(): void {
-    
-        // set the modified date on the entity before it is saved to the database.
-        this.modified = new Date();
-    }   
-}
-```
-
-Lifecycle callbacks can be used to validate entities.
-
-```typescript
-@Entity()
-class Document {
-
-    @Field()
-    owner: Person;
-       
-    @PrePersist()
-    @PreUpdate()
-    validate(callback: Callback): void {
-
-        if(!this.owner) {
-            return callback(new Error("A document must have an owner.");
-        }
-        
-        callback();
-    }   
-}
-```
-
-The following decorators are available for lifecycle callbacks:
-
-* [PrePersist](https://artifacthealth.github.io/hydrate-mongodb/globals.html#prepersist): Call method before a new 
-entity is saved to the database.
-* [PostPersist](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postpersist): Call method after a new 
-entity is saved to the database.
-* [PostLoad](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postload): Call method after an entity is loaded 
-from the database.
-* [PreUpdate](https://artifacthealth.github.io/hydrate-mongodb/globals.html#preupdate): Call method before modifications to 
-an entity are saved to the database.
-* [PostUpdate](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postupdate): Call method after 
-modifications to an entity are saved to the database.
-* [PreRemove](https://artifacthealth.github.io/hydrate-mongodb/globals.html#preremove): Call method before an entity is 
-deleted from the database.
-* [PostRemove](https://artifacthealth.github.io/hydrate-mongodb/globals.html#postremove): Call method after an entity is 
-deleted from the database.

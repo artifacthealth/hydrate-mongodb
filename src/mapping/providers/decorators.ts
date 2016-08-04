@@ -24,13 +24,8 @@ import {
     CollectionDescription,
     ClassIndexDescription,
     PropertyIndexDescription,
-    PrePersistAnnotation,
-    PostPersistAnnotation,
-    PostLoadAnnotation,
-    PreUpdateAnnotation,
-    PostUpdateAnnotation,
-    PreRemoveAnnotation,
-    PostRemoveAnnotation, TransientAnnotation, ImmutableAnnotation
+    TransientAnnotation,
+    ImmutableAnnotation
 } from "./annotations";
 
 import {PropertyConverter} from "../mappingModel";
@@ -524,153 +519,6 @@ export declare function ElementType(target: Constructor<any> | string): Property
 export declare function MapKey(propertyName: string): PropertyDecorator;
 
 /**
- * Specifies a callback to be called before a new entity is saved to the database.
- *
- * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
- * information.
- *
- * ### Example
- *
- * ```typescript
- *  @Entity()
- *  export class User {
- *
- *      @PrePersist()
- *      private _onPrePersist(): void {
- *          ...
- *      }
- *  }
- * ```
- */
-export declare function PrePersist(): PropertyDecorator;
-
-/**
- * Specifies a callback to be called after a new entity is saved to the database.
- *
- * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
- * information.
- *
- * ### Example
- *
- * ```typescript
- *  @Entity()
- *  export class User {
- *
- *      @PostPersist()
- *      private _onPostPersist(): void {
- *          ...
- *      }
- *  }
- * ```
- */
-export declare function PostPersist(): PropertyDecorator;
-
-/**
- * Specifies a callback to be called after an entity is loaded from the database.
- *
- * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
- * information.
- *
- * ### Example
- *
- * ```typescript
- *  @Entity()
- *  export class User {
- *
- *      @PostLoad()
- *      private _onPostLoad(): void {
- *          ...
- *      }
- *  }
- * ```
- */
-export declare function PostLoad(): PropertyDecorator;
-
-/**
- * Specifies a callback to be called before modifications to an entity are saved to the database.
- *
- * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
- * information.
- *
- * ### Example
- *
- * ```typescript
- *  @Entity()
- *  export class User {
- *
- *      @PreUpdate()
- *      private _onPreUpdate(): void {
- *          ...
- *      }
- *  }
- * ```
- */
-export declare function PreUpdate(): PropertyDecorator;
-
-/**
- * Specifies a callback to be called after modifications to an entity are saved to the database.
- *
- * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
- * information.
- *
- * ### Example
- *
- * ```typescript
- *  @Entity()
- *  export class User {
- *
- *      @PostUpdate()
- *      private _onPostUpdate(): void {
- *          ...
- *      }
- *  }
- * ```
- */
-export declare function PostUpdate(): PropertyDecorator;
-
-/**
- * Specifies a callback to be called before an entity is deleted from the database.
- *
- * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
- * information.
- *
- * ### Example
- *
- * ```typescript
- *  @Entity()
- *  export class User {
- *
- *      @PreRemove()
- *      private _onPreRemove(): void {
- *          ...
- *      }
- *  }
- * ```
- */
-export declare function PreRemove(): PropertyDecorator;
-
-/**
- * Specifies a callback to be called after an entity is deleted from the database.
- *
- * See [Lifecycle Callbacks](https://artifacthealth.github.io/hydrate-mongodb/index.html#LifecycleCallbacks) for more
- * information.
- *
- * ### Example
- *
- * ```typescript
- *  @Entity()
- *  export class User {
- *
- *      @PostRemove()
- *      private _onPostRemove(): void {
- *          ...
- *      }
- *  }
- * ```
- */
-export declare function PostRemove(): PropertyDecorator;
-
-/**
  * Specifies that a property should not be persisted.
  *
  * Properties are mapped to persistent document fields on an opt-in basis. *All properties that are decorated are
@@ -711,13 +559,6 @@ exports.ElementType = makeDecorator(ElementTypeAnnotation);
 exports.MapKey = makeDecorator(MapKeyAnnotation);
 exports.Id = makeDecorator(IdAnnotation);
 exports.Immutable = makeDecorator(ImmutableAnnotation);
-exports.PrePersist = makeDecorator(PrePersistAnnotation);
-exports.PostPersist = makeDecorator(PostPersistAnnotation);
-exports.PostLoad = makeDecorator(PostLoadAnnotation);
-exports.PreUpdate = makeDecorator(PreUpdateAnnotation);
-exports.PostUpdate = makeDecorator(PostUpdateAnnotation);
-exports.PreRemove = makeDecorator(PreRemoveAnnotation);
-exports.PostRemove = makeDecorator(PostRemoveAnnotation);
 exports.Transient = makeDecorator(TransientAnnotation);
 
 
