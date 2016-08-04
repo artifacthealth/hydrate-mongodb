@@ -2,6 +2,6 @@ import {IndexOptions} from "./indexOptions";
 
 export interface Index {
 
-    keys: [string, number][];
+    keys: [string, number | string][];
     options?: IndexOptions;
 }

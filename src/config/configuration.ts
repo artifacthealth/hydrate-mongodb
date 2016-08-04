@@ -109,11 +109,11 @@ export class Configuration {
         async.each(this._mappings, (provider, done) => {
 
             provider.getMapping(this, (err, r) => {
-                if(err) return done(err, null);
+                if(err) return done(err);
 
                 // Merge all registries. Duplicates will cause an error.
                 registry.addMappings(<ClassMapping[]>r);
-                done(null, null);
+                done();
             });
         }, (err) => {
             if(err) return callback(err);

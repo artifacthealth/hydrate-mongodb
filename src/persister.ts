@@ -23,6 +23,7 @@ import {WriteContext} from "./mapping/writeContext";
 import {MappingModel} from "./mapping/mappingModel";
 import {Readable} from "stream";
 import {PersistenceError} from "./persistenceError";
+import {getDuration} from "./core/timerUtil";
 
 interface FindOneQuery {
 
@@ -1015,11 +1016,6 @@ class FindQueue {
     }
 }
 
-function getDuration(start: number[]): number {
-
-    var stop = process.hrtime(start);
-    return (stop[0] * 1000) + stop[1] / 1000000;
-}
 /*
 class QueryStream extends Readable {
 

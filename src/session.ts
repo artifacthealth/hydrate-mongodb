@@ -17,6 +17,7 @@ import {QueryDefinition} from "./query/queryDefinition";
 import {Observer} from "./observer";
 import {PersistenceError} from "./persistenceError";
 import {WriteContext} from "./mapping/writeContext";
+import {getDuration} from "./core/timerUtil";
 
 /**
  * The state of an object.
@@ -281,11 +282,13 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      */
     private _queue: TaskQueue;
 
+    private _traceEnabled: boolean;
 
     constructor(public factory: InternalSessionFactory) {
         super();
 
         this._createTaskQueue();
+        this._traceEnabled = this.factory.logger != null;
     }
 
     save(obj: any, callback?: Callback): void {
@@ -826,6 +829,10 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             // clear list of scheduled objects
             this._scheduleHead = this._scheduleTail = null;
 
+            if (this._traceEnabled) {
+                var start = process.hrtime();
+            }
+
             var batch = new Batch();
             this._buildBatch(batch, head, (err) => {
                 if (err) return callback(err);
@@ -833,7 +840,11 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 batch.execute((err) => {
                     if (err) return callback(err);
 
-                    this._batchCompleted(head, callback);
+                    if (start) {
+                        var duration = getDuration(start);
+                    }
+
+                    this._batchCompleted(head, duration, callback);
                 });
             });
         });
@@ -922,9 +933,14 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     /**
      * Called after a batch is successfully executed.
      * @param head The head of the scheduled operation list.
+     * @param duration The duration of the flush operation, for trace logging.
      * @param callback Called when processing is completed.
      */
-    private _batchCompleted(head: ObjectLinks, callback: Callback): void {
+    private _batchCompleted(head: ObjectLinks, duration: number, callback: Callback): void {
+        
+        if (this._traceEnabled) {
+            this._logFlushStats(head, duration);
+        }
 
         var links = head;
         while(links) {
@@ -953,6 +969,44 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }
 
         callback();
+    }
+    
+    private _logFlushStats(head: ObjectLinks, duration: number): void {
+
+        var inserted = 0, updated = 0, removed = 0, dirtyChecked = 0;
+
+        var links = head;
+        while (links) {
+
+            switch (links.scheduledOperation) {
+                case ScheduledOperation.Update:
+                    updated++;
+                    break;
+                case ScheduledOperation.Delete:
+                    inserted++;
+                    break;
+                case ScheduledOperation.Insert:
+                    removed++;
+                    break;
+                case ScheduledOperation.DirtyCheck:
+                    dirtyChecked++;
+                    break;
+            }
+
+            links = links.next;
+        }
+        
+        this.factory.logger.trace(
+            {
+                duration,
+                operations: {
+                    inserted,
+                    updated,
+                    removed,
+                    dirtyChecked: dirtyChecked + updated
+                }
+            },
+            `[Hydrate] Completed flush.`);
     }
 
     private _close(callback: Callback): void {

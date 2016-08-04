@@ -30,6 +30,11 @@ export interface SessionFactory {
      * @param callback Called after the operation has completed.
      */
     createIndexes(options: CreateIndexesOptions, callback: Callback): void;
+    /**
+     * Drops all indexes for all collections managed by Hydrate. This includes indexes that were not created by Hydrate.
+     * @param callback Called after the operation has completed.
+     */
+    dropIndexes(callback: Callback): void;
 }
 
 /**
@@ -144,8 +149,8 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                             }
 
                             let order = index.keys[i][1];
-                            if (order !== 1 && order !== -1) {
-                                indexDone(new PersistenceError(`Invalid order for key '${propertyName}' on index for '${mapping.name}'. Order must be 1 or -1.`));
+                            if (order !== 1 && order !== -1 && order != 'text') {
+                                indexDone(new PersistenceError(`Invalid order for key '${propertyName}' on index for '${mapping.name}'. Order must be 1, -1, or 'text'.`));
                                 return;
                             }
 
@@ -182,6 +187,36 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                         });
                     },
                     mappingDone)
+            },
+            callback);
+    }
+
+    /**
+     * Drops all indexes for all collections managed by Hydrate. This includes indexes that were not created by Hydrate.
+     * @param callback Called after the operation has completed.
+     */
+    dropIndexes(callback: Callback): void {
+
+        async.each(
+            this._mappingRegistry.getEntityMappings().filter(mapping => mapping.hasFlags(MappingModel.MappingFlags.InheritanceRoot)),
+            (mapping, done) => {
+
+                let collection = this._collections[mapping.id];
+                if (collection) {
+                    collection.dropAllIndexes((err: Error) => {
+                        if (err) return done(err);
+
+                        if (this.logger) {
+                            this.logger.trace(
+                                {
+                                    collection: mapping.collectionName
+                                },
+                                `[Hydrate] Dropped all indexes on '${collection.collectionName}' collection.`);
+                        }
+
+                        done();
+                    })
+                }
             },
             callback);
     }

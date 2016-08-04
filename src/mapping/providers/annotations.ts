@@ -316,30 +316,8 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
 
     processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, property: MappingModel.Property, symbol: Property, annotation: IndexAnnotation): void {
 
-        // TODO: allow indexes in embedded types and map to containing root type
-        if(!context.assertEntityMapping(mapping)) return;
-
-        var keys: [string, number][] = [];
-
-        var order: number;
-        if(annotation.order !== undefined) {
-            order = annotation.order;
-            if(order != 1 && order != -1) {
-                context.addError("Valid values for property 'order' are 1 or -1.");
-                return;
-            }
-            // TODO: 'order' property should not be passed in options object. When we validate options in the future, this will throw an error.
-            // However, we can't just delete it from the object because then that removes it from the annotation as well and subsequent
-            // processing of the annotation would then not have the order value. Instead we should copy properties from the annotation value
-            // to the index options.
-        }
-        else {
-            order = 1;
-        }
-        keys.push([property.name, order]);
-
         this._addIndex(context, mapping, {
-            keys: keys,
+            keys: [[property.name, annotation.order || 1]],
             options: annotation.options
         });
     }
@@ -349,9 +327,24 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
         // TODO: allow indexes in embedded types and map to containing root type
         if(context.assertEntityMapping(mapping)) {
 
-            if (!value.keys) {
-                context.addError("Missing require property 'keys'.");
+            if (!Array.isArray(value.keys) || value.keys.length == 0) {
+                context.addError("Missing or invalid property 'keys'.");
                 return;
+            }
+
+            for (let i = 0; i < value.keys.length; i++) {
+
+                let key = value.keys[i];
+                if (!Array.isArray(key) || key.length != 2 || typeof key[0] !== "string") {
+                    context.addError(`Index key ${i} is invalid. Key must be a tuple [path, order].`);
+                    return;
+                }
+
+                let order = value.keys[i][1];
+                if (order != 1 && order != -1 && order != 'text') {
+                    context.addError("Valid values for index order are 1, -1, or 'text'.");
+                    return;
+                }
             }
 
             // TODO: validate index options
