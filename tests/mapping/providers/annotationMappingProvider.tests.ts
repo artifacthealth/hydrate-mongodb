@@ -173,8 +173,8 @@ describe('AnnotationMappingProvider', () => {
 
                     var mappingA = findMapping(results, "A");
                     var mappingB = findMapping(results, "B");
-                    assert.equal(mappingB.indexes, undefined);
-                    assert.lengthOf(mappingA.indexes, 4);
+                    assert.lengthOf(mappingB.indexes, 1);
+                    assert.lengthOf(mappingA.indexes, 3);
                 });
             });
 

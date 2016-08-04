@@ -12,7 +12,7 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
 
         // add default values
         var mapping = <MappingModel.EntityMapping>this.mapping;
-        if (mapping.flags & MappingModel.MappingFlags.InheritanceRoot) {
+        if (mapping.hasFlags(MappingModel.MappingFlags.InheritanceRoot)) {
 
             if(mapping.versioned == null) {
                 mapping.versioned = this.context.config.versioned;

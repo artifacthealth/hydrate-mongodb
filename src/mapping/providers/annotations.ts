@@ -28,15 +28,6 @@ export enum AnnotationPriority {
  */
 export class Annotation {
 
-    /**
-     * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
-     */
-    priority = AnnotationPriority.Medium;
-
-    static sort(annotations: Annotation[]): void {
-
-        annotations.sort((a, b) => b.priority - a.priority);
-    }
 }
 
 /**
@@ -302,14 +293,6 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
      */
     options: IndexOptions;
 
-    /**
-     * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
-     *
-     * We give the IndexAnnotation a low priority because we want it to be processed after the FieldAnnotation since
-     * we'll need ot know the name of the document field for the index if this annotation is on a property.
-     */
-    priority = AnnotationPriority.Low;
-
     constructor(args: ClassIndexDescription);
     constructor(args?: PropertyIndexDescription);
     constructor(args?: { keys?: [string, number][]; order?: number, options?: IndexOptions }) {
@@ -346,14 +329,14 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
                 return;
             }
             // TODO: 'order' property should not be passed in options object. When we validate options in the future, this will throw an error.
-            // However, we can't just delete it from the project because then that removes it from the annotation as well and subsequent
+            // However, we can't just delete it from the object because then that removes it from the annotation as well and subsequent
             // processing of the annotation would then not have the order value. Instead we should copy properties from the annotation value
             // to the index options.
         }
         else {
             order = 1;
         }
-        keys.push([property.field, order]);
+        keys.push([property.name, order]);
 
         this._addIndex(context, mapping, {
             keys: keys,
@@ -372,8 +355,6 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
             }
 
             // TODO: validate index options
-
-            // TODO: validate index keys
             mapping.addIndex(value);
         }
     }

@@ -24,8 +24,6 @@ export class ObjectMappingBuilder extends MappingBuilder {
         var mapping = <MappingModel.ObjectMapping>this.mapping,
             annotations = this.type.getAnnotations();
 
-        Annotation.sort(annotations);
-
         for(var i = 0, l = annotations.length; i < l; i++) {
             var annotation = this.context.currentAnnotation = annotations[i];
             if(annotation.processClassAnnotation) {
@@ -71,7 +69,6 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
             var annotations = method.getAnnotations();
             if(Array.isArray(annotations)) {
-                Annotation.sort(annotations);
 
                 for (var i = 0, l = annotations.length; i < l; i++) {
                     var annotation = this.context.currentAnnotation = annotations[i];
@@ -101,7 +98,6 @@ export class ObjectMappingBuilder extends MappingBuilder {
         // process all property annotations
         var annotations = symbol.getAnnotations();
         if(Array.isArray(annotations)) {
-            Annotation.sort(annotations);
 
             for (var i = 0, l = annotations.length; i < l; i++) {
                 var annotation = this.context.currentAnnotation = annotations[i];

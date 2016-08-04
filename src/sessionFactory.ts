@@ -11,6 +11,7 @@ import {EntityMapping} from "./mapping/entityMapping";
 import {Logger} from "./config/configuration";
 import {shallowClone} from "./core/objectUtil";
 import {Callback} from "./core/callback";
+import {PersistenceError} from "./persistenceError";
 
 export interface SessionFactory {
 
@@ -109,11 +110,15 @@ export class SessionFactoryImpl implements InternalSessionFactory {
             options = optionsOrCallback;
         }
 
-        var entityMappings = this._mappingRegistry.getEntityMappings();
-
         async.each(
-            entityMappings.filter(mapping => mapping.hasFlags(MappingModel.MappingFlags.InheritanceRoot)),
+            this._mappingRegistry.getEntityMappings(),
             (mapping, mappingDone) => {
+
+                var inheritanceRoot = <EntityMapping>mapping.inheritanceRoot,
+                    collection = this._collections[inheritanceRoot.id],
+                    versioned = inheritanceRoot.versioned,
+                    versionField = inheritanceRoot.versionField,
+                    discriminatorField = inheritanceRoot.discriminatorField;
 
                 async.each(
                     mapping.indexes || [],
@@ -124,16 +129,53 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                             indexOptions.background = options.background;
                         }
 
-                        this._collections[mapping.id].ensureIndex(index.keys, indexOptions, (err, indexName) => {
+                        if (!Array.isArray(index.keys) || index.keys.length == 0) {
+                            indexDone(new PersistenceError(`Missing or invalid keys on index for '${mapping.name}'.`));
+                            return;
+                        }
+
+                        let keys = new Array(index.keys.length);
+
+                        for (let i = 0; i < index.keys.length; i++) {
+                            let propertyName = index.keys[i][0];
+                            if (!propertyName) {
+                                indexDone(new PersistenceError(`Missing or invalid key on index for '${mapping.name}'.`));
+                                return;
+                            }
+
+                            let order = index.keys[i][1];
+                            if (order !== 1 && order !== -1) {
+                                indexDone(new PersistenceError(`Invalid order for key '${propertyName}' on index for '${mapping.name}'. Order must be 1 or -1.`));
+                                return;
+                            }
+
+                            if (propertyName == "_id" || (versioned && propertyName == versionField) || propertyName == discriminatorField) {
+                                // special case for the automatic fields
+                                keys[i] = index.keys[i];
+                            }
+                            else {
+                                let resolved = mapping.resolve(propertyName);
+                                if (resolved.error) {
+                                    indexDone(new PersistenceError(`Invalid key on index for '${mapping.name}': ${resolved.error.message}`));
+                                    return;
+                                }
+                                keys[i] = [resolved.resolvedPath, order];
+                            }
+                        }
+
+                        collection.ensureIndex(keys, indexOptions, (err, indexName) => {
                             if (err) return indexDone(err);
 
                             if (this.logger) {
                                 this.logger.trace(
                                     {
                                         collection: mapping.collectionName,
-                                        index
+                                        index: {
+                                            keys,
+                                            options: indexOptions
+                                        }
                                     },
-                                    `[Hydrate] Ensured index '${indexName}' exists on '${mapping.collectionName}' collection.`);
+                                    `[Hydrate] Ensured index '${indexName}' exists on '${collection.collectionName}' collection.`);
                             }
 
                             indexDone();

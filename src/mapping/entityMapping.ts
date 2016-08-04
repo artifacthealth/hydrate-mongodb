@@ -77,11 +77,6 @@ export class EntityMapping extends ClassMapping {
 
     addIndex(index: Index): void {
 
-        if(this.inheritanceRoot !== this) {
-            (<EntityMapping>this.inheritanceRoot).addIndex(index);
-            return;
-        }
-
         if(!this.indexes) {
             this.indexes = [];
         }

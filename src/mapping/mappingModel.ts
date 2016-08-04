@@ -33,6 +33,11 @@ export namespace MappingModel {
          * Readonly flags that describe the mapping. This value is assigned internally and should not be modified.
          */
         flags: MappingFlags;
+
+        /**
+         * Returns true if the mapping has the specified flags; otherwise, returns false.
+         */
+        hasFlags(flags: MappingFlags): boolean;
     }
 
     /**
