@@ -507,6 +507,8 @@ export class ImmutableAnnotation extends Annotation implements ClassAnnotation {
                 }
 
                 entityMapping.changeTracking = ChangeTrackingType.None;
+                // no reason to version an entity that isn't going to change.
+                entityMapping.versioned = false;
             }
         }
     }

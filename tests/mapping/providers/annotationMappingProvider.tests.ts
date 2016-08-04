@@ -261,6 +261,15 @@ describe('AnnotationMappingProvider', () => {
                         "Expected Immutable flag to be set on Embeddable `Name`.");
                 });
             });
+
+            it("turns off versioning", (done) => {
+
+                processFixture("immutable", done, (results) => {
+
+                    var personMapping = findMapping(results, "Person");
+                    assert.isFalse(personMapping.versioned, "Expected versioning to be disabled.");
+                });
+            });
         });
 
         describe('@elementType', () => {
