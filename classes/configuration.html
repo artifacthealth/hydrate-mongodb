@@ -90,10 +90,12 @@
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#changetracking" class="tsd-kind-icon">change<wbr>Tracking</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#collectionnamingstrategy" class="tsd-kind-icon">collection<wbr>Naming<wbr>Strategy</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#collectionprefix" class="tsd-kind-icon">collection<wbr>Prefix</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#createindexes" class="tsd-kind-icon">create<wbr>Indexes</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#discriminatorfield" class="tsd-kind-icon">discriminator<wbr>Field</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#discriminatornamingstrategy" class="tsd-kind-icon">discriminator<wbr>Naming<wbr>Strategy</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#fieldnamingstrategy" class="tsd-kind-icon">field<wbr>Naming<wbr>Strategy</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#identitygenerator" class="tsd-kind-icon">identity<wbr>Generator</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#logger" class="tsd-kind-icon">logger</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#propertyconverters" class="tsd-kind-icon">property<wbr>Converters</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#versionfield" class="tsd-kind-icon">version<wbr>Field</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="configuration.html#versioned" class="tsd-kind-icon">versioned</a></li>
@@ -157,6 +159,21 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="createindexes" class="tsd-anchor"></a>
+					<h3>create<wbr>Indexes</h3>
+					<div class="tsd-signature tsd-kind-icon">create<wbr>Indexes<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L79">config/configuration.ts:79</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Indicates if any missing indexes should be created when the <a href="../interfaces/sessionfactory.html">SessionFactory</a> is created. This is turned off by default.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
 					<a name="discriminatorfield" class="tsd-anchor"></a>
 					<h3>discriminator<wbr>Field</h3>
 					<div class="tsd-signature tsd-kind-icon">discriminator<wbr>Field<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
@@ -213,6 +230,22 @@
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
 							<p>Default identity generator to use.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="logger" class="tsd-anchor"></a>
+					<h3>logger</h3>
+					<div class="tsd-signature tsd-kind-icon">logger<span class="tsd-signature-symbol">:</span> <a href="../interfaces/logger.html" class="tsd-signature-type">Logger</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L74">config/configuration.ts:74</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A logger that conforms for the <a href="https://www.npmjs.com/package/bunyan">bunyan</a> logger interface. If specified, all executed queries
+							and other debug information will be logged using the TRACE logging level.</p>
 						</div>
 					</div>
 				</section>
@@ -282,7 +315,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L79">config/configuration.ts:79</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L90">config/configuration.ts:90</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -313,7 +346,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L89">config/configuration.ts:89</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/config/configuration.ts#L100">config/configuration.ts:100</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -367,6 +400,9 @@
 								<a href="configuration.html#collectionprefix" class="tsd-kind-icon">collection<wbr>Prefix</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="configuration.html#createindexes" class="tsd-kind-icon">create<wbr>Indexes</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="configuration.html#discriminatorfield" class="tsd-kind-icon">discriminator<wbr>Field</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
@@ -377,6 +413,9 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="configuration.html#identitygenerator" class="tsd-kind-icon">identity<wbr>Generator</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="configuration.html#logger" class="tsd-kind-icon">logger</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="configuration.html#propertyconverters" class="tsd-kind-icon">property<wbr>Converters</a>
