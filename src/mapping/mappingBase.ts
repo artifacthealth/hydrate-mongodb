@@ -30,6 +30,11 @@ export abstract class MappingBase implements InternalMapping {
 
     abstract write(context: WriteContext, value: any): any;
 
+    hasFlags(flags: MappingModel.MappingFlags): boolean {
+
+        return this.flags != undefined && ((this.flags & flags) === flags);
+    }
+
     watch(value: any, observer: Observer, visited: any[]): void {
 
     }

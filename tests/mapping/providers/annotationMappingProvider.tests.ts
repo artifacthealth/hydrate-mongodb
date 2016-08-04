@@ -178,7 +178,7 @@ describe('AnnotationMappingProvider', () => {
                     var mappingA = findMapping(results, "A");
                     var mappingB = findMapping(results, "B");
                     assert.equal(mappingB.indexes, undefined);
-                    assert.lengthOf(mappingA.indexes, 3);
+                    assert.lengthOf(mappingA.indexes, 4);
                 });
             });
 
@@ -187,11 +187,12 @@ describe('AnnotationMappingProvider', () => {
                 processFixture("index", done, (results) => {
 
                     var mappingD = findMapping(results, "D");
-                    assert.lengthOf(mappingD.indexes, 3);
+                    assert.lengthOf(mappingD.indexes, 4);
 
                     assert.deepEqual(mappingD.indexes[0].keys, [['a', 1]]);
                     assert.deepEqual(mappingD.indexes[1].keys, [['g', -1]]);
                     assert.isTrue(mappingD.indexes[2].options.dropDups);
+                    assert.deepEqual(mappingD.indexes[3].keys, [['_id', 1],['__v', 1]]);
                 });
             });
         });

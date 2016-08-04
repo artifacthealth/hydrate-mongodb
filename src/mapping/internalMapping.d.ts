@@ -17,6 +17,7 @@ export interface InternalMapping extends MappingModel.Mapping {
 
     id: number;
     flags: MappingModel.MappingFlags;
+    hasFlags(flag: MappingModel.MappingFlags): boolean;
     read(context: ReadContext, value: any): any;
     write(context: WriteContext, value: any): any;
     areEqual(documentValue1: any, documentValue2: any): boolean;

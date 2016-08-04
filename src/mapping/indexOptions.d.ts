@@ -5,7 +5,6 @@ export interface IndexOptions {
     journal?: boolean;
     unique?: boolean;
     sparse?: boolean;
-    background?: boolean;
     dropDups?: boolean;
     min?: number;
     max?: number;

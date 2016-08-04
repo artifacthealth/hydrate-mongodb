@@ -1,12 +1,5 @@
 import {ObjectMappingBuilder} from "./objectMappingBuilder";
 import {MappingModel} from "../mappingModel";
-import {
-    EntityAnnotation,
-    EmbeddableAnnotation,
-    DiscriminatorFieldAnnotation,
-    DiscriminatorValueAnnotation,
-} from "./annotations";
-import {Annotation} from "./annotations";
 
 /**
  * @hidden

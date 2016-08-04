@@ -74,6 +74,11 @@ export class Configuration {
     logger: Logger;
 
     /**
+     * Indicates if any missing indexes should be created when the [[SessionFactory]] is created. This is turned off by default.
+     */
+    createIndexes: boolean;
+
+    /**
      * @hidden
      */
     private _mappings: MappingProvider[] = [];
@@ -118,7 +123,17 @@ export class Configuration {
 
                 let factory = new SessionFactoryImpl(collections, registry);
                 factory.logger = this.logger;
-                callback(null, factory);
+
+                // see if creating indexes is enabled
+                if (!this.createIndexes) {
+                    callback(null, factory);
+                }
+                else {
+                    factory.createIndexes((err) => {
+                        if (err) return callback(err);
+                        callback(null, factory);
+                    });
+                }
             });
         });
     }
@@ -160,12 +175,9 @@ export class Configuration {
                 if(err) return done(err);
 
                 if(names.length == 0) {
-                    // TODO: disable this in production (because of race condition. Return error if collection does not exist.)
-                    // collection does not exist, create it
                     localConnection.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
-                        // TODO: create indexes for newly created collection (except in production)
                         done();
                     });
                 }

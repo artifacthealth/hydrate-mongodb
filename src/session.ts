@@ -981,8 +981,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
             links.scheduledOperation = ScheduledOperation.None;
             links.flags = ObjectFlags.None;
-            // Remove links from list. No need to fix up links of prev/next because all items will be removed from
-            // the list.
+            // Remove links from list. No need to fix up links of prev/next because all items will be removed from the list.
             links.prev = links.next = null;
 
             switch(links.state) {

@@ -1,16 +1,5 @@
 import {ClassMappingBuilder} from "./classMappingBuilder";
-import {Type, Property} from "reflect-helper";
 import {MappingModel} from "../mappingModel";
-import {
-    EntityAnnotation,
-    CollectionAnnotation,
-    IndexAnnotation,
-    VersionFieldAnnotation,
-    VersionedAnnotation,
-    ChangeTrackingAnnotation
-} from "./annotations";
-import {Index} from "../index";
-import {Annotation} from "./annotations";
 
 /**
  * @hidden
@@ -45,8 +34,13 @@ export class EntityMappingBuilder extends ClassMappingBuilder {
                 mapping.collectionName = this.context.config.collectionPrefix + mapping.collectionName;
             }
 
-            if(mapping.identity == null) {
+            if (mapping.identity == null) {
                 mapping.identity = this.context.config.identityGenerator;
+            }
+
+            // if versioning is enabled then add an index for the _id that includes the version
+            if (mapping.versioned) {
+                mapping.addIndex({ keys: [["_id", 1], [mapping.versionField, 1]] });
             }
         }
     }

@@ -1,4 +1,3 @@
-import {Configuration} from "../../config/configuration";
 import {MappingBuilder} from "./mappingBuilder";
 import {MappingModel} from "../mappingModel";
 import {
@@ -6,19 +5,12 @@ import {
     ClassAnnotation,
     PropertyAnnotation,
     ConverterAnnotation,
-    IndexAnnotation,
-    InverseOfAnnotation,
-    CascadeAnnotation,
     TypeAnnotation,
     ElementTypeAnnotation,
-    MapKeyAnnotation,
-    FieldAnnotation,
     EnumeratedAnnotation
 } from "./annotations";
 import {Type, Property} from "reflect-helper";
 import {Constructor} from "../../index";
-import {EnumType} from "../enumType";
-import {Index} from "../index";
 import {MethodAnnotation} from "./annotations";
 
 

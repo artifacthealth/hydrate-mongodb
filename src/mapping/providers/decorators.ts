@@ -34,8 +34,6 @@ import {
 } from "./annotations";
 
 import {PropertyConverter} from "../mappingModel";
-import {CollectionOptions} from "../collectionOptions";
-import {IndexOptions} from "../indexOptions";
 import {ChangeTrackingType} from "../mappingModel";
 import {CascadeFlags} from "../mappingModel";
 
