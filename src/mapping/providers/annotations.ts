@@ -281,7 +281,7 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
     /**
      * The index keys as an array of tuples [name, 1|-1] if the annotation is specified on a class.
      */
-    keys: [string, number][];
+    keys: [string, number | string][];
 
     /**
      * The order of the index if annotation is specified on a property.
@@ -295,7 +295,7 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
 
     constructor(args: ClassIndexDescription);
     constructor(args?: PropertyIndexDescription);
-    constructor(args?: { keys?: [string, number][]; order?: number, options?: IndexOptions }) {
+    constructor(args?: { keys?: [string, number | string][]; order?: number, options?: IndexOptions }) {
         super();
 
         if(args) {
@@ -355,13 +355,13 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
 
 export interface ClassIndexDescription {
 
-    keys: [string, number][];
+    keys: [string, number | string][];
     options?: IndexOptions
 }
 
 export interface PropertyIndexDescription {
 
-    order?: number;
+    order?: number | string;
     options?: IndexOptions
 }
 

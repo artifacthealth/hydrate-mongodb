@@ -10,7 +10,7 @@ export class A {
 }
 
 @Entity()
-@Index({ keys: [ [ 'c', 1 ] ]})
+@Index({ keys: [ [ 'c', 'text' ] ]})
 export class B extends A {
 
     c: string;
