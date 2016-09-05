@@ -69,7 +69,7 @@ export class Batch implements Command {
 
             // if we got an error or there are no commands left then call the callback.
             if (err || self._commands.length == 0) {
-                callback();
+                callback(err);
                 return;
             }
 

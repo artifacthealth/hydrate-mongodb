@@ -12,6 +12,7 @@ import {Logger} from "./config/configuration";
 import {shallowClone} from "./core/objectUtil";
 import {Callback} from "./core/callback";
 import {PersistenceError} from "./persistenceError";
+import {Db} from "mongodb";
 
 export interface SessionFactory {
 
