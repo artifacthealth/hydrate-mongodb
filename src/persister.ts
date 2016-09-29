@@ -62,6 +62,7 @@ interface RemoveOptions extends WriteOptions {
 
 interface UpdateOptions extends WriteOptions {
     multi?: boolean;
+    upsert?: boolean;
 }
 
 interface CountOptions {
@@ -414,6 +415,7 @@ export class PersisterImpl implements Persister {
                 break;
             case QueryKind.FindOneAndRemove:
             case QueryKind.FindOneAndUpdate:
+            case QueryKind.FindOneAndUpsert:
                 this._findOneAndModify(query, this._fetchOne(query, handleCallback));
                 break;
             case QueryKind.RemoveOne:
@@ -422,6 +424,7 @@ export class PersisterImpl implements Persister {
                 break;
             case QueryKind.UpdateOne:
             case QueryKind.UpdateAll:
+            case QueryKind.Upsert:
                 this._update(query, handleCallback);
                 break;
             case QueryKind.Distinct:
@@ -616,7 +619,8 @@ export class PersisterImpl implements Persister {
 
         var options: FindAndModifyOptions = {
             remove: query.kind == QueryKind.FindOneAndRemove,
-            new: query.wantsUpdated
+            new: query.wantsUpdated,
+            upsert: query.kind == QueryKind.FindOneAndUpsert
         };
 
         this._collection.findAndModify(query.criteria, query.orderDocument, query.updateDocument, options, (err, response) => {
@@ -694,7 +698,8 @@ export class PersisterImpl implements Persister {
     private _update(query: QueryDefinition, callback: ResultCallback<number>): void {
 
         var options: UpdateOptions = {
-            multi: query.kind == QueryKind.UpdateAll
+            multi: query.kind == QueryKind.UpdateAll,
+            upsert: query.kind == QueryKind.Upsert
         };
 
         this._collection.update(query.criteria, query.updateDocument, options, (err: Error, response: any) => {
