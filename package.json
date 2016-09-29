@@ -1,7 +1,7 @@
 {
   "name": "hydrate-mongodb",
   "description": "An Object Document Mapper (ODM) for MongoDB.",
-  "version": "0.9.4",
+  "version": "0.10.0",
   "author": {
     "name": "Artifact Health, LLC",
     "url": "http://www.artifacthealth.com"
@@ -33,9 +33,11 @@
     "gulp": "^3.9.0",
     "gulp-istanbul": "^0.10.3",
     "gulp-mocha": "^2.2.0",
+    "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-typedoc": "^1.2.1",
     "gulp-typescript": "^2.10.0",
+    "gulp-util": "^3.0.7",
     "merge2": "^0.3.6",
     "mocha": "^2.4.5",
     "run-sequence": "^1.1.5",

@@ -11,10 +11,22 @@ var runSequence = require("run-sequence");
 var Baseline = require("baseline");
 var typedoc = require("gulp-typedoc");
 var istanbul = require("gulp-istanbul");
+var plumber = require("gulp-plumber");
+var util = require("gulp-util");
 
 var tsProject = ts.createProject('./tsconfig.json', {
     typescript: require("typescript")
 });
+
+// monkey patch Gulp 'src' function to include 'gulp-plumber' for proper error handling on all tasks
+// see: https://www.timroes.de/2015/01/06/proper-error-handling-in-gulp-js/
+var gulp_src = gulp.src;
+gulp.src = function() {
+    return gulp_src.apply(gulp, arguments)
+        .pipe(plumber((error) => {
+            process.exit(1);
+        }));
+};
 
 gulp.task('default', function(done) {
 

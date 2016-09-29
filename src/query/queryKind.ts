@@ -10,10 +10,12 @@ export enum QueryKind {
     FindOneById,
     FindOneAndRemove,
     FindOneAndUpdate,
+    FindOneAndUpsert,
     RemoveAll,
     RemoveOne,
     UpdateAll,
     UpdateOne,
+    Upsert,
     Distinct,
     Count
 }

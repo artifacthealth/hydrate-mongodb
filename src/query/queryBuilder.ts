@@ -20,6 +20,8 @@ export interface QueryBuilder<T> {
     findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
     findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
     findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    findOneAndUpsert(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    findOneAndUpsert(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
     removeAll(callback?: ResultCallback<number>): void;
     removeAll(criteria: QueryDocument, callback?: ResultCallback<number>): void;
     removeOne(callback?: ResultCallback<number>): void;
@@ -28,6 +30,8 @@ export interface QueryBuilder<T> {
     updateAll(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
     updateOne(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
     updateOne(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    upsert(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    upsert(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
     distinct(key: string, callback: ResultCallback<any[]>): void;
     distinct(key: string, criteria: QueryDocument, callback: ResultCallback<any[]>): void;
     count(callback?: ResultCallback<number>): CountQuery;
@@ -105,34 +109,14 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
     findAll(criteria: QueryDocument, callback?: ResultCallback<Object[]>): FindQuery<Object>;
     findAll(criteriaOrCallback?: any, callback?: ResultCallback<Object[]>): FindQuery<Object> {
 
-        var query = this._createQuery(QueryKind.FindAll);
-
-        if(typeof criteriaOrCallback == "function") {
-            callback = criteriaOrCallback;
-            query.criteria = {};
-        }
-        else {
-            query.criteria = criteriaOrCallback || {};
-        }
-
-        return query.handleCallback(callback);
+        return this._createFindQuery(QueryKind.FindAll, criteriaOrCallback, callback);
     }
 
     findOne(callback?: ResultCallback<Object>): FindOneQuery<Object>;
     findOne(criteria: QueryDocument, callback?: ResultCallback<Object>): FindOneQuery<Object>;
     findOne(criteriaOrCallback?: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
 
-        var query = this._createQuery(QueryKind.FindOne);
-
-        if(typeof criteriaOrCallback == "function") {
-            callback = criteriaOrCallback;
-            query.criteria = {};
-        }
-        else {
-            query.criteria = criteriaOrCallback || {};
-        }
-
-        return query.handleCallback(callback);
+        return this._createFindQuery(QueryKind.FindOne, criteriaOrCallback, callback);
     }
 
     findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
@@ -151,108 +135,57 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
     findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object>;
     findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object> {
 
-        var query = this._createQuery(QueryKind.FindOneAndRemove);
-
-        if(typeof criteriaOrCallback == "function") {
-            callback = criteriaOrCallback;
-            query.criteria = {};
-        }
-        else {
-            query.criteria = criteriaOrCallback || {};
-        }
-
-        return query.handleCallback(callback);
+        return this._createRemoveQuery(QueryKind.FindOneAndRemove, criteriaOrCallback, callback);
     }
 
     findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
     findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
     findOneAndUpdate(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object>  {
 
-        var query = this._createQuery(QueryKind.FindOneAndUpdate);
+        return this._createUpdateQuery(QueryKind.FindOneAndUpdate, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
+    }
 
-        if(typeof updateDocumentOrCallback == "function" || updateDocumentOrCallback === undefined) {
-            callback = updateDocumentOrCallback;
-            query.updateDocument = criteriaOrUpdateDocument;
-            query.criteria = {};
-        }
-        else {
-            query.updateDocument = updateDocumentOrCallback;
-            query.criteria = criteriaOrUpdateDocument;
-        }
+    findOneAndUpsert(updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
+    findOneAndUpsert(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
+    findOneAndUpsert(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object>  {
 
-        return query.handleCallback(callback);
+        return this._createUpdateQuery(QueryKind.FindOneAndUpsert, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
     }
 
     removeAll(callback?: ResultCallback<number>): void;
     removeAll(criteria: QueryDocument, callback?: ResultCallback<number>): void;
     removeAll(criteriaOrCallback?: any, callback?: ResultCallback<number>): void {
 
-        var query = this._createQuery(QueryKind.RemoveAll);
-
-        if(typeof criteriaOrCallback == "function") {
-            callback = criteriaOrCallback;
-            query.criteria = {};
-        }
-        else {
-            query.criteria = criteriaOrCallback || {};
-        }
-
-        query.handleCallback(callback);
+        this._createRemoveQuery(QueryKind.RemoveAll, criteriaOrCallback, callback);
     }
 
     removeOne(callback?: ResultCallback<number>): void;
     removeOne(criteria: QueryDocument, callback?: ResultCallback<number>): void;
     removeOne(criteriaOrCallback?: any, callback?: ResultCallback<number>): void {
 
-        var query = this._createQuery(QueryKind.RemoveOne);
-
-        if(typeof criteriaOrCallback == "function") {
-            callback = criteriaOrCallback;
-            query.criteria = {};
-        }
-        else {
-            query.criteria = criteriaOrCallback || {};
-        }
-
-        query.handleCallback(callback);
+        this._createRemoveQuery(QueryKind.RemoveOne, criteriaOrCallback, callback);
     }
 
     updateAll(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
     updateAll(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
     updateAll(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
 
-        var query = this._createQuery(QueryKind.UpdateAll);
-
-        if(typeof updateDocumentOrCallback == "function" || updateDocumentOrCallback === undefined) {
-            callback = updateDocumentOrCallback;
-            query.updateDocument = criteriaOrUpdateDocument;
-            query.criteria = {};
-        }
-        else {
-            query.updateDocument = updateDocumentOrCallback;
-            query.criteria = criteriaOrUpdateDocument;
-        }
-
-        query.handleCallback(callback);
+        this._createUpdateQuery(QueryKind.UpdateAll, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
     }
 
     updateOne(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
     updateOne(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
     updateOne(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
 
-        var query = this._createQuery(QueryKind.UpdateOne);
+        this._createUpdateQuery(QueryKind.UpdateOne, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
+    }
 
-        if(typeof updateDocumentOrCallback == "function" || updateDocumentOrCallback === undefined) {
-            callback = updateDocumentOrCallback;
-            query.updateDocument = criteriaOrUpdateDocument;
-            query.criteria = {};
-        }
-        else {
-            query.updateDocument = updateDocumentOrCallback;
-            query.criteria = criteriaOrUpdateDocument;
-        }
+    upsert(updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    upsert(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<number>): void;
+    upsert(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<number>): void {
 
-        query.handleCallback(callback);
+        this._createUpdateQuery(QueryKind.Upsert, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
+
     }
 
     distinct(key: string, callback: ResultCallback<any[]>): void;
@@ -276,6 +209,53 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
     count(criteriaOrCallback?: any, callback?: ResultCallback<number>): CountQuery {
 
         var query = this._createQuery(QueryKind.Count);
+
+        if(typeof criteriaOrCallback == "function") {
+            callback = criteriaOrCallback;
+            query.criteria = {};
+        }
+        else {
+            query.criteria = criteriaOrCallback || {};
+        }
+
+        return query.handleCallback(callback);
+    }
+
+    private _createUpdateQuery(kind: QueryKind, criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<Object>): any {
+
+        var query = this._createQuery(kind);
+
+        if(typeof updateDocumentOrCallback == "function" || updateDocumentOrCallback === undefined) {
+            callback = updateDocumentOrCallback;
+            query.updateDocument = criteriaOrUpdateDocument;
+            query.criteria = {};
+        }
+        else {
+            query.updateDocument = updateDocumentOrCallback;
+            query.criteria = criteriaOrUpdateDocument;
+        }
+
+        return query.handleCallback(callback);
+    }
+
+    private _createRemoveQuery(kind: QueryKind, criteriaOrCallback?: any, callback?: ResultCallback<any>): any {
+
+        var query = this._createQuery(kind);
+
+        if(typeof criteriaOrCallback == "function") {
+            callback = criteriaOrCallback;
+            query.criteria = {};
+        }
+        else {
+            query.criteria = criteriaOrCallback || {};
+        }
+
+        return query.handleCallback(callback);
+    }
+
+    private _createFindQuery(kind: QueryKind, criteriaOrCallback?: any, callback?: ResultCallback<any>): any {
+
+        var query = this._createQuery(kind);
 
         if(typeof criteriaOrCallback == "function") {
             callback = criteriaOrCallback;
