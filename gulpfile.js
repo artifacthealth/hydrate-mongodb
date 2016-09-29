@@ -24,7 +24,10 @@ var gulp_src = gulp.src;
 gulp.src = function() {
     return gulp_src.apply(gulp, arguments)
         .pipe(plumber((error) => {
-            process.exit(1);
+            process.nextTick(() => {
+                util.log(util.colors.red("Exiting build due unhandled to error:\n") + error.toString());
+                process.exit(1);
+            });
         }));
 };
 
