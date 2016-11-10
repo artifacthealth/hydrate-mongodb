@@ -15,6 +15,7 @@ export interface QueryDefinition {
     key: string;
     id: any;
     criteria: QueryDocument;
+    fields: QueryDocument;
     updateDocument: QueryDocument;
 
     wantsUpdated: boolean;

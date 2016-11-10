@@ -279,6 +279,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     key: string;
     id: any;
     criteria: QueryDocument;
+    fields: QueryDocument;
     updateDocument: QueryDocument;
 
     wantsUpdated: boolean;
@@ -454,6 +455,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
         return {
             kind: QueryKind[this.kind],
             criteria: this.criteria,
+            fields: this.fields,
             update: this.updateDocument,
             wantsUpdated: this.wantsUpdated,
             fetch: this.fetchPaths,

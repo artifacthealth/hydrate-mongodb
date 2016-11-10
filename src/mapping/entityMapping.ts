@@ -14,6 +14,7 @@ import {Observer} from "../observer";
 import {Property} from "./property";
 import {WriteContext} from "./writeContext";
 import {PersistenceError} from "../persistenceError";
+import {QueryDocument} from "../query/queryBuilder";
 
 /**
  * @hidden
@@ -41,6 +42,8 @@ export class EntityMapping extends ClassMapping {
      * The property that maps the identity field, if defined.
      */
     identityProperty: Property;
+
+    private _defaultFields: QueryDocument;
 
     constructor(baseClass?: EntityMapping) {
         super(baseClass);
@@ -261,10 +264,28 @@ export class EntityMapping extends ClassMapping {
         });
     }
 
+    getDefaultFields(): QueryDocument {
+
+        var fields: QueryDocument = {};
+
+        if (this._defaultFields === undefined) {
+            for (var i = 0; i < this.properties.length; i++) {
+                var property = this.properties[i];
+                if ((property.flags & MappingModel.PropertyFlags.FetchLazy) != 0) {
+                    property.setFieldValue(fields, 0);
+                }
+            }
+
+            this._defaultFields = fields;
+        }
+
+        return this._defaultFields;
+    }
+
     protected resolveCore(context: ResolveContext): void {
 
         if(!context.isFirst) {
-            context.setError("Unable to resolve entity mapping. The dot notation can only be used for embedded objects.")
+            context.setError("Unable to resolve entity mapping. The dot notation can only be used for embedded objects.");
             return;
         }
 

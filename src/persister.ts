@@ -22,10 +22,12 @@ import {OrderDocument} from "./query/orderDocument";
 import {WriteContext} from "./mapping/writeContext";
 import {PersistenceError} from "./persistenceError";
 import {getDuration} from "./core/timerUtil";
+import {MappingModel} from "./mapping/mappingModel";
 
 interface FindOneQuery {
 
     criteria: any;
+    fields?: any;
     fetchPaths?: string[];
 }
 
@@ -107,6 +109,7 @@ export class PersisterImpl implements Persister {
     private _criteriaBuilder: CriteriaBuilder;
     private _updateDocumentBuilder: UpdateDocumentBuilder;
     private _traceEnabled: boolean;
+    private _defaultFields: QueryDocument;
 
     constructor(session: InternalSession, mapping: EntityMapping, collection: mongodb.Collection) {
 
@@ -119,6 +122,7 @@ export class PersisterImpl implements Persister {
         this.identity = inheritanceRoot.identity;
         this._versioned = inheritanceRoot.versioned;
         this._traceEnabled = this._session.factory.logger != null;
+        this._defaultFields = mapping.getDefaultFields();
     }
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void {
@@ -268,19 +272,24 @@ export class PersisterImpl implements Persister {
 
     findOne(criteria: QueryDocument, callback: ResultCallback<any>): void {
 
-        var handleCallback = callback;
+        var query: any =  {
+            criteria,
+            fields: this._defaultFields
+        };
 
         // setup trace logging.
+        var handleCallback = callback;
         if (this._traceEnabled) {
-            handleCallback = this._createTraceableCallback({ kind: QueryKind[QueryKind.FindOne], criteria }, callback);
+            query.kind = QueryKind[QueryKind.FindOne];
+            handleCallback = this._createTraceableCallback(query, callback);
         }
 
-        this._findOne({ criteria }, handleCallback);
+        this._findOne(query, handleCallback);
     }
 
     private _findOne(query: FindOneQuery, callback: ResultCallback<any>): void {
 
-        this._collection.findOne(query.criteria, (err, document) => {
+        this._collection.findOne(query.criteria, query.fields, (err, document) => {
             if (err) return callback(err);
             this._loadOne(document, callback);
         });
@@ -288,14 +297,19 @@ export class PersisterImpl implements Persister {
 
     findAll(criteria: QueryDocument, callback: ResultCallback<any[]>): void {
 
-        var handleCallback = callback;
+        var query: any = {
+            criteria,
+            fields: this._defaultFields
+        };
 
         // setup trace logging.
+        var handleCallback = callback;
         if (this._traceEnabled) {
-            handleCallback = this._createTraceableCallback({ kind: QueryKind[QueryKind.FindAll], criteria }, callback);
+            query.kind = QueryKind[QueryKind.FindAll];
+            handleCallback = this._createTraceableCallback(query, callback);
         }
 
-        this._findAll({ criteria }, handleCallback);
+        this._findAll(query, handleCallback);
     }
 
     private _findAll(query: FindAllQuery, callback: ResultCallback<any[]>): void {
@@ -341,7 +355,7 @@ export class PersisterImpl implements Persister {
         // TODO: change so the query definition is not modified. not sure where to move this to.
 
         // map query criteria if it's defined
-        if(query.criteria) {
+        if (query.criteria) {
             query.criteria = (this._criteriaBuilder || (this._criteriaBuilder = new CriteriaBuilder(this._mapping)))
                 .build(query.criteria);
 
@@ -351,8 +365,11 @@ export class PersisterImpl implements Persister {
             }
         }
 
+        // todo: handle field projection
+        query.fields = this._defaultFields;
+
         // map update document if it's defined
-        if(query.updateDocument) {
+        if (query.updateDocument) {
             query.updateDocument = (this._updateDocumentBuilder || (this._updateDocumentBuilder = new UpdateDocumentBuilder(this._mapping)))
                 .build(query.updateDocument);
 
@@ -592,7 +609,7 @@ export class PersisterImpl implements Persister {
 
     private _prepareFind(query: FindAllQuery): mongodb.Cursor {
         
-        var cursor = this._collection.find(query.criteria);
+        var cursor = this._collection.find(query.criteria, query.fields);
 
         if(query.orderDocument !== undefined) {
             cursor.sort(query.orderDocument);

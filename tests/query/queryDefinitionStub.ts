@@ -10,6 +10,7 @@ export class QueryDefinitionStub implements QueryDefinition {
     key: string;
     id: any;
     criteria: QueryDocument;
+    fields: QueryDefinition;
     updateDocument: QueryDocument;
 
     wantsUpdated: boolean;

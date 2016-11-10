@@ -87,10 +87,10 @@ export class MockCollection implements mongodb.Collection {
 
     }
 
-    find(selector: Object, callback?: (err: Error, result: mongodb.Cursor) => void): mongodb.Cursor {
+    find(selector: Object, fields?: any): mongodb.Cursor {
 
         if (this.onFind) {
-            return this.onFind(selector);
+            return this.onFind(selector, fields);
         }
 
         return this.createCursor();
@@ -100,12 +100,23 @@ export class MockCollection implements mongodb.Collection {
         return new MockCursor(this.contents);
     }
 
-    onFind: (selector: Object) => mongodb.Cursor;
+    onFind: (selector: Object, fields: Object) => mongodb.Cursor;
 
-    findOne(selector: Object, callback?: (err: Error, result: any) => void): any {
+    findOne(selector: Object, callback?: (err: Error, result: any) => void): any;
+    findOne(selector: Object, fields?: Object, callback?: (err: Error, result: any) => void): any;
+    findOne(selector: Object, fieldsOrCallback?: any, callback?: (err: Error, result: any) => void): any {
+
+        var fields: Object;
+
+        if (typeof fieldsOrCallback === "function") {
+            callback = fieldsOrCallback;
+        }
+        else {
+            fields = fieldsOrCallback;
+        }
 
         if (this.onFindOne) {
-            process.nextTick(() => this.onFindOne(selector, callback));
+            process.nextTick(() => this.onFindOne(selector, fields, callback));
             return;
         }
 
@@ -114,7 +125,7 @@ export class MockCollection implements mongodb.Collection {
         });
     }
 
-    onFindOne: (selector: Object, callback?: (err: Error, result: any) => void) => any;
+    onFindOne: (selector: Object, fields: Object, callback?: (err: Error, result: any) => void) => any;
 
 
     findAndModify(query: Object, sort: any[], doc: Object, optionsOrCallbac: any, callback?: (err: Error, result: any) => void): void {

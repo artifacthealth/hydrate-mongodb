@@ -9,6 +9,7 @@ import {QueryDefinitionStub} from "./query/queryDefinitionStub";
 import {QueryKind} from "../src/query/queryKind";
 import {Batch} from "../src/batch";
 import * as fetchEagerModel from "./fixtures/fetchEager";
+import * as fetchLazyModel from "./fixtures/fetchLazy";
 import {PersisterImpl} from "../src/persister";
 import {createFactory} from "./helpers";
 import {MockInternalSession} from "./mockInternalSession";
@@ -163,11 +164,11 @@ describe('PersisterImpl', () => {
             var id =  (<any>person)._id;
 
             var collection = new MockCollection();
-            collection.onFindOne = (criteria, callback) => {
+            collection.onFindOne = (criteria, fields, callback) => {
                 assert.deepEqual(criteria, { parents: id });
                 callback(null, { _id: id });
                 done();
-            }
+            };
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);
@@ -225,6 +226,29 @@ describe('PersisterImpl', () => {
 
                     assert.deepEqual(session.findFetchedPaths(a), ["b.c"], "Expected path 'b.c' to be fetched.");
                     done();
+                });
+            });
+        });
+
+        it("does not fetch properties flagged as FetchLazy", (done) => {
+
+            var idA = helpers.generateId();
+
+            var collection = new MockCollection();
+            collection.onFindOne = (criteria, fields, callback) => {
+                assert.deepEqual(criteria, { _id: idA });
+                assert.deepEqual(fields, { _b: 0 });
+                done();
+            };
+
+            createFactory("fetchLazy", (err, factory) => {
+                if (err) return done(err);
+
+                var session = new MockInternalSession(factory);
+                var persister = new PersisterImpl(session, factory.getMappingForConstructor(fetchLazyModel.A), collection);
+
+                persister.findOneById(idA, (err, a) => {
+                    if (err) return done(err);
                 });
             });
         });
