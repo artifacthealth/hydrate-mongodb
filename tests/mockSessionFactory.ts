@@ -5,11 +5,12 @@ import {EntityMapping} from "../src/mapping/entityMapping";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {MockPersister} from "./mockPersister";
 import {Constructor} from "../src/index";
+import {MockDb} from "./driver/mockDb";
 
 export class MockSessionFactory extends SessionFactoryImpl {
 
     constructor(public mappingRegistry: MappingRegistry) {
-        super(null, mappingRegistry);
+        super(new MockDb(), null, mappingRegistry);
     }
 
     createPersister(session: InternalSession, mapping: EntityMapping): Persister {

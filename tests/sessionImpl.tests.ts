@@ -22,6 +22,7 @@ import {Dog} from "./fixtures/dog";
 import {Person} from "./fixtures/classImmutable";
 import * as cascade from "./fixtures/cascade";
 import {getIdentifier} from "../src/index";
+import {MockDb} from "./driver/mockDb";
 
 describe('SessionImpl', () => {
 
@@ -884,7 +885,7 @@ describe('SessionImpl', () => {
             var mappingA = new EntityMapping();
             var mappingB = new EntityMapping();
 
-            var factory = new SessionFactoryImpl([], registry);
+            var factory = new SessionFactoryImpl(new MockDb(), [], registry);
             var session = new SessionImpl(factory);
 
             // two calls to getPersister for mappingA

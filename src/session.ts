@@ -5,7 +5,7 @@ import {ChangeTrackingType} from "./mapping/mappingModel";
 import {Constructor} from "./index";
 import {MappingModel} from "./mapping/mappingModel";
 import {ResultCallback} from "./core/callback";
-import {InternalSessionFactory} from "./sessionFactory";
+import {InternalSessionFactory, SessionFactory} from "./sessionFactory";
 import {TaskQueue} from "./taskQueue";
 import {Persister} from "./persister";
 import {Batch} from "./batch";
@@ -108,6 +108,11 @@ var cachedDetachedLinks: ObjectLinks = {
  *  synchronized with the database by calling [[flush]] or [[close]].
  */
 export interface Session {
+
+    /**
+     * The [SessionFactory] that created this [Session].
+     */
+    factory: SessionFactory;
 
     /**
      * Saves an entity to the Session. If the entity is new then it becomes managed. If the entity is already managed

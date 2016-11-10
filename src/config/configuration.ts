@@ -121,7 +121,7 @@ export class Configuration {
             this._buildCollections(connection, registry, (err, collections) => {
                 if(err) return callback(err);
 
-                let factory = new SessionFactoryImpl(collections, registry);
+                let factory = new SessionFactoryImpl(connection, collections, registry);
                 factory.logger = this.logger;
 
                 // see if creating indexes is enabled

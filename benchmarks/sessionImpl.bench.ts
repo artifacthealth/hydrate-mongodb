@@ -13,6 +13,7 @@ import { ResultCallback } from "../src/core/callback";
 import { EntityMapping } from "../src/mapping/entityMapping";
 import { QueryDefinition } from "../src/query/queryDefinition";
 import { Observer } from "../src/observer";
+import {MockDb} from "../tests/driver/mockDb";
 
 suite("SessionImpl", () => {
 
@@ -86,7 +87,7 @@ suite("SessionImpl", () => {
 class DummySessionFactory extends SessionFactoryImpl {
 
     constructor(mappingRegistry: MappingRegistry) {
-        super(null, mappingRegistry);
+        super(new MockDb(), null, mappingRegistry);
     }
 
     createPersister(session: InternalSession, mapping: EntityMapping): Persister {

@@ -17,6 +17,11 @@ import {Db} from "mongodb";
 export interface SessionFactory {
 
     /**
+     * The database connection associated with this [SessionFactory].
+     */
+    connection: Db;
+
+    /**
      * Creates a new database session.
      */
     createSession(): Session;
@@ -65,13 +70,15 @@ export interface InternalSessionFactory extends SessionFactory {
  */
 export class SessionFactoryImpl implements InternalSessionFactory {
 
+    connection: Db;
     logger: Logger;
 
     private _collections: Table<Collection>;
     private _mappingRegistry: MappingRegistry;
 
-    constructor(collections: Table<Collection>, mappingRegistry: MappingRegistry) {
+    constructor(connection: Db, collections: Table<Collection>, mappingRegistry: MappingRegistry) {
 
+        this.connection = connection;
         this._collections = collections;
         // TODO: get rid of mapping registry and handle directly in session factory
         this._mappingRegistry = mappingRegistry;
