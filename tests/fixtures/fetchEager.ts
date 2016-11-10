@@ -1,4 +1,4 @@
-import {Entity, Field, Embeddable} from "../../src/mapping/providers/decorators";
+import {Entity, Field, Embeddable, Fetch} from "../../src/mapping/providers/decorators";
 import {FetchType} from "../../src/mapping/mappingModel";
 
 @Entity()
@@ -9,7 +9,7 @@ export class C {
 @Embeddable()
 export class B {
 
-    @Field({ fetch: FetchType.Eager })
+    @Fetch(FetchType.Eager)
     c: C;
 }
 

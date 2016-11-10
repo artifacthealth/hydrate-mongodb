@@ -584,6 +584,26 @@ export class CascadeAnnotation extends Annotation implements PropertyAnnotation 
 /**
  * @hidden
  */
+export class FetchAnnotation extends Annotation implements PropertyAnnotation {
+
+    constructor(public type: FetchType) {
+        super();
+
+    }
+
+    toString(): string {
+        return "@Fetch";
+    }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: FetchAnnotation): void {
+
+        property.setFlags(annotation.type & (MappingModel.PropertyFlags.FetchEager | MappingModel.PropertyFlags.FetchLazy));
+    }
+}
+
+/**
+ * @hidden
+ */
 export class TypeAnnotation extends Annotation implements TargetClassAnnotation {
 
     constructor(public target: Constructor<any> | string) {
@@ -632,7 +652,6 @@ export class MapKeyAnnotation extends Annotation {
 export class FieldAnnotation extends Annotation implements PropertyAnnotation {
 
     name: string;
-    fetch: FetchType;
     nullable: boolean;
 
     constructor(name?: string);
@@ -647,7 +666,6 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
             else {
                 this.name = args.name;
                 this.nullable = args.nullable;
-                this.fetch = args.fetch;
             }
         }
     }
@@ -663,10 +681,6 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
             property.field = annotation.name;
         }
 
-        if (annotation.fetch != null) {
-            property.setFlags(<number>annotation.fetch);
-        }
-
         if (annotation.nullable) {
             property.setFlags(MappingModel.PropertyFlags.Nullable);
         }
@@ -677,7 +691,6 @@ export interface FieldDescription {
 
     name?: string;
     nullable?: boolean;
-    fetch?: FetchType;
 }
 
 /**

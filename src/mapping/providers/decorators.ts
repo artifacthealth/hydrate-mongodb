@@ -25,10 +25,10 @@ import {
     ClassIndexDescription,
     PropertyIndexDescription,
     TransientAnnotation,
-    ImmutableAnnotation
+    ImmutableAnnotation, FetchAnnotation
 } from "./annotations";
 
-import {PropertyConverter} from "../mappingModel";
+import {PropertyConverter, FetchType} from "../mappingModel";
 import {ChangeTrackingType} from "../mappingModel";
 import {CascadeFlags} from "../mappingModel";
 
@@ -474,6 +474,37 @@ export declare function InverseOf(propertyName: string): PropertyDecorator;
 export declare function Cascade(flags: CascadeFlags): PropertyDecorator;
 
 /**
+ * By default entity references are not loaded and must be fetched using Session#fetch or similar. If a FetchType of Eager is specified on
+ * an entity reference then that reference is automatically fetched when the entity is loaded. This works on entity reference in
+ * Embeddable objects as well. Note that it is generally preferable to fetch references as needed.
+ *
+ * When an entity is loaded, all fields for that entity are retrieved from the database. Specifying a FetchType of Lazy for a field causes
+ * that field to not be retrieved from the database when the entity is loaded. The field is only loaded by calling Session#fetch and
+ * indicating which field to load. This is useful for entities that contain large fields, such as images, that are generally not needed.
+ * Note that a FetchType of Lazy on a field in an Embeddable objects is ignored. All fields in an embeddable object are always loaded from
+ * the database.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class Person {
+ *
+ *      @Fetch(FetchType.Lazy)
+ *      image: Buffer;
+ *  }
+ *
+ *  @Entity()
+ *  export class Task {
+ *
+ *      @Fetch(FetchType.Eager)
+ *      owner: Person;
+ *  }
+ * ```
+ */
+export declare function Fetch(type: FetchType): PropertyDecorator;
+
+/**
  * Specifies the type of a property.
  *
  * It is generally not necessary to explicitly indicate the type of a property.
@@ -553,6 +584,7 @@ exports.DiscriminatorValue = makeDecorator(DiscriminatorValueAnnotation);
 exports.Field = makeDecorator(FieldAnnotation);
 exports.Enumerated = makeDecorator(EnumeratedAnnotation);
 exports.Cascade = makeDecorator(CascadeAnnotation);
+exports.Fetch = makeDecorator(FetchAnnotation);
 exports.InverseOf = makeDecorator(InverseOfAnnotation);
 exports.Type = makeDecorator(TypeAnnotation);
 exports.ElementType = makeDecorator(ElementTypeAnnotation);
