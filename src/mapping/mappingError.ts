@@ -15,6 +15,10 @@ export interface MappingError {
  */
 export function createErrorMessage(errors: MappingError[]): string {
 
+    if (!errors) {
+        return "";
+    }
+
     var message: string[] = [];
 
     for(var i = 0, l = errors.length; i < l; i++) {

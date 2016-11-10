@@ -20,8 +20,6 @@ import {ReadContext} from "./mapping/readContext";
 import {Observer} from "./observer";
 import {OrderDocument} from "./query/orderDocument";
 import {WriteContext} from "./mapping/writeContext";
-import {MappingModel} from "./mapping/mappingModel";
-import {Readable} from "stream";
 import {PersistenceError} from "./persistenceError";
 import {getDuration} from "./core/timerUtil";
 
@@ -814,7 +812,14 @@ export class PersisterImpl implements Persister {
                 }
 
                 this._session.registerManaged(this, entity, document);
-                callback(null, entity);
+
+                if (!context.fetches) {
+                    callback(null, entity);
+                }
+                else {
+                    // requested fetches were found when reading the entity
+                    this._session.fetchInternal(entity, context.fetches, callback);
+                }
                 return;
             }
         }

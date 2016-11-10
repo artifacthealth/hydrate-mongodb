@@ -15,7 +15,7 @@ export class ReadContext {
     /**
      * A list of errors that occurred during deserialization.
      */
-    errors: MappingError[] = [];
+    errors: MappingError[];
 
     /**
      * True if there are errors in the context; otherwise, false.
@@ -26,6 +26,11 @@ export class ReadContext {
      * Observer used to watch deserialized objects, if specified.
      */
     observer: Observer;
+
+    /**
+     * Fetches found while walking the object.
+     */
+    fetches: string[];
 
     constructor(public session: InternalSession) {
 
@@ -38,12 +43,23 @@ export class ReadContext {
      */
     addError(message: string, path?: string): void {
 
+        if (!this.errors) {
+            this.errors = [];
+            this.hasErrors = true;
+        }
+
         this.errors.push({
             message: message,
             path: path || this.path
         });
+    }
 
-        this.hasErrors = true;
+    addFetch(path: string): void {
+
+        if (!this.fetches) {
+            this.fetches = [];
+        }
+        this.fetches.push(path);
     }
 
     /**

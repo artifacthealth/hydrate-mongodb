@@ -8,6 +8,10 @@ import {MockCollection} from "./driver/mockCollection";
 import {QueryDefinitionStub} from "./query/queryDefinitionStub";
 import {QueryKind} from "../src/query/queryKind";
 import {Batch} from "../src/batch";
+import * as fetchEagerModel from "./fixtures/fetchEager";
+import {PersisterImpl} from "../src/persister";
+import {createFactory} from "./helpers";
+import {MockInternalSession} from "./mockInternalSession";
 
 describe('PersisterImpl', () => {
 
@@ -203,9 +207,31 @@ describe('PersisterImpl', () => {
                 async.each([id, id], (id, done) => persister.findOneById(id, done), done);
             });
         });
+
+        it("fetches properties flagged as FetchEager", (done) => {
+
+            var idA = helpers.generateId(),
+                idC = helpers.generateId();
+            var collection = new MockCollection([{ _id: idA, b: { c: idC }}, { _id: idC }]);
+
+            createFactory("fetchEager", (err, factory) => {
+                if (err) return done(err);
+
+                var session = new MockInternalSession(factory);
+                var persister = new PersisterImpl(session, factory.getMappingForConstructor(fetchEagerModel.A), collection);
+
+                persister.findOneById(idA, (err, a) => {
+                    if (err) return done(err);
+
+                    assert.deepEqual(session.findFetchedPaths(a), ["b.c"], "Expected path 'b.c' to be fetched.");
+                    done();
+                });
+            });
+        });
     });
 
     describe('findOne', () => {
+
     });
 
     describe('findAll', () => {

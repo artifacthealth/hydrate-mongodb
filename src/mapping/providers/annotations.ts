@@ -1,4 +1,4 @@
-import {PropertyConverter, FlushPriority} from "../mappingModel";
+import {PropertyConverter, FlushPriority, FetchType} from "../mappingModel";
 import {CollectionOptions} from "../collectionOptions";
 import {IndexOptions} from "../indexOptions";
 import {ChangeTrackingType} from "../mappingModel";
@@ -632,6 +632,7 @@ export class MapKeyAnnotation extends Annotation {
 export class FieldAnnotation extends Annotation implements PropertyAnnotation {
 
     name: string;
+    fetch: FetchType;
     nullable: boolean;
 
     constructor(name?: string);
@@ -646,6 +647,7 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
             else {
                 this.name = args.name;
                 this.nullable = args.nullable;
+                this.fetch = args.fetch;
             }
         }
     }
@@ -654,12 +656,18 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
         return "@Field";
     }
 
-    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: FieldAnnotation): void {
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property,
+                              symbol: Property, annotation: FieldAnnotation): void {
 
-        if(annotation.name) {
+        if (annotation.name) {
             property.field = annotation.name;
         }
-        if(annotation.nullable) {
+
+        if (annotation.fetch != null) {
+            property.setFlags(<number>annotation.fetch);
+        }
+
+        if (annotation.nullable) {
             property.setFlags(MappingModel.PropertyFlags.Nullable);
         }
     }
@@ -669,6 +677,7 @@ export interface FieldDescription {
 
     name?: string;
     nullable?: boolean;
+    fetch?: FetchType;
 }
 
 /**

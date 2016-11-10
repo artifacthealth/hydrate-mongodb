@@ -460,12 +460,17 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      */
     getVersion(obj: Object): number {
 
+        var links = this._getObjectLinks(obj);
+        if (!links || links.state == ObjectState.Detached) {
+            return null;
+        }
+        
         var mapping = this.factory.getMappingForObject(obj);
         if (!mapping) {
             return null;
         }
 
-        return mapping.getDocumentVersion(obj);
+        return mapping.getDocumentVersion(links.originalDocument);
     }
 
     getReferenceInternal(mapping: EntityMapping, id: any): any {

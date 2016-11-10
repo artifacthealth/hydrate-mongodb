@@ -179,10 +179,20 @@ export namespace MappingModel {
         ReadOnly = 0x00000200,
 
         /**
+         * Indicates the field should be eagerly fetched.
+         */
+        FetchEager = 0x00000400,
+
+        /**
+         * Indicates the field should be lazily fetched.
+         */
+        FetchLazy = 0x00000800,
+
+        /**
          * All non-walk flags.
          * @hidden
          */
-        All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | ReadOnly,
+        All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | ReadOnly | FetchEager | FetchLazy,
 
         /**
          * Indicates that refererences to entities should be walked.
@@ -528,4 +538,17 @@ export const enum CascadeFlags {
      * All operations should be cascaded to this property.
      */
     All = MappingModel.PropertyFlags.CascadeAll,
+}
+
+export const enum FetchType {
+
+    /**
+     * Indicates the field should be eagerly fetched.
+     */
+    Eager = MappingModel.PropertyFlags.FetchEager,
+
+    /**
+     * Indicates the field should be lazily fetched.
+     */
+    Lazy = MappingModel.PropertyFlags.FetchLazy
 }

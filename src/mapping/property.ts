@@ -20,7 +20,7 @@ export class Property implements MappingModel.Property {
     /**
      * The name of the database document field.
      */
-    field: string
+    field: string;
 
     /**
      * The name of the property in the target TypeMapping that is used to retrieve the value of this property.

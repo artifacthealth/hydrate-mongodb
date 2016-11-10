@@ -145,6 +145,11 @@ export class ObjectMapping extends MappingBase {
                 else {
                     var savedPath = context.path;
                     context.path = base + property.name;
+
+                    if ((property.flags & MappingModel.PropertyFlags.FetchEager) != 0) {
+                        context.addFetch(context.path);
+                    }
+
                     propertyValue = property.mapping.read(context, fieldValue);
                     context.path = savedPath;
                 }

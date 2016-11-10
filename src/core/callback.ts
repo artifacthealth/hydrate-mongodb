@@ -41,7 +41,7 @@ export interface Callback {
 
 export interface ResultCallback<T> {
 
-    (err: Error, result?: T): void;
+    (err?: Error, result?: T): void;
 }
 
 export interface IteratorCallback<T> {

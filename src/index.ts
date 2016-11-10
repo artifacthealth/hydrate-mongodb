@@ -2,7 +2,7 @@ import {Reference} from "./reference";
 
 export {NamingStrategies, NamingStrategy} from "./config/namingStrategies";
 export {PersistenceError} from "./persistenceError";
-export {CascadeFlags, ChangeTrackingType, FlushPriority} from "./mapping/mappingModel";
+export {CascadeFlags, ChangeTrackingType, FlushPriority, FetchType} from "./mapping/mappingModel";
 
 export {Configuration} from "./config/configuration";
 export {ObjectIdGenerator} from "./config/objectIdGenerator";

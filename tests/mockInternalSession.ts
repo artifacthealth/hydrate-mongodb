@@ -1,20 +1,31 @@
 import {EventEmitter} from "events";
-import {Session} from "../src/session";
-import {SessionFactory} from "../src/sessionFactory";
+import {InternalSession} from "../src/session";
+import {SessionFactory, InternalSessionFactory} from "../src/sessionFactory";
 import {MockQueryObject, MockQueryBuilder} from "./query/mockQueryBuilder";
 import {ResultCallback} from "../src/core/callback";
 import {generateId} from "./helpers";
 import {Constructor, getIdentifier} from "../src/index";
 import {FindOneQuery, QueryBuilder} from "../src/query/queryBuilder";
+import {Persister} from "../src/persister";
+import {EntityMapping} from "../src/mapping/entityMapping";
+import {QueryDefinition} from "../src/query/queryDefinition";
+import {Property} from "../src/mapping/property";
 
-export class MockSession extends EventEmitter implements Session {
+export class MockInternalSession extends EventEmitter implements InternalSession {
 
-    factory: SessionFactory;
+    factory: InternalSessionFactory;
     executeQueryCalled = 0;
     onExecuteQuery: (query: MockQueryObject, callback: ResultCallback<any>) => void;
     saved: any[] = [];
+    fetches: FetchDescription[] = [];
 
     private _collection: any[] = [];
+
+    constructor(factory: InternalSessionFactory) {
+        super();
+
+        this.factory = factory;
+    }
 
     add(item: any): void {
 
@@ -102,6 +113,7 @@ export class MockSession extends EventEmitter implements Session {
             paths = pathsOrCallback;
         }
 
+        this.fetches.push({ obj, paths });
         process.nextTick(() => callback(null, obj));
     }
 
@@ -133,10 +145,10 @@ export class MockSession extends EventEmitter implements Session {
         return false;
     }
 
-    executeQuery(query: MockQueryObject, callback: ResultCallback<Object>): void {
+    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
         this.executeQueryCalled++;
         if (this.onExecuteQuery) {
-            process.nextTick(() => this.onExecuteQuery(query, callback));
+            process.nextTick(() => this.onExecuteQuery(<any>query, callback));
         }
         else {
 
@@ -152,6 +164,42 @@ export class MockSession extends EventEmitter implements Session {
         return undefined;
     }
 
+    getObject(id: any): any {
+        return undefined;
+    }
+
+    registerManaged(persister: Persister, entity: Object, document: any): void {
+    }
+
+    notifyRemoved(entity: Object): void {
+    }
+
+    getPersister(mapping: EntityMapping): Persister {
+        return undefined;
+    }
+
+    getReferenceInternal(mapping: EntityMapping, id: any): any {
+        return undefined;
+    }
+
+    fetchInternal(entity: Object, paths: string[], callback: ResultCallback<any>): void {
+
+        this.fetch(entity, paths, callback);
+    }
+
+    findFetchedPaths(obj: any): string[] {
+
+        for (var i = 0; i < this.fetches.length; i++) {
+            var fetch = this.fetches[i];
+
+            if (fetch.obj == obj) {
+                return fetch.paths;
+            }
+        }
+
+        return null;
+    }
+
     private _find(id: string): any {
 
         for (let i = 0; i < this._collection.length; i++) {
@@ -164,4 +212,10 @@ export class MockSession extends EventEmitter implements Session {
 
         return null;
     }
+}
+
+export interface FetchDescription {
+
+    obj: any;
+    paths: string[];
 }
