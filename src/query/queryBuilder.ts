@@ -45,7 +45,6 @@ export interface QueryDocument {
 
 export interface Query<T> {
 
-    execute(callback: ResultCallback<T>): void;
     asPromise(): Promise<T>;
 }
 
