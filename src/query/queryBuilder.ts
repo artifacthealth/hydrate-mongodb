@@ -46,6 +46,7 @@ export interface QueryDocument {
 export interface Query<T> {
 
     execute(callback: ResultCallback<T>): void;
+    asPromise(): Promise<T>;
 }
 
 export interface CountQuery extends Query<number> {
@@ -445,6 +446,21 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
         }
 
         this._session.getPersister(mapping).executeQuery(this, callback);
+    }
+
+    asPromise(): Promise<any> {
+        // create and return the promise.
+        return new Promise((resolve, reject) => {
+            // wrapping of the classic callback handler.
+            this.handleCallback((err, result) => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(result);
+                }
+            });
+        });
     }
 
     /**

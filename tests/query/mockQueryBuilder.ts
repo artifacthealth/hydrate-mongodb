@@ -358,4 +358,19 @@ export class MockQueryObject implements FindQuery<Object>, FindOneQuery<Object>,
 
         this._session.executeQuery(<any>this, callback);
     }
+
+    asPromise(): Promise<any> {
+        // create and return the promise.
+        return new Promise((resolve, reject) => {
+            // wrapping of the classic callback handler.
+            this.handleCallback((err, result) => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve(result);
+                }
+            });
+        });
+    }
 }

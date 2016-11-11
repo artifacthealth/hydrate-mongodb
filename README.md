@@ -252,6 +252,26 @@ session.find(Task, id).fetch("assigned", (err, task) => {
 ```
 
 
+### Promises
+
+All queries can return a Promise by chaining a call to `asPromise`.
+
+Converting a find-by-id query to a Promise.
+
+```typescript
+session.find(Task, id).asPromise().then((task) => {
+    ...
+});
+```
+
+Converting a find-all query to a promise
+
+```typescript
+session.query(Task).findAll({ assigned: person }).asPromise().then((tasks) => {
+    ...
+});
+```
+
 ## Modeling
 
 In TypeScript, the emitDecoratorMetadata and experimentalDecorators options must be enabled on the compiler.
@@ -620,3 +640,42 @@ If the discriminator value is not explicitly specified for a class, it is determ
 By default, the name of the class is used. 
 
 
+### Fetching
+
+#### Eager Fetching of Entity References
+
+By default entity references are not loaded and must be fetched using Session#fetch or similar. If a FetchType of Eager is specified on
+an entity reference then that reference is automatically fetched when the entity is loaded.
+
+* This works on entity reference in Embeddable objects as well.
+* It is generally preferable to fetch references as needed.
+* A FetchType of Eager on a property that is not an entity reference has no effect.
+
+```typescript
+ @Entity()
+ export class Task {
+
+     @Fetch(FetchType.Eager)
+     owner: Person;
+ }
+```
+
+
+#### Lazy Fetching of Properties
+
+When an entity is loaded, all fields for that entity are retrieved from the database. Specifying a FetchType of Lazy for a field causes
+that field to not be retrieved from the database when the entity is loaded. The field is only loaded by calling Session#fetch and
+indicating which field to load.
+
+* Useful for properties that contain large amounts of data, such as images, that are not always needed.
+* A FetchType of Lazy on a property in an Embeddable objects is ignored. All properties in an embeddable object are always loaded from the database.
+* It is generally not advisable to use a FetchType of Lazy on a property that is an entity reference.
+
+```typescript
+ @Entity()
+ export class Person {
+
+     @Fetch(FetchType.Lazy)
+     image: Buffer;
+ }
+```

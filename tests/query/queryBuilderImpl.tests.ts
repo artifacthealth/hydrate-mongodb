@@ -700,5 +700,26 @@ describe('QueryBuilderImpl', () => {
             });
         });
     });
+
+    describe("asPromise", () => {
+
+        it("executes the query and returns a promise", (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.deepEqual(query.fetchPaths, [ 'parents' ]);
+                    done();
+                };
+
+                session.query(model.Person).findOne({ name: 'Test' }).fetch("parents").asPromise().then((result) => {
+                    // do nothing
+                });
+            });
+        });
+    });
 });
 

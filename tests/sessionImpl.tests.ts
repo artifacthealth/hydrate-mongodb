@@ -1045,7 +1045,7 @@ describe('SessionImpl', () => {
 
                 var session = factory.createSession();
                 var entity = new fetchLazyModel.A();
-
+                
                 // setup persister to handle fetch call
                 var persister = factory.getPersisterForObject(session, entity);
                 persister.onFetchPropertyValue = (entity, property, callback) => {
