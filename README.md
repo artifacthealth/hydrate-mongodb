@@ -285,6 +285,7 @@ In TypeScript, the emitDecoratorMetadata and experimentalDecorators options must
 * [`Inheritance`](#Inheritance)
 * [`Mapped Superclass`](#MappedSuperclass)
 * [`Discriminators`](#Discriminators)
+* [`Fetching`](#Fetching)
 
 <a name="Entities"></a>
 ### Entities
@@ -312,6 +313,7 @@ allows for entities to enforce required parameters for construction. When an ent
 the constructor is not called. This means the internal state of an entity must fully represented by it's serialized
 fields.
 * An identifier is assigned to the entity when it is saved. 
+* If the [Immutable](https://artifacthealth.github.io/hydrate-mongodb/globals.html#immutable) decorator is specified on an Entity, the entity is excluded from dirty checking.
 
 <a name="Collections"></a>
 ### Collections
@@ -448,6 +450,7 @@ export class Person {
 * Like an entity, an embeddable is **not** required to have a parameterless constructor. When an embeddable is 
 deserialized from the database, the constructor is not called. This means the internal state of an embeddable must fully 
 represented by it's serialized fields.
+* If the [Immutable](https://artifacthealth.github.io/hydrate-mongodb/globals.html#immutable) decorator is specified on an Embeddable class, the original document for the Embeddable is cached and used for serialization.
 
 <a name="Types"></a>
 ### Types
@@ -639,7 +642,7 @@ If the discriminator value is not explicitly specified for a class, it is determ
 [Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html).
 By default, the name of the class is used. 
 
-
+<a name="Fetching"></a>
 ### Fetching
 
 #### Eager Fetching of Entity References
