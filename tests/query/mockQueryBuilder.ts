@@ -6,7 +6,7 @@ import {MockInternalSession} from "../mockInternalSession";
 import {Constructor} from "../../src/index";
 import {ResultCallback, IteratorCallback} from "../../src/core/callback";
 import {QueryKind} from "../../src/query/queryKind";
-export class MockQueryBuilder implements QueryBuilder<Object> {
+export class MockQueryBuilder<T> implements QueryBuilder<T> {
 
     private _session: MockInternalSession;
     private _entityCtr: Constructor<any>;
@@ -17,21 +17,21 @@ export class MockQueryBuilder implements QueryBuilder<Object> {
         this._entityCtr = entityCtr;
     }
 
-    findAll(callback?: ResultCallback<Object[]>): FindQuery<Object>;
-    findAll(criteria: QueryDocument, callback?: ResultCallback<Object[]>): FindQuery<Object>;
-    findAll(criteriaOrCallback?: any, callback?: ResultCallback<Object[]>): FindQuery<Object> {
+    findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
+    findAll(criteria: QueryDocument, callback?: ResultCallback<T[]>): FindQuery<T>;
+    findAll(criteriaOrCallback?: any, callback?: ResultCallback<T[]>): FindQuery<T> {
 
         return this._createFindQuery(QueryKind.FindAll, criteriaOrCallback, callback);
     }
 
-    findOne(callback?: ResultCallback<Object>): FindOneQuery<Object>;
-    findOne(criteria: QueryDocument, callback?: ResultCallback<Object>): FindOneQuery<Object>;
-    findOne(criteriaOrCallback?: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
+    findOne(callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOne(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOne(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         return this._createFindQuery(QueryKind.FindOne, criteriaOrCallback, callback);
     }
 
-    findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
+    findOneById(id: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         var query = this._createQuery(QueryKind.FindOneById);
 
@@ -43,27 +43,27 @@ export class MockQueryBuilder implements QueryBuilder<Object> {
         return query.handleCallback(callback);
     }
 
-    findOneAndRemove(callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object>;
-    findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object>;
-    findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object> {
+    findOneAndRemove(callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T> {
 
         return this._createRemoveQuery(QueryKind.FindOneAndRemove, criteriaOrCallback, callback);
     }
 
-    findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
+    findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
     findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument,
-                     callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
+                     callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
     findOneAndUpdate(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any,
-                     callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object>  {
+                     callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>  {
 
         return this._createUpdateQuery(QueryKind.FindOneAndUpdate, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
     }
 
-    findOneAndUpsert(updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
+    findOneAndUpsert(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
     findOneAndUpsert(criteria: QueryDocument, updateDocument: QueryDocument,
-                     callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
+                     callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
     findOneAndUpsert(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any,
-                     callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object>  {
+                     callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>  {
 
         return this._createUpdateQuery(QueryKind.FindOneAndUpsert, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
     }
@@ -138,7 +138,7 @@ export class MockQueryBuilder implements QueryBuilder<Object> {
     }
 
     private _createUpdateQuery(kind: QueryKind, criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any,
-                               callback?: ResultCallback<Object>): any {
+                               callback?: ResultCallback<any>): any {
 
         var query = this._createQuery(kind);
 
@@ -372,5 +372,10 @@ export class MockQueryObject implements FindQuery<Object>, FindOneQuery<Object>,
                 }
             });
         });
+    }
+
+    asObservable(): Rx.Observable<Object> {
+
+        throw new Error("Not implemented");
     }
 }

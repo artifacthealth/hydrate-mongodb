@@ -550,7 +550,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     query<T>(ctr: Constructor<T>): QueryBuilder<T> {
 
-        return new QueryBuilderImpl(this, ctr);
+        return new QueryBuilderImpl<T>(this, ctr);
     }
 
     /**

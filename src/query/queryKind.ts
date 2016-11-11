@@ -11,6 +11,7 @@ export enum QueryKind {
     FindOneAndRemove,
     FindOneAndUpdate,
     FindOneAndUpsert,
+    FindCursor,
     RemoveAll,
     RemoveOne,
     UpdateAll,

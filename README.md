@@ -252,11 +252,11 @@ session.find(Task, id).fetch("assigned", (err, task) => {
 ```
 
 
-### Promises
+### Promises and Observables
 
-All queries can return a Promise by chaining a call to `asPromise`.
+All queries can use a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) for the query result by calling [asPromise](http://localhost:63342/hydrate/build/docs/interfaces/findonequery.html#aspromise).
 
-Converting a find-by-id query to a Promise.
+#### Example: Finding an entity by identifier
 
 ```typescript
 session.find(Task, id).asPromise().then((task) => {
@@ -264,10 +264,18 @@ session.find(Task, id).asPromise().then((task) => {
 });
 ```
 
-Converting a find-all query to a promise
+#### Example: Finding entities by criteria
 
 ```typescript
 session.query(Task).findAll({ assigned: person }).asPromise().then((tasks) => {
+    ...
+});
+```
+
+Queries that return multiple entities may return an [Observable](http://reactivex.io/documentation/observable.html) for the query by calling [asObservable](http://localhost:63342/hydrate/build/docs/interfaces/findquery.html#asobservable).
+
+```typescript
+session.query(Task).findAll({ assigned: person }).asObservable().subscribe((task) => {
     ...
 });
 ```

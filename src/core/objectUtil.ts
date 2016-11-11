@@ -1,3 +1,6 @@
+/**
+ * @hidden
+ */
 export function shallowClone(obj: any): any {
 
     if (!isObject(obj)) {
@@ -15,6 +18,9 @@ export function shallowClone(obj: any): any {
     return clone;
 }
 
+/**
+ * @hidden
+ */
 export function isObject(obj: any): boolean {
 
     return obj != null && typeof obj === "object" && !Array.isArray(obj);

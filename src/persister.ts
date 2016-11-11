@@ -22,7 +22,6 @@ import {OrderDocument} from "./query/orderDocument";
 import {WriteContext} from "./mapping/writeContext";
 import {PersistenceError} from "./persistenceError";
 import {getDuration} from "./core/timerUtil";
-import {MappingModel} from "./mapping/mappingModel";
 import {Property} from "./mapping/property";
 
 interface FindOneQuery {
@@ -88,7 +87,7 @@ export interface Persister {
     fetchPropertyValue(entity: any, property: Property, callback: ResultCallback<any>): void;
     refresh(entity: Object, callback: ResultCallback<Object>): void;
     watch(value: any, observer: Observer): void;
-    executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void;
+    executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void;
 
     findOneById(id: any, callback: ResultCallback<any>): void;
     findInverseOf(entity: Object, path: string, callback: ResultCallback<Object[]>): void;
@@ -486,6 +485,9 @@ export class PersisterImpl implements Persister {
             case QueryKind.FindEachSeries:
                 this._findEachSeries(query, handleCallback);
                 break;
+            case QueryKind.FindCursor:
+                this._findCursor(query, handleCallback);
+                break;
             case QueryKind.FindOneAndRemove:
             case QueryKind.FindOneAndUpdate:
             case QueryKind.FindOneAndUpsert:
@@ -663,6 +665,23 @@ export class PersisterImpl implements Persister {
             callback(err);
             callback = <Callback>function () {}; // if called for error, make sure it can't be called again
         }
+    }
+
+    private _findCursor(query: FindAllQuery, callback: ResultCallback<Cursor<any>>): void {
+
+        callback(null, new CursorImpl(this._prepareFind(query), (document: Object, callback: ResultCallback<Object>) => {
+
+            this._loadOne(document, (err, entity) => {
+                if (err) return callback(err);
+
+                if (!query.fetchPaths) {
+                    callback(null, entity);
+                    return;
+                }
+
+                this._session.fetchInternal(entity, query.fetchPaths, callback);
+            });
+        }));
     }
 
     private _prepareFind(query: FindAllQuery): mongodb.Cursor {
@@ -1101,39 +1120,76 @@ class FindQueue {
     }
 }
 
-/*
-class QueryStream extends Readable {
+/**
+ * Cursor to retrieve entities.
+ * @hidden
+ */
+export interface Cursor<T> {
+
+    /**
+     * Gets the next entity from the cursor.
+     * @param callback Called with the next entity.
+     */
+    next(callback: ResultCallback<T>): void;
+
+    /**
+     * Closes the cursor.
+     * @param callback Called when the cursor is closed.
+     */
+    close(callback?: Callback): void;
+}
+
+/**
+ * Callback to load a document as an entity.
+ * @hidden
+ */
+type EntityLoaded = (document: Object, callback: ResultCallback<any>) => void;
+
+
+/**
+ * Implementation of a cursor to retrieve entities.
+ * @hidden
+ */
+class CursorImpl<T> {
+
+    closed = false;
 
     private _cursor: mongodb.Cursor;
-    private _persister: PersisterImpl;
+    private _loader: EntityLoaded;
 
-    constructor(persister: PersisterImpl, cursor: mongodb.Cursor) {
-        super({readableObjectMode: true});
+    constructor(cursor: mongodb.Cursor, loader: EntityLoaded) {
+
         this._cursor = cursor;
-        this._persister = persister;
+        this._loader = loader;
     }
 
-    _read(): void {
+    next(callback: ResultCallback<T>): void {
 
         this._cursor.nextObject((err: Error, item: any) => {
             if (err) return handleError(err);
 
             if (item == null) {
                 // end of cursor
-                this.push(null);
+                callback(null, null);
                 return;
             }
 
-            this._persister._loadOne(item, (err, result) => {
+            this._loader(item, (err, result) => {
                 if (err) return handleError(err);
-                this.push(result);
+
+                callback(null, result);
             });
         });
 
         function handleError(err: Error) {
-            this._cursor.close();  // close the cursor since it may not be exhausted
-            this.emit('error', err);
+
+            this.close();  // close the cursor since it may not be exhausted
+            callback(err);
         }
     }
+
+    close(callback?: Callback): void {
+
+        this._cursor.close(callback);
+    }
 }
-*/

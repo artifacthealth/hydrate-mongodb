@@ -1,3 +1,6 @@
+/**
+ * @hidden
+ */
 export function getDuration(start: number[]): number {
 
     var stop = process.hrtime(start);

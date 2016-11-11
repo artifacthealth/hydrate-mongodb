@@ -119,7 +119,7 @@ export class MockInternalSession extends EventEmitter implements InternalSession
 
     query<T>(ctr: Constructor<T>): QueryBuilder<T> {
 
-        return new MockQueryBuilder(this, ctr);
+        return new MockQueryBuilder<T>(this, ctr);
     }
 
     wait(callback?: Callback): void {

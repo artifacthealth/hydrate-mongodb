@@ -314,6 +314,30 @@ describe('PersisterImpl', () => {
 
     describe('executeQuery', () => {
 
+        describe('findCursor', () => {
+
+            it('creates and returns a cursor for the query', (done) => {
+
+                var collection = new MockCollection();
+
+                helpers.createPersister(collection, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.FindCursor);
+                    query.criteria = {};
+
+                    persister.executeQuery(query, (err, result) => {
+                        if(err) return done(err);
+
+                        // actual cursor implementation is not export so use duck typing to verify it's a cursor
+                        assert.property(result, "next");
+                        assert.property(result, "close");
+                        done();
+                    });
+                });
+            });
+        });
+
         describe('findAll', () => {
 
             it('translates property names to field names in sort specification', (done) => {

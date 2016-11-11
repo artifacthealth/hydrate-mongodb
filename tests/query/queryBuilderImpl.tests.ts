@@ -7,7 +7,7 @@ import {QueryKind} from "../../src/query/queryKind";
 import {QueryBuilderImpl, QueryDocument} from "../../src/query/queryBuilder";
 import {ResultCallback} from "../../src/core/callback";
 import {Callback} from "../../src/core/callback";
-
+import {Cursor} from "../../src/persister";
 
 describe('QueryBuilderImpl', () => {
 
@@ -721,5 +721,66 @@ describe('QueryBuilderImpl', () => {
             });
         });
     });
+
+
+    describe.only("asObservable", () => {
+
+        it("executes the query and returns an observable", (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: any) => {
+
+                    assert.equal(query.kind, QueryKind.FindCursor);
+                    callback(null, new MockCursor([1, 2, 3]));
+                };
+
+                var called = 0;
+                var source = session.query(model.Person).findAll({ name: 'Test' }).asObservable();
+                source.subscribe(
+                    (entity) => {
+                        // called for each item in the collection
+                        called++;
+                    },
+                    (err) => {
+                        // called on error
+                    },
+                    () => {
+                        // called when completed
+                        assert.equal(called, 3);
+                        done();
+                    }
+                );
+            });
+        });
+    });
 });
 
+class MockCursor implements Cursor<any> {
+
+    index = 0;
+
+    constructor(public values: any[]) {
+
+    }
+
+    next(callback: ResultCallback<any>): void {
+
+        if (this.index >= this.values.length) {
+            callback(null, null);
+            return;
+        }
+
+        callback(null, this.values[this.index++]);
+    }
+
+    close(callback?: Callback): void {
+
+        if (callback) {
+            callback();
+        }
+    }
+}

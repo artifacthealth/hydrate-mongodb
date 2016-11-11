@@ -1,21 +1,20 @@
 import {Callback} from "../core/callback";
 import {ResultCallback} from "../core/callback";
 import {IteratorCallback} from "../core/callback";
-
 import {InternalSession} from "../session";
-import {Persister} from "../persister";
 import {QueryDefinition} from "./queryDefinition";
 import {QueryKind} from "./queryKind";
-
 import {Constructor} from "../index"
 import {PersistenceError} from "../persistenceError";
+import {Observable} from "rx";
+import {Cursor} from "../persister";
 
 export interface QueryBuilder<T> {
     findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
     findAll(criteria: QueryDocument, callback?: ResultCallback<T[]>): FindQuery<T>;
     findOne(callback?: ResultCallback<T>): FindOneQuery<T>;
     findOne(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneQuery<T>;
-    findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<T>;
+    findOneById(id: any, callback?: ResultCallback<T>): FindOneQuery<T>;
     findOneAndRemove(callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
     findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
     findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
@@ -45,6 +44,9 @@ export interface QueryDocument {
 
 export interface Query<T> {
 
+    /**
+     * Returns a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) for the query.
+     */
     asPromise(): Promise<T>;
 }
 
@@ -88,13 +90,18 @@ export interface FindQuery<T> extends Query<T[]> {
     batchSize(value: number): FindQuery<T>;
     each(iterator: IteratorCallback<T>, callback: Callback): void;
     eachSeries(iterator: IteratorCallback<T>, callback: Callback): void;
+
+    /**
+     * Returns an [Observable](http://reactivex.io/documentation/observable.html) for the query.
+     */
+    asObservable(): Observable<T>;
 }
 
 
 /**
  * @hidden
  */
-export class QueryBuilderImpl implements QueryBuilder<Object> {
+export class QueryBuilderImpl<T> implements QueryBuilder<T> {
 
     private _session: InternalSession;
     private _entityCtr: Constructor<any>;
@@ -105,21 +112,21 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
         this._entityCtr = entityCtr;
     }
 
-    findAll(callback?: ResultCallback<Object[]>): FindQuery<Object>;
-    findAll(criteria: QueryDocument, callback?: ResultCallback<Object[]>): FindQuery<Object>;
-    findAll(criteriaOrCallback?: any, callback?: ResultCallback<Object[]>): FindQuery<Object> {
+    findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
+    findAll(criteria: QueryDocument, callback?: ResultCallback<T[]>): FindQuery<T>;
+    findAll(criteriaOrCallback?: any, callback?: ResultCallback<T[]>): FindQuery<T> {
 
         return this._createFindQuery(QueryKind.FindAll, criteriaOrCallback, callback);
     }
 
-    findOne(callback?: ResultCallback<Object>): FindOneQuery<Object>;
-    findOne(criteria: QueryDocument, callback?: ResultCallback<Object>): FindOneQuery<Object>;
-    findOne(criteriaOrCallback?: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
+    findOne(callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOne(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneQuery<T>;
+    findOne(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         return this._createFindQuery(QueryKind.FindOne, criteriaOrCallback, callback);
     }
 
-    findOneById(id: any, callback?: ResultCallback<Object>): FindOneQuery<Object> {
+    findOneById(id: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         var query = this._createQuery(QueryKind.FindOneById);
 
@@ -131,23 +138,23 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
         return query.handleCallback(callback);
     }
 
-    findOneAndRemove(callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object>;
-    findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object>;
-    findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<Object>): FindOneAndRemoveQuery<Object> {
+    findOneAndRemove(callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndRemove(criteria: QueryDocument, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    findOneAndRemove(criteriaOrCallback?: any, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T> {
 
         return this._createRemoveQuery(QueryKind.FindOneAndRemove, criteriaOrCallback, callback);
     }
 
-    findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
-    findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
-    findOneAndUpdate(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object>  {
+    findOneAndUpdate(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
+    findOneAndUpdate(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
+    findOneAndUpdate(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>  {
 
         return this._createUpdateQuery(QueryKind.FindOneAndUpdate, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
     }
 
-    findOneAndUpsert(updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
-    findOneAndUpsert(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object> ;
-    findOneAndUpsert(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<Object>): FindOneAndUpdateQuery<Object>  {
+    findOneAndUpsert(updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
+    findOneAndUpsert(criteria: QueryDocument, updateDocument: QueryDocument, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T> ;
+    findOneAndUpsert(criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>  {
 
         return this._createUpdateQuery(QueryKind.FindOneAndUpsert, criteriaOrUpdateDocument, updateDocumentOrCallback, callback);
     }
@@ -221,7 +228,7 @@ export class QueryBuilderImpl implements QueryBuilder<Object> {
         return query.handleCallback(callback);
     }
 
-    private _createUpdateQuery(kind: QueryKind, criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<Object>): any {
+    private _createUpdateQuery(kind: QueryKind, criteriaOrUpdateDocument: QueryDocument, updateDocumentOrCallback: any, callback?: ResultCallback<any>): any {
 
         var query = this._createQuery(kind);
 
@@ -307,6 +314,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
             case QueryKind.FindAll:
             case QueryKind.FindEach:
             case QueryKind.FindEachSeries:
+            case QueryKind.FindCursor:
             case QueryKind.FindOne:
             case QueryKind.FindOneById:
             case QueryKind.Distinct:
@@ -459,6 +467,57 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
                     resolve(result);
                 }
             });
+        });
+    }
+
+    asObservable(): Observable<any> {
+
+        this.kind = QueryKind.FindCursor;
+
+        return Observable.create((observer) => {
+
+            var cursor: Cursor<any>,
+                disposed = false;
+
+            this.handleCallback((err: Error, result: Cursor<any>) => {
+                if (err) {
+                    observer.onError(err);
+                }
+                else {
+                    cursor = result;
+
+                    (function next() {
+
+                        cursor.next((err: Error, entity: any) => {
+                            if (disposed) {
+                                return;
+                            }
+
+                            if (err) {
+                                observer.onError(err);
+                                return;
+                            }
+
+                            if (entity == null) {
+                                observer.onCompleted();
+                                return;
+                            }
+
+                            observer.onNext(entity);
+                            next();
+                        });
+                    })();
+                }
+            });
+
+            // return the dispose function
+            return () => {
+                disposed = true;
+
+                if (cursor) {
+                    cursor.close();
+                }
+            }
         });
     }
 
