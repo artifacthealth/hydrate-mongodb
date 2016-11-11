@@ -302,7 +302,7 @@
 					<a name="converter" class="tsd-anchor"></a>
 					<h3>Converter</h3>
 					<ul class="tsd-signatures tsd-kind-function">
-						<li class="tsd-signature tsd-kind-icon">Converter<span class="tsd-signature-symbol">(</span>converter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">(&lt;TFunction extends Function&gt;(target: TFunction) =&gt; TFunction | void) &amp; ((target: Object, propert...</span></li>
+						<li class="tsd-signature tsd-kind-icon">Converter<span class="tsd-signature-symbol">(</span>converter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">PropertyConverter</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">PropertyConverter</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">(&lt;TFunction extends Function&gt;(target: TFunction) =&gt; TFunction | void) &amp; ((target: Object, propert...</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
@@ -350,7 +350,7 @@
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>converter: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span></h5>
+									<h5>converter: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">PropertyConverter</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">PropertyConverter</span><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">(&lt;TFunction extends Function&gt;(target: TFunction) =&gt; TFunction | void) &amp; ((target: Object, propert...</span></h4>
@@ -451,7 +451,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L557">mapping/providers/decorators.ts:557</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L558">mapping/providers/decorators.ts:558</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -591,7 +591,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L517">mapping/providers/decorators.ts:517</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L518">mapping/providers/decorators.ts:518</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -625,12 +625,13 @@
 									<li>It is generally not advisable to use a FetchType of Lazy on a property that is an entity reference.</li>
 								</ul>
 								<h4 id="example">Example</h4>
-								<p>```typescript
-									@Entity()
-								export class Person {</p>
-								<pre><code> <span class="hljs-variable">@Fetch</span>(FetchType.Lazy)
- <span class="hljs-attribute">image</span>: Buffer;
-</code></pre><p> }</p>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
+
+     @Fetch(FetchType.Lazy)
+     image: Buffer;
+ }
+</code></pre>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -944,7 +945,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L583">mapping/providers/decorators.ts:583</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L584">mapping/providers/decorators.ts:584</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -978,7 +979,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L538">mapping/providers/decorators.ts:538</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L539">mapping/providers/decorators.ts:539</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
