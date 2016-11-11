@@ -513,6 +513,7 @@ export declare function Cascade(flags: CascadeFlags): PropertyDecorator;
  *      @Fetch(FetchType.Lazy)
  *      image: Buffer;
  *  }
+ * ```
  */
 export declare function Fetch(type: FetchType): PropertyDecorator;
 
