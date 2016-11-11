@@ -78,6 +78,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-enum"><a href="enums/cascadeflags.html" class="tsd-kind-icon">Cascade<wbr>Flags</a></li>
 								<li class="tsd-kind-enum"><a href="enums/changetrackingtype.html" class="tsd-kind-icon">Change<wbr>Tracking<wbr>Type</a></li>
+								<li class="tsd-kind-enum"><a href="enums/fetchtype.html" class="tsd-kind-icon">Fetch<wbr>Type</a></li>
 								<li class="tsd-kind-enum"><a href="enums/flushpriority.html" class="tsd-kind-icon">Flush<wbr>Priority</a></li>
 							</ul>
 						</section>
@@ -134,6 +135,7 @@
 								<li class="tsd-kind-function"><a href="globals.html#embeddable" class="tsd-kind-icon">Embeddable</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#entity" class="tsd-kind-icon">Entity</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#enumerated" class="tsd-kind-icon">Enumerated</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#fetch" class="tsd-kind-icon">Fetch</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#field" class="tsd-kind-icon">Field</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#id" class="tsd-kind-icon">Id</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#immutable" class="tsd-kind-icon">Immutable</a></li>
@@ -449,7 +451,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L514">mapping/providers/decorators.ts:514</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L557">mapping/providers/decorators.ts:557</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -573,6 +575,67 @@
 							<ul class="tsd-parameters">
 								<li>
 									<h5>members: <span class="tsd-signature-type">Object</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="fetch" class="tsd-anchor"></a>
+					<h3>Fetch</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Fetch<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><a href="enums/fetchtype.html" class="tsd-signature-type">FetchType</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L517">mapping/providers/decorators.ts:517</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<h2 id="fetchtype-eager">FetchType.Eager</h2>
+								</div>
+								<p>By default entity references are not loaded and must be fetched using Session#fetch or similar. If a FetchType of Eager is specified on
+								an entity reference then that reference is automatically fetched when the entity is loaded.</p>
+								<h3 id="notes">Notes</h3>
+								<ul>
+									<li>This works on entity reference in Embeddable objects as well.</li>
+									<li>It is generally preferable to fetch references as needed.</li>
+									<li>A FetchType of Eager on a property that is not an entity reference has no effect.</li>
+								</ul>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> @Entity()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
+
+     @Fetch(FetchType.Eager)
+     owner: Person;
+ }
+</code></pre>
+								<h2 id="fetchtype-lazy">FetchType.Lazy</h2>
+								<p>When an entity is loaded, all fields for that entity are retrieved from the database. Specifying a FetchType of Lazy for a field causes
+									that field to not be retrieved from the database when the entity is loaded. The field is only loaded by calling Session#fetch and
+								indicating which field to load.</p>
+								<h3 id="notes">Notes</h3>
+								<ul>
+									<li>Useful for properties that contain large amounts of data, such as images, that are not always needed.</li>
+									<li>A FetchType of Lazy on a property in an Embeddable objects is ignored. All properties in an embeddable object are always loaded from the database.</li>
+									<li>It is generally not advisable to use a FetchType of Lazy on a property that is an entity reference.</li>
+								</ul>
+								<h3 id="example">Example</h3>
+								<p>```typescript
+									@Entity()
+								export class Person {</p>
+								<pre><code> <span class="hljs-variable">@Fetch</span>(FetchType.Lazy)
+ <span class="hljs-attribute">image</span>: Buffer;
+</code></pre><p> }</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>type: <a href="enums/fetchtype.html" class="tsd-signature-type">FetchType</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
@@ -881,7 +944,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L540">mapping/providers/decorators.ts:540</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L583">mapping/providers/decorators.ts:583</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -915,7 +978,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L495">mapping/providers/decorators.ts:495</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L538">mapping/providers/decorators.ts:538</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1179,6 +1242,9 @@
 						<a href="enums/changetrackingtype.html" class="tsd-kind-icon">Change<wbr>Tracking<wbr>Type</a>
 					</li>
 					<li class=" tsd-kind-enum">
+						<a href="enums/fetchtype.html" class="tsd-kind-icon">Fetch<wbr>Type</a>
+					</li>
+					<li class=" tsd-kind-enum">
 						<a href="enums/flushpriority.html" class="tsd-kind-icon">Flush<wbr>Priority</a>
 					</li>
 					<li class=" tsd-kind-class">
@@ -1300,6 +1366,9 @@
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#enumerated" class="tsd-kind-icon">Enumerated</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#fetch" class="tsd-kind-icon">Fetch</a>
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#field" class="tsd-kind-icon">Field</a>
