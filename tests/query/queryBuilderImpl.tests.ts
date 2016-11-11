@@ -8,6 +8,8 @@ import {QueryBuilderImpl, QueryDocument} from "../../src/query/queryBuilder";
 import {ResultCallback} from "../../src/core/callback";
 import {Callback} from "../../src/core/callback";
 import {Cursor} from "../../src/persister";
+import {MockInternalSession} from "../mockInternalSession";
+import {InternalSession} from "../../src/session";
 
 describe('QueryBuilderImpl', () => {
 
@@ -723,23 +725,15 @@ describe('QueryBuilderImpl', () => {
     });
 
 
-    describe.only("asObservable", () => {
+    describe("asObservable", () => {
 
         it("executes the query and returns an observable", (done) => {
 
-            helpers.createFactory("model", (err, factory) => {
+            createSessionForObservable((err, result) => {
                 if (err) return done(err);
 
-                var session = factory.createSession();
-                var persister = factory.getPersisterForConstructor(session, model.Person);
-                persister.onExecuteQuery = (query: QueryDefinition, callback: any) => {
-
-                    assert.equal(query.kind, QueryKind.FindCursor);
-                    callback(null, new MockCursor([1, 2, 3]));
-                };
-
                 var called = 0;
-                var source = session.query(model.Person).findAll({ name: 'Test' }).asObservable();
+                var source = result.session.query(model.Person).findAll({ name: 'Test' }).asObservable();
                 source.subscribe(
                     (entity) => {
                         // called for each item in the collection
@@ -756,12 +750,51 @@ describe('QueryBuilderImpl', () => {
                 );
             });
         });
+
+        it.only("closes underlying cursor if unsubscribe called on cursor", (done) => {
+
+            createSessionForObservable((err, result) => {
+                if (err) return done(err);
+
+                var source = result.session.query(model.Person).findAll({ name: 'Test' }).asObservable();
+                var subscription = source.subscribe(function() {
+                    throw new Error("This should not be called")
+                });
+                subscription.dispose();
+
+                setTimeout(() => {
+                    assert.isTrue(result.cursor.closed);
+                    done();
+                }, 100);
+            });
+        });
+
+        function createSessionForObservable(callback: ResultCallback<{ session: InternalSession, cursor: MockCursor }>): void {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return callback(err);
+
+                var session = factory.createSession();
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                var cursor = new MockCursor([1, 2, 3]);
+                persister.onExecuteQuery = (query: QueryDefinition, callback: any) => {
+
+                    assert.equal(query.kind, QueryKind.FindCursor);
+                    process.nextTick(() => {
+                        callback(null, cursor);
+                    });
+                };
+
+                callback(null, { session, cursor });
+            });
+        }
     });
 });
 
 class MockCursor implements Cursor<any> {
 
     index = 0;
+    closed = false;
 
     constructor(public values: any[]) {
 
@@ -778,6 +811,8 @@ class MockCursor implements Cursor<any> {
     }
 
     close(callback?: Callback): void {
+
+        this.closed = true;
 
         if (callback) {
             callback();

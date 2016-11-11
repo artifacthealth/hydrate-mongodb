@@ -490,6 +490,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
 
                         cursor.next((err: Error, entity: any) => {
                             if (disposed) {
+                                cursor.close();
                                 return;
                             }
 
