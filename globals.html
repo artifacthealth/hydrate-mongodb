@@ -596,17 +596,17 @@
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<h2 id="fetchtype-eager">FetchType.Eager</h2>
+									<h3 id="fetchtype-eager">FetchType.Eager</h3>
 								</div>
 								<p>By default entity references are not loaded and must be fetched using Session#fetch or similar. If a FetchType of Eager is specified on
 								an entity reference then that reference is automatically fetched when the entity is loaded.</p>
-								<h3 id="notes">Notes</h3>
+								<h4 id="notes">Notes</h4>
 								<ul>
 									<li>This works on entity reference in Embeddable objects as well.</li>
 									<li>It is generally preferable to fetch references as needed.</li>
 									<li>A FetchType of Eager on a property that is not an entity reference has no effect.</li>
 								</ul>
-								<h3 id="example">Example</h3>
+								<h4 id="example">Example</h4>
 								<pre><code class="lang-typescript"> @Entity()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
 
@@ -614,17 +614,17 @@
      owner: Person;
  }
 </code></pre>
-								<h2 id="fetchtype-lazy">FetchType.Lazy</h2>
+								<h3 id="fetchtype-lazy">FetchType.Lazy</h3>
 								<p>When an entity is loaded, all fields for that entity are retrieved from the database. Specifying a FetchType of Lazy for a field causes
 									that field to not be retrieved from the database when the entity is loaded. The field is only loaded by calling Session#fetch and
 								indicating which field to load.</p>
-								<h3 id="notes">Notes</h3>
+								<h4 id="notes">Notes</h4>
 								<ul>
 									<li>Useful for properties that contain large amounts of data, such as images, that are not always needed.</li>
 									<li>A FetchType of Lazy on a property in an Embeddable objects is ignored. All properties in an embeddable object are always loaded from the database.</li>
 									<li>It is generally not advisable to use a FetchType of Lazy on a property that is an entity reference.</li>
 								</ul>
-								<h3 id="example">Example</h3>
+								<h4 id="example">Example</h4>
 								<p>```typescript
 									@Entity()
 								export class Person {</p>
