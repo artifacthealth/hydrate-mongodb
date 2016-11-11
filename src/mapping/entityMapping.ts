@@ -264,11 +264,17 @@ export class EntityMapping extends ClassMapping {
         });
     }
 
+    protected fetchPropertyValue(session: InternalSession, value: any, property: Property, callback: ResultCallback<any>): void {
+
+        session.getPersister(this).fetchPropertyValue(value, property, callback);
+    }
+
     getDefaultFields(): QueryDocument {
 
         var fields: QueryDocument = {};
 
         if (this._defaultFields === undefined) {
+            // find any lazy fields and mark them with a 0 so they are not loaded
             for (var i = 0; i < this.properties.length; i++) {
                 var property = this.properties[i];
                 if ((property.flags & MappingModel.PropertyFlags.FetchLazy) != 0) {

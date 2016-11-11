@@ -325,7 +325,11 @@ export class ObjectMapping extends MappingBase {
         var propertyValue = property.getPropertyValue(value);
         if((property.flags & MappingModel.PropertyFlags.InverseSide) != 0 && propertyValue === undefined) {
             property.mapping.fetchInverse(session, parentEntity, property.inverseOf, path, depth + 1, handleCallback);
-        } else {
+        }
+        else if((property.flags & MappingModel.PropertyFlags.FetchLazy) != 0 && propertyValue === undefined) {
+            this.fetchPropertyValue(session, value, property, handleCallback);
+        }
+        else {
             property.mapping.fetch(session, parentEntity, propertyValue, path, depth + 1, handleCallback);
         }
 
@@ -338,6 +342,12 @@ export class ObjectMapping extends MappingBase {
 
             callback(null, value);
         }
+    }
+
+    protected fetchPropertyValue(session: InternalSession, value: any, property: Property, callback: ResultCallback<any>): void {
+
+        // property values should be fully fetched on all non-entity types.
+        callback(null, property.getPropertyValue(value));
     }
 
     protected resolveCore(context: ResolveContext): void {

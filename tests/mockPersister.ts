@@ -8,10 +8,13 @@ import {EntityMapping} from "../src/mapping/entityMapping";
 import {Callback} from "../src/core/callback";
 import {QueryDefinition} from "../src/query/queryDefinition";
 import {Observer} from "../src/observer";
+import {Property} from "../src/mapping/property";
+import {InternalSession} from "../src/session";
 
 export class MockPersister implements Persister {
 
     private _mapping: EntityMapping;
+    private _session: InternalSession;
 
     changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
@@ -27,8 +30,9 @@ export class MockPersister implements Persister {
 
     executeQueryCalled = 0;
 
-    constructor(mapping: EntityMapping) {
+    constructor(session: InternalSession, mapping: EntityMapping) {
         this._mapping = mapping;
+        this._session = session;
         this.changeTracking = (<EntityMapping>mapping.inheritanceRoot).changeTracking;
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
@@ -102,9 +106,21 @@ export class MockPersister implements Persister {
         if(this.onFetch) {
             process.nextTick(() => this.onFetch(entity, path, callback));
         }
+        else {
+            this._mapping.fetch(this._session, undefined, entity, path.split("."), 0, callback);
+        }
     }
 
     onFetch: (entity: any, path: string, callback: Callback) => void;
+
+    fetchPropertyValue(entity: any, property: Property, callback: ResultCallback<any>): void {
+
+        if(this.onFetchPropertyValue) {
+            process.nextTick(() => this.onFetchPropertyValue(entity, property, callback));
+        }
+    }
+
+    onFetchPropertyValue: (entity: any, property: Property, callback: ResultCallback<any>) => void;
 
     findAll(criteria: any, callback?: ResultCallback<any[]>): void {
     }

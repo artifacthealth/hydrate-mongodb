@@ -23,6 +23,7 @@ import {WriteContext} from "./mapping/writeContext";
 import {PersistenceError} from "./persistenceError";
 import {getDuration} from "./core/timerUtil";
 import {MappingModel} from "./mapping/mappingModel";
+import {Property} from "./mapping/property";
 
 interface FindOneQuery {
 
@@ -84,6 +85,7 @@ export interface Persister {
     addRemove(batch: Batch, entity: Object, callback: Callback): void;
 
     fetch(entity: Object, path: string, callback: Callback): void;
+    fetchPropertyValue(entity: any, property: Property, callback: ResultCallback<any>): void;
     refresh(entity: Object, callback: ResultCallback<Object>): void;
     watch(value: any, observer: Observer): void;
     executeQuery(query: QueryDefinition, callback: ResultCallback<Object>): void;
@@ -212,6 +214,62 @@ export class PersisterImpl implements Persister {
         }
 
         this._mapping.fetch(this._session, undefined, entity, path.split("."), 0, callback);
+    }
+
+    /**
+     * Fetches a property value from the collection.
+     * @param entity The entity to load the property on.
+     * @param property The property to fetch.
+     * @param callback Called after the property has been loaded.
+     */
+    fetchPropertyValue(entity: any, property: Property, callback: ResultCallback<any>): void {
+
+        // indicate the field we want to pull back
+        var fields: QueryDocument = {
+            _id: 0
+        };
+        property.setFieldValue(fields, 1);
+
+        // if the entity is versioned then return the version number as well
+        var version: number;
+        if (this._versioned) {
+            // get the current version
+            version = this._session.getVersion(entity);
+            // include the document version in the projection
+            this._mapping.setDocumentVersion(fields, 1);
+        }
+
+        var criteria = {
+            _id: entity["_id"]
+        };
+
+        // setup trace logging.
+        var handleCallback = callback;
+        if (this._traceEnabled) {
+            handleCallback = this._createTraceableCallback({ kind: QueryKind[QueryKind.FindOne], criteria, fields }, callback);
+        }
+
+        this._collection.findOne(criteria, fields, (err, document) => {
+            if (err) return callback(err);
+
+            // check to make sure the version has not changed
+            if (this._versioned) {
+                if (this._mapping.getDocumentVersion(document) != version) {
+                    return callback(new Error("Cannot fetch property value because document version has changed."));
+                }
+            }
+
+            // read the property based on the property mapping
+            var readContext = new ReadContext(this._session);
+
+            readContext.path = property.name;
+            var propertyValue = property.mapping.read(readContext, property.getFieldValue(document));
+            if (readContext.hasErrors) {
+                return callback(new PersistenceError("Error deserializing property value: " + readContext.getErrorMessage()));
+            }
+
+            handleCallback(null, propertyValue);
+        });
     }
 
     findInverseOf(entity: Object, path: string, callback: ResultCallback<any[]>): void {

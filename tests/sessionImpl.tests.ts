@@ -23,6 +23,7 @@ import {Person} from "./fixtures/classImmutable";
 import * as cascade from "./fixtures/cascade";
 import {getIdentifier} from "../src/index";
 import {MockDb} from "./driver/mockDb";
+import * as fetchLazyModel from "./fixtures/fetchLazy";
 
 describe('SessionImpl', () => {
 
@@ -1021,7 +1022,7 @@ describe('SessionImpl', () => {
                     (<any>parent)._id = (<Reference>entity.parent).getId();
                     entity.parent = parent;
                     process.nextTick(callback);
-                }
+                };
 
                 // save and flush entity so we start tracking changes
                 session.save(entity);
@@ -1032,6 +1033,35 @@ describe('SessionImpl', () => {
                     if (err) return done(err);
 
                     assert.equal(persister.dirtyCheckCalled, 0, "Fetch caused object to become dirty");
+                    done();
+                });
+            });
+        });
+
+        it('should load the property value if a lazy property is fetched', (done) => {
+
+            helpers.createFactory("fetchLazy", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var entity = new fetchLazyModel.A();
+
+                // setup persister to handle fetch call
+                var persister = factory.getPersisterForObject(session, entity);
+                persister.onFetchPropertyValue = (entity, property, callback) => {
+                    assert.equal(property.name, "b");
+                    process.nextTick(() => callback(null, "some long value"));
+                };
+
+                // save and flush entity so it's managed
+                session.save(entity);
+                session.flush();
+                // make sure fetching causes the property to be loaded
+                assert.isUndefined(entity.b);
+                session.fetch(entity, "b", (err) => {
+                    if (err) return done(err);
+
+                    assert.equal(entity.b, "some long value");
                     done();
                 });
             });

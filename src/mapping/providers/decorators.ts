@@ -474,26 +474,18 @@ export declare function InverseOf(propertyName: string): PropertyDecorator;
 export declare function Cascade(flags: CascadeFlags): PropertyDecorator;
 
 /**
- * By default entity references are not loaded and must be fetched using Session#fetch or similar. If a FetchType of Eager is specified on
- * an entity reference then that reference is automatically fetched when the entity is loaded. This works on entity reference in
- * Embeddable objects as well. Note that it is generally preferable to fetch references as needed.
+ * ## FetchType.Eager
  *
- * When an entity is loaded, all fields for that entity are retrieved from the database. Specifying a FetchType of Lazy for a field causes
- * that field to not be retrieved from the database when the entity is loaded. The field is only loaded by calling Session#fetch and
- * indicating which field to load. This is useful for entities that contain large fields, such as images, that are generally not needed.
- * Note that a FetchType of Lazy on a field in an Embeddable objects is ignored. All fields in an embeddable object are always loaded from
- * the database.
+ * By default entity references are not loaded and must be fetched using Session#fetch or similar. If a FetchType of Eager is specified on
+ * an entity reference then that reference is automatically fetched when the entity is loaded.
+ *
+ * ### Notes
+ * * This works on entity reference in Embeddable objects as well.
+ * * It is generally preferable to fetch references as needed.
+ * * A FetchType of Eager on a property that is not an entity reference has no effect.
  *
  * ### Example
- *
  * ```typescript
- *  @Entity()
- *  export class Person {
- *
- *      @Fetch(FetchType.Lazy)
- *      image: Buffer;
- *  }
- *
  *  @Entity()
  *  export class Task {
  *
@@ -501,6 +493,26 @@ export declare function Cascade(flags: CascadeFlags): PropertyDecorator;
  *      owner: Person;
  *  }
  * ```
+ *
+ * ## FetchType.Lazy
+ *
+ * When an entity is loaded, all fields for that entity are retrieved from the database. Specifying a FetchType of Lazy for a field causes
+ * that field to not be retrieved from the database when the entity is loaded. The field is only loaded by calling Session#fetch and
+ * indicating which field to load.
+ *
+ * ### Notes
+ * * Useful for properties that contain large amounts of data, such as images, that are not always needed.
+ * * A FetchType of Lazy on a property in an Embeddable objects is ignored. All properties in an embeddable object are always loaded from the database.
+ * * It is generally not advisable to use a FetchType of Lazy on a property that is an entity reference.
+ *
+ * ### Example
+ * ```typescript
+ *  @Entity()
+ *  export class Person {
+ *
+ *      @Fetch(FetchType.Lazy)
+ *      image: Buffer;
+ *  }
  */
 export declare function Fetch(type: FetchType): PropertyDecorator;
 

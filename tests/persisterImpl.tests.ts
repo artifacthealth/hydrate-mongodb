@@ -117,6 +117,39 @@ describe('PersisterImpl', () => {
     describe('resolve', () => {
     });
 
+    describe('fetchPropertyValue', () => {
+
+        it("loads the specified field value", (done) => {
+
+            var idA = helpers.generateId();
+            var collection = new MockCollection([ { _id: idA, _b: "some large value" }]);
+
+            createFactory("fetchLazy", (err, factory) => {
+                if (err) return done(err);
+
+                var session = new MockInternalSession(factory);
+                var mapping = factory.getMappingForConstructor(fetchLazyModel.A);
+                var persister = new PersisterImpl(session, mapping, collection);
+
+                persister.findOneById(idA, (err, a) => {
+                    if (err) return done(err);
+
+                    // clear the value since it's returned from the MockCollection
+                    a.b = null;
+
+                    assert.instanceOf(a, fetchLazyModel.A);
+
+                    persister.fetchPropertyValue(a, mapping.getProperty("b"), (err, result) => {
+                        if (err) return done(err);
+
+                        assert.equal(result, "some large value");
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
     describe('findInverseOf', () => {
 
         it("finds all entities in the collection where the property specified by path has a value matching id", (done) => {

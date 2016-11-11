@@ -15,7 +15,7 @@ export class MockSessionFactory extends SessionFactoryImpl {
 
     createPersister(session: InternalSession, mapping: EntityMapping): Persister {
 
-        return new MockPersister(mapping);
+        return new MockPersister(session, mapping);
     }
 
     createSession(): InternalSession {

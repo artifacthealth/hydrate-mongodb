@@ -14,6 +14,7 @@ import { EntityMapping } from "../src/mapping/entityMapping";
 import { QueryDefinition } from "../src/query/queryDefinition";
 import { Observer } from "../src/observer";
 import {MockDb} from "../tests/driver/mockDb";
+import {Property} from "../src/mapping/property";
 
 suite("SessionImpl", () => {
 
@@ -141,6 +142,9 @@ class DummyPersister implements Persister {
     }
 
     fetch(entity: any, path: string, callback: Callback): void {
+    }
+
+    fetchPropertyValue(entity: any, property: Property, callback: ResultCallback<any>): void {
     }
 
     findAll(criteria: any, callback?: ResultCallback<any[]>): void {
