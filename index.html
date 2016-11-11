@@ -256,15 +256,20 @@ session.find(Person, personId, (err, person) =&gt; {
     ...
 });
 </code></pre>
-				<h3 id="promises">Promises</h3>
-				<p>All queries can return a Promise by chaining a call to <code>asPromise</code>.</p>
-				<p>Converting a find-by-id query to a Promise.</p>
+				<h3 id="promises-and-observables">Promises and Observables</h3>
+				<p>All queries can use a <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promise</a> for the query result by calling <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/findonequery.html#aspromise">asPromise</a>.</p>
+				<h4 id="example-finding-an-entity-by-identifier">Example: Finding an entity by identifier</h4>
 				<pre><code class="lang-typescript">session.find(Task, id).asPromise().then((task) =&gt; {
     ...
 });
 </code></pre>
-				<p>Converting a find-all query to a promise</p>
+				<h4 id="example-finding-entities-by-criteria">Example: Finding entities by criteria</h4>
 				<pre><code class="lang-typescript">session.query(Task).findAll({ assigned: person }).asPromise().then((tasks) =&gt; {
+    ...
+});
+</code></pre>
+				<p>Queries that return multiple entities may return an <a href="http://reactivex.io/documentation/observable.html">Observable</a> for the query by calling <a href="https://artifacthealth.github.io/hydrate-mongodb/interfaces/findquery.html#asobservable">asObservable</a>.</p>
+				<pre><code class="lang-typescript">session.query(Task).findAll({ assigned: person }).asObservable().subscribe((task) =&gt; {
     ...
 });
 </code></pre>
@@ -791,16 +796,7 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 						<a href="globals.html#areequal" class="tsd-kind-icon">are<wbr>Equal</a>
 					</li>
 					<li class=" tsd-kind-function">
-						<a href="globals.html#getduration" class="tsd-kind-icon">get<wbr>Duration</a>
-					</li>
-					<li class=" tsd-kind-function">
 						<a href="globals.html#getidentifier" class="tsd-kind-icon">get<wbr>Identifier</a>
-					</li>
-					<li class=" tsd-kind-function">
-						<a href="globals.html#isobject" class="tsd-kind-icon">is<wbr>Object</a>
-					</li>
-					<li class=" tsd-kind-function">
-						<a href="globals.html#shallowclone" class="tsd-kind-icon">shallow<wbr>Clone</a>
 					</li>
 				</ul>
 			</nav>
