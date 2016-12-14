@@ -13,6 +13,7 @@ import * as fetchLazyModel from "./fixtures/fetchLazy";
 import {PersisterImpl} from "../src/persister";
 import {createFactory} from "./helpers";
 import {MockInternalSession} from "./mockInternalSession";
+import {EntityNotFoundError} from "../src/persistenceError";
 
 describe('PersisterImpl', () => {
 
@@ -282,6 +283,22 @@ describe('PersisterImpl', () => {
 
                 persister.findOneById(idA, (err, a) => {
                     if (err) return done(err);
+                });
+            });
+        });
+
+        it('returns an EntityNotFoundError if an entity with the specified id does not exists in the database', (done) => {
+
+            var id = helpers.generateId();
+            var collection = new MockCollection([]);
+
+            helpers.createPersister(collection, (err, persister) => {
+                if (err) return done(err);
+
+                persister.findOneById(id, (err) => {
+                    assert.instanceOf(err, EntityNotFoundError);
+                    assert.equal(err.message, `Unable to find document with identifier '${id}'.`);
+                    done();
                 });
             });
         });

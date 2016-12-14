@@ -1,7 +1,7 @@
 import {Reference} from "./reference";
 
 export {NamingStrategies, NamingStrategy} from "./config/namingStrategies";
-export {PersistenceError} from "./persistenceError";
+export {PersistenceError, EntityNotFoundError} from "./persistenceError";
 export {CascadeFlags, ChangeTrackingType, FlushPriority, FetchType} from "./mapping/mappingModel";
 
 export {Configuration} from "./config/configuration";

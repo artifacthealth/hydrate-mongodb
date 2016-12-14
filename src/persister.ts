@@ -20,7 +20,7 @@ import {ReadContext} from "./mapping/readContext";
 import {Observer} from "./observer";
 import {OrderDocument} from "./query/orderDocument";
 import {WriteContext} from "./mapping/writeContext";
-import {PersistenceError} from "./persistenceError";
+import {PersistenceError, EntityNotFoundError} from "./persistenceError";
 import {getDuration} from "./core/timerUtil";
 import {Property} from "./mapping/property";
 
@@ -1087,7 +1087,7 @@ class FindQueue {
                 if(err) return callback(err);
 
                 if(!entity) {
-                    return callback(new PersistenceError("Unable to find document with identifier '" + id.toString() + "'."));
+                    return callback(new EntityNotFoundError("Unable to find document with identifier '" + id.toString() + "'."));
                 }
                 callback(null, entity);
             });
@@ -1106,7 +1106,7 @@ class FindQueue {
             // TODO: add test to make sure callbacks are called if document cannot be found
 
             // pass error message to any callbacks that have not been called yet
-            callbacks.forEach((callback, id) => callback(err || new PersistenceError("Unable to find document with identifier '" + id + "'.")));
+            callbacks.forEach((callback, id) => callback(err || new EntityNotFoundError("Unable to find document with identifier '" + id + "'.")));
         });
 
         function handleCallback(id: any, err: Error, result?: any): void {

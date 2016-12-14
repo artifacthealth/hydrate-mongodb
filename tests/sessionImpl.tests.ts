@@ -1,14 +1,11 @@
 import {assert} from "chai";
 import {ObjectID} from "mongodb";
-import * as async from "async";
 import * as helpers from "./helpers";
 import * as model from "./fixtures/model";
-import {Configuration} from "../src/config/configuration";
-import {SessionFactory, SessionFactoryImpl} from "../src/sessionFactory";
+import {SessionFactoryImpl} from "../src/sessionFactory";
 import {SessionImpl, InternalSession} from "../src/session";
 import {EntityMapping} from "../src/mapping/entityMapping";
 import {MockPersister} from "./mockPersister";
-import {AnnotationMappingProvider} from "../src/mapping/providers/annotationMappingProvider";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {ObjectIdGenerator} from "../src/config/objectIdGenerator";
 import {QueryKind} from "../src/query/queryKind";
@@ -877,7 +874,7 @@ describe('SessionImpl', () => {
                     assert.isTrue(query.fetchPaths.length > 0, "Fetch was not added to the query");
 
                     callback(null, null);
-                }
+                };
 
                 session.find(model.Person, 1).fetch("children", (err, entity) => {
                     if(err) return done(err);

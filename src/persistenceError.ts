@@ -29,3 +29,7 @@ export class PersistenceError implements Error {
 // typeScript declares Error as an Interface instead of a class so use prototypical inheritance
 PersistenceError.prototype = Object.create(Error.prototype);
 PersistenceError.prototype.constructor = PersistenceError;
+
+export class EntityNotFoundError extends PersistenceError {
+
+}
