@@ -38,11 +38,6 @@ export class EntityMapping extends ClassMapping {
      */
     flushPriority = FlushPriority.Medium;
 
-    /**
-     * The property that maps the identity field, if defined.
-     */
-    identityProperty: Property;
-
     private _defaultFields: QueryDocument;
 
     constructor(baseClass?: EntityMapping) {
@@ -51,18 +46,6 @@ export class EntityMapping extends ClassMapping {
         this.flags &= ~MappingModel.MappingFlags.Embeddable;
         this.flags |= MappingModel.MappingFlags.Entity;
     }
-
-    /*
-    addProperty(property: Property): Property {
-
-        var property = super.addProperty(property);
-
-        if(property.field == "_id") {
-       //     this.identityProperty = property;
-        }
-
-        return property;
-    }*/
 
     setDocumentVersion(obj: any, version: number): void {
 
@@ -134,6 +117,7 @@ export class EntityMapping extends ClassMapping {
 
         var obj = super.read(context, value);
         obj["_id"] = id;
+        obj["id"] = id.toString();
         return obj;
     }
 

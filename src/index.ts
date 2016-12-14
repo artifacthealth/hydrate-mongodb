@@ -46,19 +46,3 @@ export function areEqual(value1: Object, value2: Object): boolean {
 
     return Reference.areEqual(value1, value2);
 }
-
-/**
- * Gets the database identifier for an entity as a string.
- * @param entity The entity.
- */
-export function getIdentifier(entity: Object): string {
-
-    if(entity) {
-        var id = (<any>entity)["_id"];
-        if(id != null) {
-            return id.toString();
-        }
-    }
-
-    return null;
-}

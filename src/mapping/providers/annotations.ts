@@ -73,30 +73,6 @@ export interface TargetClassAnnotation {
 /**
  * @hidden
  */
-export class IdAnnotation extends Annotation implements PropertyAnnotation {
-
-    toString(): string {
-        return "@Id";
-    }
-
-    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, property: MappingModel.Property, symbol: Property, annotation: IdAnnotation): void {
-
-        if(!context.assertEntityMapping(mapping)) return;
-
-        if(symbol.type && !symbol.type.isString) {
-            context.addError("Annotation can only be defined on a property that is of type 'string'.");
-            return;
-        }
-
-        property.setFlags(MappingModel.PropertyFlags.ReadOnly);
-        property.field = "_id";
-        property.mapping = MappingModel.createIdentityMapping();
-    }
-}
-
-/**
- * @hidden
- */
 export class EntityAnnotation extends Annotation implements MappingBuilderAnnotation {
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {

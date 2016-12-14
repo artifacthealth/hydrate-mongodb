@@ -1,15 +1,14 @@
 import {EventEmitter} from "events";
 import {InternalSession} from "../src/session";
-import {SessionFactory, InternalSessionFactory} from "../src/sessionFactory";
+import {InternalSessionFactory} from "../src/sessionFactory";
 import {MockQueryObject, MockQueryBuilder} from "./query/mockQueryBuilder";
 import {ResultCallback} from "../src/core/callback";
 import {generateId} from "./helpers";
-import {Constructor, getIdentifier} from "../src/index";
+import {Constructor} from "../src/index";
 import {FindOneQuery, QueryBuilder} from "../src/query/queryBuilder";
 import {Persister} from "../src/persister";
 import {EntityMapping} from "../src/mapping/entityMapping";
 import {QueryDefinition} from "../src/query/queryDefinition";
-import {Property} from "../src/mapping/property";
 
 export class MockInternalSession extends EventEmitter implements InternalSession {
 
@@ -205,7 +204,7 @@ export class MockInternalSession extends EventEmitter implements InternalSession
         for (let i = 0; i < this._collection.length; i++) {
             let item = this._collection[i];
 
-            if (getIdentifier(item) === id) {
+            if (item.id === id) {
                 return item;
             }
         }

@@ -19,7 +19,6 @@ import {
     MapKeyAnnotation,
     FieldAnnotation,
     EnumeratedAnnotation,
-    IdAnnotation,
     FieldDescription,
     CollectionDescription,
     ClassIndexDescription,
@@ -144,22 +143,6 @@ export declare function Collection(name: string): ClassDecorator;
  * ```
  */
 export declare function Collection(description?: CollectionDescription): ClassDecorator;
-
-/**
- * Specifies that a field should hold the string value of the document identifier.
- *
- * ### Example
- *
- * ```typescript
- *  @Entity()
- *  export class Person {
- *      @Id()
- *      id: string;
- *      ...
- *  }
- * ```
- */
-export declare function Id(): PropertyDecorator;
 
 /**
  * Specifies that a class is immutable. Can be used on Entity or Embeddable types. When specified on an Entity, the Entity is excluded from
@@ -602,7 +585,6 @@ exports.InverseOf = makeDecorator(InverseOfAnnotation);
 exports.Type = makeDecorator(TypeAnnotation);
 exports.ElementType = makeDecorator(ElementTypeAnnotation);
 exports.MapKey = makeDecorator(MapKeyAnnotation);
-exports.Id = makeDecorator(IdAnnotation);
 exports.Immutable = makeDecorator(ImmutableAnnotation);
 exports.Transient = makeDecorator(TransientAnnotation);
 

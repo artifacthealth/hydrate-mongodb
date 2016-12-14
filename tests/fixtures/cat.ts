@@ -2,8 +2,9 @@ import { Entity, Field, ChangeTracking } from "../../src/mapping/providers/decor
 import {ChangeTrackingType} from "../../src/mapping/mappingModel";
 
 @Entity()
-@ChangeTracking(ChangeTrackingType.Observe)
 export class Cat {
+
+    id: string;
 
     @Field()
     name: string;

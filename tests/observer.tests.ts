@@ -2,10 +2,9 @@ import {assert} from "chai";
 import * as helpers from "./helpers";
 import * as model from "./fixtures/model";
 import {Observer} from "../src/observer";
-import {Reference} from "../src/reference";
 import {ObjectIdGenerator} from "../src/config/objectIdGenerator";
 
-describe('Observer', () => {
+describe.skip('Observer', () => {
 
     it('will call the specified callback if a watched objects change', (done) => {
 
@@ -16,7 +15,7 @@ describe('Observer', () => {
 
         var obj: any = {
             name: "Bob"
-        }
+        };
 
         observer.watch(obj);
         obj.name = "Joe";

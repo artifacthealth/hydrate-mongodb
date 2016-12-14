@@ -751,7 +751,7 @@ describe('QueryBuilderImpl', () => {
             });
         });
 
-        it.only("closes underlying cursor if unsubscribe called on cursor", (done) => {
+        it("closes underlying cursor if unsubscribe called on cursor", (done) => {
 
             createSessionForObservable((err, result) => {
                 if (err) return done(err);

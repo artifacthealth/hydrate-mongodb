@@ -21,9 +21,9 @@ import {Kitten} from "./fixtures/kitten";
 import {Dog} from "./fixtures/dog";
 import {Person} from "./fixtures/classImmutable";
 import * as cascade from "./fixtures/cascade";
-import {getIdentifier} from "../src/index";
 import {MockDb} from "./driver/mockDb";
 import * as fetchLazyModel from "./fixtures/fetchLazy";
+import {setIdentifier} from "./helpers";
 
 describe('SessionImpl', () => {
 
@@ -103,7 +103,7 @@ describe('SessionImpl', () => {
             });
         });
 
-        it('does not schedule object for dirty check if removal of clean object is canceled and change tracking is observe', (done) => {
+        it.skip('does not schedule object for dirty check if removal of clean object is canceled and change tracking is observe', (done) => {
 
             cancelRemovalOfManagedObject("cat", () => new Cat("Mittens"), null, (err, persister) => {
                 if(err) return done(err);
@@ -112,7 +112,7 @@ describe('SessionImpl', () => {
             });
         });
 
-        it('schedules object for dirty check if removal of dirty object is canceled and change tracking is observe', (done) => {
+        it.skip('schedules object for dirty check if removal of dirty object is canceled and change tracking is observe', (done) => {
 
             cancelRemovalOfManagedObject("cat", () => new Cat("Mittens"), (session, entity) => entity.name = "Fluffy", (err, persister) => {
                 if(err) return done(err);
@@ -415,10 +415,10 @@ describe('SessionImpl', () => {
                 var persister = factory.getPersisterForConstructor(session, cascade.RemoveTest);
                 persister.onFindOneById = (id, callback) => {
                     var ret = <any>new cascade.RemoveTest();
-                    ret._id = id;
+                    setIdentifier(ret, id);
                     session.registerManaged(persister, ret, {});
                     callback(null, ret);
-                }
+                };
 
                 session.save(entity);
                 session.flush();
@@ -488,22 +488,43 @@ describe('SessionImpl', () => {
 
         it('discards modifications to entity so entity is considered clean after refresh', (done) => {
 
-            refresh((entity, done) => {
-                // modify object before refresh to make sure that after refresh the object is no longer considered dirty
-                entity.name = "Mittens";
-                setTimeout(done, 0);
-            }, (err, entity, session, persister) => {
-                if(err) return done(err);
+            helpers.createFactory("dog", (err, factory) => {
+                if (err) return done(err);
 
+                var entity = new Dog("Snoopy");
+                var session = factory.createSession();
+                var persister = factory.getPersisterForObject(session, entity);
+
+                var called = 0;
+                persister.onRefresh = (entity, callback) => {
+                    entity.name = "Tails";
+                    called++;
+                    process.nextTick(callback);
+                };
+
+                session.save(entity);
                 session.flush((err) => {
                     if(err) return done(err);
-                    assert.equal(persister.dirtyCheckCalled, 0, "Object still considered dirty after refresh");
-                    done();
+
+                    // modify the object, making sure it's not dirty after refresh
+                    entity.name = "Something";
+                    session.save(entity); // tracking is deferred explicit
+
+                    session.refresh(entity, (err) => {
+                        if (err) return done(err);
+                        assert.equal(called, 1, "refresh on Persister was not called");
+
+                        session.flush((err) => {
+                            if(err) return done(err);
+                            assert.equal(persister.dirtyCheckCalled, 0, "Object still considered dirty after refresh");
+                            done();
+                        });
+                    });
                 });
             });
         });
 
-        it('should not cause object to become dirty when change tracking is observe', (done) => {
+        it.skip('should not cause object to become dirty when change tracking is observe', (done) => {
 
             refresh(null, (err, entity, session, persister) => {
                 if(err) return done(err);
@@ -725,12 +746,12 @@ describe('SessionImpl', () => {
             dirtyCheckCalled("model", () => [createEntity(), createEntity()], null, 1, done);
         });
 
-        it('does not dirty check clean objects and change tracking is observe', (done) => {
+        it.skip('does not dirty check clean objects and change tracking is observe', (done) => {
 
             dirtyCheckCalled("cat", () => [new Cat("Fluffy"), new Cat("Mittens")], null, 0, done);
         });
 
-        it('dirty checks all dirty objects that are not scheduled for other operations and change tracking is observe', (done) => {
+        it.skip('dirty checks all dirty objects that are not scheduled for other operations and change tracking is observe', (done) => {
 
             dirtyCheckCalled("cat", () => [new Cat("Fluffy"), new Cat("Mittens")], (session, entities) => {
                 entities[0].name = "Mittens";
@@ -808,10 +829,10 @@ describe('SessionImpl', () => {
                     assert.equal(query.kind, QueryKind.FindOneById);
                     assert.equal(query.id, 1);
                     var ret = new model.Person(new model.PersonName("Smith"));
-                    (<any>ret)._id = query.id;
+                    setIdentifier(ret, query.id);
                     session.registerManaged(persister, ret, {});
                     callback(null, ret);
-                }
+                };
 
                 session.find(model.Person, 1, (err, entity) => {
                     assert.equal(entity.personName.last, "Smith");
@@ -1002,7 +1023,7 @@ describe('SessionImpl', () => {
             });
         });
 
-        it('should not cause object to become dirty when change tracking is observe', (done) => {
+        it.skip('should not cause object to become dirty when change tracking is observe', (done) => {
 
             helpers.createFactory("cat", (err, factory) => {
                 if (err) return done(err);
@@ -1019,7 +1040,7 @@ describe('SessionImpl', () => {
                 persister.onFetch = (entity, path, callback) => {
                     assert.equal(path, "parent");
                     var parent = new Cat("Tails");
-                    (<any>parent)._id = (<Reference>entity.parent).getId();
+                    setIdentifier(parent, (<Reference>entity.parent).getId());
                     entity.parent = parent;
                     process.nextTick(callback);
                 };
@@ -1081,7 +1102,7 @@ describe('SessionImpl', () => {
                 session.save(entity, (err) => {
                     if (err) return done(err);
 
-                    var expected = { name: 'Mittens', _id: new ObjectID(getIdentifier(entity)) };
+                    var expected = { name: 'Mittens', _id: new ObjectID(entity.id) };
                     assert.deepEqual(session.toDocument(entity), expected);
                     
                     session.toDocument(entity, (err, document) => {
@@ -1126,7 +1147,7 @@ describe('SessionImpl', () => {
 function createEntity(id?: any): any {
     var ret = new model.Person(new model.PersonName("Jones"));
     if(id !== undefined) {
-        (<any>ret)._id = id;
+        setIdentifier(ret, id);
     }
     return ret;
 }

@@ -11,15 +11,6 @@ between database collections, change tracking, and managing of persistence throu
 Hydrate is inspired by other projects including [JPA](https://en.wikipedia.org/wiki/Java_Persistence_API), 
 [Hibernate](http://hibernate.org/orm/), and [Doctrine](http://doctrine-orm.readthedocs.org/projects/doctrine-mongodb-odm/en/latest/).
  
-**NOTICE: Hydrate is an experimental project and is not recommended for production systems. It is also possible that 
-breaking changes may be introduced in the API until version 1.0.0 is reached.** 
-
-
-#### Idiomatic Javascript
-Hydrate has no requirements for how persistent classes are declared. Developers can work with 
-standard JavasScript idioms, such as constructor functions and ES6 classes. Furthermore, no 
-base class is required for creating persistent classes. 
-
 #### TypeScript support
 [TypeScript](http://www.typescriptlang.org/) is a superset of JavaScript that includes type information and compiles 
 to regular JavaScript. If you choose to use TypeScript in your projects, this type information can be used to create the 
@@ -33,7 +24,7 @@ to include decorators as a standard part of JavaScript in ES7. In the meantime, 
 to leverages decorators as simple means to describe persistent classes.  
 
 #### Familiar API
-Hydrate uses a session-based approach to the persistence API similar to [Hibernate ORM](http://hibernate.org/orm/). Developers 
+Hydrate uses an approach to the persistence API similar to [Hibernate ORM](http://hibernate.org/orm/). Developers 
 familiar with this approach should feel at home with Hydrate. Furthermore, Hydrate's query API is kept as similar as possible
 to the MongoDB native Node.js driver.
 
@@ -379,36 +370,35 @@ an identifier for an entity. The default identity generator is the
 [ObjectIdGenerator](https://artifacthealth.github.io/hydrate-mongodb/classes/objectidgenerator.html). This is the only 
 generator that ships with Hydrate. Composite identifiers are not supported. Natural identifiers are not supported.
 
-By default the  identifier is not exposed as a public member on an entity. The identifier can be retrieved as a string 
-using the [getIdentifier](https://artifacthealth.github.io/hydrate-mongodb/globals.html#getidentifier) function.
-
-```typescript
-import {getIdentifier} from "hydrate-mongodb";
-
-...
-
-session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) => {
-    ...    
-    var id = getIdentifier(tasks[0]);
-    ...
-});
-```
-
-Alternatively, the identifier can be exposed on an entity as a string using the 
-[Id](https://artifacthealth.github.io/hydrate-mongodb/globals.html#id) decorator.
+The identifier is exposed on an entity as a string through the `id` property and in it's native format, typically ObjectID, 
+on the `_id` property. This is the default behavior and cannot be disabled. No decorator is required. 
  
 ```typescript
 @Entity()
 export class User {
 
-    @Id()
+    _id: ObjectID;
+    
     id: string;
     
     @Field()
     username: string;
 }
 ```
+
+If you do not want to use one or more of the identity properties, you can leave them off your class definition. 
+
+```typescript
+@Entity()
+export class User {
+
+  id: string;
   
+  @Field()
+  username: string;
+}
+```
+
   
 <a name="Embeddables"></a>
 ### Embeddables

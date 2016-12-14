@@ -380,9 +380,9 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      */
     contains(obj: any): boolean {
 
-        var id = obj["_id"];
+        var id = obj["id"];
         if(id) {
-            var links = this._objectLinksById.get(id.toString());
+            var links = this._objectLinksById.get(id);
             if(links && links.state == ObjectState.Managed) {
                 return true;
             }
@@ -515,23 +515,6 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             this._makeDirty(links);
             return;
         }
-
-        if (links.persister.changeTracking != ChangeTrackingType.Observe) {
-            return;
-        }
-
-        if(links.observer) {
-            // object is already being watched
-            return;
-        }
-
-        links.observer = new Observer(() => {
-            // value has changed
-            // TODO: should this be added to the task queue in-case modification occurs during another operation?
-            this._makeDirty(links);
-            links.observer = undefined;
-        });
-        links.persister.watch(links.object, links.observer);
     }
 
     private _stopWatching(links: ObjectLinks): void {
@@ -626,10 +609,8 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 var persister = this.getPersister(mapping);
 
                 // we haven't seen this object before
-                if(!this._setIdentity(persister, obj, mapping, callback)) {
-                    // error while setting identity
-                    return;
-                }
+                var id = obj["_id"] = persister.identity.generate();
+                obj["id"] = id.toString();
 
                 links = this._linkObject(obj, persister);
                 this._scheduleOperation(links, ScheduledOperation.Insert);
@@ -664,17 +645,6 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
 
         callback();
-    }
-
-    private _setIdentity(persister: Persister, obj: any, mapping: EntityMapping, callback: Callback): boolean  {
-
-        var id = obj["_id"] = persister.identity.generate();
-
-        if(mapping.identityProperty) {
-            mapping.identityProperty.setPropertyValue(obj, id.toString());
-        }
-
-        return true;
     }
 
     private _makeDirty(links: ObjectLinks): void {
@@ -1100,9 +1070,9 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     private _getObjectLinks(obj: any): ObjectLinks {
 
-        var id = obj["_id"];
+        var id = obj["id"];
         if (id) {
-            var links = this._objectLinksById.get(id.toString());
+            var links = this._objectLinksById.get(id);
             if (!links || links.object !== obj) {
                 // If we have an id but no links then the object must be detached since we assume that we manage
                 // the assignment of the identifier.
@@ -1116,12 +1086,11 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     private _linkObject(obj: any, persister: Persister): ObjectLinks {
 
-        var _id = obj["_id"];
-        if(_id === undefined) {
+        var id = obj["id"];
+        if(id == null) {
             throw new PersistenceError("Object is missing identifier.");
         }
 
-        var id = _id.toString();
         if(this._objectLinksById.has(id)) {
             throw new PersistenceError("Session already contains an entity with identifier '" + id + "'.");
         }
@@ -1132,7 +1101,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             object: obj,
             persister: persister,
             index: this._objectLinks.length
-        }
+        };
 
         this._objectLinksById.set(id, links);
         this._objectLinks.push(links);
@@ -1141,7 +1110,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     private _unlinkObject(links: ObjectLinks): void {
 
-        this._objectLinksById.delete(links.object["_id"].toString());
+        this._objectLinksById.delete(links.object["id"]);
         this._objectLinks[links.index] = undefined;
 
         this._cleanupUnlinkedObject(links);
@@ -1202,7 +1171,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     private _clearIdentifier(links: ObjectLinks): void {
 
-        delete links.object["_id"];
+        links.object["_id"] = links.object["id"] = undefined;
     }
 
     private _findReferencedEntities(obj: any, flags: MappingModel.PropertyFlags, callback: ResultCallback<any[]>): void {

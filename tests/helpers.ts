@@ -132,3 +132,9 @@ export function findMapping(mappings: EntityMapping[], name: string): EntityMapp
 
     throw new Error("Could not find mapping with name '" + name + "'.");
 }
+
+export function setIdentifier(entity: any, id: any): void {
+
+    entity._id = id;
+    entity.id = id.toString();
+}
