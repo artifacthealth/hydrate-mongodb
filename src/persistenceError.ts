@@ -22,7 +22,8 @@ export class PersistenceError implements Error {
         Error.call(this, message);
 
         this.message = message;
-        this.stack = (<any>new Error(message)).stack;
+        Error.call(this, message);
+        (<any>Error).captureStackTrace(this, this.constructor);
     }
 }
 
@@ -32,4 +33,8 @@ PersistenceError.prototype.constructor = PersistenceError;
 
 export class EntityNotFoundError extends PersistenceError {
 
+    /**
+     * The name of the error.
+     */
+    name = "EntityNotFoundError";
 }

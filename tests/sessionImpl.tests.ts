@@ -1037,7 +1037,7 @@ describe('SessionImpl', () => {
                 persister.onFetch = (entity, path, callback) => {
                     assert.equal(path, "parent");
                     var parent = new Cat("Tails");
-                    setIdentifier(parent, (<Reference>entity.parent).getId());
+                    setIdentifier(parent, (<any>entity.parent)._id);
                     entity.parent = parent;
                     process.nextTick(callback);
                 };

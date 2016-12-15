@@ -45,6 +45,10 @@ export interface QueryDocument {
 export interface Query<T> {
 
     /**
+     * Executes the query if a callback was not passed to one of the other methods in the chain.
+     */
+    execute(callback: ResultCallback<any>): void;
+    /**
      * Returns a [Promise](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise) for the query.
      */
     asPromise(): Promise<T>;
@@ -426,25 +430,30 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     handleCallback(callback: ResultCallback<any>): QueryObject {
 
         if(callback) {
-            if(this._executed) {
-                callback(new PersistenceError("Query already executed. A callback can only be passed to one function in the chain."));
-            }
-            else {
-                this._executed = true;
-
-                if(this.error) {
-                    process.nextTick(() => callback(this.error))
-                }
-                else {
-                    this._session.executeQuery(this, callback);
-                }
-            }
+            this.execute(callback);
         }
 
         return this;
     }
 
     execute(callback: ResultCallback<any>): void {
+
+        if (this._executed) {
+            callback(new PersistenceError("Query already executed. A callback can only be passed to one function in the chain."));
+        }
+        else {
+            this._executed = true;
+
+            if(this.error) {
+                process.nextTick(() => callback(this.error))
+            }
+            else {
+                this._session.executeQuery(this, callback);
+            }
+        }
+    }
+
+    executeInternal(callback: ResultCallback<any>): void {
 
         var mapping = this._session.factory.getMappingForConstructor(this._entityCtr);
         if(!mapping) {
@@ -459,7 +468,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
         // create and return the promise.
         return new Promise((resolve, reject) => {
             // wrapping of the classic callback handler.
-            this.handleCallback((err, result) => {
+            this.execute((err, result) => {
                 if (err) {
                     reject(err);
                 }
@@ -479,7 +488,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
             var cursor: Cursor<any>,
                 disposed = false;
 
-            this.handleCallback((err: Error, result: Cursor<any>) => {
+            this.execute((err: Error, result: Cursor<any>) => {
                 if (err) {
                     observer.onError(err);
                 }

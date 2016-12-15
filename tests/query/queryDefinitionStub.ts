@@ -41,7 +41,7 @@ export class QueryDefinitionStub implements QueryDefinition {
 
     }
 
-    execute(callback: ResultCallback<any>): void {
+    executeInternal(callback: ResultCallback<any>): void {
         throw new Error("Not implemented");
     }
 

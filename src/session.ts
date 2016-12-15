@@ -571,7 +571,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 break;
             case Action.FindQuery:
             case Action.ModifyQuery:
-                (<QueryDefinition>arg).execute(callback);
+                (<QueryDefinition>arg).executeInternal(callback);
                 break;
             case Action.Close:
                 this._close(callback);

@@ -9,10 +9,18 @@ import {PersistenceError} from "./persistenceError";
 export class Reference {
 
     /**
+     * The id of the reference as a string.
+     */
+    id: string;
+
+    /**
      * True if the Reference has been fetched; otherwise, false.
      */
     constructor(public mapping: EntityMapping, private _id: any) {
 
+        if (_id != null) {
+            this.id = _id.toString();
+        }
     }
 
     fetch(session: InternalSession, callback: ResultCallback<any>): void {
@@ -28,10 +36,6 @@ export class Reference {
         }
 
         session.getPersister(this.mapping).findOneById(this._id, callback);
-    }
-
-    getId(): any {
-        return this._id;
     }
 
     /**

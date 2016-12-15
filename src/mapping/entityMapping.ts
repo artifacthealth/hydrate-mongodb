@@ -193,7 +193,7 @@ export class EntityMapping extends ClassMapping {
 
         if(Reference.isReference(value)) {
             // TODO: handle DBRef
-            var entity = session.getObject((<Reference>value).getId());
+            var entity = session.getObject((<Reference>value).id);
             if (entity) {
                 value = entity;
             }
