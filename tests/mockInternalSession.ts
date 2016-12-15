@@ -144,6 +144,18 @@ export class MockInternalSession extends EventEmitter implements InternalSession
         return false;
     }
 
+    exists<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<boolean>): void {
+
+        for (let i = 0; i < this._collection.length; i++) {
+            if (this._collection[i].id == id) {
+                process.nextTick(() => callback(null, true));
+                return;
+            }
+        }
+
+        process.nextTick(() => callback(null, false));
+    }
+
     executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {
         this.executeQueryCalled++;
         if (this.onExecuteQuery) {

@@ -166,6 +166,15 @@ export interface Session {
     find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T>;
 
     /**
+     * Check by identifier if an entity exists.
+     * @param ctr The constructor for the entity to find.
+     * @param id The identifier for the entity.
+     * @param callback Called with a boolean indicating if an entity with exists or not. Note that if an entity is pending removal then the
+     * value will be false.
+     */
+    exists<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<boolean>): void;
+
+    /**
      * Gets a reference to an entity without making a request to the database.
      * @param ctr The constructor for the entity.
      * @param id The identifier for the entity.
@@ -340,6 +349,31 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         return this.query(ctr).findOneById(id, callback);
+    }
+
+    exists<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<boolean>): void {
+
+        // check the identity map for the identifier
+        var obj = this.getObject(id);
+
+        // if we get an object back then entity is managed
+        if (obj) {
+            process.nextTick(() => callback(null, true));
+            return;
+        }
+
+        // if null then entity is pending removal
+        if (obj === null) {
+            process.nextTick(() => callback(null, false));
+            return;
+        }
+
+        // otherwise, check the database
+        this.query(ctr).count({ _id: id }, (err, count) => {
+            if (err) return callback(err);
+
+            callback(null, count >= 1);
+        });
     }
 
     fetch<T>(obj: T, pathsOrCallback: any, callback?: ResultCallback<T>): void {
