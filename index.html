@@ -72,12 +72,6 @@
 				between database collections, change tracking, and managing of persistence through bulk operations.</p>
 				<p>Hydrate is inspired by other projects including <a href="https://en.wikipedia.org/wiki/Java_Persistence_API">JPA</a>,
 				<a href="http://hibernate.org/orm/">Hibernate</a>, and <a href="http://doctrine-orm.readthedocs.org/projects/doctrine-mongodb-odm/en/latest/">Doctrine</a>.</p>
-				<p><strong>NOTICE: Hydrate is an experimental project and is not recommended for production systems. It is also possible that
-				breaking changes may be introduced in the API until version 1.0.0 is reached.</strong> </p>
-				<h4 id="idiomatic-javascript">Idiomatic Javascript</h4>
-				<p>Hydrate has no requirements for how persistent classes are declared. Developers can work with
-					standard JavasScript idioms, such as constructor functions and ES6 classes. Furthermore, no
-				base class is required for creating persistent classes. </p>
 				<h4 id="typescript-support">TypeScript support</h4>
 				<p><a href="http://www.typescriptlang.org/">TypeScript</a> is a superset of JavaScript that includes type information and compiles
 					to regular JavaScript. If you choose to use TypeScript in your projects, this type information can be used to create the
@@ -89,7 +83,7 @@
 					<a href="https://babeljs.io/">Babel</a> and TypeScript make decorators available for use now. Hydrate gives developers the option
 				to leverages decorators as simple means to describe persistent classes.  </p>
 				<h4 id="familiar-api">Familiar API</h4>
-				<p>Hydrate uses a session-based approach to the persistence API similar to <a href="http://hibernate.org/orm/">Hibernate ORM</a>. Developers
+				<p>Hydrate uses an approach to the persistence API similar to <a href="http://hibernate.org/orm/">Hibernate ORM</a>. Developers
 					familiar with this approach should feel at home with Hydrate. Furthermore, Hydrate&#39;s query API is kept as similar as possible
 				to the MongoDB native Node.js driver.</p>
 				<h4 id="high-performance">High performance</h4>
@@ -357,28 +351,27 @@ session.find(Person, personId, (err, person) =&gt; {
 					an identifier for an entity. The default identity generator is the
 					<a href="https://artifacthealth.github.io/hydrate-mongodb/classes/objectidgenerator.html">ObjectIdGenerator</a>. This is the only
 				generator that ships with Hydrate. Composite identifiers are not supported. Natural identifiers are not supported.</p>
-				<p>By default the  identifier is not exposed as a public member on an entity. The identifier can be retrieved as a string
-				using the <a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#getidentifier">getIdentifier</a> function.</p>
-				<pre><code class="lang-typescript"><span class="hljs-keyword">import</span> {getIdentifier} from <span class="hljs-string">"hydrate-mongodb"</span>;
-
-...
-
-session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
-    ...    
-    <span class="hljs-keyword">var</span> id = getIdentifier(tasks[<span class="hljs-number">0</span>]);
-    ...
-});
-</code></pre>
-				<p>Alternatively, the identifier can be exposed on an entity as a string using the
-				<a href="https://artifacthealth.github.io/hydrate-mongodb/globals.html#id">Id</a> decorator.</p>
+				<p>The identifier is exposed on an entity as a string through the <code>id</code> property and in it&#39;s native format, typically ObjectID,
+				on the <code>_id</code> property. This is the default behavior and cannot be disabled. No decorator is required. </p>
 				<pre><code class="lang-typescript">@Entity()
 <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
 
-    @Id()
+    _id: ObjectID;
+
     id: <span class="hljs-built_in">string</span>;
 
     @Field()
     username: <span class="hljs-built_in">string</span>;
+}
+</code></pre>
+				<p>If you do not want to use one or more of the identity properties, you can leave them off your class definition. </p>
+				<pre><code class="lang-typescript">@Entity()
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
+
+  id: <span class="hljs-built_in">string</span>;
+
+  @Field()
+  username: <span class="hljs-built_in">string</span>;
 }
 </code></pre>
 				<p><a name="Embeddables"></a></p>
@@ -649,6 +642,9 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 						<a href="classes/configuration.html" class="tsd-kind-icon">Configuration</a>
 					</li>
 					<li class=" tsd-kind-class">
+						<a href="classes/entitynotfounderror.html" class="tsd-kind-icon">Entity<wbr>Not<wbr>Found<wbr>Error</a>
+					</li>
+					<li class=" tsd-kind-class">
 						<a href="classes/objectidgenerator.html" class="tsd-kind-icon">Object<wbr>IdGenerator</a>
 					</li>
 					<li class=" tsd-kind-class">
@@ -769,9 +765,6 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 						<a href="globals.html#field" class="tsd-kind-icon">Field</a>
 					</li>
 					<li class=" tsd-kind-function">
-						<a href="globals.html#id" class="tsd-kind-icon">Id</a>
-					</li>
-					<li class=" tsd-kind-function">
 						<a href="globals.html#immutable" class="tsd-kind-icon">Immutable</a>
 					</li>
 					<li class=" tsd-kind-function">
@@ -794,9 +787,6 @@ session.query(Task).findAll({ status: TaskStatus.Pending }, (err, tasks) =&gt; {
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#areequal" class="tsd-kind-icon">are<wbr>Equal</a>
-					</li>
-					<li class=" tsd-kind-function">
-						<a href="globals.html#getidentifier" class="tsd-kind-icon">get<wbr>Identifier</a>
 					</li>
 				</ul>
 			</nav>
