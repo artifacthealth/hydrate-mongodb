@@ -436,7 +436,7 @@ export namespace MappingModel {
     }
 
     /**
-     * Creates a mapping for a binary buffer.
+     * Creates a mapping for a dynamic object (any).
      */
     export function createAnyMapping(): Mapping {
         return new AnyMapping();

@@ -1,7 +1,5 @@
-import {MappingError} from "./mappingError";
 import {MappingBase} from "./mappingBase";
 import {MappingModel} from "./mappingModel";
-import {InternalSession} from "../session";
 import {ReadContext} from "./readContext";
 import {WriteContext} from "./writeContext";
 
@@ -15,14 +13,12 @@ export class AnyMapping extends MappingBase {
     }
 
     read(context: ReadContext, value: any): any {
-
         if(value == null) return null;
 
         return value;
     }
 
     write(context: WriteContext, value: any): any {
-
         if(value == null) return null;
 
         return value;
