@@ -83,6 +83,8 @@ class Builder {
             this._processModule(module);
         }
 
+        this._addGlobalMapping("Object", MappingModel.createAnyMapping());
+
         return this._context.populateMappings();
     }
 

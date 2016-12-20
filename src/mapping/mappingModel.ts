@@ -17,6 +17,7 @@ import {IdentityGenerator} from "../config/configuration";
 import {ConverterMapping} from "./converterMapping";
 import {BufferMapping} from "./bufferMapping";
 import {PersistenceError} from "../persistenceError";
+import {AnyMapping} from "./anyMapping";
 
 
 export namespace MappingModel {
@@ -432,6 +433,13 @@ export namespace MappingModel {
      */
     export function createBufferMapping(): Mapping {
         return new BufferMapping();
+    }
+
+    /**
+     * Creates a mapping for a binary buffer.
+     */
+    export function createAnyMapping(): Mapping {
+        return new AnyMapping();
     }
 
     /**
