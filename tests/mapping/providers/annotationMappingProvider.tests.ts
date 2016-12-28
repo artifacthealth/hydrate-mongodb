@@ -292,6 +292,24 @@ describe('AnnotationMappingProvider', () => {
                     done();
                 });
             });
+
+            it("returns an error if the `id` property is mapped as a field", (done) => {
+
+                processFixture("invalidIdField", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "The 'id' property on an entity class is automatically populated");
+                    done();
+                });
+            });
+
+            it("returns an error if the `_id` property is mapped as a field", (done) => {
+
+                processFixture("invalidUnderscoreIdField", (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "The '_id' property on an entity class is automatically populated");
+                    done();
+                });
+            });
         });
 
         describe('@converter', () => {
