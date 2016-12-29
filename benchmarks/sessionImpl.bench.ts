@@ -46,8 +46,12 @@ suite("SessionImpl", () => {
             config.createSessionFactory(connection, (err: Error, sessionFactory: SessionFactory) => {
                 if (err) return done(err);
 
-                session = sessionFactory.createSession();
-                session.query(Cat).removeAll({}, done);
+                sessionFactory.createIndexes((err) => {
+                    if (err) return done(err);
+
+                    session = sessionFactory.createSession();
+                    session.query(Cat).removeAll({}, done);
+                });
             });
         });
 
@@ -70,7 +74,13 @@ suite("SessionImpl", () => {
     });
 
     test("find", (done) => {
-        session.query(Cat).findOne({ name: 'cat' + (i++)}, done);
+        session.query(Cat).findOne({ name: 'cat' + (i++)}, (err, result) => {
+            if (err) return done(err);
+            if (!result) {
+                return done(new Error("ran out of cats at " + i));
+            }
+            done();
+        });
     });
 
     test("edit x 1000", (done) => {

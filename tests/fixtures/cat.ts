@@ -1,12 +1,11 @@
-import { Entity, Field, ChangeTracking } from "../../src/mapping/providers/decorators";
-import {ChangeTrackingType} from "../../src/mapping/mappingModel";
+import { Entity, Field, Index } from "../../src/mapping/providers/decorators";
 
 @Entity()
 export class Cat {
 
     id: string;
 
-    @Field()
+    @Index()
     name: string;
 
     @Field()

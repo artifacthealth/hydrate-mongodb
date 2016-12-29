@@ -1,10 +1,16 @@
-import * as mongodb from "mongodb";
+import {Collection, MongoCallback, AggregationCursor, BulkWriteOpResultObject, DeleteWriteOpResultObject, Cursor,
+    FindAndModifyWriteOpResultObject, OrderedBulkOperation, UnorderedBulkOperation, InsertOneWriteOpResult,
+    InsertWriteOpResult, CommandCursor, WriteOpResult, UpdateWriteOpResult, CollStats, FindOneOptions} from "mongodb";
 import {MockCursor} from "./mockCursor";
 import {MockBulk} from "./mockBulk";
+import {CollectionOptions} from "../../src/mapping/collectionOptions";
 
-export class MockCollection implements mongodb.Collection {
+export class MockCollection implements Collection {
 
     collectionName: string;
+    namespace: string;
+    writeConcern: any;
+    readConcern: any;
     hint: any;
     bulk: MockBulk;
 
@@ -13,143 +19,36 @@ export class MockCollection implements mongodb.Collection {
         this.collectionName = name;
     }
 
-
-    insert(query: any, optionsOrCallback: any, callback?: (err: Error, result?: any) => void): void {
-
+    aggregate(pipeline: Object[], optionsOrCallback?: any, callback?: MongoCallback<any>): AggregationCursor {
+        return undefined;
     }
 
-    rename(newName: String, callback: (err: Error, result?: any) => void): void {
-
+    bulkWrite(operations: Object[], optionsOrCallback?: any, callback?: MongoCallback<BulkWriteOpResultObject>): Promise<BulkWriteOpResultObject> {
+        return undefined;
     }
 
-    save(doc: any, optionsOrCallback: any, callback?: (err: Error, result?: any) => void): void {
-
+    count(query: Object, optionsOrCallback?: any, callback?: MongoCallback<number>): Promise<number> {
+        return undefined;
     }
 
-    drop(callback: (err: Error, result?: any) => void): void {
-
+    createIndex(fieldOrSpec: string|any, optionsOrCallback?: any, callback?: MongoCallback<string>): Promise<string> {
+        return undefined;
     }
 
-    findAndRemove(query: Object, sort: any[], optionsOrCallback: any, callback?: (err: Error, result?: any) => void): void {
-
+    createIndexes(indexSpecs: Object[], callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
     }
 
-    createIndex(fieldOrSpec: any, optionsOrCallback: any, callback?: (err: Error, indexName: string) => void): void {
-
+    deleteMany(filter: Object, options: CollectionOptions, callback?: MongoCallback<DeleteWriteOpResultObject>): Promise<DeleteWriteOpResultObject> {
+        return undefined;
     }
 
-    ensureIndex(fieldOrSpec: any, optionsOrCallback: any, callback?: (err: Error, indexName: string) => void): void {
-
+    deleteOne(filter: Object, optionsOrCallback?: any, callback?: MongoCallback<DeleteWriteOpResultObject>): Promise<DeleteWriteOpResultObject> {
+        return undefined;
     }
 
-    indexInformation(options: any, callback: Function): void {
-    }
+    distinct(key: string, query: Object, optionsOrCallback?: any, callback?: MongoCallback<any>): Promise<any> {
 
-    dropIndex(name: string, callback: Function): void {
-    }
-
-    dropAllIndexes(callback: Function): void {
-    }
-
-    reIndex(callback: Function): void {
-    }
-
-    mapReduce(map: Function, reduce: Function, options: mongodb.MapReduceOptions, callback: Function): void {
-
-    }
-
-    group(keys: Object, condition: Object, initial: Object, reduce: Function, finalize: Function, command: boolean, options: {readPreference: string}, callback: Function): void {
-    }
-
-    options(callback: Function): void {
-    }
-
-    isCapped(callback: Function): void {
-    }
-
-    indexExists(indexes: string, callback: Function): void {
-    }
-
-    geoNear(x: number, y: number, optionsOrCallback: any, callback?: Function): void {
-    }
-
-    geoHaystackSearch(x: number, y: number, optionsOrCallback: any, callback?: Function): void {
-    }
-
-    indexes(callback: Function): void {
-    }
-
-    aggregate(pipeline: any[], optionsOrCallback: any, callback?: (err: Error, result: any) => void): void {
-
-    }
-
-    stats(optionsOrCallback: any, callback?: (err: Error, results: mongodb.CollStats) => void): void {
-
-    }
-
-    find(selector: Object, fields?: any): mongodb.Cursor {
-
-        if (this.onFind) {
-            return this.onFind(selector, fields);
-        }
-
-        return this.createCursor();
-    }
-
-    createCursor(): mongodb.Cursor {
-        return new MockCursor(this.contents);
-    }
-
-    onFind: (selector: Object, fields: Object) => mongodb.Cursor;
-
-    findOne(selector: Object, callback?: (err: Error, result: any) => void): any;
-    findOne(selector: Object, fields?: Object, callback?: (err: Error, result: any) => void): any;
-    findOne(selector: Object, fieldsOrCallback?: any, callback?: (err: Error, result: any) => void): any {
-
-        var fields: Object;
-
-        if (typeof fieldsOrCallback === "function") {
-            callback = fieldsOrCallback;
-        }
-        else {
-            fields = fieldsOrCallback;
-        }
-
-        if (this.onFindOne) {
-            process.nextTick(() => this.onFindOne(selector, fields, callback));
-            return;
-        }
-
-        process.nextTick(() => {
-            callback(null, this.contents[0]);
-        });
-    }
-
-    onFindOne: (selector: Object, fields: Object, callback?: (err: Error, result: any) => void) => any;
-
-
-    findAndModify(query: Object, sort: any[], doc: Object, optionsOrCallbac: any, callback?: (err: Error, result: any) => void): void {
-
-    }
-
-    remove(selector: Object, options: { safe?: any; single?: boolean; }, callback?: (err: Error, result: any) => void): void {
-
-    }
-
-    update(selector: Object, document: any, optionsOrCallback: any, callback?: (err: Error, result: any) => void): void {
-        if (this.onUpdate) {
-            process.nextTick(() => this.onUpdate(selector, document, optionsOrCallback, callback));
-            return;
-        }
-    }
-
-    onUpdate: (selector: Object, document: any, options: { safe?: boolean; upsert?: any; multi?: boolean; serializeFunctions?: boolean; }, callback: (err: Error, result: any) => void) => void;
-
-    count(queryOrCallback: any, optionsOrCallback?: any, callback?: (err: Error, result: any) => void): void {
-
-    }
-
-    distinct(key: string, query: Object, optionsOrCallback: any, callback?: (err: Error, result: any) => void): void {
         if (this.onDistinct) {
             process.nextTick(() => this.onDistinct(key, query, optionsOrCallback, callback));
             return;
@@ -158,8 +57,172 @@ export class MockCollection implements mongodb.Collection {
 
     onDistinct: (key: string, query: Object, options: { readPreference: string; }, callback: (err: Error, result: any) => void) => void;
 
-    initializeUnorderedBulkOp(): mongodb.UnorderedBulkOperation {
+
+    drop(callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    dropIndex(indexName: string, optionsOrCallback?: any, callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    dropIndexes(callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    find(query?: Object, fields?: Object, skip?: number, limit?: number, timeout?: number): Cursor {
+        if (this.onFind) {
+            return this.onFind(query, fields);
+        }
+
+        return this.createCursor();
+    }
+
+    onFind: (selector: Object, fields: Object) => Cursor;
+
+    findOne(filter: Object, optionsOrCallback?: any, callback?: MongoCallback<any>): Promise<any> {
+        var options: FindOneOptions;
+
+        if (typeof optionsOrCallback === "function") {
+            callback = optionsOrCallback;
+        }
+        else {
+            options = optionsOrCallback;
+        }
+
+        if (this.onFindOne) {
+            process.nextTick(() => this.onFindOne(filter, options, callback));
+            return;
+        }
+
+        process.nextTick(() => {
+            callback(null, this.contents[0]);
+        });
+    }
+
+    onFindOne: (filter: Object, options: FindOneOptions, callback?: (err: Error, result: any) => void) => any;
+
+    findOneAndDelete(filter: Object, optionsOrCallback?: any, callback?: MongoCallback<FindAndModifyWriteOpResultObject>): Promise<FindAndModifyWriteOpResultObject> {
+        return undefined;
+    }
+
+    findOneAndReplace(filter: Object, replacement: Object, optionsOrCallback?: any, callback?: MongoCallback<FindAndModifyWriteOpResultObject>): Promise<FindAndModifyWriteOpResultObject> {
+        return undefined;
+    }
+
+    findOneAndUpdate(filter: Object, update: Object, optionsOrCallback?: any, callback?: MongoCallback<FindAndModifyWriteOpResultObject>): Promise<FindAndModifyWriteOpResultObject> {
+        return undefined;
+    }
+
+    geoHaystackSearch(x: number, y: number, optionsOrCallback?: any, callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    geoNear(x: number, y: number, optionsOrCallback?: any, callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    group(keys: any, condition: Object, initial: Object, reduce: any, finalize: any, command: boolean, optionsOrCallback?: any, callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    indexes(callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    indexExists(indexes: string|string[], callback?: MongoCallback<boolean>): Promise<boolean> {
+        return undefined;
+    }
+
+    indexInformation(optionsOrCallback?: any, callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    initializeOrderedBulkOp(options?: CollectionOptions): OrderedBulkOperation {
+        return undefined;
+    }
+
+    initializeUnorderedBulkOp(options?: CollectionOptions): UnorderedBulkOperation {
 
         return this.bulk = new MockBulk();
+    }
+
+    insert(docs: Object, optionsOrCallback?: any, callback?: MongoCallback<InsertOneWriteOpResult>): Promise<InsertOneWriteOpResult> {
+        return undefined;
+    }
+
+    insertMany(docs: Object[], optionsOrCallback?: any, callback?: MongoCallback<InsertWriteOpResult>): Promise<InsertWriteOpResult> {
+        return undefined;
+    }
+
+    insertOne(docs: Object, optionsOrCallback?: any, callback?: MongoCallback<InsertOneWriteOpResult>): Promise<InsertOneWriteOpResult> {
+        return undefined;
+    }
+
+    isCapped(callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    listIndexes(options?: any): CommandCursor {
+        return undefined;
+    }
+
+    mapReduce(map: Function|string, reduce: Function|string, optionsOrCallback?: any, callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    options(callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    parallelCollectionScan(optionsOrCallback?: any, callback?: MongoCallback<Cursor[]>): Promise<Cursor[]> {
+        return undefined;
+    }
+
+    reIndex(callback?: MongoCallback<any>): Promise<any> {
+        return undefined;
+    }
+
+    remove(selector: Object, optionsOrCallback?: any, callback?: MongoCallback<WriteOpResult>): Promise<WriteOpResult> {
+        return undefined;
+    }
+
+    rename(newName: string, optionsOrCallback?: any, callback?: MongoCallback<Collection>): Promise<Collection>  {
+        return undefined;
+    }
+
+    replaceOne(filter: Object, doc: Object, optionsOrCallback?: any, callback?: MongoCallback<UpdateWriteOpResult>): Promise<UpdateWriteOpResult> {
+        return undefined;
+    }
+
+    save(doc: Object, optionsOrOptions?: any, callback?: MongoCallback<WriteOpResult>): Promise<WriteOpResult> {
+        return undefined;
+    }
+
+    stats(optionsOrCallback?: any, callback?: MongoCallback<CollStats>): Promise<CollStats> {
+        return undefined;
+    }
+
+    update(filter: Object, update: Object, optionsOrCallback?: any, callback?: MongoCallback<WriteOpResult>): Promise<WriteOpResult> {
+
+        throw new Error("deprecated");
+    }
+
+    updateMany(filter: Object, update: Object, optionsOrCallback?: any, callback?: MongoCallback<UpdateWriteOpResult>): Promise<UpdateWriteOpResult> {
+
+        if (this.onUpdateMany) {
+            process.nextTick(() => this.onUpdateMany(filter, update, optionsOrCallback, callback));
+            return;
+        }
+    }
+
+    onUpdateMany: (filter: Object, update: any, options: any, callback: (err: Error, result: any) => void) => void;
+
+    updateOne(filter: Object, update: Object, optionsOrCallback?: any, callback?: MongoCallback<UpdateWriteOpResult>): Promise<UpdateWriteOpResult> {
+        return undefined;
+    }
+
+    createCursor(): Cursor {
+        return new MockCursor(this.contents);
     }
 }

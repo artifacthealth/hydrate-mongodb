@@ -21,7 +21,9 @@ export class BufferMapping extends MappingBase {
             context.addError("Expected Binary.");
             return;
         }
-        return (<Binary>value).value(true);
+
+        var binary = (<Binary>value);
+        return binary.read(0, binary.length());
     }
 
     write(context: WriteContext, value: any): any {

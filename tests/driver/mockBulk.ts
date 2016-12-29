@@ -1,40 +1,49 @@
-import * as mongodb from "mongodb";
+import {UnorderedBulkOperation, BulkWriteResult, FindOperatorsUnordered} from "mongodb";
 
-export class MockBulk implements mongodb.UnorderedBulkOperation {
+export class MockBulk implements UnorderedBulkOperation, FindOperatorsUnordered {
 
+    length: number;
     findDocuments: any[] = [];
     replaceOneDocuments: any[] = [];
     removeOneCalled = 0;
 
-    update(updateDocument: any): mongodb.UnorderedBulkOperation {
+    update(updateDocument: any): UnorderedBulkOperation {
         return this;
     }
-    updateOne(updateDocument: any): mongodb.UnorderedBulkOperation {
+
+    updateOne(updateDocument: any): UnorderedBulkOperation {
         return this;
     }
-    replaceOne(updateDocument: any): mongodb.UnorderedBulkOperation {
+
+    replaceOne(updateDocument: any): UnorderedBulkOperation {
         this.replaceOneDocuments.push(updateDocument);
         return this;
     }
-    upsert(): mongodb.UnorderedBulkOperation {
+
+    upsert(): FindOperatorsUnordered {
         return this;
     }
-    removeOne(): mongodb.UnorderedBulkOperation {
+
+    removeOne(): UnorderedBulkOperation {
         this.removeOneCalled++;
         return this;
     }
-    remove(): mongodb.UnorderedBulkOperation {
+
+    remove(): UnorderedBulkOperation {
         return this;
     }
-    insert(document: any): mongodb.UnorderedBulkOperation {
+
+    insert(document: any): UnorderedBulkOperation {
         return this;
     }
-    find(selector: any): mongodb.UnorderedBulkOperation {
+
+    find(selector: any): FindOperatorsUnordered {
         this.findDocuments.push(selector);
         return this;
     }
 
-    execute(optionsOrCallback: any, callback?: (err: Error, result: any) => void): void {
+    execute(optionsOrCallback: any, callback?: (err: Error, result: any) => void): Promise<BulkWriteResult> {
 
+        throw new Error("Not implemented");
     }
 }
