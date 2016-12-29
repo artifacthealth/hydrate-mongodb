@@ -4,7 +4,7 @@ import {
 } from "../../src/query/queryBuilder";
 import {MockInternalSession} from "../mockInternalSession";
 import {Constructor} from "../../src/index";
-import {ResultCallback, IteratorCallback} from "../../src/core/callback";
+import {ResultCallback, IteratorCallback, Callback} from "../../src/core/callback";
 import {QueryKind} from "../../src/query/queryKind";
 export class MockQueryBuilder<T> implements QueryBuilder<T> {
 

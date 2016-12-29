@@ -2,7 +2,7 @@ import {EventEmitter} from "events";
 import {InternalSession} from "../src/session";
 import {InternalSessionFactory} from "../src/sessionFactory";
 import {MockQueryObject, MockQueryBuilder} from "./query/mockQueryBuilder";
-import {ResultCallback} from "../src/core/callback";
+import {ResultCallback, Callback} from "../src/core/callback";
 import {generateId} from "./helpers";
 import {Constructor} from "../src/index";
 import {FindOneQuery, QueryBuilder} from "../src/query/queryBuilder";

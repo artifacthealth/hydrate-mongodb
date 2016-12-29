@@ -2,6 +2,7 @@ import {assert} from "chai";
 import {Command} from "../src/core/command";
 import {Batch} from "../src/batch";
 import {FlushPriority} from "../src/mapping/mappingModel";
+import {Callback} from "../src/core/callback";
 
 var executeOrder: number,
     group: number;

@@ -9,7 +9,7 @@ import { IdentityGenerator } from "../src/config/configuration";
 import { Batch } from "../src/batch";
 import { MappingModel, ChangeTrackingType } from "../src/mapping/mappingModel";
 import { MappingRegistry } from "../src/mapping/mappingRegistry";
-import { ResultCallback } from "../src/core/callback";
+import {ResultCallback, Callback} from "../src/core/callback";
 import { EntityMapping } from "../src/mapping/entityMapping";
 import { QueryDefinition } from "../src/query/queryDefinition";
 import { Observer } from "../src/observer";

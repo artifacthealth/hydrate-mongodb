@@ -36,11 +36,11 @@ gulp.task('default', function(done) {
     runSequence('build', 'lib', 'test', done);
 });
 
-// Performs build without sourcemaps but includes dts files to need to dts-concat in 'lib' task.
+// Performs build without sourcemaps but includes dts files
 gulp.task('build', ['clean'], function() {
 
-    var tsResult = gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'])
-        .pipe(ts(tsProject));
+    var tsResult = gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'], { base: process.cwd() })
+        .pipe(tsProject());
 
     return merge([
         tsResult.dts.pipe(gulp.dest('build')),
@@ -51,9 +51,9 @@ gulp.task('build', ['clean'], function() {
 // Performs build with sourcemaps
 gulp.task('debug', ['clean'], function() {
 
-    return gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'])
+    return gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'], { base: process.cwd() })
         .pipe(sourcemaps.init())
-        .pipe(ts(tsProject))
+        .pipe(tsProject())
         .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: process.cwd() }))
         .pipe(gulp.dest('build'));
 });

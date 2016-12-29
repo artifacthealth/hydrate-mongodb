@@ -14,6 +14,7 @@ import {PersisterImpl} from "../src/persister";
 import {createFactory} from "./helpers";
 import {MockInternalSession} from "./mockInternalSession";
 import {EntityNotFoundError} from "../src/persistenceError";
+import {Callback} from "../src/core/callback";
 
 describe('PersisterImpl', () => {
 
