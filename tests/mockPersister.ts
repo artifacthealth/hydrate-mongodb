@@ -21,6 +21,7 @@ export class MockPersister implements Persister {
 
     insertCalled = 0;
     inserted: any[] = [];
+    insertError: Error;
 
     dirtyCheckCalled = 0;
     dirtyChecked: any[] = [];
@@ -51,6 +52,11 @@ export class MockPersister implements Persister {
     }
 
     addInsert(batch: Batch, entity: any, callback: ResultCallback<Object>): void{
+
+        if (this.insertError) {
+            callback(this.insertError);
+            return;
+        }
         this.insertCalled++;
         if (!this.wasInserted(entity)) {
             this.inserted.push(entity);

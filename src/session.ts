@@ -914,8 +914,8 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             }
             replenishing = false;
 
-            // If persister finished synchronously then call callback now
-            if(!links && count <= 0) {
+            // If persister finished synchronously and we did not get an error then call callback now
+            if(!links && count <= 0 && !errored) {
                 callback();
             }
         }

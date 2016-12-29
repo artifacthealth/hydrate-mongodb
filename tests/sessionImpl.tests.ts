@@ -779,6 +779,25 @@ describe('SessionImpl', () => {
             }, 0, done);
         });
 
+        it('returns an error if there is an error when inserting', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var entity = createEntity();
+                var session = factory.createSession();
+                session.save(entity);
+
+                var persister = factory.getPersisterForObject(session, entity);
+                persister.insertError = new Error("some error");
+
+                session.flush((err) => {
+
+                    assert.equal(err.message, "some error");
+                    done();
+                });
+            });
+        });
 
         function dirtyCheckCalled(fixture: string, create: () => [any, any], modify: (session: InternalSession, entities: [any, any]) => void, expectedDirtyCheckCalled: number, done: (err?: Error) => void) {
 
