@@ -176,7 +176,7 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                             }
                         }
 
-                        collection.createIndex(keys, indexOptions, (err, indexName) => {
+                        collection.ensureIndex(keys, indexOptions, (err, indexName) => {
                             if (err) return indexDone(err);
 
                             if (this.logger) {
@@ -211,7 +211,7 @@ export class SessionFactoryImpl implements InternalSessionFactory {
 
                 let collection = this._collections[mapping.id];
                 if (collection) {
-                    collection.dropIndexes((err: Error) => {
+                    collection.dropAllIndexes((err: Error) => {
                         if (err) return done(err);
 
                         if (this.logger) {

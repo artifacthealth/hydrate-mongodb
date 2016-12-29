@@ -199,7 +199,7 @@ describe('PersisterImpl', () => {
             var id =  (<any>person)._id;
 
             var collection = new MockCollection();
-            collection.onFindOne = (criteria, options, callback) => {
+            collection.onFindOne = (criteria, fields, callback) => {
                 assert.deepEqual(criteria, { parents: id });
                 callback(null, { _id: id });
                 done();
@@ -270,9 +270,9 @@ describe('PersisterImpl', () => {
             var idA = helpers.generateId();
 
             var collection = new MockCollection();
-            collection.onFindOne = (criteria, options, callback) => {
+            collection.onFindOne = (criteria, fields, callback) => {
                 assert.deepEqual(criteria, { _id: idA });
-                assert.deepEqual(options.fields, { _b: 0 });
+                assert.deepEqual(fields, { _b: 0 });
                 done();
             };
 
@@ -487,7 +487,7 @@ describe('PersisterImpl', () => {
 
                 var phone = new model.WorkPhone("555-1212", "x15");
                 var collection = new MockCollection();
-                collection.onUpdateMany = (selector, document, options, callback) => {
+                collection.onUpdate = (selector, document, options, callback) => {
 
                     assert.deepEqual(document, { $inc: { "__v": 1 }, $addToSet: { phones: { "__t": "WorkPhone", "extension": "x15", "number": "555-1212", "type": "Work" }}});
                     done();
@@ -510,7 +510,7 @@ describe('PersisterImpl', () => {
 
                 var phone = new model.WorkPhone("555-1212", "x15");
                 var collection = new MockCollection();
-                collection.onUpdateMany = (selector, document, options, callback) => {
+                collection.onUpdate = (selector, document, options, callback) => {
 
                     assert.deepEqual(document, { $set: { password: "test" }});
                     done();

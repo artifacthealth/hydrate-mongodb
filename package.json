@@ -3,7 +3,7 @@
   "description": "An Object Document Mapper (ODM) for MongoDB.",
   "version": "1.1.2",
   "author": {
-    "name": "Artifact Health, Inc",
+    "name": "Artifact Health, LLC",
     "url": "http://www.artifacthealth.com"
   },
   "repository": {
@@ -20,12 +20,10 @@
     "test": "gulp"
   },
   "dependencies": {
-    "@types/mongodb": "^2.1.36",
-    "@types/node": "^6.0.54",
     "@types/rx": "^2.5.34",
     "async": "^2.0.1",
     "change-case": "^2.2.0",
-    "mongodb": "^2.2.16",
+    "mongodb": "^2.1.19",
     "reflect-helper": "^1.0.2",
     "rx": "^4.1.0"
   },

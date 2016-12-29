@@ -1,5 +1,4 @@
 import * as mongodb from "mongodb";
-import {FindAndModifyWriteOpResultObject, DeleteWriteOpResultObject, UpdateWriteOpResult, MongoCountPreferences} from "mongodb";
 import * as async from "async";
 import {onlyOnce, chain} from "./core/callback";
 import {EntityMapping} from "./mapping/entityMapping";
@@ -56,6 +55,21 @@ interface FindAndModifyOptions extends WriteOptions {
     upsert?: boolean;
     new?: boolean;
 }
+
+interface RemoveOptions extends WriteOptions {
+    single?: boolean;
+}
+
+interface UpdateOptions extends WriteOptions {
+    multi?: boolean;
+    upsert?: boolean;
+}
+
+interface CountOptions {
+    limit: number;
+    skip: number;
+}
+
 
 /**
  * @hidden
@@ -234,7 +248,7 @@ export class PersisterImpl implements Persister {
             handleCallback = this._createTraceableCallback({ kind: QueryKind[QueryKind.FindOne], criteria, fields }, callback);
         }
 
-        this._collection.findOne(criteria, {fields:fields}, (err, document) => {
+        this._collection.findOne(criteria, fields, (err, document) => {
             if (err) return callback(err);
 
             // check to make sure the version has not changed
@@ -332,7 +346,7 @@ export class PersisterImpl implements Persister {
 
     private _findOne(query: FindOneQuery, callback: ResultCallback<any>): void {
 
-        this._collection.findOne(query.criteria, {fields:query.fields}, (err, document) => {
+        this._collection.findOne(query.criteria, query.fields, (err, document) => {
             if (err) return callback(err);
             this._loadOne(document, callback);
         });
@@ -366,7 +380,7 @@ export class PersisterImpl implements Persister {
         function next(err?: Error) {
             if (err) return error(err);
 
-            cursor.next((err: Error, item: any) => {
+            cursor.nextObject((err: Error, item: any) => {
                 if (err) return error(err);
 
                 // null item indicates the cursor is finished
@@ -480,19 +494,13 @@ export class PersisterImpl implements Persister {
                 this._findOneAndModify(query, this._fetchOne(query, handleCallback));
                 break;
             case QueryKind.RemoveOne:
-                this._removeOne(query, handleCallback);
-                break;
             case QueryKind.RemoveAll:
-                this._removeAll(query, handleCallback);
+                this._remove(query, handleCallback);
                 break;
             case QueryKind.UpdateOne:
-                this._updateOne(query, handleCallback);
-                break;
             case QueryKind.UpdateAll:
-                this._updateAll(query, handleCallback);
-                break;
             case QueryKind.Upsert:
-                this._upsert(query, handleCallback);
+                this._update(query, handleCallback);
                 break;
             case QueryKind.Distinct:
                 this._distinct(query, handleCallback);
@@ -558,7 +566,7 @@ export class PersisterImpl implements Persister {
 
         function replenish() {
             // try to retrieve a document from the cursor
-            cursor.next((err: Error, item: any) => {
+            cursor.nextObject((err: Error, item: any) => {
                 if(err) return error(err);
 
                 // if the document is null then the cursor is finished
@@ -576,7 +584,7 @@ export class PersisterImpl implements Persister {
                 process(err, item);
 
                 while((<any>cursor).bufferedCount() > 0) {
-                    cursor.next(process);
+                    cursor.nextObject(process);
                 }
             });
         }
@@ -631,7 +639,7 @@ export class PersisterImpl implements Persister {
         (function next(err?: Error) {
             if (err) return error(err);
 
-            cursor.next((err: Error, item: any) => {
+            cursor.nextObject((err: Error, item: any) => {
                 if (err) return error(err);
 
                 if (item == null) {
@@ -678,7 +686,7 @@ export class PersisterImpl implements Persister {
 
     private _prepareFind(query: FindAllQuery): mongodb.Cursor {
         
-        var cursor = this._collection.find(query.criteria).project(query.fields);
+        var cursor = this._collection.find(query.criteria, query.fields);
 
         if(query.orderDocument !== undefined) {
             cursor.sort(query.orderDocument);
@@ -701,33 +709,20 @@ export class PersisterImpl implements Persister {
 
     private _findOneAndModify(query: QueryDefinition, callback: ResultCallback<Object>): void {
 
-        var self = this;
+        var options: FindAndModifyOptions = {
+            remove: query.kind == QueryKind.FindOneAndRemove,
+            new: query.wantsUpdated,
+            upsert: query.kind == QueryKind.FindOneAndUpsert
+        };
 
-        switch (query.kind) {
-            case QueryKind.FindOneAndRemove:
-                this._collection.findOneAndDelete(query.criteria, findAndModifyCallback);
-                break;
-            default:
-                this._collection.findOneAndUpdate(
-                    query.criteria,
-                    query.updateDocument,
-                    {
-                        returnOriginal: !query.wantsUpdated,
-                        upsert: query.kind == QueryKind.FindOneAndUpsert,
-                        sort: <any>query.orderDocument
-                    },
-                    findAndModifyCallback);
-                break;
-        }
-
-        function findAndModifyCallback(err: Error, response: FindAndModifyWriteOpResultObject): void {
+        this._collection.findAndModify(query.criteria, query.orderDocument, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
 
             var document = response.value;
             if (!document) return callback(null); // no match for criteria
 
             // check if the entity is already in the session
-            var entity = self._session.getObject(document["_id"]);
+            var entity = this._session.getObject(document["_id"]);
             if(entity !== undefined) {
                 // We check to see if the entity is already in the session so we know if we need to refresh the
                 // entity or not.
@@ -737,13 +732,14 @@ export class PersisterImpl implements Persister {
             else {
                 // If the entity is not in the session, then it will be loaded and added to the session as managed.
                 // The state may be changed to Removed below.
-                self._loadOne(document, (err, value) => {
+                this._loadOne(document, (err, value) => {
                     if(err) return callback(err);
                     entity = value;
                     handleCallback();
                 });
             }
 
+            var self = this;
             function handleCallback() {
                 // If the entity is not pending deletion, then see if we need to refresh the entity from the updated
                 // document or notify the session that the entity is now removed.
@@ -751,12 +747,12 @@ export class PersisterImpl implements Persister {
                 // Note that if the entity is pending deletion in the session then the callback will be called with null
                 // for the result. This is a little funny but seems most consistent with other methods such as findOne.
                 if (entity) {
-                    if (query.kind == QueryKind.FindOneAndRemove) {
+                    if (options.remove) {
                         // If entity was removed then notify the session that the entity has been removed from the
                         // database. Note that the remove operation is not cascaded.
                         self._session.notifyRemoved(entity);
                     }
-                    else if (!query.wantsUpdated && alreadyLoaded) {
+                    else if (options.new && alreadyLoaded) {
                         // If findAndModify returned the updated document and the entity was already part of the session
                         // before findAndModify was executed, then refresh the entity from the returned document. Note
                         // that the refresh operation is not cascaded.
@@ -776,44 +772,29 @@ export class PersisterImpl implements Persister {
                 // after findOneAndUpdate.
                 callback(null, entity);
             }
-        }
+        });
     }
 
-    private _removeOne(query: QueryDefinition, callback: ResultCallback<number>): void {
+    private _remove(query: QueryDefinition, callback: ResultCallback<number>): void {
 
-        this._collection.deleteOne(query.criteria, (err: Error, response: DeleteWriteOpResultObject) => {
+        var options: RemoveOptions = {
+            single: query.kind == QueryKind.RemoveOne
+        };
+
+        this._collection.remove(query.criteria, options, (err: Error, response: any) => {
             if(err) return callback(err);
             callback(null, response.result.n);
         });
     }
 
-    private _removeAll(query: QueryDefinition, callback: ResultCallback<number>): void {
+    private _update(query: QueryDefinition, callback: ResultCallback<number>): void {
 
-        this._collection.deleteMany(query.criteria, (err: Error, response: DeleteWriteOpResultObject) => {
-            if(err) return callback(err);
-            callback(null, response.result.n);
-        });
-    }
+        var options: UpdateOptions = {
+            multi: query.kind == QueryKind.UpdateAll,
+            upsert: query.kind == QueryKind.Upsert
+        };
 
-    private _updateOne(query: QueryDefinition, callback: ResultCallback<number>): void {
-
-        this._collection.updateOne(query.criteria, query.updateDocument, (err: Error, response: UpdateWriteOpResult) => {
-            if(err) return callback(err);
-            callback(null, response.result.nModified);
-        });
-    }
-
-    private _updateAll(query: QueryDefinition, callback: ResultCallback<number>): void {
-
-        this._collection.updateMany(query.criteria, query.updateDocument, (err: Error, response: UpdateWriteOpResult) => {
-            if(err) return callback(err);
-            callback(null, response.result.nModified);
-        });
-    }
-
-    private _upsert(query: QueryDefinition, callback: ResultCallback<number>): void {
-
-        this._collection.updateOne(query.criteria, query.updateDocument, { upsert: true }, (err: Error, response: UpdateWriteOpResult) => {
+        this._collection.update(query.criteria, query.updateDocument, options, (err: Error, response: any) => {
             if(err) return callback(err);
             callback(null, response.result.nModified);
         });
@@ -850,9 +831,9 @@ export class PersisterImpl implements Persister {
 
         // TODO: add options for readpreference
 
-        var options: MongoCountPreferences = {
+        var options: CountOptions = {
             limit: query.limitCount,
-            skip: <any>query.skipCount
+            skip: query.skipCount
         };
 
         this._collection.count(query.criteria, options, (err: Error, result: number) => {
@@ -1184,7 +1165,7 @@ class CursorImpl<T> {
 
     next(callback: ResultCallback<T>): void {
 
-        this._cursor.next((err: Error, item: any) => {
+        this._cursor.nextObject((err: Error, item: any) => {
             if (err) return handleError(err);
 
             if (item == null) {
