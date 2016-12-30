@@ -306,21 +306,33 @@ export class SessionImpl extends EventEmitter implements InternalSession {
     }
 
     save(obj: any, callback?: Callback): void {
+        if (typeof obj !== "object") {
+            throw new Error("'obj' argument should be an object.");
+        }
 
         this._queue.add(Action.Save, Action.All & ~(Action.Save | Action.ReadOnly), obj, callback);
     }
 
     remove(obj: any, callback?: Callback): void {
+        if (typeof obj !== "object") {
+            throw new Error("'obj' argument should be an object.");
+        }
 
         this._queue.add(Action.Remove, Action.All & ~Action.Remove, obj, callback);
     }
 
     refresh(obj: any, callback?: Callback): void {
+        if (typeof obj !== "object") {
+            throw new Error("'obj' argument should be an object.");
+        }
 
         this._queue.add(Action.Refresh, Action.All & ~Action.Refresh, obj, callback);
     }
 
     detach(obj: any, callback?: Callback): void {
+        if (typeof obj !== "object") {
+            throw new Error("'obj' argument should be an object.");
+        }
 
         this._queue.add(Action.Detach, Action.All & ~Action.Detach, obj, callback);
     }
@@ -410,9 +422,12 @@ export class SessionImpl extends EventEmitter implements InternalSession {
 
     /**
      * Determines whether an entity is managed by this session.
-     * @param entity The entity to check.
+     * @param obj The entity to check.
      */
     contains(obj: any): boolean {
+        if (typeof obj !== "object") {
+            throw new Error("'obj' argument should be an object.");
+        }
 
         var id = obj["id"];
         if(id) {
@@ -464,6 +479,9 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      * document, `null` is returned.
      */
     toDocument(obj: Object, callback?: ResultCallback<Object>): Object {
+        if (typeof obj !== "object") {
+            throw new Error("'obj' argument should be an object.");
+        }
 
         var mapping = this.factory.getMappingForObject(obj);
         if (!mapping) {
@@ -493,6 +511,9 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      * @param obj The entity to get the version for.
      */
     getVersion(obj: Object): number {
+        if (typeof obj !== "object") {
+            throw new Error("'obj' argument should be an object.");
+        }
 
         var links = this._getObjectLinks(obj);
         if (!links || links.state == ObjectState.Detached) {
