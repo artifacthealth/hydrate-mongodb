@@ -47,6 +47,28 @@ export class EntityMapping extends ClassMapping {
         this.flags |= MappingModel.MappingFlags.Entity;
     }
 
+    /**
+     * Validates a property before adding it to the mapping. Returns any validation error messages or undefined if none.
+     * @param property The property to validate.
+     * @returns The error message.
+     */
+    validateProperty(property: Property): string {
+
+        if (property && property.name) {
+
+            if (property.name == "_id") {
+                return "The '_id' property on an entity class is automatically populated with the primary key and cannot be explicitly mapped.";
+            }
+
+            if (property.name == "id") {
+                return "The 'id' property on an entity class is automatically populated with the string representation of the primary key " +
+                    "and cannot be explicitly mapped.";
+            }
+        }
+
+        return super.validateProperty(property);
+    }
+
     setDocumentVersion(obj: any, version: number): void {
 
         // TODO: escape versionField

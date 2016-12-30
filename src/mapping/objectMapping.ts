@@ -59,15 +59,6 @@ export class ObjectMapping extends MappingBase {
             return "Property is missing 'name'.";
         }
 
-        if (property.name == "_id") {
-            return "The '_id' property on an entity class is automatically populated with the primary key and cannot be explicitly mapped.";
-        }
-        
-        if (property.name == "id") {
-            return "The 'id' property on an entity class is automatically populated with the string representation of the primary key " + 
-                    "and cannot be explicitly mapped.";
-        }
-
         if(!property.field && !property.hasFlags(MappingModel.PropertyFlags.Ignored)) {
             return "Property must define a 'field' mapping if the property is not ignored.";
         }
