@@ -629,6 +629,7 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
 
     name: string;
     nullable: boolean;
+    readable: boolean;
 
     constructor(name?: string);
     constructor(args: FieldDescription);
@@ -642,6 +643,7 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
             else {
                 this.name = args.name;
                 this.nullable = args.nullable;
+                this.readable = args.readable;
             }
         }
     }
@@ -660,13 +662,31 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
         if (annotation.nullable) {
             property.setFlags(MappingModel.PropertyFlags.Nullable);
         }
+
+        if (annotation.readable === false) {
+            property.setFlags(MappingModel.PropertyFlags.WriteOnly);
+        }
     }
 }
 
 export interface FieldDescription {
 
+    /**
+     * The name of the database document field.
+     */
     name?: string;
+
+    /**
+     * Indicates if null values are supported. If false then null values are not written to the database. Default is false.
+     */
     nullable?: boolean;
+
+    /**
+     * Indicates if the database document field should be read. Default is true. If set the `false` the database document field may still
+     * be written to but the field value is not read when deserializing the document from the database. This is useful if your entity has
+     * an accessor with a value calculated from other fields in the class that you want to store to the database for queries.
+     */
+    readable?: boolean;
 }
 
 /**

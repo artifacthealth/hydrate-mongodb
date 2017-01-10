@@ -170,9 +170,9 @@ export namespace MappingModel {
         OrphanRemoval = 0x00000100,
 
         /**
-         * Indicates the property is read-only.
+         * Indicates the database field should not be read during deserialization.
          */
-        ReadOnly = 0x00000200,
+        WriteOnly = 0x00000200,
 
         /**
          * Indicates the field should be eagerly fetched.
@@ -188,7 +188,7 @@ export namespace MappingModel {
          * All non-walk flags.
          * @hidden
          */
-        All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | ReadOnly | FetchEager | FetchLazy,
+        All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | WriteOnly | FetchEager | FetchLazy,
 
         /**
          * Indicates that refererences to entities should be walked.

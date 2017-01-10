@@ -310,6 +310,16 @@ describe('AnnotationMappingProvider', () => {
                     done();
                 });
             });
+
+            it("sets the WriteOnly flag on the property is `readable` is `false`", (done) => {
+
+                processFixture("fieldReadable", done, (results) => {
+
+                    assert.isFalse(findMapping(results, "A").getProperty("a").hasFlags(MappingModel.PropertyFlags.WriteOnly));
+                    assert.isTrue(findMapping(results, "A").getProperty("b").hasFlags(MappingModel.PropertyFlags.WriteOnly));
+                    assert.isFalse(findMapping(results, "A").getProperty("c").hasFlags(MappingModel.PropertyFlags.WriteOnly));
+                });
+            });
         });
 
         describe('@converter', () => {

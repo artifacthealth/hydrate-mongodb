@@ -128,7 +128,8 @@ export class ObjectMapping extends MappingBase {
             var property = properties[i];
 
             // skip fields that are not persisted
-            if ((property.flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide)) != 0) {
+            if ((property.flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide
+                | MappingModel.PropertyFlags.WriteOnly)) != 0) {
                 continue;
             }
             var fieldValue = property.getFieldValue(value),
@@ -206,8 +207,7 @@ export class ObjectMapping extends MappingBase {
                 flags = property.flags;
 
             // skip fields that are not persisted
-            if ((flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide
-                | MappingModel.PropertyFlags.ReadOnly)) != 0) {
+            if ((flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide)) != 0) {
                 continue;
             }
 
