@@ -217,6 +217,21 @@ export class ObjectMappingBuilder extends MappingBuilder {
             return builder.mapping;
         }
 
-        this.context.addError("Unable to determine mapping for '" + type.name + "'.");
+        var typeName;
+        if (type) {
+            typeName = type.name;
+        }
+        else if (typeof target === "string") {
+            typeName = target;
+        }
+        else if (typeof target === "function") {
+            typeName = target.name;
+        }
+        else {
+            typeName = "unknown";
+        }
+
+        this.context.addError("Unable to determine mapping for '" + typeName + "'."
+            + " Has the type been added to the AnnotationMappingProvider?");
     }
 }
