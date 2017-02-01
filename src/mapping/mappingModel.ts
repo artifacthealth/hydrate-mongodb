@@ -185,22 +185,27 @@ export namespace MappingModel {
         FetchLazy = 0x00000800,
 
         /**
+         * Property should contain a reference to the parent of the embeddable.
+         */
+        Parent = 0x00001000,
+
+        /**
          * All non-walk flags.
          * @hidden
          */
-        All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | WriteOnly | FetchEager | FetchLazy,
+        All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | WriteOnly | FetchEager | FetchLazy | Parent,
 
         /**
          * Indicates that refererences to entities should be walked.
          * @hidden
          */
-        WalkEntities = 0x00001000,
+        WalkEntities = 0x00002000,
 
         /**
          * Indicates that reference found during a walk operation should be fetched.
          * @hidden
          */
-        Dereference = 0x00002000
+        Dereference = 0x00004000
     }
 
     /**

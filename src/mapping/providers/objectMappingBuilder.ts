@@ -12,6 +12,7 @@ import {
 import {Type, Property} from "reflect-helper";
 import {Constructor} from "../../index";
 import {MethodAnnotation} from "./annotations";
+import ClassMapping = MappingModel.ClassMapping;
 
 
 /**
@@ -86,7 +87,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
     private _createProperty(symbol: Property): MappingModel.Property {
 
         var propertyMapping = this._createPropertyMapping(symbol);
-        if(!propertyMapping) {
+        if (!propertyMapping) {
             return null;
         }
 
@@ -97,7 +98,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
         // process all property annotations
         var annotations = symbol.getAnnotations();
-        if(Array.isArray(annotations)) {
+        if (Array.isArray(annotations)) {
 
             for (var i = 0, l = annotations.length; i < l; i++) {
                 var annotation = this.context.currentAnnotation = annotations[i];
@@ -107,7 +108,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
             }
             this.context.currentAnnotation = null;
         }
-
+        
         return property;
     }
 

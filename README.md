@@ -450,6 +450,31 @@ deserialized from the database, the constructor is not called. This means the in
 represented by it's serialized fields.
 * If the [Immutable](https://artifacthealth.github.io/hydrate-mongodb/globals.html#immutable) decorator is specified on an Embeddable class, the original document for the Embeddable is cached and used for serialization.
 
+
+Using the [Parent](https://artifacthealth.github.io/hydrate-mongodb/globals.html#parent) decorator, Embeddables can designate a property to reference the object they are embedded in. 
+The property is automatically populated with a reference to the parent object when the embeddable is loaded from the database. Properties annotated 
+with [Parent](https://artifacthealth.github.io/hydrate-mongodb/globals.html#parent) are not persisted to the database. 
+
+```
+@Entity()
+export class Person {
+
+    @ElementType(Address)
+    addresses: Address[];
+}
+
+@Embeddable()
+export class Address {
+
+    @Parent()
+    resident: Person;
+    
+    @Field()
+    street: string;
+    ...
+}
+```
+
 <a name="Types"></a>
 ### Types
 

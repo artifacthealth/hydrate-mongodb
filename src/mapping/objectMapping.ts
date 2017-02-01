@@ -124,8 +124,18 @@ export class ObjectMapping extends MappingBase {
         var base = context.path ? context.path + "." : "",
             properties = this.properties;
 
+        var objectParent = context.parent;
+        context.parent = obj;
+
         for (var i = 0, l = properties.length; i < l; i++) {
             var property = properties[i];
+
+            // todo: need to validate that the parent is assignable to the property
+            // set the property value to the parent of the object if this is a parent reference
+            if ((property.flags & MappingModel.PropertyFlags.Parent) != 0) {
+                property.setPropertyValue(obj, objectParent);
+                continue;
+            }
 
             // skip fields that are not persisted
             if ((property.flags & (MappingModel.PropertyFlags.Ignored | MappingModel.PropertyFlags.InverseSide
@@ -171,6 +181,8 @@ export class ObjectMapping extends MappingBase {
                 }
             }
         }
+
+        context.parent = objectParent;
 
         // if there is an observer in the context, then watch this object for changes.
         if(context.observer && (this.flags & MappingModel.MappingFlags.Immutable) == 0) {
@@ -363,11 +375,13 @@ export class ObjectMapping extends MappingBase {
             return;
         }
 
-        if((property.flags & MappingModel.PropertyFlags.InverseSide) != 0) {
+        if((property.flags & MappingModel.PropertyFlags.Parent) != 0) {
+            context.setError("Cannot resolve parent reference.");
+        }
+        else if((property.flags & MappingModel.PropertyFlags.InverseSide) != 0) {
             context.setError("Cannot resolve inverse side of relationship.");
         }
-
-        if((property.flags & MappingModel.PropertyFlags.Ignored) != 0) {
+        else if((property.flags & MappingModel.PropertyFlags.Ignored) != 0) {
             context.setError("Cannot resolve ignored property.");
         }
 

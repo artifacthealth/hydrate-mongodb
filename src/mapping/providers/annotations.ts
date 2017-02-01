@@ -669,6 +669,25 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
     }
 }
 
+/**
+ * @hidden
+ */
+export class ParentAnnotation extends Annotation implements PropertyAnnotation {
+
+    toString(): string {
+        return "@Parent";
+    }
+
+    processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property,
+                              symbol: Property, annotation: FieldAnnotation): void {
+
+
+        if (context.assertEmbeddableMapping(mapping)) {
+            property.setFlags(MappingModel.PropertyFlags.Parent | MappingModel.PropertyFlags.Ignored);
+        }
+    }
+}
+
 export interface FieldDescription {
 
     /**

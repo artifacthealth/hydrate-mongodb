@@ -232,7 +232,7 @@ export class EntityMapping extends ClassMapping {
         entities.push(value);
 
         // If this isn't the first entity, only continue if we have the WalkEntities flag
-        if((this.flags & MappingModel.PropertyFlags.WalkEntities) == 0 && entities.length > 1) return;
+        if((flags & MappingModel.PropertyFlags.WalkEntities) == 0 && entities.length > 1) return;
 
         super.walk(session, value, flags, entities, embedded, references);
     }

@@ -322,6 +322,19 @@ describe('AnnotationMappingProvider', () => {
             });
         });
 
+        describe('@parent', () => {
+
+            it("returns error if annotation is on a property in an entity", (done) => {
+
+                processFixture("parentOnEntity", (err) => {
+
+                    assert.ok(err);
+                    assert.include(err.message, "Annotation can only be defined an embeddable class");
+                    done();
+                });
+            });
+        });
+
         describe('@converter', () => {
             it("sets the mapping for the property to a ConverterMapping with the correct named converter", (done) => {
 

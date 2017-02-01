@@ -114,6 +114,15 @@ export class MappingBuilderContext {
         return true;
     }
 
+    assertEmbeddableMapping(mapping: MappingModel.Mapping): boolean {
+
+        if((mapping.flags & MappingModel.MappingFlags.Embeddable) === 0) {
+            this.addError("Annotation can only be defined an embeddable class.");
+            return false;
+        }
+        return true;
+    }
+
     assertRootClassMapping(mapping: MappingModel.Mapping): boolean {
 
         if(!this.assertClassMapping(mapping)) return false;

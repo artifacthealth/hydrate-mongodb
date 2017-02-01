@@ -32,6 +32,11 @@ export class ReadContext {
      */
     fetches: string[];
 
+    /**
+     * The parent object.
+     */
+    parent: Object;
+
     constructor(public session: InternalSession) {
 
     }

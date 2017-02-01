@@ -24,7 +24,7 @@ import {
     ClassIndexDescription,
     PropertyIndexDescription,
     TransientAnnotation,
-    ImmutableAnnotation, FetchAnnotation
+    ImmutableAnnotation, FetchAnnotation, ParentAnnotation
 } from "./annotations";
 
 import {PropertyConverter, FetchType} from "../mappingModel";
@@ -355,6 +355,34 @@ export declare function Field(name?: string): PropertyDecorator;
 export declare function Field(description: FieldDescription): PropertyDecorator;
 
 /**
+ * Indicates that a property is a reference to the parent of an embeddable class.
+ *
+ * The reference to the parent is automatically populated when the document is read from the database and the object graph is built. The
+ * value of the property is not saved to the database.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  export class Person {
+ *
+ *      @ElementType(Address)
+ *      addresses: Address[];
+ *      ...
+ *  }
+ *
+ *  @Embeddable()
+ *  export class Address {
+ *
+ *      @Parent()
+ *      resident: Person;
+ *      ...
+ *  }
+ * ```
+ */
+export declare function Parent(): PropertyDecorator;
+
+/**
  * Specifies that an enum value should be serialized as a string.
  *
  * By default enums are serialized as numbers. To serialize an enum as a string, add the Enumerated decorator to a
@@ -578,6 +606,7 @@ exports.ChangeTracking = makeDecorator(ChangeTrackingAnnotation);
 exports.DiscriminatorField = makeDecorator(DiscriminatorFieldAnnotation);
 exports.DiscriminatorValue = makeDecorator(DiscriminatorValueAnnotation);
 exports.Field = makeDecorator(FieldAnnotation);
+exports.Parent = makeDecorator(ParentAnnotation);
 exports.Enumerated = makeDecorator(EnumeratedAnnotation);
 exports.Cascade = makeDecorator(CascadeAnnotation);
 exports.Fetch = makeDecorator(FetchAnnotation);
