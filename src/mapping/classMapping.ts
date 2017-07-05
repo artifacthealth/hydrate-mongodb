@@ -71,7 +71,11 @@ export class ClassMapping extends ObjectMapping {
     setQueryDocumentDiscriminator(obj: any): void {
 
         var discriminators: string[] = [];
-        this._getDescendantDiscriminators(discriminators);
+
+        // there is no need to include the discriminator for queries on the inheritance root since everything is included.
+        if ((this.flags & MappingModel.MappingFlags.InheritanceRoot) == 0) {
+            this._getDescendantDiscriminators(discriminators);
+        }
 
         if(discriminators.length == 0) {
             this.setQueryDocumentDiscriminator = <any>(function() { /*noop*/ });

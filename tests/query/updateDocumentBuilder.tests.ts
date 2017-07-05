@@ -162,7 +162,7 @@ describe('UpdateDocumentBuilder', () => {
 
     it('correctly prepares document with $pull operator for array of embedded documents', (done) => {
 
-        assertDocument(done, { $pull: { phones: { type: model.PhoneType.Work }}}, { $pull: { phones: { "__t": { "$in": ["Phone", "WorkPhone"] }, type: "Work" }}});
+        assertDocument(done, { $pull: { phones: { type: model.PhoneType.Work }}}, { $pull: { phones: { type: "Work" }}});
     });
 
     it('returns error if a document replacement is attempted', (done) => {
@@ -182,7 +182,7 @@ function assertDocument(done: Callback, originalDocument: any, expectedDocument:
     helpers.createFactory("model", (err, factory) => {
         if (err) return done(err);
 
-        var builder = new UpdateDocumentBuilder(factory.getMappingForConstructor(ctr || model.Person))
+        var builder = new UpdateDocumentBuilder(factory.getMappingForConstructor(ctr || model.Person));
         var result = builder.build(originalDocument);
         if(builder.error) {
             return done(builder.error);

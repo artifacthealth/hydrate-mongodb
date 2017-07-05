@@ -455,7 +455,7 @@ Using the [Parent](https://artifacthealth.github.io/hydrate-mongodb/globals.html
 The property is automatically populated with a reference to the parent object when the embeddable is loaded from the database. Properties annotated 
 with [Parent](https://artifacthealth.github.io/hydrate-mongodb/globals.html#parent) are not persisted to the database. 
 
-```
+```typescript
 @Entity()
 export class Person {
 

@@ -271,6 +271,11 @@ export class Organization extends Party {
     }
 }
 
+@Entity()
+export class Team extends Organization {
+
+}
+
 
 @Entity()
 @Versioned(false)

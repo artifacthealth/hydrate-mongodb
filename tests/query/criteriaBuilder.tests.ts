@@ -20,9 +20,14 @@ describe('CriteriaBuilder', () => {
         assertCriteria(done, {}, { "__t": "Person" });
     });
 
-    it('includes list of discriminator values if mapping has subclasses', (done) => {
+    it('does not includes list of discriminator values if mapping is the inheritance root', (done) => {
 
-        assertCriteria(done, {}, { "__t": { "$in": ["Party", "Person", "Organization"] } }, model.Party);
+        assertCriteria(done, {}, {}, model.Party);
+    });
+
+    it('includes list of discriminator values if mapping has subclasses and is not the inheritance root', (done) => {
+
+        assertCriteria(done, {}, { "__t": { "$in": ["Organization", "Team"] } }, model.Organization);
     });
 
     it('translates property names on entities to field names', (done) => {

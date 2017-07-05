@@ -9,17 +9,24 @@ import {PersisterImpl} from "./persister";
 import {MappingModel} from "./mapping/mappingModel";
 import {EntityMapping} from "./mapping/entityMapping";
 import {Logger} from "./config/configuration";
-import {shallowClone} from "./core/objectUtil";
+import {shallowClone, shallowEqual} from "./core/objectUtil";
 import {Callback} from "./core/callback";
 import {PersistenceError} from "./persistenceError";
 import {Db} from "mongodb";
+import {Index} from "./mapping/index";
 
 export interface SessionFactory {
 
     /**
-     * The database connection associated with this [SessionFactory].
+     * The MongoDB database connection associated with this [SessionFactory].
      */
     connection: Db;
+
+    /**
+     * Gets the MongoDB database collection for the specified Entity constructor.
+     * @param ctr The constructor to get the collection for.
+     */
+    getCollection(ctr: Constructor<any>): Collection;
 
     /**
      * Creates a new database session.
@@ -89,6 +96,15 @@ export class SessionFactoryImpl implements InternalSessionFactory {
         return new SessionImpl(this);
     }
 
+    getCollection(ctr: Constructor<any>): Collection {
+
+        var mapping = this.getMappingForConstructor(ctr);
+        if (!mapping) {
+            throw new PersistenceError("Object type is not mapped as an entity.");
+        }
+        return this._collections[mapping.inheritanceRoot.id];
+    }
+
     getMappingForObject(obj: any): EntityMapping {
 
         var mapping = this._mappingRegistry.getMappingForObject(obj);
@@ -149,7 +165,7 @@ export class SessionFactoryImpl implements InternalSessionFactory {
 
                         let keys = new Array(index.keys.length);
 
-                        for (let i = 0; i < index.keys.length; i++) {
+                        for (var i = 0; i < index.keys.length; i++) {
                             let propertyName = index.keys[i][0];
                             if (!propertyName) {
                                 indexDone(new PersistenceError(`Missing or invalid key on index for '${mapping.name}'.`));
@@ -173,6 +189,24 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                                     return;
                                 }
                                 keys[i] = [resolved.resolvedPath, order];
+                            }
+                        }
+
+                        // check if this index is a prefix of any of the other indexes. if it is then it's redundant.
+                        for (i = 0; i < mapping.indexes.length; i++) {
+
+                            if (isPrefixIndex(index, mapping.indexes[i])) {
+                                this.logger.trace(
+                                    {
+                                        collection: mapping.collectionName,
+                                        index: {
+                                            keys,
+                                            options: indexOptions
+                                        }
+                                    },
+                                    `[Hydrate] Skipping index '${getIndexName(index)}' because it's a prefix of '${getIndexName(mapping.indexes[i])} on '${collection.collectionName}' collection'.`);
+                                process.nextTick(indexDone);
+                                return;
                             }
                         }
 
@@ -228,4 +262,44 @@ export class SessionFactoryImpl implements InternalSessionFactory {
             },
             callback);
     }
+}
+
+/**
+* Returns true if index1 is a prefix of or equal to index2 but not the exact same index definition.
+ */
+function isPrefixIndex(index1: Index, index2: Index): boolean {
+
+    if (index1 === index2) {
+        return false;
+    }
+
+    // if index1 has more keys than index2 then it's not a prefix.
+    if (index1.keys.length > index2.keys.length) {
+        return false;
+    }
+
+    // make sure both indexes have the same options
+    if (!shallowEqual(index1.options, index2.options)) {
+        return false;
+    }
+
+    var key1: [string, number | string],
+        key2: [string, number | string];
+
+    for (var i = 0; i < index1.keys.length; i++) {
+
+        key1 = index1.keys[i];
+        key2 = index2.keys[i];
+
+        if (key1[0] !== key2[0] || key1[1] !== key2[1]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function getIndexName(index: Index): string {
+
+    return index.keys.map(x => x.join("_")).join("_");
 }

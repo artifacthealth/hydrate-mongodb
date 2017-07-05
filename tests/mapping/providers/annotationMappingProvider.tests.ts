@@ -118,28 +118,34 @@ describe('AnnotationMappingProvider', () => {
 
         describe('@index', () => {
 
-            it('adds index defined on subclass to root type', (done) => {
+            it('adds index defined on subclass to subclass type', (done) => {
 
                 processFixture("index", done, (results) => {
 
                     var mappingA = findMapping(results, "A");
+                    assert.lengthOf(mappingA.indexes, 2);
+                    assert.deepEqual(mappingA.indexes[0].keys, [["a", 1], ["b", -1]]);
+                    assert.deepEqual(mappingA.indexes[1].keys, [["a", 1]]);
+
                     var mappingB = findMapping(results, "B");
                     assert.lengthOf(mappingB.indexes, 1);
-                    assert.lengthOf(mappingA.indexes, 3);
+                    assert.deepEqual(mappingB.indexes[0].keys, [["c", "text"]]);
                 });
             });
 
-            it('adds index defined on class property to root type', (done) => {
+            it('adds index defined on class property to class type', (done) => {
 
                 processFixture("index", done, (results) => {
 
-                    var mappingD = findMapping(results, "D");
-                    assert.lengthOf(mappingD.indexes, 4);
+                    var mappingC = findMapping(results, "C");
+                    assert.lengthOf(mappingC.indexes, 1);
+                    assert.deepEqual(mappingC.indexes[0].keys, [['_id', 1],['__v', 1]]);
 
+                    var mappingD = findMapping(results, "D");
+                    assert.lengthOf(mappingD.indexes, 3);
                     assert.deepEqual(mappingD.indexes[0].keys, [['a', 1]]);
                     assert.deepEqual(mappingD.indexes[1].keys, [['g', -1]]);
                     assert.isTrue(mappingD.indexes[2].options.dropDups);
-                    assert.deepEqual(mappingD.indexes[3].keys, [['_id', 1],['__v', 1]]);
                 });
             });
         });
