@@ -148,6 +148,22 @@ describe('AnnotationMappingProvider', () => {
                     assert.isTrue(mappingD.indexes[2].options.dropDups);
                 });
             });
+
+            it('adds index defined on mapped superclass to the entity inheritance root', (done) => {
+
+                processFixture("index", done, (results) => {
+                    var mappingF = findMapping(results, "F");
+                    assert.lengthOf(mappingF.indexes, 1);
+                    assert.deepEqual(mappingF.indexes[0].keys, [["e", 1]]);
+
+                    var mappingG = findMapping(results, "G");
+                    assert.lengthOf(mappingG.indexes, 1);
+                    assert.deepEqual(mappingG.indexes[0].keys, [["e", 1]]);
+
+                    var mappingH = findMapping(results, "H");
+                    assert.isUndefined(mappingH.indexes);
+                });
+            });
         });
 
         describe('@discriminatorField', () => {
@@ -197,6 +213,16 @@ describe('AnnotationMappingProvider', () => {
                 processFixture("immutableWithChangeTracking", (err) => {
                     assert.ok(err);
                     assert.include(err.message, "Change tracking cannot be set on immutable entity.");
+                    done();
+                });
+            });
+
+            it("throws error if placed on a mapped superclass", (done) => {
+
+                processFixture("immutableOnSuperclass", (err) => {
+                    assert.ok(err);
+                    console.log(err.message);
+                    assert.include(err.message, "Error processing type 'A': Invalid annotation @Immutable: Annotation cannot be defined on a mapped superclass.");
                     done();
                 });
             });

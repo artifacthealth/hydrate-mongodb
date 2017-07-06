@@ -35,3 +35,25 @@ export class D extends C {
     @Index({ options: { dropDups: true } })
     c: number;
 }
+
+@Index({ keys: [ [ 'e', 1 ] ]})
+export class E {
+
+}
+
+@Entity()
+@Versioned(false)
+export class F extends E {
+
+}
+
+@Entity()
+@Versioned(false)
+export class G extends E {
+
+}
+
+@Entity()
+export class H extends G {
+
+}

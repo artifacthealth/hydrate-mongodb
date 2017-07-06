@@ -210,6 +210,25 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                             }
                         }
 
+                        // check if index is identical to an index after it in the list. if it is then it's redundant. we start after it in
+                        // the list so at least one is added.
+                        for (i = mapping.indexes.indexOf(index) + 1; i < mapping.indexes.length; i++) {
+
+                            if (areIndexesEqual(index, mapping.indexes[i])) {
+                                this.logger.trace(
+                                    {
+                                        collection: mapping.collectionName,
+                                        index: {
+                                            keys,
+                                            options: indexOptions
+                                        }
+                                    },
+                                    `[Hydrate] Skipping index '${getIndexName(index)}' because it's identical to '${getIndexName(mapping.indexes[i])} on '${collection.collectionName}' collection'.`);
+                                process.nextTick(indexDone);
+                                return;
+                            }
+                        }
+
                         collection.ensureIndex(keys, indexOptions, (err, indexName) => {
                             if (err) return indexDone(err);
 
@@ -273,8 +292,42 @@ function isPrefixIndex(index1: Index, index2: Index): boolean {
         return false;
     }
 
-    // if index1 has more keys than index2 then it's not a prefix.
-    if (index1.keys.length > index2.keys.length) {
+    // if index1 has the same or more keys than index2 then it's not a prefix.
+    if (index1.keys.length >= index2.keys.length) {
+        return false;
+    }
+
+    // make sure both indexes have the same options
+    if (!shallowEqual(index1.options, index2.options)) {
+        return false;
+    }
+
+    var key1: [string, number | string],
+        key2: [string, number | string];
+
+    for (var i = 0; i < index1.keys.length; i++) {
+
+        key1 = index1.keys[i];
+        key2 = index2.keys[i];
+
+        if (key1[0] !== key2[0] || key1[1] !== key2[1]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Returns true if index1 is equal to index2.
+ */
+function areIndexesEqual(index1: Index, index2: Index): boolean {
+
+    if (index1 === index2) {
+        return true;
+    }
+
+    if (index1.keys.length != index2.keys.length) {
         return false;
     }
 

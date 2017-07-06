@@ -1,4 +1,3 @@
-import * as async from "async";
 import {IdentityGenerator} from "../config/configuration";
 import {ClassMapping} from "./classMapping";
 import {ChangeTrackingType, FlushPriority} from "./mappingModel";

@@ -22,8 +22,13 @@ export class ObjectMappingBuilder extends MappingBuilder {
 
     protected populateCore(): void {
 
-        var mapping = <MappingModel.ObjectMapping>this.mapping,
-            annotations = this.type.getAnnotations();
+        var mapping = <MappingModel.ObjectMapping>this.mapping;
+        var annotations = this.type.getAnnotations();
+
+        if (mapping.hasFlags(MappingModel.MappingFlags.InheritanceRoot)) {
+            // concat the arrays, don't push onto the array because it'll change the type annotations
+            annotations = annotations.concat(this._getInheritedAnnotations(this.type.baseType));
+        }
 
         for(var i = 0, l = annotations.length; i < l; i++) {
             var annotation = this.context.currentAnnotation = annotations[i];
@@ -35,6 +40,33 @@ export class ObjectMappingBuilder extends MappingBuilder {
         this.context.currentAnnotation = null;
 
         this._processType(this.type);
+    }
+
+    private _getInheritedAnnotations(type: Type): any[] {
+
+        var result: any[] = [],
+            oldType = this.context.currentType;
+
+        while (type) {
+            var annotations = type.getAnnotations();
+            for (var i = 0; i < annotations.length; i++) {
+                var annotation = annotations[i];
+                if(annotation.processClassAnnotation) {
+                    if (annotation.inherited) {
+                        result.push(annotation);
+                    }
+                    else {
+                        this.context.currentType = type;
+                        this.context.currentAnnotation = annotation;
+                        this.context.addError("Annotation cannot be defined on a mapped superclass.");
+                    }
+                }
+            }
+            type = type.baseType;
+        }
+
+        this.context.currentType = oldType;
+        return result;
     }
 
     private _processType(type: Type): void {

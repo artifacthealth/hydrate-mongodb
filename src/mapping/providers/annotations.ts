@@ -35,6 +35,11 @@ export class Annotation {
  */
 export interface ClassAnnotation {
 
+    /**
+     * Indicates if the annotation should be inherited from a mapped superclass. Default is false.
+     */
+    inherited?: boolean;
+
     processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, annotation: Annotation): void;
 }
 
@@ -269,6 +274,11 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
      */
     options: IndexOptions;
 
+    /**
+     * Indicates annotation is inherited from a mapped superclass.
+     */
+    inherited = true;
+
     constructor(args: ClassIndexDescription);
     constructor(args?: PropertyIndexDescription);
     constructor(args?: { keys?: [string, number | string][]; order?: number, options?: IndexOptions }) {
@@ -287,15 +297,19 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
 
     processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: IndexAnnotation): void {
 
-        this._addIndex(context, mapping, annotation);
+        if (context.assertEntityMapping(mapping)) {
+            this._addIndex(context, mapping, annotation);
+        }
     }
 
     processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, property: MappingModel.Property, symbol: Property, annotation: IndexAnnotation): void {
 
-        this._addIndex(context, mapping, {
-            keys: [[property.name, annotation.order || 1]],
-            options: annotation.options
-        });
+        if (context.assertEntityMapping(mapping)) {
+            this._addIndex(context, mapping, {
+                keys: [[property.name, annotation.order || 1]],
+                options: annotation.options
+            });
+        }
     }
 
     private _addIndex(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, value: Index): void {
