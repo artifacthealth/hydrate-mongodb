@@ -196,15 +196,17 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                         for (i = 0; i < mapping.indexes.length; i++) {
 
                             if (isPrefixIndex(index, mapping.indexes[i])) {
-                                this.logger.trace(
-                                    {
-                                        collection: mapping.collectionName,
-                                        index: {
-                                            keys,
-                                            options: indexOptions
-                                        }
-                                    },
-                                    `[Hydrate] Skipping index '${getIndexName(index)}' because it's a prefix of '${getIndexName(mapping.indexes[i])} on '${collection.collectionName}' collection'.`);
+                                if (this.logger) {
+                                    this.logger.trace(
+                                        {
+                                            collection: mapping.collectionName,
+                                            index: {
+                                                keys,
+                                                options: indexOptions
+                                            }
+                                        },
+                                        `[Hydrate] Skipping index '${getIndexName(index)}' because it's a prefix of '${getIndexName(mapping.indexes[i])} on '${collection.collectionName}' collection'.`);
+                                }
                                 process.nextTick(indexDone);
                                 return;
                             }
@@ -215,15 +217,17 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                         for (i = mapping.indexes.indexOf(index) + 1; i < mapping.indexes.length; i++) {
 
                             if (areIndexesEqual(index, mapping.indexes[i])) {
-                                this.logger.trace(
-                                    {
-                                        collection: mapping.collectionName,
-                                        index: {
-                                            keys,
-                                            options: indexOptions
-                                        }
-                                    },
-                                    `[Hydrate] Skipping index '${getIndexName(index)}' because it's identical to '${getIndexName(mapping.indexes[i])} on '${collection.collectionName}' collection'.`);
+                                if (this.logger) {
+                                    this.logger.trace(
+                                        {
+                                            collection: mapping.collectionName,
+                                            index: {
+                                                keys,
+                                                options: indexOptions
+                                            }
+                                        },
+                                        `[Hydrate] Skipping index '${getIndexName(index)}' because it's identical to '${getIndexName(mapping.indexes[i])} on '${collection.collectionName}' collection'.`);
+                                }
                                 process.nextTick(indexDone);
                                 return;
                             }
