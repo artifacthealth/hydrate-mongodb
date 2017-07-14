@@ -68,6 +68,7 @@ interface UpdateOptions extends WriteOptions {
 interface CountOptions {
     limit: number;
     skip: number;
+    readPreference?: string;
 }
 
 
