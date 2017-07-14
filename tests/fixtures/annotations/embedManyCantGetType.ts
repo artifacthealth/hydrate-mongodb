@@ -1,5 +1,11 @@
 import { Entity, Field, ElementType, ChangeTracking, Embeddable } from "../../../src/mapping/providers/decorators";
 
+@Embeddable()
+export class B {
+
+    name: string;
+}
+
 @Entity()
 export class A {
 
@@ -8,11 +14,5 @@ export class A {
 
     @ElementType(B)
     field2: B[] = [];
-}
-
-@Embeddable()
-export class B {
-
-    name: string;
 }
 

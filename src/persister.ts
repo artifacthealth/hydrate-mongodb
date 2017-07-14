@@ -831,7 +831,7 @@ export class PersisterImpl implements Persister {
 
         // TODO: add options for readpreference
 
-        var options: CountOptions = {
+        var options: CountOptions & { readPreference?: string; } = {
             limit: query.limitCount,
             skip: query.skipCount
         };

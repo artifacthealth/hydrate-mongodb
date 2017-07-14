@@ -79,6 +79,11 @@ export class Configuration {
     createIndexes: boolean;
 
     /**
+     * Indicate if nullable behavior for fields should be enabled. This is turned off by default.
+     */
+    nullable: boolean = true;
+
+    /**
      * @hidden
      */
     private _mappings: MappingProvider[] = [];
