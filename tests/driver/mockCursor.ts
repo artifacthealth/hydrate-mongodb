@@ -36,7 +36,7 @@ export class MockCursor implements mongodb.Cursor {
         });
     }
 
-    each(callback: (err: Error, item: any) => boolean) : void {
+    each(callback: (err: Error, item: any) => void) : void {
 
     }
 
