@@ -49,6 +49,6 @@ export class ConverterMapping extends MappingBase {
         if (documentValue1 === null || documentValue2 === null) return false;
         if (documentValue1 !== documentValue1 && documentValue2 !== documentValue2) return true; // NaN === NaN
 
-        return false;
+        return this.converter.areEqual(documentValue1, documentValue2);
     }
 }
