@@ -23,6 +23,12 @@ export class Property implements MappingModel.Property {
     field: string;
 
     /**
+     * Indicates if null values should be saved for this property. By default a property is removed from the object
+     * when saved if it has a value of `null` or `undefined`.
+     */
+    nullable: boolean;
+
+    /**
      * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
      */
     inverseOf: string;

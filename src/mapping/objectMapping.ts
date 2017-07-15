@@ -149,7 +149,7 @@ export class ObjectMapping extends MappingBase {
             if (fieldValue !== undefined) {
                 // skip null values unless allowed
                 if (fieldValue === null) {
-                    if ((property.flags & MappingModel.PropertyFlags.Nullable) != 0) {
+                    if (property.nullable) {
                         propertyValue = null;
                     }
                 }
@@ -230,7 +230,7 @@ export class ObjectMapping extends MappingBase {
             }
             if (propertyValue === null) {
                 // skip null values unless allowed
-                if ((flags & MappingModel.PropertyFlags.Nullable) == 0) {
+                if (!property.nullable) {
                     continue;
                 }
                 fieldValue = null;

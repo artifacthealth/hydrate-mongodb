@@ -90,6 +90,11 @@ export class ObjectMappingBuilder extends MappingBuilder {
                     return;
                 }
 
+                // set default value for `nullable` if not specified
+                if (property.nullable === undefined) {
+                    property.nullable = this.context.config.nullable;
+                }
+
                 mapping.addProperty(property);
             }
         }

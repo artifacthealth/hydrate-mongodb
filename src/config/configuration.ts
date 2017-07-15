@@ -28,6 +28,11 @@ export class Configuration {
     versioned = true;
 
     /**
+     * True if null values should be saved for properties by default; otherwise, false.
+     */
+    nullable = false;
+
+    /**
      * Default field name to use for optimistic locking.
      */
     versionField = "__v";

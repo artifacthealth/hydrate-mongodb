@@ -24,6 +24,51 @@ describe('ClassMapping', () => {
 
             assert.equal(writeResult, originalDocument, "Expected write to return original instance of document.");
         });
+
+        it("drops `null` properties when `nullable` is false", () => {
+
+            var mapping = createEmbeddableMapping();
+
+            var writeContext = new WriteContext();
+            var writeResult = mapping.write(writeContext, { _a: null, _b: "test" });
+
+            assert.deepEqual(writeResult, { b: "test" });
+        });
+
+        it("keeps `null` properties when `nullable` is true", () => {
+
+            var mapping = createEmbeddableMapping();
+
+            var writeContext = new WriteContext();
+            var writeResult = mapping.write(writeContext, { _a: "test", _b: null });
+
+            assert.deepEqual(writeResult, { a: "test", b: null });
+        });
+    });
+
+    describe('read', () => {
+
+        it("drops `null` properties when `nullable` is false", () => {
+
+            var mapping = createEmbeddableMapping();
+
+            var readContext = new ReadContext(null);
+            var readResult = mapping.read(readContext, { a: null, b: "test" });
+
+            assert.isUndefined(readResult._a);
+            assert.equal(readResult._b, "test");
+        });
+
+        it("keeps `null` properties when `nullable` is true", () => {
+
+            var mapping = createEmbeddableMapping();
+
+            var readContext = new ReadContext(null);
+            var readResult = mapping.read(readContext, { a: "test", b: null });
+
+            assert.equal(readResult._a, "test");
+            assert.isNull(readResult._b);
+        });
     });
 
     describe("areEqual", () => {
@@ -61,9 +106,14 @@ function createMappingWithFlags(flags: MappingModel.MappingFlags): ClassMapping 
     mapping.flags |= flags;
     mapping.classConstructor = Test;
     mapping.name = "Test";
-    var property = new Property("_a", new StringMapping());
-    property.field = "a";
-    mapping.addProperty(property);
+    var property1 = new Property("_a", new StringMapping());
+    property1.field = "a";
+    property1.nullable = false;
+    mapping.addProperty(property1);
+    var property2 = new Property("_b", new StringMapping());
+    property2.field = "b";
+    property2.nullable = true;
+    mapping.addProperty(property2);
     return mapping;
 }
 

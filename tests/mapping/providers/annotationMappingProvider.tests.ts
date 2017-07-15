@@ -352,6 +352,29 @@ describe('AnnotationMappingProvider', () => {
                     assert.isFalse(findMapping(results, "A").getProperty("c").hasFlags(MappingModel.PropertyFlags.WriteOnly));
                 });
             });
+
+            it("correctly sets the `nullable` flag on the property when the default for `nullable` is `false`", (done) => {
+
+                processFixture("fieldNullable", done, (results) => {
+
+                    assert.isFalse(findMapping(results, "A").getProperty("default").nullable);
+                    assert.isFalse(findMapping(results, "A").getProperty("notNullable").nullable);
+                    assert.isTrue(findMapping(results, "A").getProperty("nullable").nullable);
+                });
+            });
+
+            it("correctly sets the `nullable` flag on the property when the default for `nullable` is `true`", (done) => {
+
+                var config = new Configuration();
+                config.nullable = true;
+
+                processFixtureWithConfiguration("fieldNullable", config, done, (results) => {
+
+                    assert.isTrue(findMapping(results, "A").getProperty("default").nullable);
+                    assert.isFalse(findMapping(results, "A").getProperty("notNullable").nullable);
+                    assert.isTrue(findMapping(results, "A").getProperty("nullable").nullable);
+                });
+            });
         });
 
         describe('@parent', () => {

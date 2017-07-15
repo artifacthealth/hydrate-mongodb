@@ -673,8 +673,8 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
             property.field = annotation.name;
         }
 
-        if (annotation.nullable) {
-            property.setFlags(MappingModel.PropertyFlags.Nullable);
+        if (annotation.nullable !== undefined) {
+            property.nullable = annotation.nullable;
         }
 
         if (annotation.readable === false) {

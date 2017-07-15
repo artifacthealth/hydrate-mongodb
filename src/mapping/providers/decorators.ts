@@ -336,9 +336,9 @@ export declare function Field(name?: string): PropertyDecorator;
 /**
  * Describes the field that should be used to serialize a property on an entity or embeddable class.
  *
- * By default `null` values are treated the same as `undefined` values and removed from the serialized document.
- * Setting a value of `nullable: true` in the field description indicates that `null` values should be saved to the
- * database.
+ * Setting a value for `nullable` in the field description indicates whether or not `null` values should be saved to the database. If not
+ * specified, the value in the [[Configuration]] is used. If `null` values are not allowed, `null` values are treated the same as
+ * `undefined` values and removed from the serialized document.
  *
  * ### Example
  *

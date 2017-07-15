@@ -60,6 +60,12 @@ export namespace MappingModel {
         flags: PropertyFlags;
 
         /**
+         * Indicates if null values should be saved for this property. By default a property is removed from the object
+         * when saved if it has a value of `null` or `undefined`.
+         */
+        nullable?: boolean;
+
+        /**
          * The name of the database document field.
          */
         field: string
@@ -158,12 +164,6 @@ export namespace MappingModel {
         InverseSide = 0x00000040,
 
         /**
-         * Indicates that null values should be saved for this property. By default a property is removed from the object
-         * when saved if it has a value of `null` or `undefined`.
-         */
-        Nullable = 0x00000080,
-
-        /**
          * Not currently supported.
          * @hidden
          */
@@ -193,10 +193,10 @@ export namespace MappingModel {
          * All non-walk flags.
          * @hidden
          */
-        All = Ignored | CascadeAll | InverseSide | Nullable | OrphanRemoval | WriteOnly | FetchEager | FetchLazy | Parent,
+        All = Ignored | CascadeAll | InverseSide | OrphanRemoval | WriteOnly | FetchEager | FetchLazy | Parent,
 
         /**
-         * Indicates that refererences to entities should be walked.
+         * Indicates that references to entities should be walked.
          * @hidden
          */
         WalkEntities = 0x00002000,
