@@ -7,8 +7,8 @@
         "declaration": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "noLib": true,
         "noResolve": false,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "lib": ["DOM","ES6","DOM.Iterable","ScriptHost"]
     }
 }

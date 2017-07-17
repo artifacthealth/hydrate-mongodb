@@ -5,8 +5,6 @@
 
 // Documentation : http://mongodb.github.io/node-mongodb-native/
 
-/// <reference path='./node.d.ts' />
-
 declare module "mongodb" {
 
   // Class documentation : http://mongodb.github.io/node-mongodb-native/api-generated/mongoclient.html

@@ -151,7 +151,7 @@ export class Configuration {
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
         var collections: Table<mongodb.Collection> = [];
-        var namesSeen: Map<string, boolean> = new Map();
+        var namesSeen = new Map<string, boolean>();
 
         async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
 

@@ -90,7 +90,7 @@ gulp.task('bench', function(done) {
 
 gulp.task('docs', function() {
     return gulp.src(['typings/**/*.ts', 'src/**/*.ts']).pipe(typedoc({
-        target: 'es5',
+        target: 'es6',
         module: "commonjs",
         out: 'build/docs',
         mode: "file",
@@ -99,8 +99,7 @@ gulp.task('docs', function() {
         umlFormat: "svg",
         includeDeclarations: false,
         excludeExternals: true,
-        excludeNotExported: true,
-        plugin: ['comment']
+        excludeNotExported: true
     }));
 });
 
