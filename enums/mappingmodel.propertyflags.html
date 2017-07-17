@@ -7,7 +7,6 @@
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
-	<script src="../assets/js/modernizr.js"></script>
 </head>
 <body>
 <header>
@@ -39,8 +38,6 @@
 							</div>
 							<input type="checkbox" id="tsd-filter-inherited" checked />
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -93,8 +90,8 @@
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.propertyflags.html#ignored" class="tsd-kind-icon">Ignored</a></li>
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.propertyflags.html#inverseside" class="tsd-kind-icon">Inverse<wbr>Side</a></li>
 								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.propertyflags.html#none" class="tsd-kind-icon">None</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.propertyflags.html#nullable" class="tsd-kind-icon">Nullable</a></li>
-								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.propertyflags.html#readonly" class="tsd-kind-icon">Read<wbr>Only</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.propertyflags.html#parent" class="tsd-kind-icon">Parent</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="mappingmodel.propertyflags.html#writeonly" class="tsd-kind-icon">Write<wbr>Only</a></li>
 							</ul>
 						</section>
 					</div>
@@ -105,10 +102,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="cascadeall" class="tsd-anchor"></a>
 					<h3>Cascade<wbr>All</h3>
-					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>All<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>All<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;CascadeSave | CascadeRemove | CascadeDetach | CascadeRefresh | CascadeMerge</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L153">mapping/mappingModel.ts:153</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L159">mapping/mappingModel.ts:159</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -120,10 +117,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="cascadedetach" class="tsd-anchor"></a>
 					<h3>Cascade<wbr>Detach</h3>
-					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Detach<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Detach<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;8</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L138">mapping/mappingModel.ts:138</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L144">mapping/mappingModel.ts:144</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -135,10 +132,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="cascademerge" class="tsd-anchor"></a>
 					<h3>Cascade<wbr>Merge</h3>
-					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Merge<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Merge<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;32</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L148">mapping/mappingModel.ts:148</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L154">mapping/mappingModel.ts:154</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -150,10 +147,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="cascaderefresh" class="tsd-anchor"></a>
 					<h3>Cascade<wbr>Refresh</h3>
-					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Refresh<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Refresh<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;16</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L143">mapping/mappingModel.ts:143</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L149">mapping/mappingModel.ts:149</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -165,10 +162,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="cascaderemove" class="tsd-anchor"></a>
 					<h3>Cascade<wbr>Remove</h3>
-					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Remove<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Remove<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;4</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L133">mapping/mappingModel.ts:133</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L139">mapping/mappingModel.ts:139</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -180,10 +177,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="cascadesave" class="tsd-anchor"></a>
 					<h3>Cascade<wbr>Save</h3>
-					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Save<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Cascade<wbr>Save<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;2</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L128">mapping/mappingModel.ts:128</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L134">mapping/mappingModel.ts:134</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -195,10 +192,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="fetcheager" class="tsd-anchor"></a>
 					<h3>Fetch<wbr>Eager</h3>
-					<div class="tsd-signature tsd-kind-icon">Fetch<wbr>Eager<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Fetch<wbr>Eager<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;1024</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L180">mapping/mappingModel.ts:180</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L180">mapping/mappingModel.ts:180</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -210,10 +207,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="fetchlazy" class="tsd-anchor"></a>
 					<h3>Fetch<wbr>Lazy</h3>
-					<div class="tsd-signature tsd-kind-icon">Fetch<wbr>Lazy<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Fetch<wbr>Lazy<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;2048</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L185">mapping/mappingModel.ts:185</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L185">mapping/mappingModel.ts:185</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -225,10 +222,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="ignored" class="tsd-anchor"></a>
 					<h3>Ignored</h3>
-					<div class="tsd-signature tsd-kind-icon">Ignored<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Ignored<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;1</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L123">mapping/mappingModel.ts:123</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L129">mapping/mappingModel.ts:129</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -240,10 +237,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="inverseside" class="tsd-anchor"></a>
 					<h3>Inverse<wbr>Side</h3>
-					<div class="tsd-signature tsd-kind-icon">Inverse<wbr>Side<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">Inverse<wbr>Side<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;64</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L158">mapping/mappingModel.ts:158</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L164">mapping/mappingModel.ts:164</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -255,10 +252,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
 					<a name="none" class="tsd-anchor"></a>
 					<h3>None</h3>
-					<div class="tsd-signature tsd-kind-icon">None<span class="tsd-signature-symbol">:</span> </div>
+					<div class="tsd-signature tsd-kind-icon">None<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;0</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L118">mapping/mappingModel.ts:118</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L124">mapping/mappingModel.ts:124</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -268,33 +265,32 @@
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="nullable" class="tsd-anchor"></a>
-					<h3>Nullable</h3>
-					<div class="tsd-signature tsd-kind-icon">Nullable<span class="tsd-signature-symbol">:</span> </div>
+					<a name="parent" class="tsd-anchor"></a>
+					<h3>Parent</h3>
+					<div class="tsd-signature tsd-kind-icon">Parent<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;4096</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L164">mapping/mappingModel.ts:164</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L190">mapping/mappingModel.ts:190</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Indicates that null values should be saved for this property. By default a property is removed from the object
-							when saved if it has a value of <code>null</code> or <code>undefined</code>.</p>
+							<p>Property should contain a reference to the parent of the embeddable.</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
-					<a name="readonly" class="tsd-anchor"></a>
-					<h3>Read<wbr>Only</h3>
-					<div class="tsd-signature tsd-kind-icon">Read<wbr>Only<span class="tsd-signature-symbol">:</span> </div>
+					<a name="writeonly" class="tsd-anchor"></a>
+					<h3>Write<wbr>Only</h3>
+					<div class="tsd-signature tsd-kind-icon">Write<wbr>Only<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol"> =&nbsp;512</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/mappingModel.ts#L175">mapping/mappingModel.ts:175</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/mappingModel.ts#L175">mapping/mappingModel.ts:175</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Indicates the property is read-only.</p>
+							<p>Indicates the database field should not be read during deserialization.</p>
 						</div>
 					</div>
 				</section>
@@ -358,10 +354,10 @@
 								<a href="mappingmodel.propertyflags.html#none" class="tsd-kind-icon">None</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="mappingmodel.propertyflags.html#nullable" class="tsd-kind-icon">Nullable</a>
+								<a href="mappingmodel.propertyflags.html#parent" class="tsd-kind-icon">Parent</a>
 							</li>
 							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
-								<a href="mappingmodel.propertyflags.html#readonly" class="tsd-kind-icon">Read<wbr>Only</a>
+								<a href="mappingmodel.propertyflags.html#writeonly" class="tsd-kind-icon">Write<wbr>Only</a>
 							</li>
 						</ul>
 					</li>
@@ -492,7 +488,7 @@
 	</div>
 </footer>
 <div class="container tsd-generator">
-	<p>Generated using <a href="http://typedoc.io" target="_blank">TypeDoc</a></p>
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
 </div>
 <div class="overlay"></div>
 <script src="../assets/js/main.js"></script>

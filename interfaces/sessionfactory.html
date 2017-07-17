@@ -7,7 +7,6 @@
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
-	<script src="../assets/js/modernizr.js"></script>
 </head>
 <body>
 <header>
@@ -39,8 +38,6 @@
 							</div>
 							<input type="checkbox" id="tsd-filter-inherited" checked />
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -89,6 +86,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="sessionfactory.html#createindexes" class="tsd-kind-icon">create<wbr>Indexes</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="sessionfactory.html#createsession" class="tsd-kind-icon">create<wbr>Session</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="sessionfactory.html#dropindexes" class="tsd-kind-icon">drop<wbr>Indexes</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="sessionfactory.html#getcollection" class="tsd-kind-icon">get<wbr>Collection</a></li>
 							</ul>
 						</section>
 					</div>
@@ -102,12 +100,12 @@
 					<div class="tsd-signature tsd-kind-icon">connection<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Db</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/sessionFactory.ts#L22">sessionFactory.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/sessionFactory.ts#L23">sessionFactory.ts:23</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>The database connection associated with this [SessionFactory].</p>
+							<p>The MongoDB database connection associated with this [SessionFactory].</p>
 						</div>
 					</div>
 				</section>
@@ -125,7 +123,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/sessionFactory.ts#L32">sessionFactory.ts:32</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/sessionFactory.ts#L39">sessionFactory.ts:39</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -147,7 +145,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/sessionFactory.ts#L38">sessionFactory.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/sessionFactory.ts#L45">sessionFactory.ts:45</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -184,7 +182,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/sessionFactory.ts#L27">sessionFactory.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/sessionFactory.ts#L34">sessionFactory.ts:34</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -206,7 +204,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/sessionFactory.ts#L43">sessionFactory.ts:43</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/sessionFactory.ts#L50">sessionFactory.ts:50</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -224,6 +222,37 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="getcollection" class="tsd-anchor"></a>
+					<h3>get<wbr>Collection</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Collection<span class="tsd-signature-symbol">(</span>ctr<span class="tsd-signature-symbol">: </span><a href="constructor.html" class="tsd-signature-type">Constructor</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Collection</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/sessionFactory.ts#L29">sessionFactory.ts:29</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Gets the MongoDB database collection for the specified Entity constructor.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>ctr: <a href="constructor.html" class="tsd-signature-type">Constructor</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The constructor to get the collection for.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Collection</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -255,6 +284,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="sessionfactory.html#dropindexes" class="tsd-kind-icon">drop<wbr>Indexes</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="sessionfactory.html#getcollection" class="tsd-kind-icon">get<wbr>Collection</a>
 							</li>
 						</ul>
 					</li>
@@ -325,7 +357,7 @@
 	</div>
 </footer>
 <div class="container tsd-generator">
-	<p>Generated using <a href="http://typedoc.io" target="_blank">TypeDoc</a></p>
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
 </div>
 <div class="overlay"></div>
 <script src="../assets/js/main.js"></script>

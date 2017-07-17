@@ -7,7 +7,6 @@
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
-	<script src="../assets/js/modernizr.js"></script>
 </head>
 <body>
 <header>
@@ -39,8 +38,6 @@
 							</div>
 							<input type="checkbox" id="tsd-filter-inherited" checked />
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -82,6 +79,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="fielddescription.html#name" class="tsd-kind-icon">name</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="fielddescription.html#nullable" class="tsd-kind-icon">nullable</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="fielddescription.html#readable" class="tsd-kind-icon">readable</a></li>
 							</ul>
 						</section>
 					</div>
@@ -95,9 +93,14 @@
 					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/annotations.ts#L668">mapping/providers/annotations.ts:668</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/annotations.ts#L710">mapping/providers/annotations.ts:710</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The name of the database document field.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="nullable" class="tsd-anchor"></a>
@@ -105,9 +108,31 @@
 					<div class="tsd-signature tsd-kind-icon">nullable<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/annotations.ts#L669">mapping/providers/annotations.ts:669</a></li>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/annotations.ts#L715">mapping/providers/annotations.ts:715</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Indicates if null values are supported. If false then null values are not written to the database. Default is false.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="readable" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> readable</h3>
+					<div class="tsd-signature tsd-kind-icon">readable<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/annotations.ts#L722">mapping/providers/annotations.ts:722</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Indicates if the database document field should be read. Default is true. If set the <code>false</code> the database document field may still
+								be written to but the field value is not read when deserializing the document from the database. This is useful if your entity has
+							an accessor with a value calculated from other fields in the class that you want to store to the database for queries.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -131,6 +156,9 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="fielddescription.html#nullable" class="tsd-kind-icon">nullable</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="fielddescription.html#readable" class="tsd-kind-icon">readable</a>
 							</li>
 						</ul>
 					</li>
@@ -201,7 +229,7 @@
 	</div>
 </footer>
 <div class="container tsd-generator">
-	<p>Generated using <a href="http://typedoc.io" target="_blank">TypeDoc</a></p>
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
 </div>
 <div class="overlay"></div>
 <script src="../assets/js/main.js"></script>

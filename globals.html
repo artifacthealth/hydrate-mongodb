@@ -7,7 +7,6 @@
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
-	<script src="assets/js/modernizr.js"></script>
 </head>
 <body>
 <header>
@@ -39,8 +38,6 @@
 							</div>
 							<input type="checkbox" id="tsd-filter-inherited" checked />
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -141,11 +138,13 @@
 								<li class="tsd-kind-function"><a href="globals.html#immutable" class="tsd-kind-icon">Immutable</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#index" class="tsd-kind-icon">Index</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#inverseof" class="tsd-kind-icon">Inverse<wbr>Of</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#parent" class="tsd-kind-icon">Parent</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#transient" class="tsd-kind-icon">Transient</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#type" class="tsd-kind-icon">Type</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#versionfield" class="tsd-kind-icon">Version<wbr>Field</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#versioned" class="tsd-kind-icon">Versioned</a></li>
 								<li class="tsd-kind-function"><a href="globals.html#areequal" class="tsd-kind-icon">are<wbr>Equal</a></li>
+								<li class="tsd-kind-function"><a href="globals.html#shallowequal" class="tsd-kind-icon">shallow<wbr>Equal</a></li>
 							</ul>
 						</section>
 					</div>
@@ -163,7 +162,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L457">mapping/providers/decorators.ts:457</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L485">mapping/providers/decorators.ts:485</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -172,10 +171,10 @@
 									an entity. See <a href="enums/cascadeflags.html">CascadeFlags</a> for more information on the available cascade options.</p>
 								</div>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
 
-     @Cascade(CascadeFlags.Save | CascadeFlags.Remove)
+     <span class="hljs-meta">@Cascade</span>(CascadeFlags.Save | CascadeFlags.Remove)
      owner: Person;
  }
 </code></pre>
@@ -200,7 +199,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L270">mapping/providers/decorators.ts:270</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L270">mapping/providers/decorators.ts:270</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -209,8 +208,8 @@
 								</div>
 								<p>See <a href="enums/changetrackingtype.html">ChangeTrackingType</a> for more information on the types of change tracking that are available.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
- @ChangeTracking(ChangeTrackingType.DeferredImplicit)
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
+ <span class="hljs-meta">@ChangeTracking</span>(ChangeTrackingType.DeferredImplicit)
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
      ...
  }
@@ -237,7 +236,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L126">mapping/providers/decorators.ts:126</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L126">mapping/providers/decorators.ts:126</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -248,8 +247,8 @@
 									MongoDB based on the name of the class and the <a href="classes/configuration.html#collectionnamingstrategy">collectionNamingStrategy</a> in the <a href="classes/configuration.html">Configuration</a>. The default
 								naming strategy is <a href="modules/namingstrategies.html#camelcase">CamelCase</a>.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Collection(<span class="hljs-string">"people"</span>)
- @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Collection</span>(<span class="hljs-string">"people"</span>)
+ <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
     ...
  }
@@ -266,7 +265,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L145">mapping/providers/decorators.ts:145</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L145">mapping/providers/decorators.ts:145</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -277,8 +276,8 @@
 									MongoDB based on the name of the class and the <a href="classes/configuration.html#collectionnamingstrategy">collectionNamingStrategy</a> in the <a href="classes/configuration.html">Configuration</a>. The default
 								naming strategy is <a href="modules/namingstrategies.html#camelcase">CamelCase</a>.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Collection({ name: <span class="hljs-string">"logs"</span>, db: <span class="hljs-string">"dbname"</span>, options: { capped: <span class="hljs-literal">true</span> })
- @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Collection</span>({ name: <span class="hljs-string">"logs"</span>, db: <span class="hljs-string">"dbname"</span>, options: { capped: <span class="hljs-literal">true</span> })
+ <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Log {
     ...
  }
@@ -298,13 +297,13 @@
 					<a name="converter" class="tsd-anchor"></a>
 					<h3>Converter</h3>
 					<ul class="tsd-signatures tsd-kind-function">
-						<li class="tsd-signature tsd-kind-icon">Converter<span class="tsd-signature-symbol">(</span>converter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">(&lt;TFunction extends Function&gt;(target: TFunction) =&gt; TFunction | void) &amp; ((target: Object, propert...</span></li>
+						<li class="tsd-signature tsd-kind-icon">Converter<span class="tsd-signature-symbol">(</span>converter<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ClassDecorator</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">PropertyDecorator</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L106">mapping/providers/decorators.ts:106</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L106">mapping/providers/decorators.ts:106</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -317,7 +316,7 @@
 								<h3 id="example">Example</h3>
 								<p>The example below defines the property converter on the Point class. In this case the convert is used for all
 								instances of the Point class.</p>
-								<pre><code class="lang-typescript"> @Converter(PointConverter)
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Converter</span>(PointConverter)
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Point {
 
     x: <span class="hljs-built_in">number</span>;
@@ -326,19 +325,19 @@
 </code></pre>
 								<p>The example below defines the property converter as an instance of the converter. Passing an instance of the
 								converter to the decorator allows for options to be passed to the converter.</p>
-								<pre><code class="lang-typescript"> @Converter(<span class="hljs-keyword">new</span> EnumerationConverter(IdentifierType))
- <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> IdentifierType extends Enumeration {
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Converter</span>(<span class="hljs-keyword">new</span> EnumerationConverter(IdentifierType))
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> IdentifierType <span class="hljs-keyword">extends</span> Enumeration {
      ...
  }
 </code></pre>
 								<p>The example below specifies the property converter on the properties of the target class.</p>
-								<pre><code class="lang-typescript"> @Embeddable(Rectangle)
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Embeddable</span>(Rectangle)
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Rectangle {
 
-    @Converter(PointConverter)
+    <span class="hljs-meta">@Converter</span>(PointConverter)
     topLeft: Point;
 
-    @Converter(PointConverter)
+    <span class="hljs-meta">@Converter</span>(PointConverter)
     bottomRight: Point;
  }
 </code></pre>
@@ -349,7 +348,10 @@
 									<h5>converter: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol"> | </span><a href="interfaces/parameterlessconstructor.html" class="tsd-signature-type">ParameterlessConstructor</a><span class="tsd-signature-symbol">&lt;</span><a href="interfaces/propertyconverter.html" class="tsd-signature-type">PropertyConverter</a><span class="tsd-signature-symbol">&gt;</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">(&lt;TFunction extends Function&gt;(target: TFunction) =&gt; TFunction | void) &amp; ((target: Object, propert...</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">ClassDecorator</span>
+								<span class="tsd-signature-symbol"> &amp; </span>
+								<span class="tsd-signature-type">PropertyDecorator</span>
+							</h4>
 						</li>
 					</ul>
 				</section>
@@ -363,7 +365,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L287">mapping/providers/decorators.ts:287</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L287">mapping/providers/decorators.ts:287</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -372,8 +374,8 @@
 								</div>
 								<p>If the discriminator field is not specified, a value of <code>__t</code> is used.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
- @DiscriminatorField(<span class="hljs-string">"type"</span>)
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
+ <span class="hljs-meta">@DiscriminatorField</span>(<span class="hljs-string">"type"</span>)
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
      ...
  }
@@ -399,7 +401,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L317">mapping/providers/decorators.ts:317</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L317">mapping/providers/decorators.ts:317</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -409,20 +411,20 @@
 								<p>If the discriminator value is not specified, the discriminator value for a class is determined using the
 								<a href="classes/configuration.html#discriminatornamingstrategy">discriminatorNamingStrategy</a> on the <a href="classes/configuration.html">Configuration</a>. By default, the name of the class is used.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">class</span> Party {
     ...
  }
 
- @Entity()
- @DiscriminatorValue(<span class="hljs-string">"P"</span>)
- <span class="hljs-keyword">class</span> Person extends Party {
+ <span class="hljs-meta">@Entity</span>()
+ <span class="hljs-meta">@DiscriminatorValue</span>(<span class="hljs-string">"P"</span>)
+ <span class="hljs-keyword">class</span> Person <span class="hljs-keyword">extends</span> Party {
     ...
  }
 
- @Entity()
- @DiscriminatorValue(<span class="hljs-string">"O"</span>)
- <span class="hljs-keyword">class</span> Organization extends Party {
+ <span class="hljs-meta">@Entity</span>()
+ <span class="hljs-meta">@DiscriminatorValue</span>(<span class="hljs-string">"O"</span>)
+ <span class="hljs-keyword">class</span> Organization <span class="hljs-keyword">extends</span> Party {
     ...
  }
 </code></pre>
@@ -447,7 +449,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L541">mapping/providers/decorators.ts:541</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L569">mapping/providers/decorators.ts:569</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -457,10 +459,10 @@
 								<p>TypeScript does not provide the type of an array element, so the type of the array element must be indicate with the
 								ElementType decorator.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Organization {
 
-     @ElementType(Address)
+     <span class="hljs-meta">@ElementType</span>(Address)
      addresses: Address[];
  }
 </code></pre>
@@ -485,7 +487,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L61">mapping/providers/decorators.ts:61</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L61">mapping/providers/decorators.ts:61</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -493,7 +495,7 @@
 									<p>Specifies that a class can be embedded as a subdocument within an entity, array, or another embeddable.</p>
 								</div>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Embeddable()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Embeddable</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Address {
     ...
  }
@@ -513,7 +515,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L46">mapping/providers/decorators.ts:46</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L46">mapping/providers/decorators.ts:46</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -521,7 +523,7 @@
 									<p>Specifies that a class is a persistent entity and will be serialized to a document within a MongoDB collection.</p>
 								</div>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
     ...
  }
@@ -541,7 +543,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L382">mapping/providers/decorators.ts:382</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L410">mapping/providers/decorators.ts:410</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -558,10 +560,10 @@
      Archived
  }
 
- @Entity()
+ <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
 
-     @Enumerated(TaskStatus)
+     <span class="hljs-meta">@Enumerated</span>(TaskStatus)
      status: TaskStatus;
      ...
  }
@@ -587,7 +589,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L501">mapping/providers/decorators.ts:501</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L529">mapping/providers/decorators.ts:529</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -603,10 +605,10 @@
 									<li>A FetchType of Eager on a property that is not an entity reference has no effect.</li>
 								</ul>
 								<h4 id="example">Example</h4>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
 
-     @Fetch(FetchType.Eager)
+     <span class="hljs-meta">@Fetch</span>(FetchType.Eager)
      owner: Person;
  }
 </code></pre>
@@ -621,10 +623,10 @@
 									<li>It is generally not advisable to use a FetchType of Lazy on a property that is an entity reference.</li>
 								</ul>
 								<h4 id="example">Example</h4>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
 
-     @Fetch(FetchType.Lazy)
+     <span class="hljs-meta">@Fetch</span>(FetchType.Lazy)
      image: Buffer;
  }
 </code></pre>
@@ -650,7 +652,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L334">mapping/providers/decorators.ts:334</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L334">mapping/providers/decorators.ts:334</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -658,10 +660,10 @@
 									<p>Specifies the name of the field that should be used to serialize a property on an entity or embeddable class.</p>
 								</div>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
 
-      @Field(<span class="hljs-string">"n"</span>)
+      <span class="hljs-meta">@Field</span>(<span class="hljs-string">"n"</span>)
      name: <span class="hljs-built_in">string</span>;
      ...
  }
@@ -678,21 +680,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L355">mapping/providers/decorators.ts:355</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L355">mapping/providers/decorators.ts:355</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Describes the field that should be used to serialize a property on an entity or embeddable class.</p>
 								</div>
-								<p>By default <code>null</code> values are treated the same as <code>undefined</code> values and removed from the serialized document.
-									Setting a value of <code>nullable: true</code> in the field description indicates that <code>null</code> values should be saved to the
-								database.</p>
+								<p>Setting a value for <code>nullable</code> in the field description indicates whether or not <code>null</code> values should be saved to the database. If not
+									specified, the value in the <a href="classes/configuration.html">Configuration</a> is used. If <code>null</code> values are not allowed, <code>null</code> values are treated the same as
+								<code>undefined</code> values and removed from the serialized document.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
 
-      @Field({ nullable: <span class="hljs-literal">true</span> })
+      <span class="hljs-meta">@Field</span>({ nullable: <span class="hljs-literal">true</span> })
      name: <span class="hljs-built_in">string</span>;
      ...
  }
@@ -718,7 +720,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L179">mapping/providers/decorators.ts:179</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L179">mapping/providers/decorators.ts:179</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -727,8 +729,8 @@
 									dirty checking. When specified on an Embeddable, the original document for the Embeddable is cached and used for serialization.</p>
 								</div>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Embeddable()
- @Immutable()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Embeddable</span>()
+ <span class="hljs-meta">@Immutable</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Name {
 
      <span class="hljs-keyword">get</span> first(): <span class="hljs-built_in">string</span> {
@@ -739,13 +741,13 @@
          <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>._last;
      }
 
-     @Field()
+     <span class="hljs-meta">@Field</span>()
      <span class="hljs-keyword">private</span> _last: <span class="hljs-built_in">string</span>;
 
-     @Field()
+     <span class="hljs-meta">@Field</span>()
      <span class="hljs-keyword">private</span> _first: <span class="hljs-built_in">string</span>;
 
-     <span class="hljs-constructor"><span class="hljs-keyword">constructor</span>(last: string, first: string) </span>{
+     <span class="hljs-keyword">constructor</span>(<span class="hljs-params">last: <span class="hljs-built_in">string</span>, first: <span class="hljs-built_in">string</span></span>) {
          <span class="hljs-keyword">this</span>._last = last;
          <span class="hljs-keyword">this</span>._first = first;
      }
@@ -767,7 +769,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L202">mapping/providers/decorators.ts:202</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L202">mapping/providers/decorators.ts:202</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -776,14 +778,14 @@
 								</div>
 								<p>This is the required method of defining indexes when compound keys are needed.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
- @Index({ keys: [[<span class="hljs-string">'name'</span>, <span class="hljs-number">1</span>], [<span class="hljs-string">'age'</span>, <span class="hljs-number">1</span>]] })
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
+ <span class="hljs-meta">@Index</span>({ keys: [[<span class="hljs-string">'name'</span>, <span class="hljs-number">1</span>], [<span class="hljs-string">'age'</span>, <span class="hljs-number">1</span>]] })
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
 
-     @Field()
+     <span class="hljs-meta">@Field</span>()
      name: <span class="hljs-built_in">string</span>;
 
-     @Field()
+     <span class="hljs-meta">@Field</span>()
      age: <span class="hljs-built_in">number</span>;
      ...
  }
@@ -800,7 +802,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L219">mapping/providers/decorators.ts:219</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L219">mapping/providers/decorators.ts:219</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -808,10 +810,10 @@
 									<p>Specifies a database index should be generated for the specified field on the collection holds this entity.</p>
 								</div>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
 
-     @Index()
+     <span class="hljs-meta">@Index</span>()
      name: <span class="hljs-built_in">string</span>;
      ...
  }
@@ -837,7 +839,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L440">mapping/providers/decorators.ts:440</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L468">mapping/providers/decorators.ts:468</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -846,47 +848,47 @@
 								</div>
 								<h3 id="example">Example</h3>
 								<p>In the example below, the reference is stored on the <code>patient</code> property of the <code>Admission</code> entity.</p>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Patient {
 
-     @InverseOf(<span class="hljs-string">"patient"</span>)
-     @ElementType(Admission)
+     <span class="hljs-meta">@InverseOf</span>(<span class="hljs-string">"patient"</span>)
+     <span class="hljs-meta">@ElementType</span>(Admission)
      admissions: Admission[];
      ...
  }
 
- @Entity()
+ <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Admission {
 
-     @Field()
+     <span class="hljs-meta">@Field</span>()
      patient: Patient;
      ...
  }
 
  ...
- session.fetch(patient.admissions, (err, admissions) =&gt; {
+ session.fetch(patient.admissions, <span class="hljs-function">(<span class="hljs-params">err, admissions</span>) =&gt;</span> {
       ...
  });
 </code></pre>
 								<p>In the example below, the references are stored on the <code>admissions</code> property of the <code>Patient</code> entity.</p>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Patient {
 
-     @ElementType(Admission)
+     <span class="hljs-meta">@ElementType</span>(Admission)
      admissions: Admission[];
      ...
  }
 
- @Entity()
+ <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Admission {
 
-     @InverseOf(<span class="hljs-string">"admissions"</span>)
+     <span class="hljs-meta">@InverseOf</span>(<span class="hljs-string">"admissions"</span>)
      patient: Patient;
      ...
  }
 
  ...
- session.fetch(admission.patient, (err, patient) =&gt; {
+ session.fetch(admission.patient, <span class="hljs-function">(<span class="hljs-params">err, patient</span>) =&gt;</span> {
       ...
  });
 </code></pre>
@@ -902,6 +904,47 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="parent" class="tsd-anchor"></a>
+					<h3>Parent</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">Parent<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PropertyDecorator</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L383">mapping/providers/decorators.ts:383</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Indicates that a property is a reference to the parent of an embeddable class.</p>
+								</div>
+								<p>The reference to the parent is automatically populated when the document is read from the database and the object graph is built. The
+								value of the property is not saved to the database.</p>
+								<h3 id="example">Example</h3>
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
+
+      <span class="hljs-meta">@ElementType</span>(Address)
+     addresses: Address[];
+     ...
+ }
+
+ <span class="hljs-meta">@Embeddable</span>()
+ <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Address {
+
+      <span class="hljs-meta">@Parent</span>()
+     resident: Person;
+     ...
+ }
+</code></pre>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PropertyDecorator</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
 					<a name="transient" class="tsd-anchor"></a>
 					<h3>Transient</h3>
 					<ul class="tsd-signatures tsd-kind-function">
@@ -911,7 +954,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L567">mapping/providers/decorators.ts:567</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L595">mapping/providers/decorators.ts:595</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -922,11 +965,11 @@
 									mapped.</em> However, if you wish to prevent a decorated property from being mapped, decorate that property with the
 								Transient decorator as demonstrated below.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> User {
 
-     @Transient()
-     @SomeOtherDecorator()
+     <span class="hljs-meta">@Transient</span>()
+     <span class="hljs-meta">@SomeOtherDecorator</span>()
      <span class="hljs-keyword">private</span> _something: <span class="hljs-built_in">string</span>;
  }
 </code></pre>
@@ -945,7 +988,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L522">mapping/providers/decorators.ts:522</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L550">mapping/providers/decorators.ts:550</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -957,10 +1000,10 @@
 									determined because of circular references of <code>import</code> statements. In this case the Type decorator should be used
 								with the name of the type.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Task {
 
-     @Type(<span class="hljs-string">"Person"</span>)
+     <span class="hljs-meta">@Type</span>(<span class="hljs-string">"Person"</span>)
      owner: Person;
  }
 </code></pre>
@@ -985,7 +1028,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L236">mapping/providers/decorators.ts:236</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L236">mapping/providers/decorators.ts:236</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -994,8 +1037,8 @@
 								</div>
 								<p>If the version field is not specified, <code>__v</code> is used.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
- @VersionField(<span class="hljs-string">"version"</span>)
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
+ <span class="hljs-meta">@VersionField</span>(<span class="hljs-string">"version"</span>)
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
      ...
  }
@@ -1021,7 +1064,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/mapping/providers/decorators.ts#L253">mapping/providers/decorators.ts:253</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/mapping/providers/decorators.ts#L253">mapping/providers/decorators.ts:253</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1030,8 +1073,8 @@
 								</div>
 								<p>Optimistic locking is enabled by default. A value of <code>false</code> disables optimistic locking.</p>
 								<h3 id="example">Example</h3>
-								<pre><code class="lang-typescript"> @Entity()
- @Versioned(<span class="hljs-literal">false</span>)
+								<pre><code class="lang-typescript"> <span class="hljs-meta">@Entity</span>()
+ <span class="hljs-meta">@Versioned</span>(<span class="hljs-literal">false</span>)
  <span class="hljs-keyword">export</span> <span class="hljs-keyword">class</span> Person {
      ...
  }
@@ -1057,7 +1100,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/master/src/index.ts#L45">index.ts:45</a></li>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/index.ts#L45">index.ts:45</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1081,6 +1124,32 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function">
+					<a name="shallowequal" class="tsd-anchor"></a>
+					<h3>shallow<wbr>Equal</h3>
+					<ul class="tsd-signatures tsd-kind-function">
+						<li class="tsd-signature tsd-kind-icon">shallow<wbr>Equal<span class="tsd-signature-symbol">(</span>obj1<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, obj2<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/artifacthealth/hydrate-mongodb/blob/9f75964/src/core/objectUtil.ts#L21">core/objectUtil.ts:21</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>obj1: <span class="tsd-signature-type">any</span></h5>
+								</li>
+								<li>
+									<h5>obj2: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">any</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -1253,6 +1322,9 @@
 						<a href="globals.html#inverseof" class="tsd-kind-icon">Inverse<wbr>Of</a>
 					</li>
 					<li class=" tsd-kind-function">
+						<a href="globals.html#parent" class="tsd-kind-icon">Parent</a>
+					</li>
+					<li class=" tsd-kind-function">
 						<a href="globals.html#transient" class="tsd-kind-icon">Transient</a>
 					</li>
 					<li class=" tsd-kind-function">
@@ -1266,6 +1338,9 @@
 					</li>
 					<li class=" tsd-kind-function">
 						<a href="globals.html#areequal" class="tsd-kind-icon">are<wbr>Equal</a>
+					</li>
+					<li class=" tsd-kind-function">
+						<a href="globals.html#shallowequal" class="tsd-kind-icon">shallow<wbr>Equal</a>
 					</li>
 				</ul>
 			</nav>
@@ -1332,7 +1407,7 @@
 	</div>
 </footer>
 <div class="container tsd-generator">
-	<p>Generated using <a href="http://typedoc.io" target="_blank">TypeDoc</a></p>
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
 </div>
 <div class="overlay"></div>
 <script src="assets/js/main.js"></script>
