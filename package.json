@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/chai": "^4.0.1",
+    "@types/change-case": "^2.3.1",
     "@types/glob": "^5.0.30",
     "@types/mocha": "^2.2.35",
     "@types/rx": "^4.1.1",
