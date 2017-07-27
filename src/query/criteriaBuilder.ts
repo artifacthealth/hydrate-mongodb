@@ -198,6 +198,7 @@ export class CriteriaBuilder {
                     case '$type':
                     case '$mod':
                     case '$regex':
+                    case '$options':
                     case '$geoIntersects':
                     case '$geoWithin':
                     case '$nearSphere':
