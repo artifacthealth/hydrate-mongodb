@@ -966,7 +966,6 @@ class BulkOperationCommand implements Command {
         };
 
         if(version != null) {
-            // TODO: adding the version to the query makes the query much slower. Couldn't figure out any way around it. Look into this.
             this._mapping.setDocumentVersion(query, version);
         }
 
