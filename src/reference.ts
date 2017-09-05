@@ -13,9 +13,6 @@ export class Reference {
      */
     id: string;
 
-    /**
-     * True if the Reference has been fetched; otherwise, false.
-     */
     constructor(public mapping: EntityMapping, private _id: any) {
 
         if (_id != null) {

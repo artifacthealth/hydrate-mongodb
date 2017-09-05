@@ -29,6 +29,7 @@ interface FindOneQuery {
     criteria: any;
     fields?: any;
     fetchPaths?: string[];
+    isLazy?: boolean;
 }
 
 interface FindAllQuery extends FindOneQuery {
@@ -349,7 +350,7 @@ export class PersisterImpl implements Persister {
 
         this._collection.findOne(query.criteria, query.fields, (err, document) => {
             if (err) return callback(err);
-            this._loadOne(document, callback);
+            this._loadOne(document, query.isLazy, callback);
         });
     }
 
@@ -389,7 +390,7 @@ export class PersisterImpl implements Persister {
                     return callback(null, entities);
                 }
 
-                self._loadOne(item, (err, value) => {
+                self._loadOne(item, query.isLazy, (err, value) => {
                     if(err) return error(err);
 
                     // Filter any null values from the result because null means the object is scheduled for removal
@@ -424,7 +425,14 @@ export class PersisterImpl implements Persister {
         }
 
         // todo: handle field projection
-        query.fields = this._defaultFields;
+
+        if (query.isLazy) {
+            // if it's a reference only query then just return the id
+            query.fields = { _id: 1 };
+        }
+        else {
+            query.fields = this._defaultFields;
+        }
 
         // map update document if it's defined
         if (query.updateDocument) {
@@ -596,7 +604,7 @@ export class PersisterImpl implements Persister {
             started++;
 
             // convert the document to an entity
-            self._loadOne(item, (err, value) => {
+            self._loadOne(item, query.isLazy, (err, value) => {
                 if(err) return error(err);
 
                 // Filter any null values from the result because null means the object is scheduled for removal
@@ -647,7 +655,7 @@ export class PersisterImpl implements Persister {
                     return callback();
                 }
 
-                self._loadOne(item, (err, value) => {
+                self._loadOne(item, query.isLazy, (err, value) => {
                     if(err) return error(err);
 
                     // Filter any null values from the result because null means the object is scheduled for removal
@@ -672,7 +680,7 @@ export class PersisterImpl implements Persister {
 
         callback(null, new CursorImpl(this._prepareFind(query), (document: Object, callback: ResultCallback<Object>) => {
 
-            this._loadOne(document, (err, entity) => {
+            this._loadOne(document, query.isLazy, (err, entity) => {
                 if (err) return callback(err);
 
                 if (!query.fetchPaths) {
@@ -733,7 +741,7 @@ export class PersisterImpl implements Persister {
             else {
                 // If the entity is not in the session, then it will be loaded and added to the session as managed.
                 // The state may be changed to Removed below.
-                this._loadOne(document, (err, value) => {
+                this._loadOne(document, query.isLazy, (err, value) => {
                     if(err) return callback(err);
                     entity = value;
                     handleCallback();
@@ -887,19 +895,21 @@ export class PersisterImpl implements Persister {
         }
     }
 
-    private _loadOne(document: any, callback: ResultCallback<Object>): void {
+    private _loadOne(document: any, reference: boolean, callback: ResultCallback<Object>): void {
 
         var entity: any;
 
         if (!document) {
             entity = null;
         }
+        else if (reference) {
+            entity = this._session.getReferenceInternal(this._mapping, document["_id"]);
+        }
         else {
             // Check to see if object is already loaded. Note explicit check for undefined here. Null means
             // that the object is loaded but scheduled for delete so null should be returned.
             entity = this._session.getObject(document["_id"]);
             if (entity === undefined) {
-
                 var context = new ReadContext(this._session);
                 entity = this._mapping.read(context, document);
                 if (context.hasErrors) {

@@ -1,10 +1,8 @@
 import * as RegExpUtil from "../core/regExpUtil";
 import {QueryDocument} from "./queryBuilder";
-import {ResolveContext} from "../mapping/resolveContext";
 import {MappingModel} from "../mapping/mappingModel";
 import {ArrayMapping} from "../mapping/arrayMapping";
 import {InternalMapping} from "../mapping/internalMapping";
-import {MappingError} from "../mapping/mappingError";
 import {EntityMapping} from "../mapping/entityMapping";
 import {WriteContext} from "../mapping/writeContext";
 import {PersistenceError} from "../persistenceError";

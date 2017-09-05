@@ -83,6 +83,24 @@ describe('QueryBuilderImpl', () => {
             });
         });
 
+        it('allows lazy fetching of references', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onExecuteQuery = (query: QueryDefinition) => {
+                    assert.isTrue(query.isLazy);
+                    done();
+                };
+
+                session.query(model.Person).findAll({}).lazy((err, results) => {
+                    if(err) return done(err);
+                });
+            });
+        });
+
         it("allows specification of 'each' iterator if callback is not provided", (done) => {
 
             helpers.createFactory("model", (err, factory) => {

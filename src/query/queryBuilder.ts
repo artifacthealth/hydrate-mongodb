@@ -66,6 +66,10 @@ export interface FindOneAndRemoveQuery<T> extends Query<T> {
     sort(fields: [string, number][], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
     fetch(path: string, callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
     fetch(paths: string[], callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
+    /**
+     * Return a reference instead of the Entity for unmanaged Entities.
+     */
+    lazy(callback?: ResultCallback<T>): FindOneAndRemoveQuery<T>;
 }
 
 export interface FindOneAndUpdateQuery<T> extends Query<T> {
@@ -75,12 +79,20 @@ export interface FindOneAndUpdateQuery<T> extends Query<T> {
     fetch(path: string, callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
     fetch(paths: string[], callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
     returnUpdated(callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
+    /**
+     * Return a reference instead of the Entity for unmanaged Entities.
+     */
+    lazy(callback?: ResultCallback<T>): FindOneAndUpdateQuery<T>;
 }
 
 export interface FindOneQuery<T> extends Query<T> {
 
     fetch(path: string, callback?: ResultCallback<T>): FindOneQuery<T>;
     fetch(paths: string[], callback?: ResultCallback<T>): FindOneQuery<T>;
+    /**
+     * Return a reference instead of the Entity for unmanaged Entities.
+     */
+    lazy(callback?: ResultCallback<T>): FindOneQuery<T>;
 }
 
 export interface FindQuery<T> extends Query<T[]> {
@@ -91,6 +103,10 @@ export interface FindQuery<T> extends Query<T[]> {
     fetch(paths: string[], callback?: ResultCallback<T[]>): FindQuery<T>;
     limit(value: number, callback?: ResultCallback<T[]>): FindQuery<T>;
     skip(value: number, callback?: ResultCallback<T[]>): FindQuery<T>;
+    /**
+     * Return references instead of Entities for unmanaged Entities.
+     */
+    lazy(callback?: ResultCallback<T[]>): FindQuery<T>;
     batchSize(value: number): FindQuery<T>;
     each(iterator: IteratorCallback<T>, callback: Callback): void;
     eachSeries(iterator: IteratorCallback<T>, callback: Callback): void;
@@ -292,7 +308,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     criteria: QueryDocument;
     fields: QueryDocument;
     updateDocument: QueryDocument;
-
+    isLazy: boolean;
     wantsUpdated: boolean;
     fetchPaths: string[];
     sortValue: [string, number][];
@@ -377,6 +393,12 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     returnUpdated(callback?: ResultCallback<any>): QueryObject {
 
         this.wantsUpdated = true;
+        return this.handleCallback(callback);
+    }
+
+    lazy(callback?: ResultCallback<any>): QueryObject {
+
+        this.isLazy = true;
         return this.handleCallback(callback);
     }
 
@@ -541,6 +563,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
             criteria: this.criteria,
             fields: this.fields,
             update: this.updateDocument,
+            isLazy: this.isLazy,
             wantsUpdated: this.wantsUpdated,
             fetch: this.fetchPaths,
             sort: this.sortValue,

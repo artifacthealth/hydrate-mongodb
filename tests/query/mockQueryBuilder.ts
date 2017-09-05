@@ -198,7 +198,7 @@ export class MockQueryObject implements FindQuery<Object>, FindOneQuery<Object>,
     id: any;
     criteria: QueryDocument;
     updateDocument: QueryDocument;
-
+    isLazy: boolean;
     wantsUpdated: boolean;
     fetchPaths: string[];
     sortValue: [string, number][];
@@ -283,6 +283,12 @@ export class MockQueryObject implements FindQuery<Object>, FindOneQuery<Object>,
     returnUpdated(callback?: ResultCallback<any>): MockQueryObject {
 
         this.wantsUpdated = true;
+        return this.handleCallback(callback);
+    }
+
+    lazy(callback?: ResultCallback<any>): MockQueryObject {
+
+        this.isLazy = true;
         return this.handleCallback(callback);
     }
 

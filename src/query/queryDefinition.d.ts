@@ -17,7 +17,7 @@ export interface QueryDefinition {
     criteria: QueryDocument;
     fields: QueryDocument;
     updateDocument: QueryDocument;
-
+    isLazy: boolean;
     wantsUpdated: boolean;
     fetchPaths: string[];
     sortValue: [string, number][];

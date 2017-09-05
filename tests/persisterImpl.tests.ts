@@ -389,6 +389,29 @@ describe('PersisterImpl', () => {
                     });
                 });
             });
+
+
+            it("only fetches the _id if the query is lazy", (done) => {
+
+                var collection = new MockCollection();
+                collection.onFind = (criteria, fields) => {
+                    assert.deepEqual(fields, { _id: 1 });
+                    done();
+                    return collection.createCursor();
+                };
+
+                helpers.createPersister(collection, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.FindAll);
+                    query.criteria = {};
+                    query.isLazy = true;
+
+                    persister.executeQuery(query, (err, results) => {
+                        if(err) return done(err);
+                    });
+                });
+            });
         });
 
         describe('distinct', () => {

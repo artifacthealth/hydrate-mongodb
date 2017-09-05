@@ -12,7 +12,7 @@ export class QueryDefinitionStub implements QueryDefinition {
     criteria: QueryDocument;
     fields: QueryDefinition;
     updateDocument: QueryDocument;
-
+    isLazy: boolean;
     wantsUpdated: boolean;
     fetchPaths: string[];
     sortValue: [string, number][];
