@@ -1,6 +1,5 @@
-import { Db, Cursor, Collection, MongoCollectionOptions, CollectionCreateOptions, IndexOptions } from "mongodb";
+import { Db, Cursor, Collection, MongoCollectionOptions, IndexOptions } from "mongodb";
 import {MockCursor} from "./mockCursor";
-import {MockBulk} from "./mockBulk";
 import {MockCollection} from "./mockCollection";
 
 export class MockDb implements Db {
@@ -89,8 +88,7 @@ export class MockDb implements Db {
         throw new Error("Not implemented");
     }
 
-    createCollection(collectionName: string, callback?: (err: Error, result: Collection) => void ): void;
-    createCollection(collectionName: string, options: CollectionCreateOptions, callback?: (err: Error, result: any) => void ): void {
+    createCollection(collectionName: string, options?: any, callback?: (err: Error, result: any) => void ): void {
         throw new Error("Not implemented");
     }
 

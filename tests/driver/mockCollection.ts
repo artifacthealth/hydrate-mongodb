@@ -132,7 +132,7 @@ export class MockCollection implements mongodb.Collection {
 
     }
 
-    remove(selector: Object, options: { safe?: any; single?: boolean; }, callback?: (err: Error, result: any) => void): void {
+    remove(selector: Object, options?: any, callback?: (err: Error, result: any) => void): void {
 
     }
 
