@@ -2,7 +2,7 @@ import {assert} from "chai";
 import * as async from "async";
 import * as helpers from "./helpers";
 import * as model from "./fixtures/model";
-import {Cursor} from "mongodb";
+import {Cursor, ObjectID} from "mongodb";
 import {MockCursor} from "./driver/mockCursor";
 import {MockCollection} from "./driver/mockCollection";
 import {QueryDefinitionStub} from "./query/queryDefinitionStub";
@@ -15,6 +15,7 @@ import {createFactory} from "./helpers";
 import {MockInternalSession} from "./mockInternalSession";
 import {EntityNotFoundError} from "../src/persistenceError";
 import {Callback} from "../src/core/callback";
+import {User} from "./fixtures/model";
 
 describe('PersisterImpl', () => {
 
@@ -548,6 +549,39 @@ describe('PersisterImpl', () => {
 
                     persister.executeQuery(query, (err, results) => {
                         if(err) return done(err);
+                    });
+                });
+            });
+        });
+
+        describe('findOneAndRemove', () => {
+
+            it('calls findAndModify on the collection', (done) => {
+
+                var id = new ObjectID(),
+                    called = false;
+
+                var collection = new MockCollection();
+                collection.onFindAndModify = (query: Object, sort: any[], doc: Object, options: any, callback?: (err: Error, result: any) => void) => {
+
+                    assert.deepEqual(query, { _id: id });
+                    called = true;
+
+                    callback(null, { value: { _id: id }});
+                };
+
+                helpers.createPersister(collection, model.User, (err, persister) => {
+                    if (err) return done(err);
+
+                    var query = new QueryDefinitionStub(QueryKind.FindOneAndRemove);
+                    query.criteria = { _id: id };
+
+                    persister.executeQuery(query, (err, result) => {
+                        if(err) return done(err);
+
+                        assert.instanceOf(result, User);
+                        assert.isTrue(called);
+                        done();
                     });
                 });
             });

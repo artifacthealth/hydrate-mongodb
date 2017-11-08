@@ -723,6 +723,7 @@ export class PersisterImpl implements Persister {
             new: query.wantsUpdated,
             upsert: query.kind == QueryKind.FindOneAndUpsert
         };
+        var self = this;
 
         this._collection.findAndModify(query.criteria, query.orderDocument, query.updateDocument, options, (err, response) => {
             if (err) return callback(err);
@@ -748,7 +749,6 @@ export class PersisterImpl implements Persister {
                 });
             }
 
-            var self = this;
             function handleCallback() {
                 // If the entity is not pending deletion, then see if we need to refresh the entity from the updated
                 // document or notify the session that the entity is now removed.

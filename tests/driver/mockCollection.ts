@@ -128,9 +128,17 @@ export class MockCollection implements mongodb.Collection {
     onFindOne: (selector: Object, fields: Object, callback?: (err: Error, result: any) => void) => any;
 
 
-    findAndModify(query: Object, sort: any[], doc: Object, optionsOrCallbac: any, callback?: (err: Error, result: any) => void): void {
+    findAndModify(query: Object, sort: any[], doc: Object, optionsOrCallback: any, callback?: (err: Error, result: any) => void): void {
 
+        if (typeof optionsOrCallback === "function") {
+            callback = optionsOrCallback;
+            optionsOrCallback = {};
+        }
+
+        process.nextTick(() => this.onFindAndModify(query, sort, doc, optionsOrCallback, callback));
     }
+
+    onFindAndModify: (query: Object, sort: any[], doc: Object, options: any, callback?: (err: Error, result: any) => void) => void;
 
     remove(selector: Object, options?: any, callback?: (err: Error, result: any) => void): void {
 
