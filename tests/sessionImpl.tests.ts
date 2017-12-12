@@ -221,7 +221,7 @@ describe('SessionImpl', () => {
         });
     });
 
-    describe.only('isDirty', () => {
+    describe('isDirty', () => {
 
         it('returns true if the entity is not equal to the original document', (done) => {
 
