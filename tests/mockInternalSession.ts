@@ -171,6 +171,13 @@ export class MockInternalSession extends EventEmitter implements InternalSession
         return undefined;
     }
 
+    isDirty(obj: Object, callback?: ResultCallback<boolean>): boolean {
+        if (callback) {
+            callback(null, false);
+        }
+        return false;
+    }
+
     getVersion(obj: Object): number {
         return undefined;
     }

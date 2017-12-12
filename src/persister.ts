@@ -81,9 +81,11 @@ export interface Persister {
     changeTracking: ChangeTrackingType;
     identity: IdentityGenerator;
 
-    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void;
-    addInsert(batch: Batch, entity: Object, callback: ResultCallback<Object>): void;
-    addRemove(batch: Batch, entity: Object, callback: Callback): void;
+    areDocumentsEqual(context: DirtyCheckContext, entity: Object, originalDocument: Object): boolean;
+
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Object;
+    addInsert(batch: Batch, entity: Object): Object;
+    addRemove(batch: Batch, entity: Object): void;
 
     fetch(entity: Object, path: string, callback: Callback): void;
     fetchPropertyValue(entity: any, property: Property, callback: ResultCallback<any>): void;
@@ -94,6 +96,11 @@ export interface Persister {
     findOneById(id: any, callback: ResultCallback<any>): void;
     findInverseOf(entity: Object, path: string, callback: ResultCallback<Object[]>): void;
     findOneInverseOf(entity: Object, path: string, callback: ResultCallback<Object>): void;
+}
+
+export interface DirtyCheckContext {
+
+    error?: Error;
 }
 
 /**
@@ -128,17 +135,12 @@ export class PersisterImpl implements Persister {
         this._defaultFields = mapping.getDefaultFields();
     }
 
-    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object, callback: ResultCallback<Object>): void {
+    dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Object {
 
-        var context = new WriteContext();
-        var document = this._mapping.write(context, entity);
-        if(context.hasErrors) {
-            return callback(new PersistenceError(`Error serializing document:\n${context.getErrorMessage()}`));
-        }
-
-        if(this._mapping.areDocumentsEqual(originalDocument, document)) {
+        var document = this._dirtyCheck(batch, entity, originalDocument);
+        if(!document) {
             // document did not change
-            callback(null);
+            return null;
         }
         else {
             // update version field if versioned
@@ -150,16 +152,40 @@ export class PersisterImpl implements Persister {
             }
 
             this._getCommand(batch).addReplace(document, version);
-            callback(null, document);
+            return document;
         }
     }
 
-    addInsert(batch: Batch, entity: Object, callback: ResultCallback<Object>): void {
+    areDocumentsEqual(context: DirtyCheckContext, entity: Object, originalDocument: Object): boolean {
+
+        return this._dirtyCheck(context, entity, originalDocument) == null;
+    }
+
+    private _dirtyCheck(context: DirtyCheckContext, entity: Object, originalDocument: Object): Object {
+
+        var writeContext = new WriteContext();
+        var document = this._mapping.write(writeContext, entity);
+        if(writeContext.hasErrors) {
+            context.error = new PersistenceError(`Error serializing document:\n${writeContext.getErrorMessage()}`);
+            return null;
+        }
+
+        if(this._mapping.areDocumentsEqual(originalDocument, document)) {
+            // document did not change
+            return null;
+        }
+        else {
+            return document;
+        }
+    }
+
+    addInsert(batch: Batch, entity: Object): Object {
 
         var context = new WriteContext();
         var document = this._mapping.write(context, entity);
         if(context.hasErrors) {
-            return callback(new PersistenceError(`Error serializing document:\n${context.getErrorMessage()}`));
+            batch.error = new PersistenceError(`Error serializing document:\n${context.getErrorMessage()}`);
+            return null;
         }
 
         // add version field if versioned
@@ -168,13 +194,12 @@ export class PersisterImpl implements Persister {
         }
 
         this._getCommand(batch).addInsert(document);
-        callback(null, document);
+        return document;
     }
 
-    addRemove(batch: Batch, entity: any, callback: Callback): void {
+    addRemove(batch: Batch, entity: any): void {
 
         this._getCommand(batch).addRemove(entity["_id"]);
-        callback();
     }
 
     /**

@@ -10,6 +10,11 @@ import {FlushPriority} from "./mapping/mappingModel";
  */
 export class Batch implements Command {
 
+    /**
+     * Error that occurred while with building the batch.
+     */
+    error: Error;
+
     private _commandTable: Table<Command> = [];
     private _commands: Command[] = [];
     private _executed = false;

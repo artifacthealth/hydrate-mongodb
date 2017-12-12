@@ -10,7 +10,6 @@ import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {ObjectIdGenerator} from "../src/config/objectIdGenerator";
 import {QueryKind} from "../src/query/queryKind";
 import {Callback} from "../src/core/callback";
-import {Reference} from "../src/reference";
 
 // Fixtures
 import {Cat} from "./fixtures/cat";
@@ -217,6 +216,186 @@ describe('SessionImpl', () => {
                     var persister = factory.getPersisterForObject(session, entity);
                     assert.equal(persister.insertCalled, entity.cascadeArray.length + 2);
                     done();
+                });
+            });
+        });
+    });
+
+    describe.only('isDirty', () => {
+
+        it('returns true if the entity is not equal to the original document', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                var entity = createEntity();
+
+                // setup persister to handle onFindOneById call
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onAreDocumentsEqual = (context, checkedEntity, originalDocument) => {
+                    assert.ok(context);
+                    assert.ok(originalDocument, "Expected original document");
+                    assert.equal(checkedEntity, entity);
+                    return false;
+                };
+
+                session.save(entity, (err) => {
+                    if (err) return done(err);
+
+                    session.flush((err) => {
+                        if (err) return done(err);
+
+                        assert.isTrue(session.isDirty(entity));
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('calls callback with true if the entity is not equal to the original document', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                // setup persister to handle onFindOneById call
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onAreDocumentsEqual = (context, entity, originalDocument) => {
+                    return false;
+                };
+
+                var entity = createEntity();
+                session.save(entity, (err) => {
+                    if (err) return done(err);
+
+                    session.flush((err) => {
+                        if (err) return done(err);
+
+                        session.isDirty(entity, (err, result) => {
+                            if (err) return done(err);
+                            assert.isTrue(result);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+
+        it('returns false if the entity is equal to the original document', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                // setup persister to handle onFindOneById call
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onAreDocumentsEqual = (context, entity, originalDocument) => {
+                    return true;
+                };
+
+                var entity = createEntity();
+                session.save(entity, (err) => {
+                    if (err) return done(err);
+
+                    session.flush((err) => {
+                        if (err) return done(err);
+
+                        assert.isFalse(session.isDirty(entity));
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('calls callback with false if the entity is equal to the original document', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                // setup persister to handle onFindOneById call
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onAreDocumentsEqual = (context, entity, originalDocument) => {
+                    return true;
+                };
+
+                var entity = createEntity();
+                session.save(entity, (err) => {
+                    if (err) return done(err);
+
+                    session.flush((err) => {
+                        if (err) return done(err);
+
+                        session.isDirty(entity, (err, result) => {
+                            if (err) return done(err);
+                            assert.isFalse(result);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+
+        it('returns null if there is an error serializing the entity', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                // setup persister to handle onFindOneById call
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onAreDocumentsEqual = (context, entity, originalDocument) => {
+                    context.error = new Error("Some error");
+                    return null;
+                };
+
+                var entity = createEntity();
+                session.save(entity, (err) => {
+                    if (err) return done(err);
+
+                    session.flush((err) => {
+                        if (err) return done(err);
+
+                        assert.isNull(session.isDirty(entity));
+                        done();
+                    });
+                });
+            });
+        });
+
+        it('calls callback with the error if there is error serializing the entity', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                // setup persister to handle onFindOneById call
+                var persister = factory.getPersisterForConstructor(session, model.Person);
+                persister.onAreDocumentsEqual = (context, entity, originalDocument) => {
+                    context.error = new Error("Some error");
+                    return null;
+                };
+
+                var entity = createEntity();
+                session.save(entity, (err) => {
+                    if (err) return done(err);
+
+                    session.flush((err) => {
+                        if (err) return done(err);
+
+                        session.isDirty(entity, (err, result) => {
+                            assert.ok(err);
+                            done();
+                        });
+                    });
                 });
             });
         });

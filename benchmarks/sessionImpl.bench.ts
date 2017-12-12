@@ -4,7 +4,7 @@ import { Configuration } from "../src/config/configuration";
 import { AnnotationMappingProvider } from "../src/mapping/providers/annotationMappingProvider";
 import { Cat } from "../tests/fixtures/cat";
 import { SessionFactory, SessionFactoryImpl } from "../src/sessionFactory";
-import { Persister } from "../src/persister";
+import {DirtyCheckContext, Persister} from "../src/persister";
 import { IdentityGenerator } from "../src/config/configuration";
 import { Batch } from "../src/batch";
 import { MappingModel, ChangeTrackingType } from "../src/mapping/mappingModel";
@@ -107,17 +107,22 @@ class DummyPersister implements Persister {
         this.identity = (<EntityMapping>mapping.inheritanceRoot).identity;
     }
 
-    dirtyCheck(batch: Batch, entity: any, originalDocument: any, callback: ResultCallback<Object>): void {
-        callback(null, originalDocument);
+    areDocumentsEqual(context: DirtyCheckContext, entity: Object, originalDocument: Object): boolean {
+        return true;
     }
 
-    addInsert(batch: Batch, entity: any, callback: ResultCallback<Object>): void {
-        callback(null, {});
+    dirtyCheck(batch: Batch, entity: any, originalDocument: any): Object {
+
+        return originalDocument;
     }
 
-    addRemove(batch: Batch, entity: any, callback: Callback): void {
+    addInsert(batch: Batch, entity: any): Object {
 
-        callback();
+        return {};
+    }
+
+    addRemove(batch: Batch, entity: any): void {
+
     }
 
     postUpdate(entity: Object, callback: Callback): void {
