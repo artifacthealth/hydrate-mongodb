@@ -982,7 +982,7 @@ class BulkOperationCommand implements Command {
     constructor(collection: mongodb.Collection, mapping: EntityMapping) {
 
         this._mapping = mapping;
-        this.priority = mapping.flushPriority;
+        this.priority = (<EntityMapping>mapping.inheritanceRoot).flushPriority;
         this.collectionName = collection.collectionName;
         this.operation = collection.initializeUnorderedBulkOp();
         this.inserted = this.updated = this.removed = 0;

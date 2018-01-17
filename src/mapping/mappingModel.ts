@@ -488,7 +488,9 @@ export const enum ChangeTrackingType {
 export const enum FlushPriority {
 
     High = 100,
+    MediumHigh = 75,
     Medium = 50,
+    MediumLow = 25,
     Low = 0
 }
 
