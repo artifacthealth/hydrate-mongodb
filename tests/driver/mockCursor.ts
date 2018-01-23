@@ -1,100 +1,178 @@
 import * as mongodb from "mongodb";
-import * as async from "async";
+import {Readable} from "stream";
 
-export class MockCursor implements mongodb.Cursor {
+export class MockCursor extends Readable implements mongodb.Cursor {
 
     private _closed = false;
 
     private _sorting: any[];
 
+    sortValue: string;
+    projectValue: Object;
+    timeout: boolean;
+    readPreference: mongodb.ReadPreference;
+
     constructor(public contents: any[] = []) {
-
+        super();
     }
 
-    stream(): mongodb.CursorStream {
-        throw new Error("Not implemented");
+    addCursorFlag(flag: string, value: boolean): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
     }
 
-    filter(filter: any): mongodb.Cursor {
+    addQueryModifier(name: string, value: boolean): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
 
+    batchSize(value: number): mongodb.Cursor<any> {
         return this;
     }
 
-    project(value: any): mongodb.Cursor {
+    clone(): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
 
+    close(): Promise<any>;
+    close(callback: mongodb.MongoCallback<any>): void;
+    close(callback?: any): any {
+        this._closed = true;
+    }
+
+    comment(value: string): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    count(callback: mongodb.MongoCallback<number>): void;
+    count(applySkipLimit: boolean, callback: mongodb.MongoCallback<number>): void;
+    count(options: mongodb.CursorCommentOptions, callback: mongodb.MongoCallback<number>): void;
+    count(applySkipLimit: boolean, options: mongodb.CursorCommentOptions, callback: mongodb.MongoCallback<number>): void;
+    count(applySkipLimit?: boolean, options?: mongodb.CursorCommentOptions): Promise<number>;
+    count(applySkipLimit?: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
+    }
+
+    explain(): Promise<any>;
+    explain(callback: mongodb.MongoCallback<any>): void;
+    explain(callback?: any): any {
+        throw new Error("Method not implemented.");
+    }
+
+    filter(filter: Object): mongodb.Cursor<any> {
         return this;
     }
 
-    rewind() : mongodb.Cursor {
+    forEach(iterator: mongodb.IteratorCallback<any>, callback: mongodb.EndCallback): void {
+        throw new Error("Method not implemented.");
+    }
 
+    hasNext(): Promise<boolean>;
+    hasNext(callback: mongodb.MongoCallback<boolean>): void;
+    hasNext(callback?: any): any {
+        throw new Error("Method not implemented.");
+    }
+
+    hint(hint: Object): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    isClosed(): boolean {
+        return this._closed;
+    }
+
+    limit(value: number): mongodb.Cursor<any> {
         return this;
     }
 
-    toArray(callback: (err: Error, results: any[]) => any) : void {
-        process.nextTick(() => {
-            callback(null, this.contents);
-        });
+    map(transform: Function): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
     }
 
-    each(callback: (err: Error, item: any) => void) : void {
+    max(max: number): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    maxAwaitTimeMS(value: number): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    maxScan(maxScan: Object): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    maxTimeMS(value: number): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    min(min: number): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    next(): Promise<any>;
+    next(callback: mongodb.MongoCallback<any>): void;
+    next(callback?: any): any {
 
     }
 
-    forEach(iterator: (value: any) => void, callback: (err: Error) => void): void {
-
-        async.each(this.contents, iterator, callback);
+    project(value: Object): mongodb.Cursor<any> {
+        this.projectValue = value;
+        return this;
     }
 
-    count(applySkipLimit: boolean, callback: (err: Error, count: number) => void) : void {
-
+    read(size: number): string | void | Buffer {
+        throw new Error("Method not implemented.");
     }
 
-    sort(keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void): mongodb.Cursor {
+    returnKey(returnKey: Object): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
 
+    rewind(): void {
+        throw new Error("Method not implemented.");
+    }
+
+    setCursorOption(field: string, value: Object): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    setReadPreference(readPreference: string | mongodb.ReadPreference): mongodb.Cursor<any> {
+        return this;
+    }
+
+    showRecordId(showRecordId: Object): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    skip(value: number): mongodb.Cursor<any> {
+        return this;
+    }
+
+    snapshot(snapshot: Object): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
+    sort(keyOrList: string | Object | Object[], direction?: number): mongodb.Cursor<any> {
         if(this.onSort) {
-            return this.onSort(keyOrList, directionOrCallback, callback);
+            return this.onSort(keyOrList, direction);
         }
 
         return this;
     }
 
-    onSort: (keyOrList: any, directionOrCallback: any, callback?: (err: Error, result: any) => void) => mongodb.Cursor;
+    onSort: (keyOrList: any, directionOrCallback: any) => mongodb.Cursor;
 
-    limit(limit: number, callback?: (err: Error, result: any) => void): mongodb.Cursor {
-
-        return this;
+    stream(options?: { transform?: Function; }): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
     }
 
-    setReadPreference(preference: string, callback?: Function): mongodb.Cursor {
-
-        return this;
+    toArray(): Promise<any[]>;
+    toArray(callback: mongodb.MongoCallback<any[]>): void;
+    toArray(callback?: any): any {
+        process.nextTick(() => {
+            callback(null, this.contents);
+        });
     }
 
-    skip(skip: number, callback?: (err: Error, result: any) => void): mongodb.Cursor {
-
-        return this;
-    }
-
-    batchSize(batchSize: number, callback?: (err: Error, result: any) => void): mongodb.Cursor {
-
-        return this;
-    }
-
-    nextObject(callback: (err: Error, doc: any) => void) : void {
-
-    }
-
-    explain(callback: (err: Error, result: any) => void) : void {
-
-    }
-
-    close(callback: (err: Error, result: any) => void) : void {
-
-        this._closed = true;
-    }
-
-    isClosed(): boolean {
-
-        return this._closed;
+    unshift(stream: string | Buffer): void {
+        throw new Error("Method not implemented.");
     }
 }

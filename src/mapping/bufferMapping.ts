@@ -21,7 +21,8 @@ export class BufferMapping extends MappingBase {
             context.addError("Expected Binary.");
             return;
         }
-        return (<Binary>value).value(true);
+        // dts is wrong. value is defined as Binary.prototype.value = function value(asRaw) {
+        return (<any>value).value(true);
     }
 
     write(context: WriteContext, value: any): any {

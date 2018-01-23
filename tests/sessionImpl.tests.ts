@@ -20,6 +20,7 @@ import * as cascade from "./fixtures/cascade";
 import {MockDb} from "./driver/mockDb";
 import * as fetchLazyModel from "./fixtures/fetchLazy";
 import {setIdentifier} from "./helpers";
+import {MockMongoClient} from "./driver/mockMongoClient";
 
 describe('SessionImpl', () => {
 
@@ -1102,7 +1103,7 @@ describe('SessionImpl', () => {
             var mappingA = new EntityMapping();
             var mappingB = new EntityMapping();
 
-            var factory = new SessionFactoryImpl(new MockDb(), [], registry);
+            var factory = new SessionFactoryImpl(new MockMongoClient(), [], registry);
             var session = new SessionImpl(factory);
 
             // two calls to getPersister for mappingA

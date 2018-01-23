@@ -15,6 +15,7 @@ import { QueryDefinition } from "../src/query/queryDefinition";
 import { Observer } from "../src/observer";
 import {MockDb} from "../tests/driver/mockDb";
 import {Property} from "../src/mapping/property";
+import {MockMongoClient} from "../tests/driver/mockMongoClient";
 
 suite("SessionImpl", () => {
 
@@ -88,7 +89,7 @@ suite("SessionImpl", () => {
 class DummySessionFactory extends SessionFactoryImpl {
 
     constructor(mappingRegistry: MappingRegistry) {
-        super(new MockDb(), null, mappingRegistry);
+        super(new MockMongoClient(), null, mappingRegistry);
     }
 
     createPersister(session: InternalSession, mapping: EntityMapping): Persister {

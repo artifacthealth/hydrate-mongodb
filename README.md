@@ -32,6 +32,20 @@ to the MongoDB native Node.js driver.
 MongoDB [bulk write operations](https://docs.mongodb.org/v3.0/core/bulk-write-operations/) are used to synchronize 
 changes with the database, which can result in significant performance gains.
 
+### Breaking Changes in 2.0
+
+Version 2.0 updates Hydrate to use version 3.0 of the MongoDB NodeJS native driver. Version 3.0 of the MongoDB NodeJS driver [introduces several breaking changes](https://github.com/mongodb/node-mongodb-native/blob/3.0.0/CHANGES_3.0.0.md)
+which result in breaking changes in Hydrate. 
+
+* Since MongoClient.connect(...) now returns a MongoClient object instead of a Db object, [createSessionFactory](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#createsessionfactory) 
+now takes a MongoClient object instead of a Db object. 
+* The new NodeJS MongoDB driver now requires that a database name be specified inorder to get a Db object. Therefore, the database name
+must now be specified in Hydrate. There are 3 ways this can be done (in order of priority from highest to lowest): 1) Specify the database name in the [@Collection](https://artifacthealth.github.io/hydrate-mongodb/globals.html#collection) 
+decorator, 2) Provide the database name as an argument to [createSessionFactory](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#createsessionfactory), 
+or 3) Specify the database name in the [Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#databaseName).
+* The [connection](https://artifacthealth.github.io/hydrate-mongodb/interfaces/sessionfactory.html#connection) property on the SessionFactory 
+is now a MongoClient object instead of a Db object. 
+
 
 ## Installation
 
@@ -135,11 +149,10 @@ defined [Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes
 
 **server.ts (con't):**
 ```typescript
-
-MongoClient.connect('mongodb://localhost/mydatabase', (err, db) => {
+MongoClient.connect('mongodb://localhost', (err, client) => {
     if(err) throw err;
     
-    config.createSessionFactory(db, (err, sessionFactory) => {        
+    config.createSessionFactory(client, "mydatabase", (err, sessionFactory) => {        
         ...
     });
 });

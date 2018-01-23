@@ -5,12 +5,12 @@ import {EntityMapping} from "../src/mapping/entityMapping";
 import {MappingRegistry} from "../src/mapping/mappingRegistry";
 import {MockPersister} from "./mockPersister";
 import {Constructor} from "../src/index";
-import {MockDb} from "./driver/mockDb";
+import {MockMongoClient} from "./driver/mockMongoClient";
 
 export class MockSessionFactory extends SessionFactoryImpl {
 
     constructor(public mappingRegistry: MappingRegistry) {
-        super(new MockDb(), null, mappingRegistry);
+        super(new MockMongoClient(), null, mappingRegistry);
     }
 
     createPersister(session: InternalSession, mapping: EntityMapping): Persister {

@@ -163,7 +163,7 @@ describe('PersisterImpl', () => {
                 assert.deepEqual(criteria, { parents: id });
                 done();
                 return collection.createCursor();
-            }
+            };
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);
@@ -269,9 +269,9 @@ describe('PersisterImpl', () => {
             var idA = helpers.generateId();
 
             var collection = new MockCollection();
-            collection.onFindOne = (criteria, fields, callback) => {
+            collection.onFindOne = (criteria, options, callback) => {
                 assert.deepEqual(criteria, { _id: idA });
-                assert.deepEqual(fields, { _b: 0 });
+                assert.deepEqual(options.projection, { _b: 0 });
                 done();
             };
 
@@ -392,11 +392,12 @@ describe('PersisterImpl', () => {
 
             it("only fetches the _id if the query is lazy", (done) => {
 
-                var collection = new MockCollection();
+                var collection = new MockCollection(),
+                    cursor = collection.createCursor();
+
                 collection.onFind = (criteria, fields) => {
-                    assert.deepEqual(fields, { _id: 1 });
                     done();
-                    return collection.createCursor();
+                    return cursor;
                 };
 
                 helpers.createPersister(collection, (err, persister) => {
@@ -408,6 +409,10 @@ describe('PersisterImpl', () => {
 
                     persister.executeQuery(query, (err, results) => {
                         if(err) return done(err);
+
+                        assert.deepEqual(cursor.projectValue, { _id: 1 });
+
+                        done();
                     });
                 });
             });
@@ -509,11 +514,11 @@ describe('PersisterImpl', () => {
 
                 var phone = new model.WorkPhone("555-1212", "x15");
                 var collection = new MockCollection();
-                collection.onUpdate = (selector, document, options, callback) => {
+                collection.onUpdateMany = (selector, document, options, callback) => {
 
                     assert.deepEqual(document, { $inc: { "__v": 1 }, $addToSet: { phones: { "__t": "WorkPhone", "extension": "x15", "number": "555-1212", "type": "Work" }}});
                     done();
-                }
+                };
 
                 helpers.createPersister(collection, (err, persister) => {
                     if (err) return done(err);
@@ -532,11 +537,11 @@ describe('PersisterImpl', () => {
 
                 var phone = new model.WorkPhone("555-1212", "x15");
                 var collection = new MockCollection();
-                collection.onUpdate = (selector, document, options, callback) => {
+                collection.onUpdateMany = (selector, document, options, callback) => {
 
                     assert.deepEqual(document, { $set: { password: "test" }});
                     done();
-                }
+                };
 
                 helpers.createPersister(collection, model.User, (err, persister) => {
                     if (err) return done(err);
@@ -560,9 +565,9 @@ describe('PersisterImpl', () => {
                     called = false;
 
                 var collection = new MockCollection();
-                collection.onFindAndModify = (query: Object, sort: any[], doc: Object, options: any, callback?: (err: Error, result: any) => void) => {
+                collection.onFindOneAndDelete = (filter: any, options: any, callback: any) => {
 
-                    assert.deepEqual(query, { _id: id });
+                    assert.deepEqual(filter, { _id: id });
                     called = true;
 
                     callback(null, { value: { _id: id }});

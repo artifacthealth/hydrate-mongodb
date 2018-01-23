@@ -1,6 +1,8 @@
 import * as mongodb from "mongodb";
+import {BulkWriteResult} from "mongodb";
 
-export class MockBulk implements mongodb.UnorderedBulkOperation {
+export class MockBulk implements mongodb.UnorderedBulkOperation, mongodb.FindOperatorsUnordered {
+    length: number;
 
     findDocuments: any[] = [];
     replaceOneDocuments: any[] = [];
@@ -16,7 +18,7 @@ export class MockBulk implements mongodb.UnorderedBulkOperation {
         this.replaceOneDocuments.push(updateDocument);
         return this;
     }
-    upsert(): mongodb.UnorderedBulkOperation {
+    upsert(): mongodb.FindOperatorsUnordered {
         return this;
     }
     removeOne(): mongodb.UnorderedBulkOperation {
@@ -29,12 +31,12 @@ export class MockBulk implements mongodb.UnorderedBulkOperation {
     insert(document: any): mongodb.UnorderedBulkOperation {
         return this;
     }
-    find(selector: any): mongodb.UnorderedBulkOperation {
+    find(selector?: any): mongodb.FindOperatorsUnordered {
         this.findDocuments.push(selector);
         return this;
     }
 
-    execute(optionsOrCallback: any, callback?: (err: Error, result: any) => void): void {
-
+    execute(optionsOrCallback: any, callback?: (err: Error, result: any) => void): Promise<BulkWriteResult> {
+        return null;
     }
 }

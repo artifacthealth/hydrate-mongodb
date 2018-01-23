@@ -1,5 +1,5 @@
 import * as async from "async";
-import * as mongodb from "mongodb";
+import {Collection, MongoClient, Db} from "mongodb";
 import {NamingStrategy, NamingStrategies} from "./namingStrategies";
 import {ResultCallback} from "../core/callback";
 import {MappingRegistry} from "../mapping/mappingRegistry";
@@ -16,6 +16,11 @@ import {PersistenceError} from "../persistenceError";
  * Specifies default settings used to create the [[SessionFactory]].
  */
 export class Configuration {
+
+    /**
+     * The default database name to use.
+     */
+    databaseName: string;
 
     /**
      * Default identity generator to use.
@@ -102,9 +107,27 @@ export class Configuration {
      * @param connection The MongoDB connection to use.
      * @param callback Called once the session factory is created.
      */
-    createSessionFactory(connection: mongodb.Db, callback: ResultCallback<SessionFactory>): void {
+    createSessionFactory(connection: MongoClient, callback: ResultCallback<SessionFactory>): void;
+    /**
+     * Creates a session factory.
+     * @param connection The MongoDB connection to use.
+     * @param databaseName The name of the default database. If not specified, the database name must be specified in either the
+     * [[Configuration]] or the Collection decorator.
+     * @param callback Called once the session factory is created.
+     */
+    createSessionFactory(connection: MongoClient, databaseName: string,callback: ResultCallback<SessionFactory>): void;
 
-        var registry = new MappingRegistry();
+    createSessionFactory(connection: MongoClient, callbackOrDatabaseName: any, callback?: ResultCallback<SessionFactory>): void {
+
+        var registry = new MappingRegistry(),
+            databaseName: string;
+
+        if (typeof callbackOrDatabaseName === "function") {
+            callback = callbackOrDatabaseName;
+        }
+        else {
+            databaseName = callbackOrDatabaseName;
+        }
 
         if(!this._mappings || this._mappings.length == 0) {
             return callback(new PersistenceError("No mappings were added to the configuration."));
@@ -123,7 +146,7 @@ export class Configuration {
         }, (err) => {
             if(err) return callback(err);
 
-            this._buildCollections(connection, registry, (err, collections) => {
+            this._buildCollections(connection, databaseName, registry, (err, collections) => {
                 if(err) return callback(err);
 
                 let factory = new SessionFactoryImpl(connection, collections, registry);
@@ -146,41 +169,45 @@ export class Configuration {
     /**
      * @hidden
      */
-    private _buildCollections(connection: mongodb.Db, registry: MappingRegistry, callback: ResultCallback<Table<mongodb.Collection>>): void {
+    private _buildCollections(connection: MongoClient, databaseName: string, registry: MappingRegistry, callback: ResultCallback<Table<Collection>>): void {
 
         // Get all the collections and make sure they exit. We can also use this as a chance to build the
         // collection if it does not exist.
-        var collections: Table<mongodb.Collection> = [];
+        var collections: Table<Collection> = [];
         var namesSeen = new Map<string, boolean>();
 
         async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
 
-            var localConnection = connection;
-
-            if(!(mapping.flags & MappingModel.MappingFlags.InheritanceRoot)) return done();
+            if(!(mapping.flags & MappingModel.MappingFlags.InheritanceRoot)) {
+                process.nextTick(done);
+                return;
+            }
 
             // make sure we have a collection name
             if (!mapping.collectionName) {
                 return done(new PersistenceError("Missing collection name on mapping for type '" + mapping.name + "'."));
             }
 
+            var dbName = mapping.databaseName || databaseName || this.databaseName;
+            if (!dbName) {
+                return callback(new Error(`Could not determine database name for '${mapping.collectionName}'. Please make sure to specify `
+                    + "the database name in either the Configuration, the call to createSessionFactory, or the @Collection decorator."));
+            }
+
             // make sure db/collection is not mapped to some other type.
-            var key = [(mapping.databaseName || localConnection.databaseName), "/", mapping.collectionName].join("");
+            var key = dbName + "/" + mapping.collectionName;
             if (namesSeen.has(key)) {
                 return done(new PersistenceError("Duplicate collection name '" + key + "' on type '" + mapping.name + "' ."));
             }
             namesSeen.set(key, true);
 
-            // change current database if a databaseName was specified in the mapping
-            if(mapping.databaseName && mapping.databaseName !== localConnection.databaseName) {
-                localConnection = localConnection.db(mapping.databaseName);
-            }
+            var db = connection.db(dbName);
 
-            localConnection.listCollections({ name: mapping.collectionName }).toArray((err: Error, names: string[]): void => {
+            db.listCollections({ name: mapping.collectionName }).toArray((err: Error, names: string[]): void => {
                 if(err) return done(err);
 
                 if(names.length == 0) {
-                    localConnection.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
+                    db.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
                         done();
@@ -188,7 +215,7 @@ export class Configuration {
                 }
                 else {
                     // collection exists, get it
-                    localConnection.collection(mapping.collectionName, { strict: true }, (err: Error, collection: mongodb.Collection) => {
+                    db.collection(mapping.collectionName, { strict: true }, (err: Error, collection: Collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
                         done();

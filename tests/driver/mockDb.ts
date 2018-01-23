@@ -1,48 +1,36 @@
-import { Db, Cursor, Collection, MongoCollectionOptions, IndexOptions } from "mongodb";
-import {MockCursor} from "./mockCursor";
+import * as mongodb from "mongodb";
 import {MockCollection} from "./mockCollection";
 
-export class MockDb implements Db {
+export class MockDb implements mongodb.Db {
 
+    serverConfig: mongodb.Server | mongodb.ReplSet | mongodb.Mongos;
+    bufferMaxEntries: number;
     databaseName: string;
-    cachedCollections: Map<string, Collection> = new Map();
+    options: any;
+    native_parser: boolean;
+    slaveOk: boolean;
+    writeConcern: any;
+    cachedCollections: Map<string, MockCollection> = new Map();
 
     constructor(name: string = "test") {
         this.databaseName = name;
     }
 
-    db(dbName: string): Db {
-        return new MockDb(dbName);
+    addUser(username: string, password: string, callback: mongodb.MongoCallback<any>): void;
+    addUser(username: string, password: string, options?: mongodb.DbAddUserOptions): Promise<any>;
+    addUser(username: string, password: string, options: mongodb.DbAddUserOptions, callback: mongodb.MongoCallback<any>): void;
+    addUser(username: any, password: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    open(callback: (err : Error, db : Db) => void ): void {
-        throw new Error("Not implemented");
+    admin(): mongodb.Admin {
+        throw new Error("Method not implemented.");
     }
 
-    close(forceClose?: boolean, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
-    }
-
-    admin(callback: (err: Error, result: any) => void ): any {
-        throw new Error("Not implemented");
-    }
-
-    collectionsInfo(collectionName: string, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
-    }
-
-    collectionNames(collectionName: string, options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
-    }
-
-    listCollections(filter: any): Cursor {
-        return new MockCursor([filter.name]);
-    }
-
-    collection(collectionName: string): Collection;
-    collection(collectionName: string, callback: (err: Error, collection: Collection) => void ): Collection;
-    collection(collectionName: string, options: MongoCollectionOptions, callback: (err: Error, collection: Collection) => void): Collection;
-    collection(collectionName: string, optionsOrCallback?: any, callback?: (err: Error, collection: Collection) => void): Collection  {
+    collection<TSchema = any>(name: string): mongodb.Collection<TSchema>;
+    collection<TSchema = any>(name: string, callback: mongodb.MongoCallback<mongodb.Collection<TSchema>>): mongodb.Collection<TSchema>;
+    collection<TSchema = any>(name: string, options: mongodb.DbCollectionOptions, callback: mongodb.MongoCallback<mongodb.Collection<TSchema>>): mongodb.Collection<TSchema>;
+    collection(collectionName: any, optionsOrCallback?: any, callback?: any): any {
 
         if(callback === undefined) {
             callback = optionsOrCallback;
@@ -60,141 +48,152 @@ export class MockDb implements Db {
         return collection;
     }
 
-    collections(callback: (err: Error, collections: Collection[]) => void ): void {
-        throw new Error("Not implemented");
+    collections(): Promise<mongodb.Collection<any>[]>;
+    collections(callback: mongodb.MongoCallback<mongodb.Collection<any>[]>): void;
+    collections(callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    eval(code: any, parameters: any[], options?: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    command(command: Object, callback: mongodb.MongoCallback<any>): void;
+    command(command: Object, options?: { readPreference: string | mongodb.ReadPreference; }): Promise<any>;
+    command(command: Object, options: { readPreference: string | mongodb.ReadPreference; }, callback: mongodb.MongoCallback<any>): void;
+    command(command: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    logout(callback: (err: Error, result: any) => void ): void;
-    logout(options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    createCollection<TSchema = any>(name: string, callback: mongodb.MongoCallback<mongodb.Collection<TSchema>>): void;
+    createCollection<TSchema = any>(name: string, options?: mongodb.CollectionCreateOptions): Promise<mongodb.Collection<TSchema>>;
+    createCollection<TSchema = any>(name: string, options: mongodb.CollectionCreateOptions, callback: mongodb.MongoCallback<mongodb.Collection<TSchema>>): void;
+    createCollection(name: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    authenticate(userName: string, password: string, callback?: (err: Error, result: any) => void ): void;
-    authenticate(userName: string, password: string, options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    createIndex(name: string, fieldOrSpec: string | Object, callback: mongodb.MongoCallback<any>): void;
+    createIndex(name: string, fieldOrSpec: string | Object, options?: mongodb.IndexOptions): Promise<any>;
+    createIndex(name: string, fieldOrSpec: string | Object, options: mongodb.IndexOptions, callback: mongodb.MongoCallback<any>): void;
+    createIndex(name: any, fieldOrSpec: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    addUser(username: string, password: string, callback?: (err: Error, result: any) => void ): void;
-    addUser(username: string, password: string, options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    dropCollection(name: string): Promise<boolean>;
+    dropCollection(name: string, callback: mongodb.MongoCallback<boolean>): void;
+    dropCollection(name: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    removeUser(username: string, callback?: (err: Error, result: any) => void ): void;
-    removeUser(username: string, options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    dropDatabase(): Promise<any>;
+    dropDatabase(callback: mongodb.MongoCallback<any>): void;
+    dropDatabase(callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    createCollection(collectionName: string, options?: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    executeDbAdminCommand(command: Object, callback: mongodb.MongoCallback<any>): void;
+    executeDbAdminCommand(command: Object, options?: { readPreference?: string | mongodb.ReadPreference; maxTimeMS?: number; }): Promise<any>;
+    executeDbAdminCommand(command: Object, options: { readPreference?: string | mongodb.ReadPreference; maxTimeMS?: number; }, callback: mongodb.MongoCallback<any>): void;
+    executeDbAdminCommand(command: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    command(selector: Object, callback?: (err: Error, result: any) => void ): void;
-    command(selector: Object, options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    indexInformation(name: string, callback: mongodb.MongoCallback<any>): void;
+    indexInformation(name: string, options?: { full?: boolean; readPreference?: string | mongodb.ReadPreference; }): Promise<any>;
+    indexInformation(name: string, options: { full?: boolean; readPreference?: string | mongodb.ReadPreference; }, callback: mongodb.MongoCallback<any>): void;
+    indexInformation(name: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    dropCollection(collectionName: string, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    listCollections(filter?: Object, options?: { batchSize?: number; readPreference?: string | mongodb.ReadPreference; }): mongodb.CommandCursor {
+        throw new Error("Method not implemented.");
     }
 
-    renameCollection(fromCollection: string, toCollection: string, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    profilingInfo(callback: mongodb.MongoCallback<any>): void;
+    profilingInfo(options?: { session?: any; }): Promise<void>;
+    profilingInfo(options: { session?: any; }, callback: mongodb.MongoCallback<void>): void;
+    profilingInfo(options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    lastError(options: Object, connectionOptions: any, callback: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    profilingLevel(callback: mongodb.MongoCallback<any>): void;
+    profilingLevel(options?: { session?: any; }): Promise<void>;
+    profilingLevel(options: { session?: any; }, callback: mongodb.MongoCallback<void>): void;
+    profilingLevel(level: string, callback: mongodb.MongoCallback<any>): void;
+    profilingLevel(level: string, options?: { session?: any; }): Promise<void>;
+    profilingLevel(level: string, options: { session?: any; }, callback: mongodb.MongoCallback<void>): void;
+    profilingLevel(level?: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    previousError(options: Object, callback: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    removeUser(username: string, callback: mongodb.MongoCallback<any>): void;
+    removeUser(username: string, options?: mongodb.CommonOptions): Promise<any>;
+    removeUser(username: string, options: mongodb.CommonOptions, callback: mongodb.MongoCallback<any>): void;
+    removeUser(username: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    executeDbCommand(command_hash: any, callback?: (err: Error, result: any) => void ): void;
-    executeDbCommand(command_hash: any, options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    renameCollection<TSchema = any>(fromCollection: string, toCollection: string, callback: mongodb.MongoCallback<mongodb.Collection<TSchema>>): void;
+    renameCollection<TSchema = any>(fromCollection: string, toCollection: string, options?: { dropTarget?: boolean; }): Promise<mongodb.Collection<TSchema>>;
+    renameCollection<TSchema = any>(fromCollection: string, toCollection: string, options: { dropTarget?: boolean; }, callback: mongodb.MongoCallback<mongodb.Collection<TSchema>>): void;
+    renameCollection(fromCollection: any, toCollection: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    executeDbAdminCommand(command_hash: any, callback?: (err: Error, result: any) => void ): void;
-    executeDbAdminCommand(command_hash: any, options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    stats(callback: mongodb.MongoCallback<any>): void;
+    stats(options?: { scale?: number; }): Promise<any>;
+    stats(options: { scale?: number; }, callback: mongodb.MongoCallback<any>): void;
+    stats(options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
     }
 
-    resetErrorHistory(callback?: (err: Error, result: any) => void ): void;
-    resetErrorHistory(options: any, callback?: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    addListener(event: string | symbol, listener: (...args: any[]) => void): this {
+        throw new Error("Method not implemented.");
     }
 
-    createIndex(collectionName: any, fieldOrSpec: any, options: IndexOptions, callback: Function): void {
-        throw new Error("Not implemented");
+    on(event: string | symbol, listener: (...args: any[]) => void): this {
+        throw new Error("Method not implemented.");
     }
 
-    ensureIndex(collectionName: any, fieldOrSpec: any, options: IndexOptions, callback: Function): void {
-        throw new Error("Not implemented");
+    once(event: string | symbol, listener: (...args: any[]) => void): this {
+        throw new Error("Method not implemented.");
     }
 
-    cursorInfo(options: any, callback: Function): void {
-        throw new Error("Not implemented");
+    prependListener(event: string | symbol, listener: (...args: any[]) => void): this {
+        throw new Error("Method not implemented.");
     }
 
-    dropIndex(collectionName: string, indexName: string, callback: Function): void {
-        throw new Error("Not implemented");
+    prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this {
+        throw new Error("Method not implemented.");
     }
 
-    reIndex(collectionName: string, callback: Function): void {
-        throw new Error("Not implemented");
+    removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
+        throw new Error("Method not implemented.");
     }
 
-    indexInformation(collectionName: string, options: any, callback: Function): void {
-        throw new Error("Not implemented");
+    removeAllListeners(event?: string | symbol): this {
+        throw new Error("Method not implemented.");
     }
 
-    dropDatabase(callback: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
+    setMaxListeners(n: number): this {
+        throw new Error("Method not implemented.");
     }
 
-    stats(options: any, callback: Function): void {
-        throw new Error("Not implemented");
+    getMaxListeners(): number {
+        throw new Error("Method not implemented.");
     }
 
-    _registerHandler(db_command: any, raw: any, connection: any, exhaust: any, callback: Function): void {
-        throw new Error("Not implemented");
+    listeners(event: string | symbol): Function[] {
+        throw new Error("Method not implemented.");
     }
 
-    _reRegisterHandler(newId: any, object: any, callback: Function): void {
-        throw new Error("Not implemented");
+    emit(event: string | symbol, ...args: any[]): boolean {
+        throw new Error("Method not implemented.");
     }
 
-    _callHandler(id: any, document: any, err: any): any {
-        throw new Error("Not implemented");
+    eventNames(): (string | symbol)[] {
+        throw new Error("Method not implemented.");
     }
 
-    _hasHandler(id: any): any {
-        throw new Error("Not implemented");
+    listenerCount(type: string | symbol): number {
+        throw new Error("Method not implemented.");
     }
 
-    _removeHandler(id: any): any {
-        throw new Error("Not implemented");
-    }
 
-    _findHandler(id: any): { id: string; callback: Function; } {
-        throw new Error("Not implemented");
-    }
-
-    __executeQueryCommand(self: any, db_command: any, options: any, callback: any): void {
-        throw new Error("Not implemented");
-    }
-
-    DEFAULT_URL: string;
-
-    connect(url: string, options: { uri_decode_auth?: boolean; }, callback: (err: Error, result: any) => void ): void {
-        throw new Error("Not implemented");
-    }
-
-    addListener(event: string, handler:(param: any) => any): any {
-        throw new Error("Not implemented");
-    }
 }

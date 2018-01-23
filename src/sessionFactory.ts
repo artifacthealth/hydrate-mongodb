@@ -1,5 +1,5 @@
 import * as async from "async";
-import {Collection} from "mongodb";
+import {Collection, MongoClient} from "mongodb";
 import {Table} from "./core/table";
 import {MappingRegistry} from "./mapping/mappingRegistry";
 import {Session, InternalSession, SessionImpl} from "./session";
@@ -12,7 +12,6 @@ import {Logger} from "./config/configuration";
 import {shallowClone, shallowEqual} from "./core/objectUtil";
 import {Callback} from "./core/callback";
 import {PersistenceError} from "./persistenceError";
-import {Db} from "mongodb";
 import {Index} from "./mapping/index";
 
 export interface SessionFactory {
@@ -20,7 +19,7 @@ export interface SessionFactory {
     /**
      * The MongoDB database connection associated with this [SessionFactory].
      */
-    connection: Db;
+    connection: MongoClient;
 
     /**
      * Gets the MongoDB database collection for the specified Entity constructor.
@@ -77,13 +76,13 @@ export interface InternalSessionFactory extends SessionFactory {
  */
 export class SessionFactoryImpl implements InternalSessionFactory {
 
-    connection: Db;
+    connection: MongoClient;
     logger: Logger;
 
     private _collections: Table<Collection>;
     private _mappingRegistry: MappingRegistry;
 
-    constructor(connection: Db, collections: Table<Collection>, mappingRegistry: MappingRegistry) {
+    constructor(connection: MongoClient, collections: Table<Collection>, mappingRegistry: MappingRegistry) {
 
         this.connection = connection;
         this._collections = collections;
@@ -233,7 +232,7 @@ export class SessionFactoryImpl implements InternalSessionFactory {
                             }
                         }
 
-                        collection.ensureIndex(keys, indexOptions, (err, indexName) => {
+                        collection.createIndex(keys, indexOptions, (err, indexName) => {
                             if (err) return indexDone(err);
 
                             if (this.logger) {
@@ -268,7 +267,7 @@ export class SessionFactoryImpl implements InternalSessionFactory {
 
                 let collection = this._collections[mapping.id];
                 if (collection) {
-                    collection.dropAllIndexes((err: Error) => {
+                    collection.dropIndexes((err: Error) => {
                         if (err) return done(err);
 
                         if (this.logger) {
