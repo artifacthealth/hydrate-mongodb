@@ -39,7 +39,7 @@ which result in breaking changes in Hydrate.
 
 * Since MongoClient.connect(...) now returns a MongoClient object instead of a Db object, [createSessionFactory](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#createsessionfactory) 
 now takes a MongoClient object instead of a Db object. 
-* The new NodeJS MongoDB driver now requires that a database name be specified inorder to get a Db object. Therefore, the database name
+* The new NodeJS MongoDB driver now requires that a database name be specified in order to get a Db object. Therefore, the database name
 must now be specified in Hydrate. There are 3 ways this can be done (in order of priority from highest to lowest): 1) Specify the database name in the [@Collection](https://artifacthealth.github.io/hydrate-mongodb/globals.html#collection) 
 decorator, 2) Provide the database name as an argument to [createSessionFactory](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#createsessionfactory), 
 or 3) Specify the database name in the [Configuration](https://artifacthealth.github.io/hydrate-mongodb/classes/configuration.html#databaseName).
@@ -47,7 +47,7 @@ or 3) Specify the database name in the [Configuration](https://artifacthealth.gi
 is now a MongoClient object instead of a Db object. 
 * The MongoDB driver was change to a peer dependency
 * In version 2.2 of the MongoDB NodeJS native driver, [domain support was disabled by default](http://mongodb.github.io/node-mongodb-native/2.2/upgrade-migration/main/). 
-You can enable with parameter the *domainsEnabled* parameter on MongoClient. Domain support is not required for Hydrate, but you should be
+You can enable with the *domainsEnabled* parameter on MongoClient. Domain support is not required for Hydrate, but you should be
 aware of this change when upgrading the MongoDB driver.
 
 ## Installation
