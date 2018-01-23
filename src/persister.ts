@@ -407,7 +407,7 @@ export class PersisterImpl implements Persister {
         function next(err?: Error) {
             if (err) return error(err);
 
-            cursor.nextObject((err: Error, item: any) => {
+            cursor.next((err: Error, item: any) => {
                 if (err) return error(err);
 
                 // null item indicates the cursor is finished
@@ -600,7 +600,7 @@ export class PersisterImpl implements Persister {
 
         function replenish() {
             // try to retrieve a document from the cursor
-            cursor.nextObject((err: Error, item: any) => {
+            cursor.next((err: Error, item: any) => {
                 if(err) return error(err);
 
                 // if the document is null then the cursor is finished
@@ -618,7 +618,7 @@ export class PersisterImpl implements Persister {
                 process(err, item);
 
                 while((<any>cursor).bufferedCount() > 0) {
-                    cursor.nextObject(process);
+                    cursor.next(process);
                 }
             });
         }
@@ -673,7 +673,7 @@ export class PersisterImpl implements Persister {
         (function next(err?: Error) {
             if (err) return error(err);
 
-            cursor.nextObject((err: Error, item: any) => {
+            cursor.next((err: Error, item: any) => {
                 if (err) return error(err);
 
                 if (item == null) {
@@ -1200,7 +1200,7 @@ class CursorImpl<T> {
 
     next(callback: ResultCallback<T>): void {
 
-        this._cursor.nextObject((err: Error, item: any) => {
+        this._cursor.next((err: Error, item: any) => {
             if (err) return handleError(err);
 
             if (item == null) {
