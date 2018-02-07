@@ -695,7 +695,7 @@ export class PersisterImpl implements Persister {
     }
 
     private _prepareFind(query: FindAllQuery): mongodb.Cursor {
-        
+
         var cursor = this._collection.find(query.criteria);
 
         if (query.fields) {
@@ -821,7 +821,7 @@ export class PersisterImpl implements Persister {
             (err: Error, response: any) => {
                 if(err) return callback(err);
                 callback(null, response.modifiedCount);
-        });
+            });
     }
 
     private _updateAll(query: QueryDefinition, callback: ResultCallback<number>): void {
@@ -1067,16 +1067,33 @@ class FindQueue {
             process.nextTick(() => this._process());
         }
 
-        var key = id.toString();
+        var normalizedId = this._normalizeIdentifier(id);
+        if (normalizedId == null) {
+            callback(new PersistenceError(`'${id}' is not a valid identifier.`));
+            return;
+        }
+
+        var key = normalizedId.toString();
         var existingCallback = this._callbacks.get(key);
         if(existingCallback === undefined) {
-            this._ids.push(id);
+            this._ids.push(normalizedId);
             this._callbacks.set(key, callback);
         }
         else {
             // this id is already in the queue so chain the callbacks
             this._callbacks.set(key, chain(callback, existingCallback));
         }
+    }
+
+    private _normalizeIdentifier(id: any): any {
+
+        if (typeof id === "string") {
+            return this._persister.identity.fromString(id);
+        }
+        else if (this._persister.identity.validate(id)) {
+            return id;
+        }
+        return null;
     }
 
     private _process(): void {
@@ -1087,29 +1104,6 @@ class FindQueue {
 
         // clear queue
         this._ids = this._callbacks = undefined;
-
-        // make sure we have valid ObjectIDs
-        for (let i = ids.length - 1; i >= 0; i--) {
-            let originalId = ids[i];
-
-            if (typeof originalId === "string") {
-                let id = this._persister.identity.fromString(originalId);
-                if (id == null) {
-                    // remove the invalid id
-                    ids.splice(i, 1);
-                    handleCallback(originalId, new PersistenceError(`Unable to convert string '${originalId}' to valid identifier.`));
-                }
-                else {
-                    // store converted id
-                    ids[i] = id;
-                }
-            }
-            else if (!this._persister.identity.validate(originalId)) {
-                // remove the invalid id
-                ids.splice(i, 1);
-                handleCallback(originalId, new PersistenceError(`'${originalId}' is not a valid identifier.`));
-            }
-        }
 
         // check for simple case of only a single find in the queue
         if (ids.length == 1) {

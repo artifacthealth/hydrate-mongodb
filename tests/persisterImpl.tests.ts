@@ -243,6 +243,18 @@ describe('PersisterImpl', () => {
             });
         });
 
+        it('does not consider case for ObjectIds', (done) => {
+
+            var id = helpers.generateId();
+            var collection = new MockCollection([ { _id: id }]);
+
+            helpers.createPersister(collection, (err, persister) => {
+                if (err) return done(err);
+
+                persister.findOneById(id.toString().toUpperCase(), done);
+            });
+        });
+
         it("fetches properties flagged as FetchEager", (done) => {
 
             var idA = helpers.generateId(),

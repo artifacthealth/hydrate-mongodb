@@ -39,12 +39,13 @@ suite("SessionImpl", () => {
         */
 
         var config = new Configuration();
+        config.createIndexes = true;
         config.addMapping(new AnnotationMappingProvider(Cat));
 
-        mongodb.MongoClient.connect("mongodb://localhost:27017/artifact", (err, connection) => {
+        mongodb.MongoClient.connect("mongodb://localhost:27017", (err, connection) => {
             if(err) return done(err);
 
-            config.createSessionFactory(connection, (err: Error, sessionFactory: SessionFactory) => {
+            config.createSessionFactory(connection, "test", (err: Error, sessionFactory: SessionFactory) => {
                 if (err) return done(err);
 
                 session = sessionFactory.createSession();

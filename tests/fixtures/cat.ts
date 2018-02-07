@@ -1,7 +1,7 @@
-import { Entity, Field, ChangeTracking } from "../../src/mapping/providers/decorators";
-import {ChangeTrackingType} from "../../src/mapping/mappingModel";
+import { Entity, Field, Index } from "../../src/mapping/providers/decorators";
 
 @Entity()
+@Index({ keys: [["name", 1]]})
 export class Cat {
 
     id: string;
