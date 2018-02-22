@@ -244,6 +244,11 @@ export interface Session {
     getVersion(obj: Object): number;
 
     /**
+     * Gets an array of all entities managed by the session.
+     */
+    getEntities(): Object[];
+
+    /**
      * Adds an event listener.
      * @param event The event to listen for.
      * @param listener The listener function.
@@ -447,6 +452,21 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }
 
         return false;
+    }
+
+    /**
+     * Gets an array of all entities managed by the session.
+     */
+    getEntities(): Object[] {
+
+        var ret = new Array(this._objectLinksById.size),
+            i = 0;
+
+        this._objectLinksById.forEach((value) => {
+            ret[i++] = value.object;
+        });
+
+        return ret;
     }
 
     /**

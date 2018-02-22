@@ -218,6 +218,10 @@ export class MockInternalSession extends EventEmitter implements InternalSession
         return null;
     }
 
+    getEntities(): Object[] {
+        return [];
+    }
+
     private _find(id: string): any {
 
         for (let i = 0; i < this._collection.length; i++) {

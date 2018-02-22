@@ -1122,6 +1122,34 @@ describe('SessionImpl', () => {
         });
     });
 
+    describe('getEntities', () => {
+
+        it('returns all managed entites', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var entity1 = createEntity();
+                var entity2 = createEntity();
+                var session = factory.createSession();
+
+                session.save(entity1, (err) => {
+                    if (err) return done(err);
+
+                    session.save(entity2, (err) => {
+                        if (err) return done(err);
+
+                        var entities = session.getEntities();
+                        assert.lengthOf(entities, 2);
+                        assert.equal(entities[0], entity1);
+                        assert.equal(entities[1], entity2);
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
     describe('close', () => {
 
         it('marks sessions as closed such that any future actions will result in error', (done) => {
