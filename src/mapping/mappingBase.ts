@@ -46,7 +46,7 @@ export abstract class MappingBase implements InternalMapping {
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
         if (documentValue1 === documentValue2) return true;
-        if (documentValue1 === null || documentValue2 === null) return false;
+        if (documentValue1 == null || documentValue2 == null) return false;
         if (documentValue1 !== documentValue1 && documentValue2 !== documentValue2) return true; // NaN === NaN
 
         return false;

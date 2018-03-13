@@ -79,6 +79,9 @@ export class ArrayMapping extends MappingBase {
 
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
+        if (documentValue1 === documentValue2) return true;
+        if (documentValue1 == null || documentValue2 == null) return false;
+
         if (!Array.isArray(documentValue1) || !Array.isArray(documentValue2) || documentValue1.length != documentValue2.length) {
             return false;
         }
