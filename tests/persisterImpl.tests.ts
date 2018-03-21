@@ -200,7 +200,7 @@ describe('PersisterImpl', () => {
             var collection = new MockCollection();
             collection.onFindOne = (criteria, fields, callback) => {
                 assert.deepEqual(criteria, { parents: id });
-                callback(null, { _id: id });
+                callback(null, { _id: id, __t: "Person" });
                 done();
             };
 
@@ -234,7 +234,7 @@ describe('PersisterImpl', () => {
         it('calls the callbacks of all invocations when called multiples times for the same identifier', (done) => {
 
             var id = helpers.generateId();
-            var collection = new MockCollection([ { _id: id }]);
+            var collection = new MockCollection([ { _id: id, __t: "Person" }]);
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);
@@ -246,7 +246,7 @@ describe('PersisterImpl', () => {
         it('does not consider case for ObjectIds', (done) => {
 
             var id = helpers.generateId();
-            var collection = new MockCollection([ { _id: id }]);
+            var collection = new MockCollection([ { _id: id, __t: "Person" }]);
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);
@@ -271,6 +271,41 @@ describe('PersisterImpl', () => {
                     if (err) return done(err);
 
                     assert.deepEqual(session.findFetchedPaths(a), ["b.c"], "Expected path 'b.c' to be fetched.");
+                    done();
+                });
+            });
+        });
+
+        it("returns an error if the document discriminator is not known", (done) => {
+
+            var id = helpers.generateId();
+            var collection = new MockCollection([{ _id: id, __t: "Foo" }]);
+
+            helpers.createPersister(collection, (err, persister) => {
+                if (err) return done(err);
+
+                persister.findOneById(id, (err) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Unknown discriminator value 'Foo' for class 'Person'.");
+                    done();
+                });
+            });
+        });
+
+        it("returns an error if the discriminator is known but does not match the mapping", (done) => {
+
+            var id = helpers.generateId();
+            var collection = new MockCollection([{ _id: id, __t: "Person" }]);
+
+            createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = new MockInternalSession(factory);
+                var persister = new PersisterImpl(session, factory.getMappingForConstructor(model.Organization), collection);
+
+                persister.findOneById(id, (err, a) => {
+                    assert.ok(err);
+                    assert.include(err.message, "Unknown discriminator value 'Person' for class 'Organization'.");
                     done();
                 });
             });

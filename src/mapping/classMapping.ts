@@ -65,7 +65,7 @@ export class ClassMapping extends ObjectMapping {
             throw new PersistenceError("Expected string for discriminator value.");
         }
         this._discriminatorValue = value;
-        this.inheritanceRoot._addDiscriminatorMapping(value, this);
+        this._addDiscriminatorMapping(value, this);
     }
 
     setQueryDocumentDiscriminator(obj: any): void {
@@ -163,6 +163,10 @@ export class ClassMapping extends ObjectMapping {
         }
 
         this._discriminatorMap.set(value, mapping);
+
+        if (this._baseClass) {
+            this._baseClass._addDiscriminatorMapping(value, mapping);
+        }
     }
 
     private _ensureRegistry(): MappingRegistry {
@@ -186,7 +190,7 @@ export class ClassMapping extends ObjectMapping {
 
         if(value == null) return null;
 
-        var mapping = this.inheritanceRoot.getMapping(context, value);
+        var mapping = this.getMapping(context, value);
         if (mapping) {
             return mapping.readClass(context, value);
         }
@@ -199,7 +203,7 @@ export class ClassMapping extends ObjectMapping {
 
         var mapping = this._getMappingForDocument(document);
         if(mapping === undefined) {
-            context.addError("Unknown discriminator value '" + this.getDocumentDiscriminator(document) + "'.");
+            context.addError(`Unknown discriminator value '${this.getDocumentDiscriminator(document)}' for class '${this.name}'.`);
             return;
         }
 
@@ -209,7 +213,13 @@ export class ClassMapping extends ObjectMapping {
     private _getMappingForDocument(document: any): ClassMapping {
 
         var discriminatorValue = this.getDocumentDiscriminator(document);
-        return discriminatorValue === undefined ? this : this.inheritanceRoot._discriminatorMap.get(discriminatorValue);
+        if (discriminatorValue === undefined) {
+            return this;
+        }
+
+        if (this._discriminatorMap) {
+            return this._discriminatorMap.get(discriminatorValue);
+        }
     }
 
     protected readClass(context: ReadContext, value: any): any {
@@ -220,7 +230,7 @@ export class ClassMapping extends ObjectMapping {
         if ((this.flags & MappingModel.MappingFlags.ImmutableEmbeddable) == MappingModel.MappingFlags.ImmutableEmbeddable) {
             obj[OriginalDocument] = value;
         }
-        
+
         return obj;
     }
 

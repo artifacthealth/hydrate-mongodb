@@ -92,7 +92,7 @@ export class EntityMapping extends ClassMapping {
 
     refresh(context: ReadContext, entity: any, document: any): any {
 
-        var mapping = this.inheritanceRoot.getMapping(context, document);
+        var mapping = this.getMapping(context, document);
         if (mapping) {
             if(mapping != this) {
                 // http://jsperf.com/change-proto-on-class
@@ -137,8 +137,10 @@ export class EntityMapping extends ClassMapping {
         }
 
         var obj = super.read(context, value);
-        obj["_id"] = id;
-        obj["id"] = id.toString();
+        if (obj) {
+            obj["_id"] = id;
+            obj["id"] = id.toString();
+        }
         return obj;
     }
 
