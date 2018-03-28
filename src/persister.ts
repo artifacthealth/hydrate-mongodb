@@ -941,18 +941,15 @@ export class PersisterImpl implements Persister {
 
                 this._session.registerManaged(this, entity, document);
 
-                if (!context.fetches) {
-                    callback(null, entity);
-                }
-                else {
+                if (context.fetches) {
                     // requested fetches were found when reading the entity
                     this._session.fetchInternal(entity, context.fetches, callback);
+                    return;
                 }
-                return;
             }
         }
 
-        callback(null, entity);
+        process.nextTick(() => callback(null, entity));
     }
 
     private _getCommand(batch: Batch): BulkOperationCommand {
