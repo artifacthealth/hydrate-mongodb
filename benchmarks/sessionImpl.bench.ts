@@ -22,7 +22,7 @@ suite("SessionImpl", () => {
     var session: Session;
     var count = 0;
     var cats: Cat[] = [];
-    var i = 0;
+    var i = 0, saved = 0;
 
     before((done) => {
 
@@ -59,6 +59,15 @@ suite("SessionImpl", () => {
         }
     });
 
+    after((done) => {
+
+        for(var j = 0; j < saved; j++) {
+            session.remove(cats[j]);
+        }
+
+        session.flush(done);
+    });
+
     beforeEach(() => {
         i = 0;
     });
@@ -67,12 +76,17 @@ suite("SessionImpl", () => {
         for(var j = 0; j < 1000; j++) {
             if(!cats[i]) return done(new Error("ran out of cats at " + i));
             session.save(cats[i++]);
+            saved = i;
         }
         session.flush(done);
     });
 
-    test("find", (done) => {
+    test("findOne", (done) => {
         session.query(Cat).findOne({ name: 'cat' + (i++)}, done);
+    });
+
+    test("findAll", (done) => {
+        session.query(Cat).findAll({ name: /^cat/}, done);
     });
 
     test("edit x 1000", (done) => {

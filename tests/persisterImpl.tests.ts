@@ -443,7 +443,6 @@ describe('PersisterImpl', () => {
                     cursor = collection.createCursor();
 
                 collection.onFind = (criteria, fields) => {
-                    done();
                     return cursor;
                 };
 
