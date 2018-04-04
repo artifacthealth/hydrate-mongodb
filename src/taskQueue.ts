@@ -71,7 +71,6 @@ export class TaskQueue extends EventEmitter {
         else {
             // this is the first task so initialize the queue and start processing
             this._head = this._tail = task;
-            // make sure calls to _process are async
             process.nextTick(() => this._process());
         }
     }
@@ -145,8 +144,7 @@ export class TaskQueue extends EventEmitter {
             }
 
             if(this._head) {
-                // make sure calls to _process are async
-                process.nextTick(() => this._process());
+                this._process();
             }
 
         }
