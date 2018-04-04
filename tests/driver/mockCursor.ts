@@ -110,7 +110,7 @@ export class MockCursor extends Readable implements mongodb.Cursor {
     next(): Promise<any>;
     next(callback: mongodb.MongoCallback<any>): void;
     next(callback?: any): any {
-
+        callback();
     }
 
     project(value: Object): mongodb.Cursor<any> {
