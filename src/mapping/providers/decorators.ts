@@ -18,6 +18,7 @@ import {
     ElementTypeAnnotation,
     MapKeyAnnotation,
     FieldAnnotation,
+    IdentityAnnotation,
     EnumeratedAnnotation,
     FieldDescription,
     CollectionDescription,
@@ -30,6 +31,7 @@ import {
 import {PropertyConverter, FetchType} from "../mappingModel";
 import {ChangeTrackingType} from "../mappingModel";
 import {CascadeFlags} from "../mappingModel";
+import {IdentityGenerator} from "../../config/configuration";
 
 /**
  * Specifies that a class is a persistent entity and will be serialized to a document within a MongoDB collection.
@@ -105,6 +107,10 @@ export declare function Embeddable(): ClassDecorator;
  */
 export declare function Converter(converter: string | PropertyConverter | ParameterlessConstructor<PropertyConverter>): ClassDecorator & PropertyDecorator;
 
+/**
+ * Specifies the IdentityGenerator to use for a class.
+ */
+export declare function Identity(identity: IdentityGenerator | ParameterlessConstructor<IdentityGenerator>): ClassDecorator;
 
 /**
  * Specifies the name of the collection used to hold the entity.
@@ -616,5 +622,4 @@ exports.ElementType = makeDecorator(ElementTypeAnnotation);
 exports.MapKey = makeDecorator(MapKeyAnnotation);
 exports.Immutable = makeDecorator(ImmutableAnnotation);
 exports.Transient = makeDecorator(TransientAnnotation);
-
-
+exports.Identity = makeDecorator(IdentityAnnotation);

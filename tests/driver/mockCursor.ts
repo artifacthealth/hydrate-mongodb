@@ -103,6 +103,10 @@ export class MockCursor extends Readable implements mongodb.Cursor {
         throw new Error("Method not implemented.");
     }
 
+    collation(value: Object): mongodb.Cursor<any> {
+        throw new Error("Method not implemented.");
+    }
+
     min(min: number): mongodb.Cursor<any> {
         throw new Error("Method not implemented.");
     }

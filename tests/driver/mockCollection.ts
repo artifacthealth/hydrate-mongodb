@@ -16,8 +16,8 @@ export class MockCollection implements mongodb.Collection {
         this.collectionName = name;
     }
 
-    aggregate<T = any>(pipeline: Object[], callback: mongodb.MongoCallback<T[]>): mongodb.AggregationCursor<T>;
-    aggregate<T = any>(pipeline: Object[], options?: mongodb.CollectionAggregationOptions, callback?: mongodb.MongoCallback<T[]>): mongodb.AggregationCursor<T>;
+    aggregate<T>(pipeline: Object[], callback: mongodb.MongoCallback<mongodb.AggregationCursor<T>>): mongodb.AggregationCursor<T>;
+    aggregate<T>(pipeline: Object[], options?: mongodb.CollectionAggregationOptions, callback?: mongodb.MongoCallback<mongodb.AggregationCursor<T>>): mongodb.AggregationCursor<T>;
     aggregate(pipeline: any, options?: any, callback?: any): any {
         throw new Error("Method not implemented.");
     }

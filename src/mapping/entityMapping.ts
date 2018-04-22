@@ -139,7 +139,8 @@ export class EntityMapping extends ClassMapping {
         var obj = super.read(context, value);
         if (obj) {
             obj["_id"] = id;
-            obj["id"] = id.toString();
+            var identityGenerator = (<EntityMapping>this.inheritanceRoot).identity;
+            obj["id"] = identityGenerator.convertToString ? identityGenerator.convertToString(id) : id.toString();
         }
         return obj;
     }

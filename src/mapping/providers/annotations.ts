@@ -11,6 +11,7 @@ import {Type, Property, Method} from "reflect-helper";
 import {EntityMappingBuilder} from "./entityMappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";
 import {Index} from "../index";
+import {IdentityGenerator} from "../../config/configuration";
 
 /**
  * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
@@ -434,6 +435,56 @@ export class ChangeTrackingAnnotation extends Annotation implements ClassAnnotat
             }
 
             mapping.changeTracking = annotation.type;
+        }
+    }
+}
+
+/**
+ * @hidden
+ */
+export class IdentityAnnotation extends Annotation implements ClassAnnotation {
+
+    identity: IdentityGenerator;
+    identityCtr: ParameterlessConstructor<IdentityGenerator>;
+
+    /**
+     * Constructs a IdentityAnnotation object.
+     * @param identity The instance or constructor of the IdentityGenerator to apply to the class.
+     */
+    constructor(identity: IdentityGenerator | ParameterlessConstructor<IdentityGenerator>) {
+        super();
+
+        if(typeof identity === "function") {
+            this.identityCtr = <ParameterlessConstructor<IdentityGenerator>>identity;
+        }
+        else {
+            this.identity = <IdentityGenerator>identity;
+        }
+    }
+
+    toString(): string {
+        return "@Identity";
+    }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: ChangeTrackingAnnotation): void {
+
+        if(context.assertRootEntityMapping(mapping)) {
+
+            var identity: IdentityGenerator;
+
+            if(this.identity) {
+                identity = this.identity;
+            }
+            else if(this.identityCtr) {
+                identity = new this.identityCtr();
+            }
+
+            if (!identity) {
+                context.addError("An identity generator instance or constructor must be specified.");
+                return;
+            }
+
+            mapping.identity = identity;
         }
     }
 }

@@ -1,7 +1,8 @@
 import * as mongodb from "mongodb";
 import {MockCollection} from "./mockCollection";
+import {EventEmitter} from "events";
 
-export class MockDb implements mongodb.Db {
+export class MockDb extends EventEmitter implements mongodb.Db {
 
     serverConfig: mongodb.Server | mongodb.ReplSet | mongodb.Mongos;
     bufferMaxEntries: number;
@@ -13,6 +14,8 @@ export class MockDb implements mongodb.Db {
     cachedCollections: Map<string, MockCollection> = new Map();
 
     constructor(name: string = "test") {
+        super();
+
         this.databaseName = name;
     }
 
@@ -142,58 +145,4 @@ export class MockDb implements mongodb.Db {
     stats(options?: any, callback?: any): any {
         throw new Error("Method not implemented.");
     }
-
-    addListener(event: string | symbol, listener: (...args: any[]) => void): this {
-        throw new Error("Method not implemented.");
-    }
-
-    on(event: string | symbol, listener: (...args: any[]) => void): this {
-        throw new Error("Method not implemented.");
-    }
-
-    once(event: string | symbol, listener: (...args: any[]) => void): this {
-        throw new Error("Method not implemented.");
-    }
-
-    prependListener(event: string | symbol, listener: (...args: any[]) => void): this {
-        throw new Error("Method not implemented.");
-    }
-
-    prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this {
-        throw new Error("Method not implemented.");
-    }
-
-    removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
-        throw new Error("Method not implemented.");
-    }
-
-    removeAllListeners(event?: string | symbol): this {
-        throw new Error("Method not implemented.");
-    }
-
-    setMaxListeners(n: number): this {
-        throw new Error("Method not implemented.");
-    }
-
-    getMaxListeners(): number {
-        throw new Error("Method not implemented.");
-    }
-
-    listeners(event: string | symbol): Function[] {
-        throw new Error("Method not implemented.");
-    }
-
-    emit(event: string | symbol, ...args: any[]): boolean {
-        throw new Error("Method not implemented.");
-    }
-
-    eventNames(): (string | symbol)[] {
-        throw new Error("Method not implemented.");
-    }
-
-    listenerCount(type: string | symbol): number {
-        throw new Error("Method not implemented.");
-    }
-
-
 }

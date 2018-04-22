@@ -12,6 +12,7 @@ import * as ConverterOnClassFixture from "../../fixtures/annotations/converterOn
 import {requireFiles, findMapping} from "../../helpers";
 import {Callback} from "../../../src/core/callback";
 import {Property} from "../../../src/mapping/property";
+import {TestGenerator} from "../../fixtures/annotations/identity";
 
 describe('AnnotationMappingProvider', () => {
 
@@ -469,6 +470,25 @@ describe('AnnotationMappingProvider', () => {
                     assert.ok(err);
                     assert.include(err.message, "Unknown converter 'Blah'");
                     done();
+                });
+            });
+        });
+
+        describe('@identity', () => {
+
+            it("sets the identity generator for the class", (done) => {
+
+                var config = new Configuration();
+
+                processFixtureWithConfiguration("identity", config, done, (results) => {
+
+                    var mappingA = findMapping(results, "A");
+                    assert.instanceOf(mappingA.identity, TestGenerator);
+                    assert.equal((<TestGenerator>mappingA.identity).next, 1);
+
+                    var mappingB = findMapping(results, "B");
+                    assert.instanceOf(mappingB.identity, TestGenerator);
+                    assert.equal((<TestGenerator>mappingB.identity).next, 42);
                 });
             });
         });
