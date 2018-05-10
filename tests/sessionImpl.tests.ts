@@ -222,6 +222,27 @@ describe('SessionImpl', () => {
         });
     });
 
+    describe('getVersion', () => {
+
+        it('returns 0 if the entity has never been flushed to database', (done) => {
+
+            helpers.createFactory("model", (err, factory) => {
+                if (err) return done(err);
+
+                var session = factory.createSession();
+
+                var entity = createEntity();
+
+                session.save(entity, (err) => {
+                    if (err) return done(err);
+
+                    assert.equal(session.getVersion(entity), 0);
+                    done();
+                });
+            });
+        });
+    });
+
     describe('isDirty', () => {
 
         it('returns true if the entity is not equal to the original document', (done) => {

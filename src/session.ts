@@ -588,6 +588,11 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         if (!links || links.state == ObjectState.Detached) {
             return null;
         }
+
+        // return 0 if document has never been saved
+        if (!links.originalDocument) {
+            return 0;
+        }
         
         var mapping = this.factory.getMappingForObject(obj);
         if (!mapping) {
