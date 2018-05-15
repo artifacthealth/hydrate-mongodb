@@ -1,6 +1,6 @@
 import * as mongodb from "mongodb";
 import * as async from "async";
-import {onlyOnce, chain} from "./core/callback";
+import {onlyOnce} from "./core/callback";
 import {EntityMapping} from "./mapping/entityMapping";
 import {ResultCallback} from "./core/callback";
 import {InternalSession} from "./session";
@@ -1050,7 +1050,7 @@ class FindQueue {
 
     private _persister: PersisterImpl;
     private _ids: any[];
-    private _callbacks: Map<string, ResultCallback<any>>;
+    private _callbacksMap: Map<string, ResultCallback<any>[]>;
 
     constructor(persister: PersisterImpl) {
         this._persister = persister;
@@ -1060,7 +1060,7 @@ class FindQueue {
         if(!this._ids) {
             // this is the first entry in the queue so create the queue and schedule processing on the next tick
             this._ids = [];
-            this._callbacks = new Map();
+            this._callbacksMap = new Map();
             process.nextTick(() => this._process());
         }
 
@@ -1071,15 +1071,13 @@ class FindQueue {
         }
 
         var key = normalizedId.toString();
-        var existingCallback = this._callbacks.get(key);
-        if(existingCallback === undefined) {
+        var callbacks = this._callbacksMap.get(key);
+        if(callbacks === undefined) {
+            callbacks = [];
             this._ids.push(normalizedId);
-            this._callbacks.set(key, callback);
+            this._callbacksMap.set(key, callbacks);
         }
-        else {
-            // this id is already in the queue so chain the callbacks
-            this._callbacks.set(key, chain(callback, existingCallback));
-        }
+        callbacks.push(callback);
     }
 
     private _normalizeIdentifier(id: any): any {
@@ -1096,24 +1094,23 @@ class FindQueue {
     private _process(): void {
 
         // pull values local
-        var callbacks = this._callbacks,
+        var callbacksMap = this._callbacksMap,
             ids = this._ids;
 
         // clear queue
-        this._ids = this._callbacks = undefined;
+        this._ids = this._callbacksMap = undefined;
 
         // check for simple case of only a single find in the queue
         if (ids.length == 1) {
-            let id = ids[0],
-                callback = callbacks.get(id.toString());
+            var id = ids[0];
 
             this._persister.findOne({ _id: id }, (err, entity) => {
-                if(err) return callback(err);
+                if(err) return handleCallback(id, err);
 
                 if(!entity) {
-                    return callback(new EntityNotFoundError("Unable to find document with identifier '" + id.toString() + "'."));
+                    return handleCallback(id, new EntityNotFoundError("Unable to find document with identifier '" + id.toString() + "'."));
                 }
-                callback(null, entity);
+                handleCallback(id, null, entity);
             });
             return;
         }
@@ -1130,16 +1127,23 @@ class FindQueue {
             // TODO: add test to make sure callbacks are called if document cannot be found
 
             // pass error message to any callbacks that have not been called yet
-            callbacks.forEach((callback, id) => callback(err || new EntityNotFoundError("Unable to find document with identifier '" + id + "'.")));
+            callbacksMap.forEach((callbacks, id) => callCallbacks(callbacks, err || new EntityNotFoundError("Unable to find document with identifier '" + id + "'.")));
         });
 
-        function handleCallback(id: any, err: Error, result?: any): void {
+        function handleCallback(id: any, err: Error, entity?: any): void {
 
             var key = id.toString(),
-                callback = callbacks.get(key);
+                callbacks = callbacksMap.get(key);
 
-            callback(err, result);
-            callbacks.delete(key);
+            callbacksMap.delete(key);
+            callCallbacks(callbacks, err, entity);
+        }
+
+        function callCallbacks(callbacks: ResultCallback<any>[], err: Error, entity?: any): void {
+
+            for (var i = 0; i < callbacks.length; i++) {
+                callbacks[i](err, entity);
+            }
         }
     }
 }
