@@ -126,7 +126,7 @@ export class ArrayMapping extends MappingBase {
         });
     }
 
-    fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetchInverse(session: InternalSession, parentEntity: any, inverse: MappingModel.InverseRelationship, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!parentEntity) {
             return callback(new PersistenceError("Parent entity required to resolve inverse relationship."));
@@ -136,7 +136,7 @@ export class ArrayMapping extends MappingBase {
             return callback(new PersistenceError("Element mapping must be an entity to resolve inverse relationship."));
         }
 
-        session.getPersister(<EntityMapping>this.elementMapping).findInverseOf(parentEntity, propertyName, (err, value) => {
+        session.getPersister(<EntityMapping>this.elementMapping).findInverseOf(parentEntity, inverse, (err, value) => {
             if(err) return callback(err);
             this.fetch(session, this, value, path, depth, callback);
         });

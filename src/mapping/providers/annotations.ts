@@ -580,14 +580,57 @@ export class DiscriminatorValueAnnotation extends Annotation  implements ClassAn
     }
 }
 
+export interface InverseRelationshipDescription {
+
+    /**
+     * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
+     */
+    propertyName: string;
+
+    /**
+     * Sorting to apply when fetching the inverse relationship.
+     */
+    sort?: [string, number][];
+
+    /**
+     * Limit to apply when retrieving the inverse relationship.
+     */
+    limit?: number;
+}
+
 /**
  * @hidden
  */
 export class InverseOfAnnotation extends Annotation implements PropertyAnnotation {
 
-    constructor(public propertyName: string) {
+    /**
+     * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
+     */
+    propertyName: string;
+
+    /**
+     * Sorting to apply when fetching the inverse relationship.
+     */
+    sort?: [string, number][];
+
+    /**
+     * Limit to apply when retrieving the inverse relationship.
+     */
+    limit?: number;
+
+    constructor(propertyName: string);
+    constructor(description: InverseRelationshipDescription);
+    constructor(propertyNameOrDescription: any) {
         super();
 
+        if (typeof propertyNameOrDescription === "string") {
+            this.propertyName = propertyNameOrDescription;
+        }
+        else if (typeof propertyNameOrDescription === "object") {
+            this.propertyName = propertyNameOrDescription.propertyName;
+            this.sort = propertyNameOrDescription.sort;
+            this.limit = propertyNameOrDescription.limit;
+        }
     }
 
     toString(): string {
@@ -596,8 +639,17 @@ export class InverseOfAnnotation extends Annotation implements PropertyAnnotatio
 
     processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, property: MappingModel.Property, symbol: Property, annotation: InverseOfAnnotation): void {
 
+        if (!this.propertyName) {
+            context.addError(`Missing property name for inverse relationship.`);
+            return;
+        }
+
         // TODO: validate inverse relationship
-        property.inverseOf = annotation.propertyName;
+        property.inverse = {
+            propertyName: annotation.propertyName,
+            sort: annotation.sort,
+            limit: annotation.limit
+        };
         property.setFlags(MappingModel.PropertyFlags.InverseSide);
     }
 }

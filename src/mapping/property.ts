@@ -29,9 +29,9 @@ export class Property implements MappingModel.Property {
     nullable: boolean;
 
     /**
-     * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
+     * Describes the inverse relationship.
      */
-    inverseOf: string;
+    inverse: MappingModel.InverseRelationship;
 
     /**
      * The mapping of the property.

@@ -71,9 +71,9 @@ export namespace MappingModel {
         field: string
 
         /**
-         * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
+         * Describes the inverse relationship.
          */
-        inverseOf: string;
+        inverse?: InverseRelationship;
 
         /**
          * The mapping of the property.
@@ -84,6 +84,24 @@ export namespace MappingModel {
          * Sets the property flags.
          */
         setFlags(flags: PropertyFlags): void;
+    }
+
+    export interface InverseRelationship {
+
+        /**
+         * The name of the property in the target TypeMapping that is used to retrieve the value of this property.
+         */
+        propertyName: string;
+
+        /**
+         * Sorting to apply when fetching the inverse relationship.
+         */
+        sort?: [string, number][];
+
+        /**
+         * Limit to apply when retrieving the inverse relationship.
+         */
+        limit?: number;
     }
 
     /**

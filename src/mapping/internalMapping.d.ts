@@ -1,7 +1,4 @@
-import {MappingError} from "./mappingError";
 import {MappingModel} from "./mappingModel";
-import {InternalSessionFactory} from "../sessionFactory";
-import {Changes} from "./changes";
 import {Reference} from "../reference";
 import {InternalSession} from "../session";
 import {ResultCallback} from "../core/callback";
@@ -26,5 +23,5 @@ export interface InternalMapping extends MappingModel.Mapping {
     watch(value: any, observer: Observer, visited: any[]): void;
     walk(session: InternalSession, value: any, flags: MappingModel.PropertyFlags, entities: any[], embedded: any[], references: Reference[]): void;
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void;
-    fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void;
+    fetchInverse(session: InternalSession, parentEntity: any, inverse: MappingModel.InverseRelationship, path: string[], depth: number, callback: ResultCallback<any>): void;
 }

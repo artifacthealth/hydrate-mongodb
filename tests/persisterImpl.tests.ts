@@ -159,17 +159,24 @@ describe('PersisterImpl', () => {
             var id =  (<any>person)._id;
 
             var collection = new MockCollection();
+            var cursor: MockCursor;
             collection.onFind = (criteria) => {
                 assert.deepEqual(criteria, { parents: id });
-                done();
-                return collection.createCursor();
+                cursor = collection.createCursor();
+                return cursor;
             };
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);
 
-                persister.findInverseOf(person, "parents", (err, results) => {
+                persister.findInverseOf(person, { propertyName: "parents", limit: 10, sort: [["createdAt", 1]] }, (err, results) => {
                     if(err) return done(err);
+
+                    assert.ok(cursor, "Find was not called");
+                    assert.equal(cursor.limitCount, 10);
+                    assert.deepEqual(cursor.sortKeyOrList, [["createdAt", 1]]);
+                    assert.isArray(results);
+                    done();
                 });
             });
         });
@@ -181,7 +188,7 @@ describe('PersisterImpl', () => {
 
                 var person = helpers.createPerson();
 
-                persister.findInverseOf(person, "blah", (err, results) => {
+                persister.findInverseOf(person, { propertyName: "blah" }, (err, results) => {
                     // TODO: check error code
                     assert.instanceOf(err, Error);
                     done();
@@ -197,18 +204,26 @@ describe('PersisterImpl', () => {
             var person = helpers.createPerson();
             var id =  (<any>person)._id;
 
-            var collection = new MockCollection();
-            collection.onFindOne = (criteria, fields, callback) => {
+            var collection = new MockCollection([{ _id: id, __t: "Person" }]);
+            var cursor: MockCursor;
+            collection.onFind = (criteria) => {
                 assert.deepEqual(criteria, { parents: id });
-                callback(null, { _id: id, __t: "Person" });
-                done();
+                cursor = collection.createCursor();
+                return cursor;
             };
 
             helpers.createPersister(collection, (err, persister) => {
                 if (err) return done(err);
 
-                persister.findOneInverseOf(person, "parents", (err, results) => {
+                persister.findOneInverseOf(person, { propertyName: "parents", limit: 10, sort: [["createdAt", 1]] }, (err, result) => {
                     if(err) return done(err);
+
+                    assert.ok(cursor, "Find was not called");
+                    assert.equal(cursor.limitCount, 1, "Value of limit should be ignored and set to 1");
+                    assert.deepEqual(cursor.sortKeyOrList, [["createdAt", 1]]);
+                    assert.isFalse(Array.isArray(result));
+                    assert.isTrue(typeof result === "object", "Expected result to be an object. Instead it was: " + (typeof result));
+                    done();
                 });
             });
         });
@@ -220,7 +235,7 @@ describe('PersisterImpl', () => {
 
                 var person = helpers.createPerson();
 
-                persister.findOneInverseOf(person, "blah", (err, results) => {
+                persister.findOneInverseOf(person, { propertyName: "blah" }, (err, results) => {
                     // TODO: check error code
                     assert.instanceOf(err, Error);
                     done();

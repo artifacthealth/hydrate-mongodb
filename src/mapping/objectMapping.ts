@@ -336,7 +336,7 @@ export class ObjectMapping extends MappingBase {
 
         var propertyValue = property.getPropertyValue(value);
         if((property.flags & MappingModel.PropertyFlags.InverseSide) != 0 && propertyValue === undefined) {
-            property.mapping.fetchInverse(session, parentEntity, property.inverseOf, path, depth + 1, handleCallback);
+            property.mapping.fetchInverse(session, parentEntity, property.inverse, path, depth + 1, handleCallback);
         }
         else if((property.flags & MappingModel.PropertyFlags.FetchLazy) != 0 && propertyValue === undefined) {
             this.fetchPropertyValue(session, value, property, handleCallback);

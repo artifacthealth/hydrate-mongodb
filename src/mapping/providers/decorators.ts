@@ -25,7 +25,7 @@ import {
     ClassIndexDescription,
     PropertyIndexDescription,
     TransientAnnotation,
-    ImmutableAnnotation, FetchAnnotation, ParentAnnotation
+    ImmutableAnnotation, FetchAnnotation, ParentAnnotation, InverseRelationshipDescription
 } from "./annotations";
 
 import {PropertyConverter, FetchType} from "../mappingModel";
@@ -472,6 +472,7 @@ export declare function Enumerated(members: Object): PropertyDecorator;
  * ```
  */
 export declare function InverseOf(propertyName: string): PropertyDecorator;
+export declare function InverseOf(propertyName: InverseRelationshipDescription): PropertyDecorator;
 
 /**
  * Specifies which operations should cascade to a property on an entity or embeddable. The type of the property must be

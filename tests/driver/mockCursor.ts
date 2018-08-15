@@ -7,10 +7,14 @@ export class MockCursor extends Readable implements mongodb.Cursor {
 
     private _sorting: any[];
 
+    limitCount: number;
     sortValue: string;
+    sortKeyOrList: any;
     projectValue: Object;
     timeout: boolean;
     readPreference: mongodb.ReadPreference;
+
+    private _index = 0;
 
     constructor(public contents: any[] = []) {
         super();
@@ -80,6 +84,7 @@ export class MockCursor extends Readable implements mongodb.Cursor {
     }
 
     limit(value: number): mongodb.Cursor<any> {
+        this.limitCount = value;
         return this;
     }
 
@@ -114,7 +119,13 @@ export class MockCursor extends Readable implements mongodb.Cursor {
     next(): Promise<any>;
     next(callback: mongodb.MongoCallback<any>): void;
     next(callback?: any): any {
-        callback();
+
+        if (!this.contents || this._index >= this.contents.length) {
+            process.nextTick(() => callback(null, null));
+            return;
+        }
+
+        process.nextTick(() => callback(null, this.contents[this._index++]));
     }
 
     project(value: Object): mongodb.Cursor<any> {
@@ -131,7 +142,7 @@ export class MockCursor extends Readable implements mongodb.Cursor {
     }
 
     rewind(): void {
-        throw new Error("Method not implemented.");
+        this._index = 0;
     }
 
     setCursorOption(field: string, value: Object): mongodb.Cursor<any> {
@@ -155,6 +166,9 @@ export class MockCursor extends Readable implements mongodb.Cursor {
     }
 
     sort(keyOrList: string | Object | Object[], direction?: number): mongodb.Cursor<any> {
+
+        this.sortKeyOrList = keyOrList;
+
         if(this.onSort) {
             return this.onSort(keyOrList, direction);
         }

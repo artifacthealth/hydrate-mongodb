@@ -152,11 +152,11 @@ export class MockPersister implements Persister {
 
     }
 
-    findInverseOf(entity: Object, path: string, callback: ResultCallback<any[]>): void {
+    findInverseOf(entity: Object, inverse: MappingModel.InverseRelationship, callback: ResultCallback<any[]>): void {
 
     }
 
-    findOneInverseOf(entity: Object, path: string, callback: ResultCallback<any>): void {
+    findOneInverseOf(entity: Object, inverse: MappingModel.InverseRelationship, callback: ResultCallback<any>): void {
 
     }
 

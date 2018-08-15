@@ -4,7 +4,7 @@ import {onlyOnce} from "./core/callback";
 import {EntityMapping} from "./mapping/entityMapping";
 import {ResultCallback} from "./core/callback";
 import {InternalSession} from "./session";
-import {ChangeTrackingType} from "./mapping/mappingModel";
+import {ChangeTrackingType, MappingModel} from "./mapping/mappingModel";
 import {IdentityGenerator} from "./config/configuration";
 import {Batch} from "./batch";
 import {Callback} from "./core/callback";
@@ -66,8 +66,8 @@ export interface Persister {
     executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void;
 
     findOneById(id: any, callback: ResultCallback<any>): void;
-    findInverseOf(entity: Object, path: string, callback: ResultCallback<Object[]>): void;
-    findOneInverseOf(entity: Object, path: string, callback: ResultCallback<Object>): void;
+    findInverseOf(entity: Object, inverse: MappingModel.InverseRelationship, callback: ResultCallback<Object[]>): void;
+    findOneInverseOf(entity: Object, inverse: MappingModel.InverseRelationship, callback: ResultCallback<Object>): void;
 }
 
 export interface DirtyCheckContext {
@@ -270,20 +270,49 @@ export class PersisterImpl implements Persister {
         });
     }
 
-    findInverseOf(entity: Object, path: string, callback: ResultCallback<any[]>): void {
+    findInverseOf(entity: Object, inverse: MappingModel.InverseRelationship, callback: ResultCallback<any[]>): void {
 
-        var criteria = this._prepareInverseQuery(entity, path, callback);
-        if(criteria) {
-            this.findAll(criteria, callback);
+        var criteria = this._prepareInverseQuery(entity, inverse, callback);
+        if(!criteria) {
+            return;
         }
+
+        var query: any = {
+            criteria,
+            fields: this._defaultFields,
+            limitCount: inverse.limit
+        };
+
+        // setup trace logging.
+        var handleCallback = callback;
+        if (this._traceEnabled) {
+            query.kind = QueryKind[QueryKind.FindAll];
+            handleCallback = this._createTraceableCallback(query, callback);
+        }
+
+        // prepare sorting if needed
+        if (inverse.sort) {
+            this._prepareOrderDocument(inverse.sort, (err, preparedOrder) => {
+                if (err) return callback(err);
+
+                query.orderDocument = preparedOrder;
+                this._findAll(query, handleCallback);
+            });
+            return;
+        }
+
+        this._findAll(query, handleCallback);
     }
 
-    findOneInverseOf(entity: Object, path: string, callback: ResultCallback<any>): void {
+    findOneInverseOf(entity: Object, inverse: MappingModel.InverseRelationship, callback: ResultCallback<any>): void {
 
-        var criteria = this._prepareInverseQuery(entity, path, callback);
-        if(criteria) {
-            this.findOne(criteria, callback);
-        }
+        // set value for limit to 1 regardless of what is passed in since this is a "findOne" call.
+        this.findInverseOf(entity, { propertyName: inverse.propertyName, sort: inverse.sort, limit: 1 }, (err, results) => {
+            if (err) return callback(err);
+
+            // calling function expects a single value, not an array
+            callback(null, results[0]);
+        });
     }
 
     /**
@@ -291,14 +320,14 @@ export class PersisterImpl implements Persister {
      * the callback is not called and is left to the caller to handle. Note that the query prepared does not include
      * a discriminator but since we assume that ids are globally unique, this doesn't matter.
      * @param entity The entity that has the inverse relationship
-     * @param path The map to the property in the entity that is the owning side of the relationship.
+     * @param inverse The map to the property in the entity that is the owning side of the relationship.
      * @param callback Callback called on error.
      */
-    _prepareInverseQuery(entity: Object, path: string, callback: ResultCallback<any>): QueryDocument {
+    _prepareInverseQuery(entity: Object, inverse: MappingModel.InverseRelationship, callback: ResultCallback<any>): QueryDocument {
 
-        var property = this._mapping.getProperty(path);
+        var property = this._mapping.getProperty(inverse.propertyName);
         if(property === undefined) {
-            callback(new PersistenceError("Missing property '" + path + "'."));
+            callback(new PersistenceError("Missing property '" + inverse.propertyName + "'."));
             return null;
         }
 

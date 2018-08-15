@@ -259,13 +259,13 @@ export class EntityMapping extends ClassMapping {
         super.fetch(session, value, value, path, depth, callback);
     }
 
-    fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetchInverse(session: InternalSession, parentEntity: any, inverse: MappingModel.InverseRelationship, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!parentEntity) {
             return callback(new PersistenceError("Parent entity required to resolve inverse relationship."));
         }
 
-        session.getPersister(this).findOneInverseOf(parentEntity, propertyName, (err, value) => {
+        session.getPersister(this).findOneInverseOf(parentEntity, inverse, (err, value) => {
             if(err) return callback(err);
             super.fetch(session, this, value, path, depth, callback);
         });

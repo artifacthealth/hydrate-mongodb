@@ -62,7 +62,7 @@ export abstract class MappingBase implements InternalMapping {
         }
     }
 
-    fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {
+    fetchInverse(session: InternalSession, parentEntity: any, inverse: MappingModel.InverseRelationship, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         callback(new PersistenceError("Mapping does not support inverse relationships."));
     }
