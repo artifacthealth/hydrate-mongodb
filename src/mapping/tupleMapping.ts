@@ -134,7 +134,8 @@ export class TupleMapping extends MappingBase {
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!Array.isArray(value) || depth == path.length) {
-            return callback(null, value);
+            process.nextTick(() => callback(null, value));
+            return;
         }
 
         var index = parseInt(path[depth]);

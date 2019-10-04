@@ -61,7 +61,8 @@ export class Batch implements Command {
         this._executed = true;
 
         if(this._commands.length == 0) {
-            return process.nextTick(() => callback());
+            process.nextTick(callback);
+            return;
         }
 
         var self = this;

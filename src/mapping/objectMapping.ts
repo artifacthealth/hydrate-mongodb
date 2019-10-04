@@ -324,7 +324,8 @@ export class ObjectMapping extends MappingBase {
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!value || typeof value !== "object" || depth == path.length) {
-            return callback(null, value);
+            process.nextTick(() => callback(null, value));
+            return;
         }
 
         var property = this.getProperty(path[depth]);
@@ -359,7 +360,7 @@ export class ObjectMapping extends MappingBase {
     protected fetchPropertyValue(session: InternalSession, value: any, property: Property, callback: ResultCallback<any>): void {
 
         // property values should be fully fetched on all non-entity types.
-        callback(null, property.getPropertyValue(value));
+        process.nextTick(() => callback(null, property.getPropertyValue(value)));
     }
 
     protected resolveCore(context: ResolveContext): void {

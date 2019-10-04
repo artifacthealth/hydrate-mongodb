@@ -462,17 +462,16 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
 
         if (this._executed) {
             callback(new PersistenceError("Query already executed. A callback can only be passed to one function in the chain."));
+            return;
         }
-        else {
-            this._executed = true;
+        this._executed = true;
 
-            if(this.error) {
-                process.nextTick(() => callback(this.error))
-            }
-            else {
-                this._session.executeQuery(this, callback);
-            }
+        if(this.error) {
+            callback(this.error);
+            return;
         }
+
+        this._session.executeQuery(this, callback);
     }
 
     executeInternal(callback: ResultCallback<any>): void {

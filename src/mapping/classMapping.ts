@@ -299,7 +299,8 @@ export class ClassMapping extends ObjectMapping {
 
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
         if (!value || typeof value !== "object") {
-            return callback(null, value);
+            process.nextTick(() => callback(null, value));
+            return;
         }
 
         return (this._ensureRegistry().getMappingForObject(value) || this)._fetch(session, parentEntity, value, path, depth, callback);

@@ -23,12 +23,12 @@ export class Reference {
     fetch(session: InternalSession, callback: ResultCallback<any>): void {
 
         if (!this.mapping) {
-            process.nextTick(() => callback(new PersistenceError("Object type is not mapped as an entity.")));
+            callback(new PersistenceError("Object type is not mapped as an entity."));
             return;
         }
 
         if (this._id == null) {
-            process.nextTick(() => callback(new PersistenceError("Missing or invalid identifier.")));
+            callback(new PersistenceError("Missing or invalid identifier."));
             return;
         }
 

@@ -319,7 +319,8 @@ export class PersisterImpl implements Persister {
         // that the object is loaded but scheduled for delete so null should be returned.
         var entity = this._session.getObject(id);
         if (entity !== undefined) {
-            return process.nextTick(() => callback(null, entity));
+            process.nextTick(() => callback(null, entity));
+            return;
         }
 
         // TODO: FindQueue should be shared by all persisters with the same collection?

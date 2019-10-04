@@ -552,7 +552,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         if (!links.originalDocument) {
             // entity has never been saved to the database, so it can't be dirty.
             if (callback) {
-                callback(null, false);
+                process.nextTick(() => callback(null, false));
             }
 
             return false;
@@ -569,7 +569,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         }
 
         if (callback) {
-            callback(null, !areEqual);
+            process.nextTick(() => callback(null, !areEqual));
         }
 
         return !areEqual;
@@ -693,7 +693,9 @@ export class SessionImpl extends EventEmitter implements InternalSession {
                 this._flush(callback);
                 break;
             case Action.Wait:
-                if(callback) callback(null);
+                if(callback) {
+                    process.nextTick(() => callback(null));
+                }
                 break;
             case Action.Fetch:
                 this.fetchInternal(arg[0], arg[1], callback);
@@ -772,7 +774,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             }
         }
 
-
+        // ok with not being async b/c only called in _save above which will be async
         callback();
     }
 
@@ -835,6 +837,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             }
         }
 
+        // ok with not being async b/c only called in _remove above which will be async
         callback();
     }
 
@@ -890,6 +893,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             // TODO: double check how we want to handle Removed entities here.
         }
 
+        // ok with not being async b/c only called in _detach above which will be async
         callback();
     }
 
@@ -1004,6 +1008,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             process.nextTick(() => this._buildBatch(batch, links, callback));
         }
         else {
+            // ok with not being async b/c calls to _buildBatch are always async
             callback();
         }
     }

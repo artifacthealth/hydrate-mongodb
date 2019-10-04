@@ -55,11 +55,11 @@ export abstract class MappingBase implements InternalMapping {
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(depth == path.length) {
-            callback(null, value);
+            process.nextTick(() => callback(null, value));
+            return;
         }
-        else {
-            callback(new PersistenceError("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
-        }
+
+        callback(new PersistenceError("Undefined property '" + path[depth] + "' in path '"+ path.join(".") + "'."));
     }
 
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {

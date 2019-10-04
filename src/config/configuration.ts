@@ -176,7 +176,7 @@ export class Configuration {
         var collections: Table<Collection> = [];
         var namesSeen = new Map<string, boolean>();
 
-        async.each(registry.getEntityMappings(), (mapping: EntityMapping, callback: (err?: Error) => void) => {
+        async.each(registry.getEntityMappings(), (mapping: EntityMapping, done: (err?: Error) => void) => {
 
             if(!(mapping.flags & MappingModel.MappingFlags.InheritanceRoot)) {
                 process.nextTick(done);
@@ -190,7 +190,7 @@ export class Configuration {
 
             var dbName = mapping.databaseName || databaseName || this.databaseName;
             if (!dbName) {
-                return callback(new Error(`Could not determine database name for '${mapping.collectionName}'. Please make sure to specify `
+                return done(new Error(`Could not determine database name for '${mapping.collectionName}'. Please make sure to specify `
                     + "the database name in either the Configuration, the call to createSessionFactory, or the @Collection decorator."));
             }
 
@@ -210,7 +210,7 @@ export class Configuration {
                     db.createCollection(mapping.collectionName, mapping.collectionOptions || {}, (err, collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
-                        done();
+                        process.nextTick(done);
                     });
                 }
                 else {
@@ -218,17 +218,11 @@ export class Configuration {
                     db.collection(mapping.collectionName, { strict: true }, (err: Error, collection: Collection) => {
                         if(err) return done(err);
                         collections[mapping.id] = collection;
-                        done();
+                        process.nextTick(done);
                     });
                 }
 
             });
-
-            function done(err?: Error): void {
-                process.nextTick(() => {
-                    callback(err);
-                });
-            }
         }, (err) => {
             if(err) return callback(err);
             callback(null, collections);

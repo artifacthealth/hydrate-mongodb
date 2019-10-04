@@ -52,10 +52,10 @@ export class AnnotationMappingProvider implements MappingProvider {
 
         if (builder.hasErrors) {
             callback(new PersistenceError(builder.getErrorMessage()), null);
+            return;
         }
-        else {
-            callback(null, mappings);
-        }
+
+        process.nextTick(() => callback(null, mappings));
     }
 }
 

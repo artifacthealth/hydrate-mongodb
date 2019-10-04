@@ -116,14 +116,12 @@ export class ArrayMapping extends MappingBase {
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if(!Array.isArray(value) || value.length == 0) {
-            return callback(null, value);
+            process.nextTick(() => callback(null, value));
+            return;
         }
 
         var mapping = this.elementMapping;
-        async.map(value, (item, done) => mapping.fetch(session, parentEntity, item, path, depth, done), (err, result) => {
-            if(err) return callback(err);
-            callback(null, result);
-        });
+        async.map(value, (item, done) => mapping.fetch(session, parentEntity, item, path, depth, done), callback);
     }
 
     fetchInverse(session: InternalSession, parentEntity: any, propertyName: string, path: string[], depth: number, callback: ResultCallback<any>): void {

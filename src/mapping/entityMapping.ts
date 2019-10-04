@@ -241,7 +241,8 @@ export class EntityMapping extends ClassMapping {
     fetch(session: InternalSession, parentEntity: any, value: any, path: string[], depth: number, callback: ResultCallback<any>): void {
 
         if (!value || typeof value !== "object") {
-            return callback(null, value);
+            process.nextTick(() => callback(null, value));
+            return;
         }
 
         if(Reference.isReference(value)) {
