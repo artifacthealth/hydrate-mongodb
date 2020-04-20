@@ -2,13 +2,16 @@
     "compilerOptions": {
         "outDir": "build/",
         "target": "es5",
+        "lib": ["DOM","ES6","DOM.Iterable","ScriptHost"],
         "module": "commonjs",
+        "removeComments": true,
         "noImplicitAny": true,
+        "noImplicitThis": true,
         "declaration": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "noResolve": false,
         "moduleResolution": "node",
-        "lib": ["DOM","ES6","DOM.Iterable","ScriptHost"]
+        "skipLibCheck": true
     }
 }

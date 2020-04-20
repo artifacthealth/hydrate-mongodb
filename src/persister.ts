@@ -1181,8 +1181,6 @@ type EntityLoaded = (document: Object, callback: ResultCallback<any>) => void;
  */
 class CursorImpl<T> {
 
-    closed = false;
-
     private _cursor: mongodb.Cursor;
     private _loader: EntityLoaded;
 
@@ -1195,7 +1193,11 @@ class CursorImpl<T> {
     next(callback: ResultCallback<T>): void {
 
         this._cursor.next((err: Error, item: any) => {
-            if (err) return handleError(err);
+            if (err) {
+                this.close();
+                callback(err);
+                return;
+            }
 
             if (item == null) {
                 // end of cursor
@@ -1204,17 +1206,15 @@ class CursorImpl<T> {
             }
 
             this._loader(item, (err, result) => {
-                if (err) return handleError(err);
+                if (err) {
+                    this.close();
+                    callback(err);
+                    return;
+                }
 
                 callback(null, result);
             });
         });
-
-        function handleError(err: Error) {
-
-            this.close();  // close the cursor since it may not be exhausted
-            callback(err);
-        }
     }
 
     close(callback?: Callback): void {
