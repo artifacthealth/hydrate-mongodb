@@ -6,14 +6,14 @@ import {MappingModel} from "../mappingModel";
  */
 export class ClassMappingBuilder extends ObjectMappingBuilder {
 
-    protected populateCore(): void {
+    protected constructCore(): void {
 
         var mapping = <MappingModel.ClassMapping>this.mapping;
 
         mapping.name = this.type.name;
         mapping.classConstructor = <any>this.type.ctr;
 
-        super.populateCore()
+        super.constructCore();
 
         // add default values
         if (mapping.flags & MappingModel.MappingFlags.InheritanceRoot) {

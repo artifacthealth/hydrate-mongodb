@@ -109,6 +109,7 @@ export namespace MappingModel {
         Iterable            = 0x00008000,
         Virtual             = 0x00010000,
         Immutable           = 0x00020000,
+        EntityHistory       = 0x00040000,
 
         ImmutableEmbeddable = Immutable | Embeddable
     }

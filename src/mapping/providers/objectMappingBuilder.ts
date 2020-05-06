@@ -1,7 +1,6 @@
 import {MappingBuilder} from "./mappingBuilder";
 import {MappingModel} from "../mappingModel";
 import {
-    Annotation,
     ClassAnnotation,
     PropertyAnnotation,
     ConverterAnnotation,
@@ -12,15 +11,14 @@ import {
 import {Type, Property} from "reflect-helper";
 import {Constructor} from "../../index";
 import {MethodAnnotation} from "./annotations";
-import ClassMapping = MappingModel.ClassMapping;
-
+import {TypeMappingBuilder} from "./typeMappingBuilder";
 
 /**
  * @hidden
  */
-export class ObjectMappingBuilder extends MappingBuilder {
+export class ObjectMappingBuilder extends TypeMappingBuilder {
 
-    protected populateCore(): void {
+    protected constructCore(): void {
 
         var mapping = <MappingModel.ObjectMapping>this.mapping;
         var annotations = this.type.getAnnotations();
@@ -38,6 +36,9 @@ export class ObjectMappingBuilder extends MappingBuilder {
         }
 
         this.context.currentAnnotation = null;
+    }
+
+    protected populateCore(): void {
 
         this._processType(this.type);
     }
@@ -45,7 +46,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
     private _getInheritedAnnotations(type: Type): any[] {
 
         var result: any[] = [],
-            oldType = this.context.currentType;
+            oldType = this.context.currentTypeName;
 
         while (type) {
             var annotations = type.getAnnotations();
@@ -56,7 +57,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
                         result.push(annotation);
                     }
                     else {
-                        this.context.currentType = type;
+                        this.context.currentTypeName = type.name;
                         this.context.currentAnnotation = annotation;
                         this.context.addError("Annotation cannot be defined on a mapped superclass.");
                     }
@@ -65,7 +66,7 @@ export class ObjectMappingBuilder extends MappingBuilder {
             type = type.baseType;
         }
 
-        this.context.currentType = oldType;
+        this.context.currentTypeName = oldType;
         return result;
     }
 

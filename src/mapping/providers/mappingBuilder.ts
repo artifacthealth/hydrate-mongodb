@@ -1,5 +1,4 @@
 import {MappingModel} from "../mappingModel";
-import {Type} from "reflect-helper";
 import {MappingBuilderContext} from "./mappingBuilderContext";
 
 /**
@@ -7,18 +6,32 @@ import {MappingBuilderContext} from "./mappingBuilderContext";
  */
 export class MappingBuilder {
 
-    type: Type;
+    name: string;
     mapping: MappingModel.Mapping;
 
     protected context: MappingBuilderContext;
 
     private _populated: boolean;
+    private _constructed: boolean;
 
-    constructor(context: MappingBuilderContext, type: Type, mapping: MappingModel.Mapping) {
+    constructor(context: MappingBuilderContext, mapping: MappingModel.Mapping, name: string) {
 
         this.context = context;
-        this.type = type;
         this.mapping = mapping;
+        this.name = name;
+    }
+
+    construct(): void {
+
+        if(!this._constructed) {
+            this._constructed = true;
+
+            this.constructCore();
+        }
+    }
+
+    protected constructCore(): void {
+
     }
 
     populate(): void {

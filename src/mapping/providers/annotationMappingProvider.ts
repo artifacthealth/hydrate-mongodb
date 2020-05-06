@@ -3,10 +3,9 @@ import {MappingModel} from "../mappingModel";
 import {MappingProvider, Configuration} from "../../config/configuration";
 import {Type, Property} from "reflect-helper";
 import {MappingBuilderAnnotation,TargetClassAnnotation} from "./annotations";
-import {Constructor} from "../../index";
 import {MappingBuilderContext} from "./mappingBuilderContext";
-import {MappingBuilder} from "./mappingBuilder";
 import {PersistenceError} from "../../persistenceError";
+import {TypeMappingBuilder} from "./typeMappingBuilder";
 
 export class AnnotationMappingProvider implements MappingProvider {
 
@@ -102,8 +101,7 @@ class Builder {
             return;
         }
 
-        var type = this._context.getType(ctr);
-        this._context.addBuilder(new MappingBuilder(this._context, type, mapping));
+        this._context.addBuilder(new TypeMappingBuilder(this._context, mapping, this._context.getType(ctr)));
     }
 
     private _processModule(obj: any): void {
@@ -162,7 +160,7 @@ class Builder {
                 if(typeof annotation.target === "string") {
                     return null;
                 }
-                return this._context.getType(<Constructor<any>>annotation.target);
+                return this._context.getType(annotation.target);
             }
         }
 

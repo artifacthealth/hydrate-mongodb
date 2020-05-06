@@ -12,6 +12,7 @@ import {EntityMappingBuilder} from "./entityMappingBuilder";
 import {ClassMappingBuilder} from "./classMappingBuilder";
 import {Index} from "../index";
 import {IdentityGenerator} from "../../config/configuration";
+import {TypeMappingBuilder} from "./typeMappingBuilder";
 
 /**
  * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
@@ -89,7 +90,7 @@ export class EntityAnnotation extends Annotation implements MappingBuilderAnnota
             return;
         }
 
-        return new EntityMappingBuilder(context, type, MappingModel.createEntityMapping((parentMapping)));
+        return new EntityMappingBuilder(context, MappingModel.createEntityMapping(parentMapping), type);
     }
 
     toString(): string {
@@ -110,7 +111,7 @@ export class EmbeddableAnnotation extends Annotation implements MappingBuilderAn
             return;
         }
 
-        return new ClassMappingBuilder(context, type, MappingModel.createClassMapping(parentMapping));
+        return new ClassMappingBuilder(context, MappingModel.createClassMapping(parentMapping), type);
     }
 
     toString(): string {
@@ -151,7 +152,7 @@ export class ConverterAnnotation extends Annotation implements MappingBuilderAnn
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
-        return new MappingBuilder(context, type, this.createMapping(context));
+        return new TypeMappingBuilder(context, this.createMapping(context), type);
     }
 
     createMapping(context: MappingBuilderContext): MappingModel.Mapping {

@@ -12,13 +12,12 @@ export class MappingBuilderContext {
     config: Configuration;
     errors: string[] = [];
 
-    currentType: Type;
+    currentTypeName: string;
     currentProperty: Property;
     currentMethod: Method;
     currentAnnotation: any;
 
     private _builders: Map<string, MappingBuilder> = new Map();
-    private _typesByName: Map<string, Type> = new Map();
     private _reflect: ReflectContext;
 
     constructor(config: Configuration) {
@@ -30,17 +29,26 @@ export class MappingBuilderContext {
 
         var classMappings: MappingModel.ClassMapping[] = [];
 
+        // construct mappings
         this._builders.forEach(mappedType => {
 
-            this.currentType = mappedType.type;
-            mappedType.populate();
+            this.currentTypeName = mappedType.name;
+            mappedType.construct();
 
             if(mappedType.mapping.flags & MappingModel.MappingFlags.Class) {
                 classMappings.push(<MappingModel.ClassMapping>mappedType.mapping);
             }
         });
+        this.currentTypeName = null;
 
-        this.currentType = null;
+        // populate mappings
+        this._builders.forEach(mappedType => {
+
+            this.currentTypeName = mappedType.name;
+            mappedType.populate();
+        });
+
+        this.currentTypeName = null;
 
         return classMappings;
     }
@@ -59,25 +67,15 @@ export class MappingBuilderContext {
 
             message = `Error processing property '${this.currentProperty.name}' on type '${this.currentProperty.parent.name}': ${message}`;
         }
-        else if (this.currentType) {
+        else if (this.currentTypeName) {
 
-            message = `Error processing type '${this.currentType.name}': ${message}`
+            message = `Error processing type '${this.currentTypeName}': ${message}`
         }
 
         this.errors.push(message);
     }
 
-    getType(type: Constructor<any> | string): Type {
-
-        if(typeof type === "string") {
-            var resolved = this._typesByName.get(type);
-            if(!resolved) {
-                this.addError("Unknown type '" + type + "'.");
-                return;
-            }
-
-            return resolved;
-        }
+    getType(type: Constructor<any>): Type {
 
         return this._reflect.getType(<Constructor<any>>type);
     }
@@ -86,11 +84,10 @@ export class MappingBuilderContext {
 
         if(!mappedType) return;
 
-        if(this._typesByName.has(mappedType.type.name)) {
-            this.addError("Duplicate class name '" + mappedType.type.name + "'. All named types must have unique names.");
+        if(this._builders.has(mappedType.name)) {
+            this.addError("Duplicate class name '" + mappedType.name + "'. All types must have unique names.");
         }
-        this._typesByName.set(mappedType.type.name, mappedType.type);
-        this._builders.set(mappedType.type.name, mappedType);
+        this._builders.set(mappedType.name, mappedType);
     }
 
     getBuilder(target: Type | Constructor<any> | string): MappingBuilder {

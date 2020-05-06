@@ -6,9 +6,9 @@ import {MappingModel} from "../mappingModel";
  */
 export class EntityMappingBuilder extends ClassMappingBuilder {
 
-    protected populateCore(): void {
+    protected constructCore(): void {
 
-        super.populateCore();
+        super.constructCore();
 
         // add default values
         var mapping = <MappingModel.EntityMapping>this.mapping;
