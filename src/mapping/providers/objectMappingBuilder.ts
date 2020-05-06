@@ -155,7 +155,12 @@ export class ObjectMappingBuilder extends MappingBuilder {
             return symbol.getAnnotations(ConverterAnnotation)[0].createMapping(this.context);
         }
 
-        var propertyType = this._getPropertyType(symbol);
+        var typeAnnotation = symbol.getAnnotations(TypeAnnotation)[0];
+        if(typeAnnotation && typeAnnotation.target) {
+            return this._getMapping(typeAnnotation.target);
+        }
+
+        var propertyType = symbol.type;
         if(!propertyType) {
             this.context.addError("Unable to determine type of property. This may be because of a circular reference or the type is used before it is defined. Try adding the @Type decorator with the name of the class as the target.");
             return;
@@ -200,24 +205,6 @@ export class ObjectMappingBuilder extends MappingBuilder {
         return null;
     }
 
-    private _getPropertyType(symbol: Property): Type {
-
-        // Check to see if type is specified by an annotation
-        var target: Constructor<any> | string;
-
-        var typeAnnotation = symbol.getAnnotations(TypeAnnotation)[0];
-        if(typeAnnotation) {
-            target = typeAnnotation.target;
-        }
-
-        if(target) {
-            return this.context.getType(target);
-        }
-
-        // get property type from the compiler generated metadata.
-        return symbol.type;
-    }
-
     private _createEnumMapping(type: Type, annotation: EnumeratedAnnotation): MappingModel.Mapping {
 
         if(!type.isNumber) {
@@ -234,42 +221,19 @@ export class ObjectMappingBuilder extends MappingBuilder {
             }
         }
 
-        var enumMapping = MappingModel.createEnumMapping(members);
-
-        return enumMapping;
+        return MappingModel.createEnumMapping(members);
     }
 
     private _getMapping(target: Type | Constructor<any> | string): MappingModel.Mapping {
 
-        var type: Type;
-
-        if(typeof target === "string" || typeof target === "function") {
-            type = this.context.getType(<(Constructor<any> | string)>target);
-        }
-        else {
-            type = <Type>target;
-        }
-
-        var builder = this.context.getBuilder(type);
+        var builder = this.context.getBuilder(target);
         if(builder && builder.mapping) {
             return builder.mapping;
         }
 
-        var typeName;
-        if (type) {
-            typeName = type.name;
-        }
-        else if (typeof target === "string") {
-            typeName = target;
-        }
-        else if (typeof target === "function") {
-            typeName = target.name;
-        }
-        else {
-            typeName = "unknown";
-        }
+        var typeName = typeof target === "string" ? target : target.name;
 
-        this.context.addError("Unable to determine mapping for '" + typeName + "'."
+        this.context.addError("Unable to determine mapping for '" + (typeName || "unknown") + "'."
             + " Has the type been added to the AnnotationMappingProvider?");
     }
 }

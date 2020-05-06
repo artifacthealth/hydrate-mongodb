@@ -17,7 +17,7 @@ export class MappingBuilderContext {
     currentMethod: Method;
     currentAnnotation: any;
 
-    private _builders: Map<Type, MappingBuilder> = new Map();
+    private _builders: Map<string, MappingBuilder> = new Map();
     private _typesByName: Map<string, Type> = new Map();
     private _reflect: ReflectContext;
 
@@ -90,19 +90,14 @@ export class MappingBuilderContext {
             this.addError("Duplicate class name '" + mappedType.type.name + "'. All named types must have unique names.");
         }
         this._typesByName.set(mappedType.type.name, mappedType.type);
-        this._builders.set(mappedType.type, mappedType);
+        this._builders.set(mappedType.type.name, mappedType);
     }
 
-    getBuilder(type: Type): MappingBuilder {
+    getBuilder(target: Type | Constructor<any> | string): MappingBuilder {
 
-        if(!type) return null;
+        if(!target) return null;
 
-        return this._builders.get(type);
-    }
-
-    hasBuilder(type: Type): boolean {
-
-        return this._builders.has(type);
+        return this._builders.get(typeof target === "string" ? target : target.name);
     }
 
     assertClassMapping(mapping: MappingModel.Mapping): boolean {
