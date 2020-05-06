@@ -214,8 +214,21 @@ export namespace MappingModel {
      */
     export interface ObjectMapping extends Mapping {
 
+        /**
+         * List of properties on the object mapping.
+         */
+        properties: Property[];
+
+        /**
+         * Adds a property to the object mapping.
+         */
         addProperty(property: Property): void;
+
+        /**
+         * Gets a property by name on the object mapping.
+         */
         getProperty(name: string): Property;
+
         /**
          * Validates a property before adding it to the mapping. Returns any validation error messages or undefined if none.
          * @param property The property to validate.
@@ -321,6 +334,11 @@ export namespace MappingModel {
          * value from the Configuration is used.
          */
         versionField: string;
+
+        /**
+         * The mapping used to track entity history.
+         */
+        historyMapping: EntityMapping;
 
         /**
          * Adds a specification for an index that should be created on the collection. The index is only created if

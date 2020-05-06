@@ -135,14 +135,19 @@ class Builder {
             this._findTypes(type.baseType);
         }
 
+        this._context.currentTypeName = type.name;
         for(let annotation of <MappingBuilderAnnotation[]>type.getAnnotations()) {
+            this._context.currentAnnotation = annotation;
             if(annotation.createBuilder) {
                 this._context.addBuilder(annotation.createBuilder(this._context, type));
                 break;
             }
         }
+        this._context.currentAnnotation = null;
 
         this._scanPropertiesForTypes(type);
+
+        this._context.currentTypeName = null;
     }
 
     private _scanPropertiesForTypes(type: Type): void {

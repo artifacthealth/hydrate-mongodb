@@ -37,6 +37,11 @@ export class EntityMapping extends ClassMapping {
      */
     flushPriority = FlushPriority.Medium;
 
+    /**
+     * The mapping used to track entity history.
+     */
+    historyMapping: EntityMapping;
+
     private _defaultFields: QueryDocument;
 
     constructor(baseClass?: EntityMapping) {

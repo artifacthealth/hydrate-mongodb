@@ -25,7 +25,7 @@ import {
     ClassIndexDescription,
     PropertyIndexDescription,
     TransientAnnotation,
-    ImmutableAnnotation, FetchAnnotation, ParentAnnotation
+    ImmutableAnnotation, FetchAnnotation, ParentAnnotation, HistoryAnnotation
 } from "./annotations";
 
 import {PropertyConverter, FetchType} from "../mappingModel";
@@ -257,6 +257,21 @@ export declare function VersionField(name: string): ClassDecorator;
  * ```
  */
 export declare function Versioned(enabled?: boolean): ClassDecorator;
+
+/**
+ * Specifies that entity change history should be tracked.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  @History()
+ *  export class Task {
+ *     ...
+ *  }
+ * ```
+ */
+export declare function History(): ClassDecorator;
 
 /**
  * Specifies the type of change tracking to use for an entity.
@@ -623,3 +638,4 @@ exports.MapKey = makeDecorator(MapKeyAnnotation);
 exports.Immutable = makeDecorator(ImmutableAnnotation);
 exports.Transient = makeDecorator(TransientAnnotation);
 exports.Identity = makeDecorator(IdentityAnnotation);
+exports.History = makeDecorator(HistoryAnnotation);

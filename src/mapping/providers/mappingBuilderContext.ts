@@ -90,16 +90,33 @@ export class MappingBuilderContext {
         this._builders.set(mappedType.name, mappedType);
     }
 
+    getParentMappingForType(type: Type): MappingModel.ClassMapping {
+
+        var baseType = type.baseType;
+        if (baseType) {
+            // cast to ClassMapping since a base type must be a ClassMapping
+            return <MappingModel.ClassMapping>this.getMapping(baseType);
+        }
+    }
+
+    getMapping(target: Type | Constructor<any> | string): MappingModel.Mapping {
+
+        var builder = this.getBuilder(target);
+        if (builder) {
+            return <MappingModel.ClassMapping>builder.mapping;
+        }
+    }
+
     getBuilder(target: Type | Constructor<any> | string): MappingBuilder {
 
-        if(!target) return null;
-
-        return this._builders.get(typeof target === "string" ? target : target.name);
+        if (target) {
+            return this._builders.get(typeof target === "string" ? target : target.name);
+        }
     }
 
     assertClassMapping(mapping: MappingModel.Mapping): boolean {
 
-        if(!(mapping.flags & MappingModel.MappingFlags.Class)) {
+        if(!mapping || !(mapping.flags & MappingModel.MappingFlags.Class)) {
             this.addError("Annotation can only be defined on class mappings.");
             return false;
         }
@@ -108,7 +125,7 @@ export class MappingBuilderContext {
 
     assertEmbeddableMapping(mapping: MappingModel.Mapping): boolean {
 
-        if((mapping.flags & MappingModel.MappingFlags.Embeddable) === 0) {
+        if(!mapping || (mapping.flags & MappingModel.MappingFlags.Embeddable) === 0) {
             this.addError("Annotation can only be defined an embeddable class.");
             return false;
         }
@@ -120,7 +137,7 @@ export class MappingBuilderContext {
         if(!this.assertClassMapping(mapping)) return false;
 
         var classMapping = <MappingModel.ClassMapping>mapping;
-        if(!(classMapping.flags & MappingModel.MappingFlags.InheritanceRoot)) {
+        if(!classMapping || !(classMapping.flags & MappingModel.MappingFlags.InheritanceRoot)) {
             this.addError("Annotation can only be defined on classes that are the root of a mapped inheritance hierarchy.");
         }
         return true;
@@ -135,7 +152,7 @@ export class MappingBuilderContext {
 
     assertEntityMapping(mapping: MappingModel.Mapping): boolean {
 
-        if(!(mapping.flags & MappingModel.MappingFlags.Entity)) {
+        if(!mapping || !(mapping.flags & MappingModel.MappingFlags.Entity)) {
             this.addError("Annotation can only be defined on entities.");
             return false;
         }

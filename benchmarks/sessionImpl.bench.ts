@@ -13,7 +13,6 @@ import {ResultCallback, Callback} from "../src/core/callback";
 import { EntityMapping } from "../src/mapping/entityMapping";
 import { QueryDefinition } from "../src/query/queryDefinition";
 import { Observer } from "../src/observer";
-import {MockDb} from "../tests/driver/mockDb";
 import {Property} from "../src/mapping/property";
 import {MockMongoClient} from "../tests/driver/mockMongoClient";
 

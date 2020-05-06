@@ -31,7 +31,7 @@ export class ObjectMappingBuilder extends TypeMappingBuilder {
         for(var i = 0, l = annotations.length; i < l; i++) {
             var annotation = this.context.currentAnnotation = annotations[i];
             if(annotation.processClassAnnotation) {
-                (<ClassAnnotation>annotation).processClassAnnotation(this.context, mapping, annotation);
+                (<ClassAnnotation>annotation).processClassAnnotation(this.context, mapping, this.type, annotation);
             }
         }
 

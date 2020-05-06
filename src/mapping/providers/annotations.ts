@@ -13,6 +13,7 @@ import {ClassMappingBuilder} from "./classMappingBuilder";
 import {Index} from "../index";
 import {IdentityGenerator} from "../../config/configuration";
 import {TypeMappingBuilder} from "./typeMappingBuilder";
+import {EntityHistoryMappingBuilder} from "./entityHistoryMappingBuilder";
 
 /**
  * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
@@ -42,7 +43,7 @@ export interface ClassAnnotation {
      */
     inherited?: boolean;
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, annotation: Annotation): void;
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ObjectMapping, type: Type, annotation: Annotation): void;
 }
 
 /**
@@ -84,7 +85,7 @@ export class EntityAnnotation extends Annotation implements MappingBuilderAnnota
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
-        var parentMapping = <MappingModel.EntityMapping>getParentMapping(context, type);
+        var parentMapping = <MappingModel.EntityMapping>context.getParentMappingForType(type);
         if(parentMapping && (parentMapping.flags & MappingModel.MappingFlags.Entity) == 0) {
             context.addError("Parent of mapping for '" + type.name + "' must be an entity mapping.");
             return;
@@ -105,7 +106,7 @@ export class EmbeddableAnnotation extends Annotation implements MappingBuilderAn
 
     createBuilder(context: MappingBuilderContext, type: Type): MappingBuilder {
 
-        var parentMapping = getParentMapping(context, type);
+        var parentMapping = context.getParentMappingForType(type);
         if(parentMapping && (parentMapping.flags & MappingModel.MappingFlags.Embeddable) == 0) {
             context.addError("Parent of mapping for '" + type.name + "' must be an embeddable mapping.");
             return;
@@ -116,6 +117,44 @@ export class EmbeddableAnnotation extends Annotation implements MappingBuilderAn
 
     toString(): string {
         return "@Embeddable";
+    }
+}
+
+/**
+ * @hidden
+ */
+export class HistoryAnnotation extends Annotation implements ClassAnnotation {
+
+    constructor(public type: ChangeTrackingType) {
+        super();
+
+    }
+
+    toString(): string {
+        return "@History";
+    }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: HistoryAnnotation): void {
+
+        if(context.assertEntityMapping(mapping)) {
+
+            // if this is a subclass then the parent class must also track history
+            var parentEntityMapping = <MappingModel.EntityMapping>context.getParentMappingForType(type);
+            if (parentEntityMapping) {
+                var parentMapping = parentEntityMapping.historyMapping;
+                if (!parentMapping) {
+                    context.addError("Parent of mapping for '" + mapping.name + "' must track history.");
+                    return;
+                }
+            }
+
+            var historyMapping = MappingModel.createEntityMapping(parentMapping);
+            historyMapping.flags |= MappingModel.MappingFlags.EntityHistory;
+
+            mapping.historyMapping = historyMapping;
+
+            context.addBuilder(new EntityHistoryMappingBuilder(context, historyMapping, type));
+        }
     }
 }
 
@@ -226,7 +265,7 @@ export class CollectionAnnotation extends Annotation implements ClassAnnotation 
         return "@Collection";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: CollectionAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: CollectionAnnotation): void {
 
         if(context.assertRootEntityMapping(mapping)) {
 
@@ -297,7 +336,7 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
         return "@Index";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: IndexAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: IndexAnnotation): void {
 
         if (context.assertEntityMapping(mapping)) {
             this._addIndex(context, mapping, annotation);
@@ -376,7 +415,7 @@ export class VersionFieldAnnotation extends Annotation implements ClassAnnotatio
         return "@VersionField";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: VersionFieldAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: VersionFieldAnnotation): void {
 
         if(context.assertRootEntityMapping(mapping)) {
 
@@ -404,7 +443,7 @@ export class VersionedAnnotation extends Annotation implements ClassAnnotation {
         return "@Versioned";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: VersionedAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: VersionedAnnotation): void {
 
         if(context.assertRootEntityMapping(mapping)) {
 
@@ -427,7 +466,7 @@ export class ChangeTrackingAnnotation extends Annotation implements ClassAnnotat
         return "@ChangeTracking";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: ChangeTrackingAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: ChangeTrackingAnnotation): void {
 
         if(context.assertRootEntityMapping(mapping)) {
             if((mapping.flags & MappingModel.MappingFlags.Immutable) != 0) {
@@ -467,7 +506,7 @@ export class IdentityAnnotation extends Annotation implements ClassAnnotation {
         return "@Identity";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, annotation: ChangeTrackingAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: ChangeTrackingAnnotation): void {
 
         if(context.assertRootEntityMapping(mapping)) {
 
@@ -504,7 +543,7 @@ export class DiscriminatorFieldAnnotation extends Annotation implements ClassAnn
         return "@DiscriminatorField";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, annotation: DiscriminatorFieldAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, type: Type, annotation: DiscriminatorFieldAnnotation): void {
 
         if(context.assertRootClassMapping(mapping)) {
             if(!annotation.name) {
@@ -525,7 +564,7 @@ export class ImmutableAnnotation extends Annotation implements ClassAnnotation {
         return "@Immutable";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, annotation: ImmutableAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, type: Type, annotation: ImmutableAnnotation): void {
 
         if(context.assertClassMapping(mapping)) {
 
@@ -563,7 +602,7 @@ export class DiscriminatorValueAnnotation extends Annotation  implements ClassAn
         return "@DiscriminatorValue";
     }
 
-    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, annotation: DiscriminatorValueAnnotation): void {
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.ClassMapping, type: Type, annotation: DiscriminatorValueAnnotation): void {
 
         if(context.assertClassMapping(mapping)) {
             if(!annotation.value) {
@@ -785,20 +824,6 @@ export class EnumeratedAnnotation {
 
     toString(): string {
         return "@Enumerated";
-    }
-}
-
-/**
- * @hidden
- */
-function getParentMapping(context: MappingBuilderContext, type: Type): MappingModel.ClassMapping {
-
-    var baseType = type.baseType;
-    if(baseType) {
-        var builder = context.getBuilder(baseType);
-        if(builder) {
-            return <MappingModel.ClassMapping>builder.mapping;
-        }
     }
 }
 

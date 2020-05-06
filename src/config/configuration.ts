@@ -58,6 +58,21 @@ export class Configuration {
     collectionPrefix: string;
 
     /**
+     * The suffix used to create the entity history type name from the entity type name.
+     */
+    historySuffix = "Version";
+
+    /**
+     * Default property name to use for the reference to the entity in the history.
+     */
+    historyEntityProperty = "entity";
+
+    /**
+     * Default property name to use for the version of the entity in the history.
+     */
+    historyVersionProperty = "version";
+
+    /**
      * Naming strategy to use for collection names.
      */
     collectionNamingStrategy: NamingStrategy = NamingStrategies.CamelCase;
