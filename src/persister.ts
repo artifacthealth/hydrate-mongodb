@@ -9,7 +9,6 @@ import {IdentityGenerator} from "./config/configuration";
 import {Batch} from "./batch";
 import {Callback} from "./core/callback";
 import {Command} from "./core/command";
-import {Changes} from "./mapping/changes";
 import {QueryDefinition} from "./query/queryDefinition";
 import {QueryKind} from "./query/queryKind";
 import {IteratorCallback} from "./core/callback";
@@ -1002,16 +1001,6 @@ class BulkOperationCommand implements Command {
 
         this.updated++;
         this.operation.find(query).replaceOne(document);
-    }
-
-    addUpdate(id: any, changes: Changes): void {
-
-        var query: any = {
-            _id: id
-        };
-
-        this.updated++;
-        this.operation.find(query).update(changes);
     }
 
     addRemove(id: any): void {

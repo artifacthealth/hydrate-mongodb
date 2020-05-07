@@ -341,6 +341,16 @@ export namespace MappingModel {
         historyMapping: EntityMapping;
 
         /**
+         * The property name to use for the reference to the entity in the history.
+         */
+        historyEntityProperty: string;
+
+        /**
+         * The property name to use for the version of the entity in the history.
+         */
+        historyVersionProperty: string;
+
+        /**
          * Adds a specification for an index that should be created on the collection. The index is only created if
          * creation of indexes is enabled.
          * @param index The index specification.
