@@ -74,6 +74,10 @@ export class MockPersister implements Persister {
         return {};
     }
 
+    writeHistory(batch: Batch, entity: Object, version: number, originalDocument?: Object): void {
+
+    }
+
     wasInserted(entity: any): boolean {
         return this.inserted.indexOf(entity) !== -1;
     }

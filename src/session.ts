@@ -163,7 +163,7 @@ export interface Session {
      * @param id The identifier for the entity.
      * @param callback Called with the entity.
      */
-    find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T>;
+    find<T>(ctr: Constructor<T> | string, id: any, callback?: ResultCallback<T>): FindOneQuery<T>;
 
     /**
      * Check by identifier if an entity exists.
@@ -172,14 +172,14 @@ export interface Session {
      * @param callback Called with a boolean indicating if an entity with exists or not. Note that if an entity is pending removal then the
      * value will be false.
      */
-    exists<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<boolean>): void;
+    exists<T>(ctr: Constructor<T> | string, id: any, callback: ResultCallback<boolean>): void;
 
     /**
      * Gets a reference to an entity without making a request to the database.
      * @param ctr The constructor for the entity.
      * @param id The identifier for the entity.
      */
-    getReference<T>(ctr: Constructor<T>, id: any): T;
+    getReference<T>(ctr: Constructor<T> | string, id: any): T;
 
     /**
      * Fetches an entity reference from the database.
@@ -197,7 +197,7 @@ export interface Session {
      */
     fetch<T>(obj: T, path: string | string[], callback?: ResultCallback<T>): void;
 
-    query<T>(ctr: Constructor<T>): QueryBuilder<T>;
+    query<T>(ctr: Constructor<T>  | string): QueryBuilder<T>;
 
     /**
      * Waits for pending operations on the Session to complete.
@@ -372,12 +372,12 @@ export class SessionImpl extends EventEmitter implements InternalSession {
         this._queue.add(Action.Wait, Action.All, undefined, callback);
     }
 
-    find<T>(ctr: Constructor<T>, id: any, callback?: ResultCallback<T>): FindOneQuery<T> {
+    find<T>(ctr: Constructor<T> | string, id: any, callback?: ResultCallback<T>): FindOneQuery<T> {
 
         return this.query(ctr).findOneById(id, callback);
     }
 
-    exists<T>(ctr: Constructor<T>, id: any, callback: ResultCallback<boolean>): void {
+    exists<T>(ctr: Constructor<T> | string, id: any, callback: ResultCallback<boolean>): void {
 
         // check the identity map for the identifier
         var obj = this.getObject(id);
@@ -475,7 +475,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
      * @param id The id of the entity
      * @param callback Called with the reference.
      */
-    getReference<T>(ctr: Constructor<T>, id: any): T {
+    getReference<T>(ctr: Constructor<T> | string, id: any): T {
 
         var mapping = this.factory.getMappingForConstructor(ctr);
         if(mapping) {
@@ -660,7 +660,7 @@ export class SessionImpl extends EventEmitter implements InternalSession {
             || (this._persisters[mapping.id] = this.factory.createPersister(this, mapping));
     }
 
-    query<T>(ctr: Constructor<T>): QueryBuilder<T> {
+    query<T>(ctr: Constructor<T> | string): QueryBuilder<T> {
 
         return new QueryBuilderImpl<T>(this, ctr);
     }

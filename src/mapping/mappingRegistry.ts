@@ -9,7 +9,7 @@ import {PersistenceError} from "../persistenceError";
  */
 export class MappingRegistry {
 
-    private _mappings: Map<Function, ClassMapping> = new Map();
+    private _mappings: Map<string, ClassMapping> = new Map();
 
     addMappings(mappings: ClassMapping[]): void {
 
@@ -22,11 +22,15 @@ export class MappingRegistry {
             throw new PersistenceError("Class mapping is missing classConstructor.");
         }
 
-        if(this._mappings.has(mapping.classConstructor)) {
-            throw new PersistenceError("Mapping '" + mapping.classConstructor.name + "' has already been registered.");
+        if(!mapping.name) {
+            throw new PersistenceError("Class mapping is missing name.");
         }
 
-        this._mappings.set(mapping.classConstructor, mapping);
+        if(this._mappings.has(mapping.name)) {
+            throw new PersistenceError("Mapping '" + mapping.name + "' has already been registered.");
+        }
+
+        this._mappings.set(mapping.name, mapping);
     }
 
     getEntityMappings(): EntityMapping[] {
@@ -48,10 +52,10 @@ export class MappingRegistry {
         return this.getMappingForConstructor(obj.constructor);
     }
 
-    getMappingForConstructor(ctr: Constructor<any>): ClassMapping {
+    getMappingForConstructor(ctr: Constructor<any> | string): ClassMapping {
 
         if(ctr) {
-            return this._mappings.get(<any>ctr);
+            return this._mappings.get(typeof ctr === "string" ? ctr : ctr.name);
         }
     }
 }

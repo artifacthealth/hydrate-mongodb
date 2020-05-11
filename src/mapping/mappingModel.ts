@@ -84,6 +84,16 @@ export namespace MappingModel {
          * Sets the property flags.
          */
         setFlags(flags: PropertyFlags): void;
+
+        /**
+         * Returns true if the property has the specified flag.
+         */
+        hasFlags(flags: MappingModel.PropertyFlags): boolean;
+
+        /**
+         * Clones the property.
+         */
+        clone(): Property;
     }
 
     /**
@@ -191,22 +201,27 @@ export namespace MappingModel {
         Parent = 0x00001000,
 
         /**
+         * Indicates that field should not be considered in history tracking.
+         */
+        DoNotTrackHistory = 0x00002000,
+
+        /**
          * All non-walk flags.
          * @hidden
          */
-        All = Ignored | CascadeAll | InverseSide | OrphanRemoval | WriteOnly | FetchEager | FetchLazy | Parent,
+        All = Ignored | CascadeAll | InverseSide | OrphanRemoval | WriteOnly | FetchEager | FetchLazy | Parent | DoNotTrackHistory,
 
         /**
          * Indicates that references to entities should be walked.
          * @hidden
          */
-        WalkEntities = 0x00002000,
+        WalkEntities = 0x00004000,
 
         /**
          * Indicates that reference found during a walk operation should be fetched.
          * @hidden
          */
-        Dereference = 0x00004000
+        Dereference = 0x00008000
     }
 
     /**
@@ -349,6 +364,16 @@ export namespace MappingModel {
          * The property name to use for the version of the entity in the history.
          */
         historyVersionProperty: string;
+
+        /**
+         * The name of the database document field to use to store a reference to the entity in the history.
+         */
+        historyEntityField: string;
+
+        /**
+         * The name of the database document field to use to store the version of the entity in the history.
+         */
+        historyVersionField: string;
 
         /**
          * Adds a specification for an index that should be created on the collection. The index is only created if

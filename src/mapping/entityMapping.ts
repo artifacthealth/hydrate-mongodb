@@ -52,6 +52,16 @@ export class EntityMapping extends ClassMapping {
      */
     historyVersionProperty: string;
 
+    /**
+     * The name of the database document field to use to store a reference to the entity in the history.
+     */
+    historyEntityField: string;
+
+    /**
+     * The name of the database document field to use to store the version of the entity in the history.
+     */
+    historyVersionField: string;
+
     private _defaultFields: QueryDocument;
 
     constructor(baseClass?: EntityMapping) {
@@ -99,16 +109,16 @@ export class EntityMapping extends ClassMapping {
 
     setDocumentHistoryEntity(obj: any, id: any): void {
 
-        var property = this.getProperty((<EntityMapping>this.inheritanceRoot).historyEntityProperty);
-        this.setDocumentHistoryEntity = <any>(new Function("o", "v", "o['" + property.field + "'] = v"));
-        obj[property.field] = id;
+        // TODO: escape historyEntityField
+        this.setDocumentHistoryEntity = <any>(new Function("o", "v", "o['" + (<EntityMapping>this.inheritanceRoot).historyEntityField + "'] = v"));
+        obj[(<EntityMapping>this.inheritanceRoot).historyEntityField] = id;
     }
 
     setDocumentHistoryVersion(obj: any, version: number): void {
 
-        var property = this.getProperty((<EntityMapping>this.inheritanceRoot).historyVersionProperty);
-        this.setDocumentHistoryVersion = <any>(new Function("o", "v", "o['" + property.field + "'] = v"));
-        obj[property.field] = version;
+        // TODO: escape historyVersionField
+        this.setDocumentHistoryVersion = <any>(new Function("o", "v", "o['" + (<EntityMapping>this.inheritanceRoot).historyVersionField + "'] = v"));
+        obj[(<EntityMapping>this.inheritanceRoot).historyVersionField] = version;
     }
 
     addIndex(index: Index): void {

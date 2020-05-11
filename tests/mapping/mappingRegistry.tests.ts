@@ -23,9 +23,11 @@ describe('MappingRegistry', () => {
             var registry = new MappingRegistry();
 
             var mapping1 = new EntityMapping();
+            mapping1.name = "Party";
             mapping1.classConstructor = model.Party;
 
             var mapping2 = new EntityMapping();
+            mapping2.name = "Party";
             mapping2.classConstructor = model.Party;
 
             registry.addMapping(mapping1);
@@ -89,10 +91,13 @@ function createFixture() {
     var registry = new MappingRegistry();
 
     var partyMapping = new EntityMapping();
+    partyMapping.name = "Party";
     partyMapping.classConstructor = model.Party;
     var personMapping = new EntityMapping(partyMapping);
+    personMapping.name = "Person";
     personMapping.classConstructor = model.Person;
     var addressMapping = new ClassMapping();
+    addressMapping.name = "Address";
     addressMapping.classConstructor = model.Address;
 
     registry.addMapping(partyMapping);

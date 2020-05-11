@@ -124,9 +124,9 @@ export interface FindQuery<T> extends Query<T[]> {
 export class QueryBuilderImpl<T> implements QueryBuilder<T> {
 
     private _session: InternalSession;
-    private _entityCtr: Constructor<any>;
+    private _entityCtr: Constructor<any> | string;
 
-    constructor(session: InternalSession, entityCtr: Constructor<any>) {
+    constructor(session: InternalSession, entityCtr: Constructor<any> | string) {
 
         this._session = session;
         this._entityCtr = entityCtr;
@@ -319,10 +319,10 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     error: Error;
 
     private _session: InternalSession;
-    private _entityCtr: Constructor<any>;
+    private _entityCtr: Constructor<any> | string;
     private _executed: boolean;
 
-    constructor(session: InternalSession, entityCtr: Constructor<any>, public kind: QueryKind) {
+    constructor(session: InternalSession, entityCtr: Constructor<any> | string, public kind: QueryKind) {
 
         this._session = session;
         this._entityCtr = entityCtr;

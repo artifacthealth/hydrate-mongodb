@@ -25,7 +25,7 @@ import {
     ClassIndexDescription,
     PropertyIndexDescription,
     TransientAnnotation,
-    ImmutableAnnotation, FetchAnnotation, ParentAnnotation, HistoryAnnotation
+    ImmutableAnnotation, FetchAnnotation, ParentAnnotation, HistoryAnnotation, HistoryIndexAnnotation
 } from "./annotations";
 
 import {PropertyConverter, FetchType} from "../mappingModel";
@@ -272,6 +272,28 @@ export declare function Versioned(enabled?: boolean): ClassDecorator;
  * ```
  */
 export declare function History(): ClassDecorator;
+
+/**
+ * Specifies a database index should be generated on the collection that holds this entity's history.
+ *
+ * ### Example
+ *
+ * ```typescript
+ *  @Entity()
+ *  @History()
+ *  @HistoryIndex({ keys: [['entity', 1], ['version', -1]] })
+ *  export class Person {
+ *
+ *      @Field()
+ *      name: string;
+ *
+ *      @Field()
+ *      age: number;
+ *      ...
+ *  }
+ * ```
+ */
+export declare function HistoryIndex(description: ClassIndexDescription): ClassDecorator;
 
 /**
  * Specifies the type of change tracking to use for an entity.
@@ -639,3 +661,4 @@ exports.Immutable = makeDecorator(ImmutableAnnotation);
 exports.Transient = makeDecorator(TransientAnnotation);
 exports.Identity = makeDecorator(IdentityAnnotation);
 exports.History = makeDecorator(HistoryAnnotation);
+exports.HistoryIndex = makeDecorator(HistoryIndexAnnotation);

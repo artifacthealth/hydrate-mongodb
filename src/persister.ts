@@ -57,6 +57,7 @@ export interface Persister {
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Object;
     addInsert(batch: Batch, entity: Object): Object;
     addRemove(batch: Batch, entity: Object): void;
+    writeHistory(batch: Batch, entity: Object, version: number, originalDocument?: Object): void;
 
     fetch(entity: Object, path: string, callback: Callback): void;
     fetchPropertyValue(entity: any, property: Property, callback: ResultCallback<any>): void;
@@ -91,6 +92,8 @@ export class PersisterImpl implements Persister {
     private _updateDocumentBuilder: UpdateDocumentBuilder;
     private _traceEnabled: boolean;
     private _defaultFields: QueryDocument;
+    private _historyPersister: Persister;
+    private _trackHistory: boolean;
 
     constructor(session: InternalSession, mapping: EntityMapping, collection: mongodb.Collection) {
 
@@ -104,6 +107,7 @@ export class PersisterImpl implements Persister {
         this._versioned = inheritanceRoot.versioned;
         this._traceEnabled = this._session.factory.logger != null;
         this._defaultFields = mapping.getDefaultFields();
+        this._trackHistory = mapping.historyMapping != null;
     }
 
     dirtyCheck(batch: Batch, entity: Object, originalDocument: Object): Object {
@@ -117,12 +121,17 @@ export class PersisterImpl implements Persister {
             // update version field if versioned
             if (this._versioned) {
                 // get the current version
-                var version = this._mapping.getDocumentVersion(originalDocument);
+                var oldVersion = this._mapping.getDocumentVersion(originalDocument);
                 // increment the version if defined; otherwise, start at 1.
-                this._mapping.setDocumentVersion(document, (version || 0) + 1);
+                var newVersion = (oldVersion || 0) + 1;
+                this._mapping.setDocumentVersion(document, newVersion);
             }
 
-            this._getCommand(batch).addReplace(document, version);
+            if (this._trackHistory) {
+                this._writeHistory(batch, entity, newVersion, originalDocument);
+            }
+
+            this._getCommand(batch).addReplace(document, oldVersion);
             return document;
         }
     }
@@ -164,6 +173,10 @@ export class PersisterImpl implements Persister {
             this._mapping.setDocumentVersion(document, 1);
         }
 
+        if (this._trackHistory) {
+            this._writeHistory(batch, document, 1);
+        }
+
         this._getCommand(batch).addInsert(document);
         return document;
     }
@@ -171,6 +184,37 @@ export class PersisterImpl implements Persister {
     addRemove(batch: Batch, entity: any): void {
 
         this._getCommand(batch).addRemove(entity["_id"]);
+    }
+
+    writeHistory(batch: Batch, entity: any, version: number, originalDocument?: Object): void {
+
+        // write out the history document.
+        var context = new WriteContext();
+        var document = this._mapping.write(context, entity);
+        if(context.hasErrors) {
+            batch.error = new PersistenceError(`Error serializing history document:\n${context.getErrorMessage()}`);
+            return;
+        }
+
+        // check if the history document has changed relative to the old entity document. we do this check because the history document
+        // might not track all fields that are in the entity document.
+        if(!originalDocument || !this._mapping.areDocumentsEqual(originalDocument, document)) {
+
+            var entityId = entity["_id"];
+            if (entityId == null) {
+                batch.error = new PersistenceError("Entity missing id.");
+                return;
+            }
+
+            // add the version number and entity reference to the history document
+            this._mapping.setDocumentHistoryEntity(document, entityId);
+            this._mapping.setDocumentHistoryVersion(document, version);
+
+            // generate the document id. the write above will write the id of the entity but we want a new id for the version.
+            document["_id"] = this._mapping.identity.generate();
+
+            this._getCommand(batch).addInsert(document);
+        }
     }
 
     /**
@@ -463,6 +507,15 @@ export class PersisterImpl implements Persister {
         else {
             this._executeQuery(query, callback);
         }
+    }
+
+    private _writeHistory(batch: Batch, entity: Object, version: number, originalDocument?: Object): void {
+
+        if (!this._historyPersister) {
+            this._historyPersister = this._session.getPersister(this._mapping.historyMapping);
+        }
+
+        this._historyPersister.writeHistory(batch, entity, version, originalDocument);
     }
 
     private _executeQuery(query: QueryDefinition, callback: ResultCallback<any>): void {

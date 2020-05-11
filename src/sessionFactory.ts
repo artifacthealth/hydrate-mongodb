@@ -67,7 +67,7 @@ export interface InternalSessionFactory extends SessionFactory {
 
     logger: Logger;
     getMappingForObject(obj: any): EntityMapping;
-    getMappingForConstructor(ctr: Constructor<any>): EntityMapping;
+    getMappingForConstructor(ctr: Constructor<any> | string): EntityMapping;
     createPersister(session: InternalSession, mapping: EntityMapping): Persister;
 }
 
@@ -112,7 +112,7 @@ export class SessionFactoryImpl implements InternalSessionFactory {
         }
     }
 
-    getMappingForConstructor(ctr: Constructor<any>): EntityMapping {
+    getMappingForConstructor(ctr: Constructor<any> | string): EntityMapping {
 
         var mapping = this._mappingRegistry.getMappingForConstructor(ctr);
         if(mapping && (mapping.flags & MappingModel.MappingFlags.Entity)) {

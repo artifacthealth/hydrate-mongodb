@@ -31,6 +31,15 @@ export enum AnnotationPriority {
  */
 export class Annotation {
 
+    /**
+     * Indicates the order in which annotations are processed. Annotations with a higher priority are processed first.
+     */
+    priority = AnnotationPriority.Medium;
+
+    static sort(annotations: Annotation[]): void {
+
+        annotations.sort((a, b) => b.priority - a.priority);
+    }
 }
 
 /**
@@ -125,6 +134,8 @@ export class EmbeddableAnnotation extends Annotation implements MappingBuilderAn
  */
 export class HistoryAnnotation extends Annotation implements ClassAnnotation {
 
+    priority = AnnotationPriority.High; // we want the history annotation processed before other history related annotations
+
     constructor(public type: ChangeTrackingType) {
         super();
 
@@ -143,7 +154,7 @@ export class HistoryAnnotation extends Annotation implements ClassAnnotation {
             if (parentEntityMapping) {
                 var parentMapping = parentEntityMapping.historyMapping;
                 if (!parentMapping) {
-                    context.addError("Parent of mapping for '" + mapping.name + "' must track history.");
+                    context.addError("Parent mapping for '" + mapping.name + "' must track history.");
                     return;
                 }
             }
@@ -298,7 +309,7 @@ export interface CollectionDescription {
 /**
  * @hidden
  */
-export class IndexAnnotation extends Annotation implements ClassAnnotation, PropertyAnnotation {
+export class IndexAnnotationBase extends Annotation {
 
     /**
      * The index keys as an array of tuples [name, 1|-1] if the annotation is specified on a class.
@@ -332,6 +343,39 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
         }
     }
 
+    protected addIndex(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, value: Index): void {
+
+        // TODO: allow indexes in embedded types and map to containing root type
+        if (!Array.isArray(value.keys) || value.keys.length == 0) {
+            context.addError("Missing or invalid property 'keys'.");
+            return;
+        }
+
+        for (let i = 0; i < value.keys.length; i++) {
+
+            let key = value.keys[i];
+            if (!Array.isArray(key) || key.length != 2 || typeof key[0] !== "string") {
+                context.addError(`Index key ${i} is invalid. Key must be a tuple [path, order].`);
+                return;
+            }
+
+            let order = value.keys[i][1];
+            if (order != 1 && order != -1 && order != 'text') {
+                context.addError("Valid values for index order are 1, -1, or 'text'.");
+                return;
+            }
+        }
+
+        // TODO: validate index options
+        mapping.addIndex(value);
+    }
+}
+
+/**
+ * @hidden
+ */
+export class IndexAnnotation extends IndexAnnotationBase implements ClassAnnotation, PropertyAnnotation {
+
     toString(): string {
         return "@Index";
     }
@@ -339,47 +383,40 @@ export class IndexAnnotation extends Annotation implements ClassAnnotation, Prop
     processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: IndexAnnotation): void {
 
         if (context.assertEntityMapping(mapping)) {
-            this._addIndex(context, mapping, annotation);
+            this.addIndex(context, mapping, annotation);
         }
     }
 
     processPropertyAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, property: MappingModel.Property, symbol: Property, annotation: IndexAnnotation): void {
 
         if (context.assertEntityMapping(mapping)) {
-            this._addIndex(context, mapping, {
+            this.addIndex(context, mapping, {
                 keys: [[property.name, annotation.order || 1]],
                 options: annotation.options
             });
         }
     }
+}
 
-    private _addIndex(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, value: Index): void {
+/**
+ * @hidden
+ */
+export class HistoryIndexAnnotation extends IndexAnnotationBase implements ClassAnnotation {
 
-        // TODO: allow indexes in embedded types and map to containing root type
+    toString(): string {
+        return "@HistoryIndex";
+    }
+
+    processClassAnnotation(context: MappingBuilderContext, mapping: MappingModel.EntityMapping, type: Type, annotation: IndexAnnotation): void {
+
         if(context.assertEntityMapping(mapping)) {
 
-            if (!Array.isArray(value.keys) || value.keys.length == 0) {
-                context.addError("Missing or invalid property 'keys'.");
+            if (!mapping.historyMapping) {
+                context.addError("Mapping for '" + mapping.name + "' must track history.");
                 return;
             }
 
-            for (let i = 0; i < value.keys.length; i++) {
-
-                let key = value.keys[i];
-                if (!Array.isArray(key) || key.length != 2 || typeof key[0] !== "string") {
-                    context.addError(`Index key ${i} is invalid. Key must be a tuple [path, order].`);
-                    return;
-                }
-
-                let order = value.keys[i][1];
-                if (order != 1 && order != -1 && order != 'text') {
-                    context.addError("Valid values for index order are 1, -1, or 'text'.");
-                    return;
-                }
-            }
-
-            // TODO: validate index options
-            mapping.addIndex(value);
+            this.addIndex(context, mapping.historyMapping, annotation);
         }
     }
 }
@@ -735,6 +772,7 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
     name: string;
     nullable: boolean;
     readable: boolean;
+    trackHistory: boolean;
 
     constructor(name?: string);
     constructor(args: FieldDescription);
@@ -749,6 +787,7 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
                 this.name = args.name;
                 this.nullable = args.nullable;
                 this.readable = args.readable;
+                this.trackHistory = args.trackHistory;
             }
         }
     }
@@ -770,6 +809,10 @@ export class FieldAnnotation extends Annotation implements PropertyAnnotation {
 
         if (annotation.readable === false) {
             property.setFlags(MappingModel.PropertyFlags.WriteOnly);
+        }
+
+        if (annotation.trackHistory === false) {
+            property.setFlags(MappingModel.PropertyFlags.DoNotTrackHistory);
         }
     }
 }
@@ -811,6 +854,11 @@ export interface FieldDescription {
      * an accessor with a value calculated from other fields in the class that you want to store to the database for queries.
      */
     readable?: boolean;
+
+    /**
+     * Indicates if field should be considered in history tracking. Default is true.
+     */
+    trackHistory?: boolean;
 }
 
 /**

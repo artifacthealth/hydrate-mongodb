@@ -6,12 +6,13 @@ import {
     ConverterAnnotation,
     TypeAnnotation,
     ElementTypeAnnotation,
-    EnumeratedAnnotation
+    EnumeratedAnnotation, Annotation
 } from "./annotations";
 import {Type, Property} from "reflect-helper";
 import {Constructor} from "../../index";
 import {MethodAnnotation} from "./annotations";
 import {TypeMappingBuilder} from "./typeMappingBuilder";
+import {shallowClone} from "../../core/arrayUtil";
 
 /**
  * @hidden
@@ -21,12 +22,14 @@ export class ObjectMappingBuilder extends TypeMappingBuilder {
     protected constructCore(): void {
 
         var mapping = <MappingModel.ObjectMapping>this.mapping;
-        var annotations = this.type.getAnnotations();
+        var annotations = shallowClone(this.type.getAnnotations());
 
         if (mapping.hasFlags(MappingModel.MappingFlags.InheritanceRoot)) {
             // concat the arrays, don't push onto the array because it'll change the type annotations
             annotations = annotations.concat(this._getInheritedAnnotations(this.type.baseType));
         }
+
+        Annotation.sort(annotations);
 
         for(var i = 0, l = annotations.length; i < l; i++) {
             var annotation = this.context.currentAnnotation = annotations[i];

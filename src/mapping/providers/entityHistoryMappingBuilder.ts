@@ -32,6 +32,9 @@ export class EntityHistoryMappingBuilder extends MappingBuilder {
             mapping.collectionName = this.context.config.collectionNamingStrategy(mapping.name);
             mapping.historyEntityProperty = this.context.config.historyEntityProperty;
             mapping.historyVersionProperty = this.context.config.historyVersionProperty;
+            mapping.historyEntityField = this.context.config.fieldNamingStrategy(mapping.historyEntityProperty);
+            mapping.historyVersionField = this.context.config.fieldNamingStrategy(mapping.historyVersionProperty);
+
             mapping.identity = this.context.config.identityGenerator;
 
             if (this.context.config.collectionPrefix) {
@@ -47,6 +50,10 @@ export class EntityHistoryMappingBuilder extends MappingBuilder {
         }
 
         var entityMapping = <MappingModel.EntityMapping>this.context.getMapping(this._entityType);
+        if (!entityMapping) {
+            this.context.addError(`Could not get entity mapping for type '${this._entityType.name}'.`);
+            return;
+        }
 
         // flush the entity history before the entity
         mapping.flushPriority = entityMapping.flushPriority + 1;
@@ -55,25 +62,35 @@ export class EntityHistoryMappingBuilder extends MappingBuilder {
     protected populateCore(): void {
 
         var mapping = <MappingModel.EntityMapping>this.mapping;
+
         var entityMapping = <MappingModel.EntityMapping>this.context.getMapping(this._entityType);
+        if (!entityMapping) {
+            this.context.addError(`Could not get entity mapping for type '${this._entityType.name}'.`);
+            return;
+        }
 
         // make sure that the entity that we are tracking history for is versioned
         if (!entityMapping.versioned) {
             this.context.addError(`Cannot track history on '${entityMapping.name}' which is not versioned.`);
+            return;
         }
 
         // add all properties from the entity mapping to the entity history mapping
-        entityMapping.properties.forEach(property => mapping.addProperty(property));
+        entityMapping.properties.forEach(property => {
+            if (!property.hasFlags(MappingModel.PropertyFlags.DoNotTrackHistory)) {
+                mapping.addProperty(property)
+            }
+        });
 
         // add additional properties
-        this._addProperty(mapping.historyEntityProperty, entityMapping);
-        this._addProperty(mapping.historyVersionProperty, this.context.getMapping("Number"));
+        this._addProperty(mapping.historyEntityProperty, mapping.historyEntityField, entityMapping);
+        this._addProperty(mapping.historyVersionProperty, mapping.historyVersionField, this.context.getMapping("Number"));
     }
 
-    private _addProperty(name: string, mapping: MappingModel.Mapping): void {
+    private _addProperty(name: string, field: string, mapping: MappingModel.Mapping): void {
 
         var property = MappingModel.createProperty(name, mapping);
-        property.field = this.context.config.fieldNamingStrategy(property.name);
+        property.field = field;
         (<MappingModel.EntityMapping>this.mapping).addProperty(property);
     }
 }
