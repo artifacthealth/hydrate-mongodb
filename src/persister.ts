@@ -9,7 +9,6 @@ import {IdentityGenerator} from "./config/configuration";
 import {Batch} from "./batch";
 import {Callback} from "./core/callback";
 import {Command} from "./core/command";
-import {Changes} from "./mapping/changes";
 import {QueryDefinition} from "./query/queryDefinition";
 import {QueryKind} from "./query/queryKind";
 import {IteratorCallback} from "./core/callback";
@@ -957,7 +956,7 @@ export class PersisterImpl implements Persister {
         var id = this._mapping.inheritanceRoot.id;
         var command = <BulkOperationCommand>batch.getCommand(id);
         if(!command) {
-            command = new BulkOperationCommand(this._collection, this._mapping);
+            command = new BulkOperationCommand(batch, this._collection, this._mapping);
             batch.addCommand(id, command);
         }
         return command;
@@ -974,10 +973,13 @@ class BulkOperationCommand implements Command {
     priority: number;
 
     private _mapping: EntityMapping;
+    private _batch: Batch;
 
-    constructor(collection: mongodb.Collection, mapping: EntityMapping) {
+    constructor(batch: Batch, collection: mongodb.Collection, mapping: EntityMapping) {
 
         this._mapping = mapping;
+        this._batch = batch;
+
         this.priority = (<EntityMapping>mapping.inheritanceRoot).flushPriority;
         this.collectionName = collection.collectionName;
         this.operation = collection.initializeUnorderedBulkOp();
@@ -987,7 +989,13 @@ class BulkOperationCommand implements Command {
     addInsert(document: any): void {
 
         this.inserted++;
-        this.operation.insert(document);
+
+        try {
+            this.operation.insert(document);
+        }
+        catch (err) {
+            this._batch.error = new PersistenceError("Error adding insert to batch: " + err.message, err);
+        }
     }
 
     addReplace(document: any, version: number): void {
@@ -1001,17 +1009,13 @@ class BulkOperationCommand implements Command {
         }
 
         this.updated++;
-        this.operation.find(query).replaceOne(document);
-    }
 
-    addUpdate(id: any, changes: Changes): void {
-
-        var query: any = {
-            _id: id
-        };
-
-        this.updated++;
-        this.operation.find(query).update(changes);
+        try {
+            this.operation.find(query).replaceOne(document);
+        }
+        catch (err) {
+            this._batch.error = new PersistenceError("Error adding replace to batch: " + err.message, err);
+        }
     }
 
     addRemove(id: any): void {
@@ -1021,7 +1025,13 @@ class BulkOperationCommand implements Command {
         };
 
         this.removed++;
-        this.operation.find(query).removeOne();
+
+        try {
+            this.operation.find(query).removeOne();
+        }
+        catch (err) {
+            this._batch.error = new PersistenceError("Error adding remove to batch: " + err.message, err);
+        }
     }
 
     execute(callback: Callback): void {

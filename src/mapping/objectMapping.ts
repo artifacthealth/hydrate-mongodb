@@ -1,16 +1,12 @@
 import {MappingBase} from "./mappingBase";
-import {MappingError} from "./mappingError";
 import {MappingModel} from "./mappingModel";
 import {Property} from "./property";
-import {Changes} from "./changes";
 import {Reference} from "../reference";
 import {InternalSession} from "../session";
 import {ResultCallback} from "../core/callback";
 import {ResolveContext} from "./resolveContext";
-import {ClassMapping} from "./classMapping";
 import {ReadContext} from "./readContext";
 import {Observer} from "../observer";
-import {InternalMapping} from "./internalMapping";
 import {WriteContext} from "./writeContext";
 import {PersistenceError} from "../persistenceError";
 
