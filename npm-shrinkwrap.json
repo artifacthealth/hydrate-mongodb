@@ -1,6 +1,6 @@
 {
   "name": "hydrate-mongodb",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -533,9 +533,9 @@
       }
     },
     "bson": {
-      "version": "1.0.9",
-      "resolved": "https://registry.npmjs.org/bson/-/bson-1.0.9.tgz",
-      "integrity": "sha512-IQX9/h7WdMBIW/q/++tGd+emQr0XMdeZ6icnT/74Xk9fnabWn+gZgpE+9V+gujL3hhJOoNrnDVY7tWdzc7NUTg==",
+      "version": "1.1.5",
+      "resolved": "https://registry.npmjs.org/bson/-/bson-1.1.5.tgz",
+      "integrity": "sha512-kDuEzldR21lHciPQAIulLs1LZlCXdLziXI6Mb/TDkwXhb//UORJNPXgcRs2CuO4H0DcMkpfT3/ySsP3unoZjBg==",
       "dev": true
     },
     "cache-base": {
@@ -3075,6 +3075,13 @@
       "integrity": "sha512-rUxjysqif/BZQH2yhd5Aaq7vXMSx9NdEsQcyA07uEzIvxgI7zIr33gGsh+RU0/XjmQpCW7RsVof1vlkvQVCK5A==",
       "dev": true
     },
+    "memory-pager": {
+      "version": "1.5.0",
+      "resolved": "https://registry.npmjs.org/memory-pager/-/memory-pager-1.5.0.tgz",
+      "integrity": "sha512-ZS4Bp4r/Zoeq6+NLJpP+0Zzm0pR8whtGPf1XExKLJBAczGMnSi3It14OiNCStjQjM6NU1okjQGSxgEZN8eBYKg==",
+      "dev": true,
+      "optional": true
+    },
     "meow": {
       "version": "3.7.0",
       "resolved": "https://registry.npmjs.org/meow/-/meow-3.7.0.tgz",
@@ -3301,22 +3308,25 @@
       }
     },
     "mongodb": {
-      "version": "3.0.7",
-      "resolved": "https://registry.npmjs.org/mongodb/-/mongodb-3.0.7.tgz",
-      "integrity": "sha512-n/14kMJEoARXz1qhpNPhUocqy+z5130jhqgEIX1Tsl8UVpHrndQ8et+VmgC4yPK/I8Tcgc93JEMQCHTekBUnNA==",
+      "version": "3.1.13",
+      "resolved": "https://registry.npmjs.org/mongodb/-/mongodb-3.1.13.tgz",
+      "integrity": "sha512-sz2dhvBZQWf3LRNDhbd30KHVzdjZx9IKC0L+kSZ/gzYquCF5zPOgGqRz6sSCqYZtKP2ekB4nfLxhGtzGHnIKxA==",
       "dev": true,
       "requires": {
-        "mongodb-core": "3.0.7"
+        "mongodb-core": "3.1.11",
+        "safe-buffer": "^5.1.2"
       }
     },
     "mongodb-core": {
-      "version": "3.0.7",
-      "resolved": "https://registry.npmjs.org/mongodb-core/-/mongodb-core-3.0.7.tgz",
-      "integrity": "sha512-z6YufO7s40wLiv2ssFshqoLS4+Kf+huhHq6KZ7gDArsKNzXYjAwTMnhEIJ9GQ8fIfBGs5tBLNPfbIDoCKGPmOw==",
+      "version": "3.1.11",
+      "resolved": "https://registry.npmjs.org/mongodb-core/-/mongodb-core-3.1.11.tgz",
+      "integrity": "sha512-rD2US2s5qk/ckbiiGFHeu+yKYDXdJ1G87F6CG3YdaZpzdOm5zpoAZd/EKbPmFO6cQZ+XVXBXBJ660sSI0gc6qg==",
       "dev": true,
       "requires": {
-        "bson": "~1.0.4",
-        "require_optional": "^1.0.1"
+        "bson": "^1.1.0",
+        "require_optional": "^1.0.1",
+        "safe-buffer": "^5.1.2",
+        "saslprep": "^1.0.0"
       }
     },
     "ms": {
@@ -4076,6 +4086,16 @@
         "ret": "~0.1.10"
       }
     },
+    "saslprep": {
+      "version": "1.0.3",
+      "resolved": "https://registry.npmjs.org/saslprep/-/saslprep-1.0.3.tgz",
+      "integrity": "sha512-/MY/PEMbk2SuY5sScONwhUDsV2p77Znkb/q3nSVstq/yQzYJOH/Azh29p9oJLsl3LnQwSvZDKagDGBsBwSooag==",
+      "dev": true,
+      "optional": true,
+      "requires": {
+        "sparse-bitfield": "^3.0.3"
+      }
+    },
     "semver": {
       "version": "4.3.6",
       "resolved": "https://registry.npmjs.org/semver/-/semver-4.3.6.tgz",
@@ -4339,6 +4359,16 @@
       "resolved": "https://registry.npmjs.org/sparkles/-/sparkles-1.0.1.tgz",
       "integrity": "sha512-dSO0DDYUahUt/0/pD/Is3VIm5TGJjludZ0HVymmhYF6eNA53PVLhnUk0znSYbH8IYBuJdCE+1luR22jNLMaQdw==",
       "dev": true
+    },
+    "sparse-bitfield": {
+      "version": "3.0.3",
+      "resolved": "https://registry.npmjs.org/sparse-bitfield/-/sparse-bitfield-3.0.3.tgz",
+      "integrity": "sha1-/0rm5oZWBWuks+eSqzM004JzyhE=",
+      "dev": true,
+      "optional": true,
+      "requires": {
+        "memory-pager": "^1.0.2"
+      }
     },
     "spdx-correct": {
       "version": "3.1.0",
