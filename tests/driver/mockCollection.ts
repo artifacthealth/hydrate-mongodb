@@ -1,8 +1,14 @@
 import * as mongodb from "mongodb";
 import {MockCursor} from "./mockCursor";
 import {MockBulk} from "./mockBulk";
+import {MongoCallback} from "mongodb";
+import {AggregationCursor} from "mongodb";
+import {CollectionAggregationOptions} from "mongodb";
+import {MongoCountPreferences} from "mongodb";
+import {BulkWriteOpResultObject} from "mongodb";
+import {CollectionBulkWriteOptions} from "mongodb";
 
-export class MockCollection implements mongodb.Collection {
+export class MockCollection<TSchema = any> implements mongodb.Collection {
 
     collectionName: string;
     namespace: string;
@@ -16,15 +22,16 @@ export class MockCollection implements mongodb.Collection {
         this.collectionName = name;
     }
 
-    aggregate<T>(pipeline: Object[], callback: mongodb.MongoCallback<mongodb.AggregationCursor<T>>): mongodb.AggregationCursor<T>;
-    aggregate<T>(pipeline: Object[], options?: mongodb.CollectionAggregationOptions, callback?: mongodb.MongoCallback<mongodb.AggregationCursor<T>>): mongodb.AggregationCursor<T>;
+    aggregate<T = TSchema>(callback: MongoCallback<AggregationCursor<T>>): AggregationCursor<T>;
+    aggregate<T = TSchema>(pipeline: Object[], callback: MongoCallback<AggregationCursor<T>>): AggregationCursor<T>;
+    aggregate<T = TSchema>(pipeline?: Object[], options?: CollectionAggregationOptions, callback?: MongoCallback<AggregationCursor<T>>): AggregationCursor<T>;
     aggregate(pipeline: any, options?: any, callback?: any): any {
         throw new Error("Method not implemented.");
     }
 
-    bulkWrite(operations: Object[], callback: mongodb.MongoCallback<mongodb.BulkWriteOpResultObject>): void;
-    bulkWrite(operations: Object[], options?: mongodb.CollectionBluckWriteOptions): Promise<mongodb.BulkWriteOpResultObject>;
-    bulkWrite(operations: Object[], options: mongodb.CollectionBluckWriteOptions, callback: mongodb.MongoCallback<mongodb.BulkWriteOpResultObject>): void;
+    bulkWrite(operations: Object[], callback: MongoCallback<BulkWriteOpResultObject>): void;
+    bulkWrite(operations: Object[], options?: CollectionBulkWriteOptions): Promise<BulkWriteOpResultObject>;
+    bulkWrite(operations: Object[], options: CollectionBulkWriteOptions, callback: MongoCallback<BulkWriteOpResultObject>): void;
     bulkWrite(operations: any, options?: any, callback?: any): any {
         throw new Error("Method not implemented.");
     }
@@ -33,6 +40,14 @@ export class MockCollection implements mongodb.Collection {
     count(query: Object, options?: mongodb.MongoCountPreferences): Promise<number>;
     count(query: Object, options: mongodb.MongoCountPreferences, callback: mongodb.MongoCallback<number>): void;
     count(query: any, options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
+    }
+
+    countDocuments(callback: MongoCallback<number>): void;
+    countDocuments(query: Object, callback: MongoCallback<number>): void;
+    countDocuments(query?: Object, options?: MongoCountPreferences): Promise<number>;
+    countDocuments(query: Object, options: MongoCountPreferences, callback: MongoCallback<number>): void;
+    countDocuments(query: any, options?: any, callback?: MongoCallback<number>): any {
         throw new Error("Method not implemented.");
     }
 
@@ -354,6 +369,14 @@ export class MockCollection implements mongodb.Collection {
     onUpdateOne: (filter: Object, update: any, options: any, callback: (err: Error, result: any) => void) => void;
 
     watch(pipeline?: Object[], options?: mongodb.ChangeStreamOptions & { session?: any; }): mongodb.ChangeStream {
+        throw new Error("Method not implemented.");
+    }
+
+    estimatedDocumentCount(callback: MongoCallback<number>): void;
+    estimatedDocumentCount(query: Object, callback: MongoCallback<number>): void;
+    estimatedDocumentCount(query?: Object, options?: MongoCountPreferences): Promise<number>;
+    estimatedDocumentCount(query: Object, options: MongoCountPreferences, callback: MongoCallback<number>): void;
+    estimatedDocumentCount(query?: any, options?: any, callback?: any): any {
         throw new Error("Method not implemented.");
     }
 }

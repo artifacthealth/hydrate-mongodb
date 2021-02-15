@@ -8,6 +8,7 @@ import {Constructor} from "../index"
 import {PersistenceError} from "../persistenceError";
 import {Observable} from "rx";
 import {Cursor} from "../persister";
+import {CollationOptions} from "../mapping/collationOptions";
 
 export interface QueryBuilder<T> {
     findAll(callback?: ResultCallback<T[]>): FindQuery<T>;
@@ -102,6 +103,7 @@ export interface FindQuery<T> extends Query<T[]> {
     fetch(path: string, callback?: ResultCallback<T[]>): FindQuery<T>;
     fetch(paths: string[], callback?: ResultCallback<T[]>): FindQuery<T>;
     limit(value: number, callback?: ResultCallback<T[]>): FindQuery<T>;
+    collation(value: CollationOptions, callback?: ResultCallback<T[]>): FindQuery<T>;
     skip(value: number, callback?: ResultCallback<T[]>): FindQuery<T>;
     /**
      * Return references instead of Entities for unmanaged Entities.
@@ -313,6 +315,7 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     fetchPaths: string[];
     sortValue: [string, number][];
     limitCount: number;
+    collationOptions: CollationOptions;
     skipCount: number;
     iterator: IteratorCallback<Object>;
     batchSizeValue: number;
@@ -405,6 +408,12 @@ class QueryObject implements QueryDefinition, FindQuery<Object>, FindOneQuery<Ob
     limit(value: number, callback?: ResultCallback<any>): QueryObject {
 
         this.limitCount = value;
+        return this.handleCallback(callback);
+    }
+
+    collation(value: CollationOptions, callback?: ResultCallback<any>): QueryObject {
+
+        this.collationOptions = value;
         return this.handleCallback(callback);
     }
 

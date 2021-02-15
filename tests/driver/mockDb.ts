@@ -1,6 +1,9 @@
 import * as mongodb from "mongodb";
 import {MockCollection} from "./mockCollection";
 import {EventEmitter} from "events";
+import {MongoCallback} from "mongodb";
+import {ProfilingLevel} from "mongodb";
+import {ClientSession} from "mongodb";
 
 export class MockDb extends EventEmitter implements mongodb.Db {
 
@@ -115,13 +118,10 @@ export class MockDb extends EventEmitter implements mongodb.Db {
         throw new Error("Method not implemented.");
     }
 
-    profilingLevel(callback: mongodb.MongoCallback<any>): void;
-    profilingLevel(options?: { session?: any; }): Promise<void>;
-    profilingLevel(options: { session?: any; }, callback: mongodb.MongoCallback<void>): void;
-    profilingLevel(level: string, callback: mongodb.MongoCallback<any>): void;
-    profilingLevel(level: string, options?: { session?: any; }): Promise<void>;
-    profilingLevel(level: string, options: { session?: any; }, callback: mongodb.MongoCallback<void>): void;
-    profilingLevel(level?: any, options?: any, callback?: any): any {
+    profilingLevel(callback: MongoCallback<ProfilingLevel>): void;
+    profilingLevel(options?: { session?: ClientSession }): Promise<ProfilingLevel>;
+    profilingLevel(options: { session?: ClientSession }, callback: MongoCallback<ProfilingLevel>): void;
+    profilingLevel(options?: any, callback?: any): any {
         throw new Error("Method not implemented.");
     }
 
@@ -143,6 +143,13 @@ export class MockDb extends EventEmitter implements mongodb.Db {
     stats(options?: { scale?: number; }): Promise<any>;
     stats(options: { scale?: number; }, callback: mongodb.MongoCallback<any>): void;
     stats(options?: any, callback?: any): any {
+        throw new Error("Method not implemented.");
+    }
+
+    setProfilingLevel(level: ProfilingLevel, callback: MongoCallback<ProfilingLevel>): void;
+    setProfilingLevel(level: ProfilingLevel, options?: { session?: ClientSession }): Promise<ProfilingLevel>;
+    setProfilingLevel(level: ProfilingLevel, options: { session?: ClientSession }, callback: MongoCallback<ProfilingLevel>): void;
+    setProfilingLevel(level?: any, options?: any, callback?: any): any {
         throw new Error("Method not implemented.");
     }
 }

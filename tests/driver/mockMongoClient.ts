@@ -1,6 +1,7 @@
 import * as mongodb from "mongodb";
 import {MockDb} from "./mockDb";
 import {EventEmitter} from "events";
+import {MongoClientCommonOption} from "mongodb";
 
 export class MockMongoClient extends EventEmitter implements mongodb.MongoClient {
 
@@ -21,10 +22,6 @@ export class MockMongoClient extends EventEmitter implements mongodb.MongoClient
         return new MockDb(dbName);
     }
 
-    isConnected(name: string, options?: mongodb.MongoClientCommonOption): boolean {
-        throw new Error("Method not implemented.");
-    }
-
     logout(callback: mongodb.MongoCallback<any>): void;
     logout(options?: { dbName?: string; }): Promise<any>;
     logout(options: { dbName?: string; }, callback: mongodb.MongoCallback<any>): void;
@@ -33,6 +30,20 @@ export class MockMongoClient extends EventEmitter implements mongodb.MongoClient
     }
 
     startSession(options?: any): any {
+        throw new Error("Method not implemented.");
+    }
+
+    isConnected(options?: MongoClientCommonOption): boolean {
+        throw new Error("Method not implemented.");
+    }
+
+    watch(pipeline?: Object[], options?: mongodb.ChangeStreamOptions & { startAtClusterTime?: mongodb.Timestamp; session?: mongodb.ClientSession }): mongodb.ChangeStream {
+        throw new Error("Method not implemented.");
+    }
+
+    withSession(operation: (session: mongodb.ClientSession) => Promise<any>): Promise<void>;
+    withSession(options: mongodb.SessionOptions, operation: (session: mongodb.ClientSession) => Promise<any>): Promise<void>;
+    withSession(options: any, operation?: any): any {
         throw new Error("Method not implemented.");
     }
 }

@@ -1,5 +1,7 @@
 import * as mongodb from "mongodb";
 import {Readable} from "stream";
+import {IteratorCallback} from "mongodb";
+import {EndCallback} from "mongodb";
 
 export class MockCursor extends Readable implements mongodb.Cursor {
 
@@ -61,7 +63,9 @@ export class MockCursor extends Readable implements mongodb.Cursor {
         return this;
     }
 
-    forEach(iterator: mongodb.IteratorCallback<any>, callback: mongodb.EndCallback): void {
+    forEach<T>(iterator: IteratorCallback<T>, callback: EndCallback): void;
+    forEach<T>(iterator: IteratorCallback<T>): Promise<void>;
+    forEach<T>(iterator: mongodb.IteratorCallback<any>, callback?: mongodb.EndCallback): any {
         throw new Error("Method not implemented.");
     }
 

@@ -7,6 +7,7 @@ export {CascadeFlags, ChangeTrackingType, FlushPriority, FetchType} from "./mapp
 export {Configuration} from "./config/configuration";
 export {ObjectIdGenerator} from "./config/objectIdGenerator";
 export {AnnotationMappingProvider} from "./mapping/providers/annotationMappingProvider";
+export {CollationOptions} from "./mapping/collationOptions";
 
 export * from "./mapping/providers/decorators";
 
@@ -22,7 +23,7 @@ export {
     FindOneQuery,
     FindOneAndUpdateQuery,
     FindOneAndRemoveQuery,
-    QueryDocument
+    QueryDocument,
 } from "./query/queryBuilder";
 
 export interface Constructor<T> {

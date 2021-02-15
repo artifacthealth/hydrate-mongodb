@@ -11,4 +11,5 @@ export interface IndexOptions {
     v?: number;
     expireAfterSeconds?: number;
     name?: string;
+    collation?: CollationOptions;
 }

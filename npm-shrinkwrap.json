@@ -1,13 +1,13 @@
 {
   "name": "hydrate-mongodb",
-  "version": "2.2.4",
+  "version": "2.3.0",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
     "@types/bson": {
-      "version": "4.0.2",
-      "resolved": "https://registry.npmjs.org/@types/bson/-/bson-4.0.2.tgz",
-      "integrity": "sha512-+uWmsejEHfmSjyyM/LkrP0orfE2m5Mx9Xel4tXNeqi1ldK5XMQcDsFkBmLDtuyKUbxj2jGDo0H240fbCRJZo7Q==",
+      "version": "4.0.3",
+      "resolved": "https://registry.npmjs.org/@types/bson/-/bson-4.0.3.tgz",
+      "integrity": "sha512-mVRvYnTOZJz3ccpxhr3wgxVmSeiYinW+zlzQz3SXWaJmD1DuL05Jeq7nKw3SnbKmbleW5qrLG5vdyWe/A9sXhw==",
       "dev": true,
       "requires": {
         "@types/node": "*"
@@ -93,9 +93,9 @@
       "dev": true
     },
     "@types/mongodb": {
-      "version": "3.0.7",
-      "resolved": "https://registry.npmjs.org/@types/mongodb/-/mongodb-3.0.7.tgz",
-      "integrity": "sha512-A2MKmbS+HyO+S/q8otc+Y0ekK5n85ZNjNz3XVYOMPf3hxwS+N00fY8Wz4LMjAy/oPHRy7TMnkzUQWGME53d8sg==",
+      "version": "3.1.9",
+      "resolved": "https://registry.npmjs.org/@types/mongodb/-/mongodb-3.1.9.tgz",
+      "integrity": "sha512-3vv3ad/AmiXz/MI/dKVzJNo1FFx/PYp6wlgzbKPPnOnTXnNWKxV9pI/sfReI/7ji0OtxSWByW0LWCNEClyy/vA==",
       "dev": true,
       "requires": {
         "@types/bson": "*",

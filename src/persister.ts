@@ -22,6 +22,7 @@ import {WriteContext} from "./mapping/writeContext";
 import {PersistenceError, EntityNotFoundError} from "./persistenceError";
 import {getDuration} from "./core/timerUtil";
 import {Property} from "./mapping/property";
+import {CollationOptions} from "./mapping/collationOptions";
 
 interface FindOneQuery {
 
@@ -35,6 +36,7 @@ interface FindAllQuery extends FindOneQuery {
 
     orderDocument?: OrderDocument[];
     limitCount?: number;
+    collationOptions?: CollationOptions;
     skipCount?: number;
     batchSizeValue?: number;
 }
@@ -712,6 +714,10 @@ export class PersisterImpl implements Persister {
 
         if(query.limitCount !== undefined) {
             cursor.limit(query.limitCount);
+        }
+
+        if(query.collationOptions !== undefined) {
+            cursor.collation(query.collationOptions);
         }
 
         if(query.batchSizeValue !== undefined) {

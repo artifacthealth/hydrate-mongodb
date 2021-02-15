@@ -6,6 +6,7 @@ import {MockInternalSession} from "../mockInternalSession";
 import {Constructor} from "../../src/index";
 import {ResultCallback, IteratorCallback, Callback} from "../../src/core/callback";
 import {QueryKind} from "../../src/query/queryKind";
+import {CollationOptions} from "../../src/mapping/collationOptions";
 export class MockQueryBuilder<T> implements QueryBuilder<T> {
 
     private _session: MockInternalSession;
@@ -203,6 +204,7 @@ export class MockQueryObject implements FindQuery<Object>, FindOneQuery<Object>,
     fetchPaths: string[];
     sortValue: [string, number][];
     limitCount: number;
+    collationOptions: CollationOptions;
     skipCount: number;
     iterator: IteratorCallback<Object>;
     batchSizeValue: number;
@@ -295,6 +297,12 @@ export class MockQueryObject implements FindQuery<Object>, FindOneQuery<Object>,
     limit(value: number, callback?: ResultCallback<any>): MockQueryObject {
 
         this.limitCount = value;
+        return this.handleCallback(callback);
+    }
+
+    collation(value: CollationOptions, callback?: ResultCallback<any>): MockQueryObject {
+
+        this.collationOptions = value;
         return this.handleCallback(callback);
     }
 

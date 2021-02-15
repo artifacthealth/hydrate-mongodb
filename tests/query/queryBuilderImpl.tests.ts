@@ -70,6 +70,7 @@ describe('QueryBuilderImpl', () => {
                 var persister = factory.getPersisterForConstructor(session, model.Person);
                 persister.onExecuteQuery = (query: QueryDefinition) => {
                     assert.equal(query.limitCount, 10);
+                    assert.deepEqual(query.collationOptions, {locale: "en_US", strength: 2});
                     assert.equal(query.skipCount, 22);
                     assert.equal(query.batchSizeValue, 10000);
                     assert.deepEqual(query.sortValue, [['name', 1]]);
@@ -77,7 +78,7 @@ describe('QueryBuilderImpl', () => {
                     done();
                 }
 
-                session.query(model.Person).findAll({}).limit(10).skip(22).batchSize(10000).sort([['name', 1]]).fetch("children", (err, results) => {
+                session.query(model.Person).findAll({}).limit(10).collation({locale: "en_US", strength: 2}).skip(22).batchSize(10000).sort([['name', 1]]).fetch("children", (err, results) => {
                     if(err) return done(err);
                 });
             });

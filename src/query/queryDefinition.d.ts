@@ -3,6 +3,7 @@ import {IteratorCallback} from "../core/callback";
 import {QueryKind} from "./queryKind";
 import {QueryDocument} from "./queryBuilder";
 import {OrderDocument} from "./orderDocument";
+import {CollationOptions} from "../mapping/collationOptions";
 
 /**
  * @hidden
@@ -23,6 +24,7 @@ export interface QueryDefinition {
     sortValue: [string, number][];
     orderDocument?: OrderDocument[];
     limitCount: number;
+    collationOptions?: CollationOptions;
     skipCount: number;
     iterator: IteratorCallback<Object>;
     batchSizeValue: number;
