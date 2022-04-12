@@ -1,6 +1,6 @@
 {
   "name": "hydrate-mongodb",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -381,12 +381,9 @@
       "dev": true
     },
     "async": {
-      "version": "2.0.1",
-      "resolved": "https://registry.npmjs.org/async/-/async-2.0.1.tgz",
-      "integrity": "sha1-twnMAoCpw28J9FNr6CPIOKkEniU=",
-      "requires": {
-        "lodash": "^4.8.0"
-      }
+      "version": "3.2.2",
+      "resolved": "https://registry.npmjs.org/async/-/async-3.2.2.tgz",
+      "integrity": "sha512-H0E+qZaDEfx/FY4t7iLRv1W2fFI6+pyCeTw1uN20AQPiwqwM6ojPxHxdLv4z8hi2DtnW9BOckSspLucW7pIE5g=="
     },
     "atob": {
       "version": "2.1.2",
@@ -2871,7 +2868,8 @@
     "lodash": {
       "version": "4.17.15",
       "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.15.tgz",
-      "integrity": "sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A=="
+      "integrity": "sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==",
+      "dev": true
     },
     "lodash._basecopy": {
       "version": "3.0.1",
