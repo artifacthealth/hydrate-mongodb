@@ -1,7 +1,6 @@
 import {MappingBase} from "./mappingBase";
-import {MappingModel} from "./mappingModel";
+import {MappingModel, PropertyConverter} from "./mappingModel";
 import {ReadContext} from "./readContext";
-import {PropertyConverter} from "../config/configuration";
 import {WriteContext} from "./writeContext";
 
 /**
@@ -38,7 +37,7 @@ export class ConverterMapping extends MappingBase {
 
         return result;
     }
-    
+
     areEqual(documentValue1: any, documentValue2: any): boolean {
 
         if (documentValue1 === documentValue2) return true;

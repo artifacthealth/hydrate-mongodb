@@ -451,6 +451,30 @@ export namespace MappingModel {
     }
 }
 
+/**
+ * Describes a type that is able to convert an entity or embeddable property value to a MongoDB document field and back.
+ *
+ * ### Example
+ *
+ * The example below defines a PropertyConverter that converts an instance of a Point class to a string.
+ * ```typescript
+ *  class PointConverter implements PropertyConverter {
+ *
+ *      convertToDocumentField(property: any): any {
+ *          if(property instanceof Point) {
+ *              return [property.x, property.y].join(",");
+ *          }
+ *      }
+ *
+ *      convertToObjectProperty(field: any): any {
+ *          if(typeof field === "string") {
+ *              var parts = field.split(",");
+ *              return new Point(parts[0], parts[1]);
+ *         }
+ *      }
+ *  }
+ *  ```
+ */
 export interface PropertyConverter {
 
     /**

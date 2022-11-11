@@ -31,51 +31,22 @@ gulp.src = function() {
         }));
 };
 
-gulp.task('default', function(done) {
-
-    runSequence('build', 'lib', 'test', done);
-});
-
-// Performs build without sourcemaps but includes dts files
-gulp.task('build', ['clean'], function() {
-
-    var tsResult = gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'], { base: process.cwd() })
-        .pipe(tsProject());
-
-    return merge([
-        tsResult.dts.pipe(gulp.dest('build')),
-        tsResult.js.pipe(gulp.dest('build'))
-    ]);
-});
-
-// Performs build with sourcemaps
-gulp.task('debug', ['clean'], function() {
-
-    return gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'], { base: process.cwd() })
-        .pipe(sourcemaps.init())
-        .pipe(tsProject())
-        .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: process.cwd() }))
-        .pipe(gulp.dest('build'));
-});
-
-
-
-gulp.task('clean', function() {
+function clean() {
     return del(['build', 'lib']);
-});
+}
 
-gulp.task('lib', function(done) {
+function lib() {
 
     return gulp.src(['build/src/**/*.js', "build/src/**/*.d.ts", "src/**/*.d.ts", "package.json", "*.txt", "*.md" ])
         .pipe(gulp.dest('lib'));
-});
+}
 
-gulp.task('test', function() {
+function test() {
     return gulp.src('build/tests/**/*.tests.js', {read: false})
         .pipe(mocha());
-});
+}
 
-gulp.task('bench', function(done) {
+function bench(done) {
 
     var baseline = new Baseline();
     baseline.reporter = new Baseline.DefaultReporter();
@@ -86,9 +57,9 @@ gulp.task('bench', function(done) {
         done(err);
         process.exit(slower);
     });
-});
+}
 
-gulp.task('docs', function() {
+function docs() {
     return gulp.src(['typings/**/*.ts', 'src/**/*.ts']).pipe(typedoc({
         target: 'es6',
         module: "commonjs",
@@ -101,23 +72,40 @@ gulp.task('docs', function() {
         excludeExternals: true,
         excludeNotExported: true
     }));
-});
+}
 
-gulp.task('release-docs', function(done) {
+function releaseDocs() {
 
     return gulp.src(['build/docs/**/*.*' ])
         .pipe(gulp.dest('docs'));
-});
+}
 
-gulp.task('pre-coverage', function () {
+function preCoverage() {
     return gulp.src(['build/src/**/*.js'])
         // Covering files
         .pipe(istanbul())
         // Force `require` to return covered files
         .pipe(istanbul.hookRequire());
-});
+}
+function tsCompile() {
 
-gulp.task('coverage', ['pre-coverage'], function () {
+    var tsResult = gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'], { base: process.cwd() })
+        .pipe(tsProject());
+
+    return merge([
+        tsResult.dts.pipe(gulp.dest('build')),
+        tsResult.js.pipe(gulp.dest('build'))
+    ]);
+}
+
+exports.clean = clean;
+
+// Performs build without sourcemaps but includes dts files
+exports.build = gulp.series(clean, tsCompile);
+
+exports.releaseDocs = releaseDocs;
+
+exports.coverage = gulp.series(preCoverage, function () {
     return gulp.src(['build/tests/**/*.tests.js'])
         .pipe(mocha())
         // Creating the reports after tests ran
@@ -125,3 +113,16 @@ gulp.task('coverage', ['pre-coverage'], function () {
         // Enforce a coverage of at least 90%
         .pipe(istanbul.enforceThresholds({ thresholds: { global: 90 } }));
 });
+
+// Performs build with sourcemaps
+exports.debug = gulp.series(clean, function() {
+
+    return gulp.src(['typings/**/*.ts', 'src/**/*.ts', 'tests/**/*.ts', 'benchmarks/**/*.ts'], { base: process.cwd() })
+        .pipe(sourcemaps.init())
+        .pipe(tsProject())
+        .pipe(sourcemaps.write('.', {includeContent: false, sourceRoot: process.cwd() }))
+        .pipe(gulp.dest('build'));
+});
+
+exports.bench = bench;
+exports.default = gulp.series(clean, tsCompile, lib, test);

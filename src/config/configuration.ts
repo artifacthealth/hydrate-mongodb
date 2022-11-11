@@ -242,53 +242,6 @@ export interface IdentityGenerator {
 }
 
 /**
- * Describes a type that is able to convert an entity or embeddable property value to a MongoDB document field and back.
- *
- * ### Example
- *
- * The example below defines a PropertyConverter that converts an instance of a Point class to a string.
- * ```typescript
- *  class PointConverter implements PropertyConverter {
- *
- *      convertToDocumentField(property: any): any {
- *          if(property instanceof Point) {
- *              return [property.x, property.y].join(",");
- *          }
- *      }
- *
- *      convertToObjectProperty(field: any): any {
- *          if(typeof field === "string") {
- *              var parts = field.split(",");
- *              return new Point(parts[0], parts[1]);
- *         }
- *      }
- *  }
- *  ```
- */
-export interface PropertyConverter {
-
-    /**
-     * Converts an object property value to a document field value.
-     * @param property The property value to convert.
-     */
-    convertToDocumentField(property: any): any;
-
-    /**
-     * Converts a document field value to an object property value.
-     * @param field The field value to convert.
-     */
-    convertToObjectProperty(field: any): any;
-
-    /**
-     * Returns true if the document field values are equal; otherwise, returns false. This method is only called if both values are not
-     * null and the values are not strictly equal.
-     * @param field1 First document field value.
-     * @param field2 Other document field value.
-     */
-    areEqual(field1: any, field2: any): boolean;
-}
-
-/**
  * Provides data mappings to the Configuration.
  */
 export interface MappingProvider {
@@ -300,8 +253,6 @@ export interface MappingProvider {
      */
     getMapping(config: Configuration, callback: ResultCallback<MappingModel.ClassMapping[]>): void;
 }
-
-
 
 /**
  * A logger that conforms for the [bunyan](https://www.npmjs.com/package/bunyan) logger interface.

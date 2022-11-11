@@ -2,7 +2,7 @@ import {Reference} from "./reference";
 
 export {NamingStrategies, NamingStrategy} from "./config/namingStrategies";
 export {PersistenceError, EntityNotFoundError} from "./persistenceError";
-export {CascadeFlags, ChangeTrackingType, FlushPriority, FetchType} from "./mapping/mappingModel";
+export {CascadeFlags, ChangeTrackingType, FlushPriority, FetchType, PropertyConverter} from "./mapping/mappingModel";
 
 export {Configuration} from "./config/configuration";
 export {ObjectIdGenerator} from "./config/objectIdGenerator";
@@ -12,7 +12,7 @@ export {CollationOptions} from "./mapping/collationOptions";
 export * from "./mapping/providers/decorators";
 
 export {Callback, ResultCallback, IteratorCallback} from "./core/callback";
-export {IdentityGenerator, PropertyConverter} from "./config/configuration";
+export {IdentityGenerator} from "./config/configuration";
 export {Session} from "./session";
 export {SessionFactory} from "./sessionFactory";
 export {
