@@ -16,7 +16,7 @@
     "test": "gulp"
   },
   "dependencies": {
-    "async": "2.0.1",
+    "async": "2.6.4",
     "change-case": "3.0.1",
     "reflect-helper": "1.1.0",
     "rx": "4.1.0"
