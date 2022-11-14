@@ -66,7 +66,6 @@ function docs() {
         out: 'build/docs',
         mode: "file",
         name: "hydrate-mongodb",
-        entryPoint: "index",
         umlFormat: "svg",
         includeDeclarations: false,
         excludeExternals: true,
@@ -103,7 +102,7 @@ exports.clean = clean;
 // Performs build without sourcemaps but includes dts files
 exports.build = gulp.series(clean, tsCompile);
 
-exports.releaseDocs = releaseDocs;
+exports.releaseDocs = gulp.series(docs, releaseDocs);
 
 exports.coverage = gulp.series(preCoverage, function () {
     return gulp.src(['build/tests/**/*.tests.js'])

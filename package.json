@@ -3,8 +3,8 @@
   "description": "An Object Document Mapper (ODM) for MongoDB.",
   "version": "2.5.0",
   "author": {
-    "name": "Artifact Health, Inc",
-    "url": "http://www.artifacthealth.com"
+    "name": "Iodine Software, Llc",
+    "url": "http://www.iodinesoftware.com"
   },
   "repository": {
     "type": "git",
